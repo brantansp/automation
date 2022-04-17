@@ -1,0 +1,8 @@
+!5 consignee_count 1 => to upload PDF for 1st consignee
+!5 consignee_count 2 => to upload PDF for 2nd consignee
+
+!|Script  |Ui                                                                     |
+|click;   |//span[normalize-space(text())='Update']                                 |xpath         |
+|sendKeys;|(//input[@class='el-upload__input'])[${consignee_count}]|xpath|$pdfpath|
+|wait;    |3                                                                      |
+|click;   |//div[@class='close-sidebar']                           |xpath         |

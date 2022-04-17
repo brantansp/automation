@@ -1,0 +1,468 @@
+---
+Help: Ensure Multiple reason selection is working
+Suites: britannia
+Test
+---
+!*** Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-4|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-3|
+|$rdate1=      |dateCalculation;|yyyy/MM/dd |0 |
+|$rdate2=      |dateCalculation;|yyyy/MM/dd |0 |
+|$rdate3=      |dateCalculation;|yyyy/MM/dd |0 |
+
+!|Script       |Common                                         |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer -!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer -!|
+|$rdate1=      |stringConcatenation;|$rdate1      |!- $timer -!|
+|$rdate2=      |stringConcatenation;|$rdate2      |!- $timer -!|
+|$rdate3=      |stringConcatenation;|$rdate3      |!- $timer -!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate1=      |utcConversion;|$rdate1      |
+|$rdate2=      |utcConversion;|$rdate2      |
+|$rdate3=      |utcConversion;|$rdate3      |
+
+!|Script        |DateUtil                                     |
+|$expected_date=|dateCalculation;|yyyy/MM/dd        |0        |
+|$expected_date=|utcConversion;  |$expected_date !- 10:00:00-!|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!*** Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!*** Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!*** Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {PTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!*** Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!*** Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!*** Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!** Material Creation 1
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!*** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,${gate_ref_id},$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,1000,per_trip,01-Jan-$year,31-Dec-2030,100,1,}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!*** Indent Creation Date 1
+!*** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|script     |common            |
+|$indent_id1=|getTrim;|$order_id|
+*!
+
+!*** Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!** Update LR for Consignee 1
+!define consignee_id {$consignee_id_1}
+!define lr_number {l1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!** Create Material invoice 1
+!define mrp_price {10}
+!define quantity1 {100}
+!define quantity_unit {cases}
+!define weight {300}
+!define weight_unit {KG}
+!define volume {50}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {10}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+!define erp_depo_id_api {${depot_reference_id}}
+!define erp_gate_id_api {${gate_ref_id}}
+!define ship_to {${consignee_ref_id}}
+!define sold_to {${consignee_ref_id}}
+!define invoice_number {INV1-$unique}
+!define delivery_number {D1$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{ "data": [ { "indent_no": "$order_id", "delivery_number": "${delivery_number}", "mrp_price": "${mrp_price}", "material_code": "${material_code}", "depot_ref_id": "${erp_depo_id_api}", "gate_ref_id": "${erp_gate_id_api}", "division": "BK", "quantity": "${quantity1}", "quantity_unit": "${quantity_unit}", "weight": "${weight}", "weight_unit": "${weight_unit}", "volume": "${volume}", "volume_unit": "${volume_unit}", "ship_to": "${ship_to}", "sold_to": "${sold_to}", "type": "${type}", "invoice_number": "${invoice_number}", "invoice_amount": "${invoice_amount}", "invoice_date": "${invoice_date}","category": "","truck_out": "${truck_out}","shipment_number":"ship$unique" }] }|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+
+**!
+
+!** EPOD Calculation 1
+!define no_of_shortage {10}
+!define no_of_leakage {0}
+!define mrp {${mrp_price}}
+!define no_of_excess {0}
+!define no_of_damage {0}
+!define no_of_carton_damage {0}
+!define release_date {$rdate1}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"cr$unique","sold_to":"cr$unique","material_invoice_number":"${invoice_number}","material_code":"${material_code}","no_of_shortage":"${no_of_shortage}","no_of_leakage":"${no_of_leakage}","mrp":"${mrp}","no_of_excess":"${no_of_excess}","no_of_damage":"${no_of_damage}","no_of_carton_damage":"${no_of_carton_damage}","release_date":"${release_date}","shipment_number":"ship$unique"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+
+**!
+**!
+
+!*** Indent Creation Date 2
+!*** Indent Creation 2
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|script     |common            |
+|$indent_id2=|getTrim;|$order_id|
+*!
+
+!*** Adding Truck details 2
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!** Update LR for Consignee 2
+!define consignee_id {$consignee_id_1}
+!define lr_number {l1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!** Create Material invoice 2
+!define mrp_price {10}
+!define quantity1 {100}
+!define quantity_unit {cases}
+!define weight {300}
+!define weight_unit {KG}
+!define volume {50}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {10}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+!define erp_depo_id_api {${depot_reference_id}}
+!define erp_gate_id_api {${gate_ref_id}}
+!define ship_to {${consignee_ref_id}}
+!define sold_to {${consignee_ref_id}}
+!define invoice_number {INV2-$unique}
+!define delivery_number {D2$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{ "data": [ { "indent_no": "$order_id", "delivery_number": "${delivery_number}", "mrp_price": "${mrp_price}", "material_code": "${material_code}", "depot_ref_id": "${erp_depo_id_api}", "gate_ref_id": "${erp_gate_id_api}", "division": "BK", "quantity": "${quantity1}", "quantity_unit": "${quantity_unit}", "weight": "${weight}", "weight_unit": "${weight_unit}", "volume": "${volume}", "volume_unit": "${volume_unit}", "ship_to": "${ship_to}", "sold_to": "${sold_to}", "type": "${type}", "invoice_number": "${invoice_number}", "invoice_amount": "${invoice_amount}", "invoice_date": "${invoice_date}","category": "","truck_out": "${truck_out}","shipment_number":"ship$unique" }] }|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+
+**!
+
+!** EPOD Calculation 2
+!define no_of_shortage {0}
+!define no_of_leakage {0}
+!define mrp {${mrp_price}}
+!define no_of_excess {0}
+!define no_of_damage {20}
+!define no_of_carton_damage {0}
+!define release_date {$rdate2}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"cr$unique","sold_to":"cr$unique","material_invoice_number":"${invoice_number}","material_code":"${material_code}","no_of_shortage":"${no_of_shortage}","no_of_leakage":"${no_of_leakage}","mrp":"${mrp}","no_of_excess":"${no_of_excess}","no_of_damage":"${no_of_damage}","no_of_carton_damage":"${no_of_carton_damage}","release_date":"${release_date}","shipment_number":"ship$unique"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+
+**!
+**!
+
+!*** Indent Creation Date 3
+!*** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|script     |common            |
+|$indent_id3=|getTrim;|$order_id|
+*!
+
+!*** Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!** Update LR for Consignee 3
+!define consignee_id {$consignee_id_1}
+!define lr_number {l1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!** Create Material invoice 3
+!define mrp_price {10}
+!define quantity1 {100}
+!define quantity_unit {cases}
+!define weight {300}
+!define weight_unit {KG}
+!define volume {50}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {10}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+!define erp_depo_id_api {${depot_reference_id}}
+!define erp_gate_id_api {${gate_ref_id}}
+!define ship_to {${consignee_ref_id}}
+!define sold_to {${consignee_ref_id}}
+!define invoice_number {INV3-$unique}
+!define delivery_number {D3$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{ "data": [ { "indent_no": "$order_id", "delivery_number": "${delivery_number}", "mrp_price": "${mrp_price}", "material_code": "${material_code}", "depot_ref_id": "${erp_depo_id_api}", "gate_ref_id": "${erp_gate_id_api}", "division": "BK", "quantity": "${quantity1}", "quantity_unit": "${quantity_unit}", "weight": "${weight}", "weight_unit": "${weight_unit}", "volume": "${volume}", "volume_unit": "${volume_unit}", "ship_to": "${ship_to}", "sold_to": "${sold_to}", "type": "${type}", "invoice_number": "${invoice_number}", "invoice_amount": "${invoice_amount}", "invoice_date": "${invoice_date}","category": "","truck_out": "${truck_out}","shipment_number":"ship$unique" }] }|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+
+**!
+
+!** EPOD Calculation 3
+!define no_of_shortage {0}
+!define no_of_leakage {0}
+!define mrp {${mrp_price}}
+!define no_of_excess {0}
+!define no_of_damage {0}
+!define no_of_carton_damage {5}
+!define release_date {$rdate3}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"cr$unique","sold_to":"cr$unique","material_invoice_number":"${invoice_number}","material_code":"${material_code}","no_of_shortage":"${no_of_shortage}","no_of_leakage":"${no_of_leakage}","mrp":"${mrp}","no_of_excess":"${no_of_excess}","no_of_damage":"${no_of_damage}","no_of_carton_damage":"${no_of_carton_damage}","release_date":"${release_date}","shipment_number":"ship$unique"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+
+**!
+**!
+
+!** Re-Logging into shipper application
+!include -c .FrontPage.Pando.Common.ShipperLogout
+!include -c .FrontPage.Pando.Common.Login
+*!
+
+!** Validating Wallet entries in Shipper 
+!define status_name_wallet {Select All}
+!define reason_wallet_1 {Shortage}
+!define reason_wallet_2 {Damage}
+!define reason_wallet_3 {Carton Damage}
+!define multiple_reasons {!-//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_1}!-']|//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_2}!-']|//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_3}!-']-!}
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletFilterShipper
+
+!|Script                     |Ui                                                                                                                                                                                                              |
+|waitForElementToBeDisplayed;|//div[contains(@class,'list-row') or contains(@class,'card-row')]|xpath                                                                                                                                   |15   |
+|$count1=                    |getCountOfElements;                                              |//*[contains(text(),'$indent_id1')]//parent::span//parent::div//following-sibling::div//span/span[contains(text(),'${reason_wallet_1}')]|xpath|
+|$count2=                    |getCountOfElements;                                              |//*[contains(text(),'$indent_id2')]//parent::span//parent::div//following-sibling::div//span/span[contains(text(),'${reason_wallet_2}')]|xpath|
+|$count3=                    |getCountOfElements;                                              |//*[contains(text(),'$indent_id3')]//parent::span//parent::div//following-sibling::div//span/span[contains(text(),'${reason_wallet_3}')]|xpath|
+
+!|Script    |common                                                     |
+|check      |checkIfStringAreEqual;       |$count1     |1     |true     |
+|check      |checkIfStringAreEqual;       |$count2     |1     |true     |
+|check      |checkIfStringAreEqual;       |$count3     |1     |true     |
+|$tresult1= |checkIfStringAreEqual;       |$count1     |1               |
+|$tresult2= |checkIfStringAreEqual;       |$count2     |1               |
+|$tresult3= |checkIfStringAreEqual;       |$count3     |1               |
+|$tresultr1=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3|
+**!
+
+!** Transporter login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+**!
+
+!** Validating Wallet entries in Transporter
+!define status_name_wallet {Select All}
+!define reason_wallet_1 {Shortage}
+!define reason_wallet_2 {Damage}
+!define reason_wallet_3 {Carton Damage}
+!define multiple_reasons {!-//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_1}!-']|//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_2}!-']|//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_3}!-']-!}
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletFilterTransporter
+
+!|Script |Ui                                                                                                                                                                |
+|$count4=|getCountOfElements;|//*[contains(text(),'$indent_id1')]//parent::span//parent::div//following-sibling::div//span/span[contains(text(),'${reason_wallet_1}')]|xpath|
+|$count5=|getCountOfElements;|//*[contains(text(),'$indent_id2')]//parent::span//parent::div//following-sibling::div//span/span[contains(text(),'${reason_wallet_2}')]|xpath|
+|$count6=|getCountOfElements;|//*[contains(text(),'$indent_id3')]//parent::span//parent::div//following-sibling::div//span/span[contains(text(),'${reason_wallet_3}')]|xpath|
+
+!|Script    |common                                                     |
+|check      |checkIfStringAreEqual;       |$count4     |1     |true     |
+|check      |checkIfStringAreEqual;       |$count5     |1     |true     |
+|check      |checkIfStringAreEqual;       |$count6     |1     |true     |
+|$tresult4= |checkIfStringAreEqual;       |$count4     |1               |
+|$tresult5= |checkIfStringAreEqual;       |$count5     |1               |
+|$tresult6= |checkIfStringAreEqual;       |$count6     |1               |
+|$tresultr2=|checkIfStringAreEqualInArray;|$tresult4,$tresult5,$tresult6|
+
+!|Script  |common                                           |
+|check    |checkIfStringAreEqual;|$tresultr1|$tresultr2|true|
+|$tresult=|checkIfStringAreEqual;|$tresultr1|$tresultr2     |
+**!
+
+!** Logout Transporter
+!include -c .FrontPage.Pando.Common.TransporterLogout
+**!

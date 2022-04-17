@@ -1,0 +1,8 @@
+---
+Test
+---
+!define surl {https://optima-auto.pandostaging.in}
+!define username {pandooptima@gmail.com}
+!define password {test@1234}
+!define shipper_client_id {5c74efc294f454119c02cb9c}
+

@@ -1,0 +1,13 @@
+---
+Help: Contains script to get information of the gate
+Test
+---
+!|Script    |Http                                |
+|addHeader; |Authorization |bearer $stoken       |
+|setBaseUrl;|${surl}/api/depot/${depot_id}/gate  |
+|$data=     |getResponse;  |Application/Json|get||
+|check      |getStatusCode;|200                  |
+
+|Script|Common                       |
+|$len= |getStringLength;|$data       |
+|$data=|getSubString;   |$data|8|$len|

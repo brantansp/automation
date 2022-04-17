@@ -1,0 +1,9 @@
+---
+Help: Use to Filter the search
+---
+!|Script|Ui                                                             |
+|click; |//button[@class='el-button el-button--default']          |xpath|
+|click; |//label[text()='Status']/../following-sibling::div//input|xpath|
+|click; |//span[text()='${filter}']                               |xpath|
+|wait;                       |2                                                                       |
+|click; |//button[text()='APPLY']                                 |xpath|

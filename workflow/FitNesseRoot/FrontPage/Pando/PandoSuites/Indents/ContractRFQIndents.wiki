@@ -1,0 +1,6 @@
+---
+Help: Contains test case for the contract rfq indents
+Suite
+---
+!1 Test suite Contract RFQ indents
+!contents -R2 -g -p -f -h

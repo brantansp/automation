@@ -1,0 +1,7 @@
+---
+Test
+---
+!| Script   |Http                               |
+|addHeader; |Authorization|bearer $token        |
+|setBaseUrl;|${turl}/api/order/$order_id/lr     |
+|$response= |getResponse; |Application/Json|get||

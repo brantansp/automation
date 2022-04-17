@@ -1,0 +1,21 @@
+---
+Files: no
+RecentChanges: no
+Refactor: no
+Search: no
+Static
+Versions: no
+WhereUsed: no
+---
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+!|Script  |Excel                       |
+|newSheet;|${row}|${column}|$excelpath|
+
+!|script                   |ui                                                              |
+|navigateToUrl;            |${surl}/mdm/loading                                             |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|wait;                     |5                                                               |

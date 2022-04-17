@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://signify-auto.pandostaging.in}
+!define username {pandosignify@outlook.com}
+!define password {test@1234}
+!define shipper_client_id {5e60d3c8cd4177019c4c9571}

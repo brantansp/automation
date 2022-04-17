@@ -1,0 +1,100 @@
+---
+Help: Edit Consignee
+Suites: dm1
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Egmore}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Consignee Edit
+!define consignee_name {ce$unique}
+!define consignee_ref_id {cre$unique}
+!define address {Kovure}
+!define city {Bhopal}
+!define state {Orissa}
+!define pincode {420011}
+!define manager_name {Manager edit Automation}
+!define manager_mobile {0187654321}
+!define manager_email {pandoconsignee+1$unique@gmail.com}
+!define region {North}
+!define site {Shipper Site}
+
+
+
+!|Script                     |Ui                                                                           |
+|navigateToUrl;              |${surl}/mdm/consignees                                                       |
+|click;                      |//span[contains(text(),'c$unique')]                |xpath                    |
+|wait;                       |2                                                                            |
+|clearValueJS;               |//input[@placeholder='Enter Consignee Name']       |xpath                    |
+|sendKeys;                   |//input[@placeholder='Enter Consignee Name']       |xpath|${consignee_name}  |
+|click;                      |//input[@placeholder='Enter Reference Id']         |xpath                    |
+|clearValueJS;               |//input[@placeholder='Enter Reference Id']         |xpath                    |
+|sendKeys;                   |//input[@placeholder='Enter Reference Id']         |xpath|${consignee_ref_id}|
+|click;                      |//input[@placeholder='Enter Address']              |xpath                    |
+|clearValueJS;               |//input[@placeholder='Enter Address']              |xpath                    |
+|sendKeys;                   |//input[@placeholder='Enter Address']              |xpath|${address}         |
+|click;                      |//input[@placeholder='Enter City']                 |xpath                    |
+|clearValueJS;               |//input[@placeholder='Enter City']                 |xpath                    |
+|sendKeys;                   |//input[@placeholder='Enter City']                 |xpath|${city}            |
+|click;                      |//input[@placeholder='Enter State']                |xpath                    |
+|clearValueJS;               |//input[@placeholder='Enter State']                |xpath                    |
+|sendKeys;                   |//input[@placeholder='Enter State']                |xpath|${state}           |
+|click;                      |//input[@placeholder='Enter Postal code']          |xpath                    |
+|clearValueJS;               |//input[@placeholder='Enter Postal code']          |xpath                    |
+|sendKeys;                   |//input[@placeholder='Enter Postal code']          |xpath|${pincode}         |
+|click;                      |//input[@placeholder='Enter Representative Name']  |xpath                    |
+|clearValueJS;               |//input[@placeholder='Enter Representative Name']  |xpath                    |
+|sendKeys;                   |//input[@placeholder='Enter Representative Name']  |xpath|${manager_name}    |
+|click;                      |//input[@placeholder='Enter Representative Mobile']|xpath                    |
+|clearValueJS;               |//input[@placeholder='Enter Representative Mobile']|xpath                    |
+|sendKeys;                   |//input[@placeholder='Enter Representative Mobile']|xpath|${manager_mobile}  |
+|click;                      |//input[@placeholder='Enter Representative Email'] |xpath                    |
+|clearValueJS;               |//input[@placeholder='Enter Representative Email'] |xpath                    |
+|sendKeys;                   |//input[@placeholder='Enter Representative Email'] |xpath|${manager_email}   |
+|click;                      |//input[@placeholder='Enter Region']               |xpath                    |
+|clearValueJS;               |//input[@placeholder='Enter Region']               |xpath                    |
+|sendKeys;                   |//input[@placeholder='Enter Region']               |xpath|${region}          |
+|click;                      |//span[contains(text(),'Save')]                    |xpath                    |
+|waitForElementToBeDisplayed;|//h3[text()='Success']                             |xpath|10                 |
+
+**!
+
+!|Script       |Ui                                                                       |
+|navigateToUrl;|${surl}/mdm/consignees                                                   |
+|check         |isElementPresent;|//span[contains(text(),'${consignee_name}')]|xpath|true|
+|$tresult1=    |isElementPresent;|//span[contains(text(),'${consignee_name}')]|xpath     |
+|check         |isElementPresent;|//span[contains(text(),'${address}')]       |xpath|true|
+|$tresult2=    |isElementPresent;|//span[contains(text(),'${address}')]       |xpath     |
+|check         |isElementPresent;|//span[contains(text(),'${city}')]          |xpath|true|
+|$tresult3=    |isElementPresent;|//span[contains(text(),'${city}')]          |xpath     |
+|check         |isElementPresent;|//span[contains(text(),'${state}')]         |xpath|true|
+|$tresult4=    |isElementPresent;|//span[contains(text(),'${state}')]         |xpath     |
+|check         |isElementPresent;|//span[contains(text(),'${pincode}')]       |xpath|true|
+|$tresult5=    |isElementPresent;|//span[contains(text(),'${pincode}')]       |xpath     |
+|check         |isElementPresent;|//span[contains(text(),'${region}')]        |xpath|true|
+|$tresult6=    |isElementPresent;|//span[contains(text(),'${region}')]        |xpath     |
+
+!|Script  |Common                                                                                   |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6|
+
+
+ 

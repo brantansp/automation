@@ -1,0 +1,19 @@
+---
+Help: Contains steps to Click on Generate Invoice in Transporter Payments
+Test
+---
+!** Click on the Generate Invoice button in Transporter Payments module
+!| Script    |Http                                                                                                                                                                                                                                                     |
+|setBaseUrl; |${turl}/api/login                                                                                                                                                                                                                                        |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}                                                                                                                                                            |
+|$token=     |getHeader;      |x-auth-token                                                                                                                                                                                                                            |
+|addHeader;  |Authorization   |bearer $token                                                                                                                                                                                                                           |
+|setBaseUrl; |${turl}/api/invoice                                                                                                                                                                                                                                      |
+|$response=  |getResponse;    |Application/Json|post|{"data":{"service_recipient":1,"source_state":"${source_state}","gst_number":"${gstn_number}","gstin_ref_id":"","igst_tax":10,"invoice_number":"${invoice_number}","payment_ids":["$payment_id"],"wallet_ids":[]}}|
+|$status=    |getStatusCode;                                                                                                                                                                                                                                           |
+*!
+
+!** Retrieving Invoice id
+!|Script     |json                                |
+|$invoice_id=|getValueFromJSON;|$response|data._id|
+*!

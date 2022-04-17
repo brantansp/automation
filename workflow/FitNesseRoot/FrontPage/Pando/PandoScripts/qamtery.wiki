@@ -1,0 +1,9 @@
+---
+Test
+---
+!|Script              |Ui                                                                                                                  |
+|$testCaseDescription=|getTestCaseDescription;|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME}                                                   |
+|startTestCase;       |${RUNNING_PAGE_NAME}   |${extent_tag}|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME} : $testCaseDescription|${log_to_elk}|
+
+!|Script|qmetry                                                                                                                                                          |
+|$data= |updateTestcase;|${test_cycle}|${RUNNING_PAGE_NAME}|$tresult|Debug referenace => $unique|${surl}|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME} : $testCaseDescription|

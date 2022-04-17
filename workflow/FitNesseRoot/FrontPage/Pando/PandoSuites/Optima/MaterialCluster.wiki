@@ -1,0 +1,6 @@
+---
+Help: Contains material cluster test cases
+Suite
+---
+!1 Test suite Material cluster
+!contents -R2 -g -p -f -h

@@ -1,0 +1,6 @@
+---
+Help: Search module for Depo
+Suite
+---
+!1 Test suite for Depo Search
+!contents -R2 -g -p -f -h

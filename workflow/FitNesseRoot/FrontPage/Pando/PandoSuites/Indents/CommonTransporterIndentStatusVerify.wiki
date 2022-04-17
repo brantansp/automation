@@ -1,0 +1,10 @@
+---
+Help: common page to verify the status of the indent
+---
+!|Script       |Ui                                                                                                                                                      |
+|refresh;                                                                                                                                                               |
+|Wait;         |4                                                                                                                                                       |
+|check         |isElementPresent;|//span[text()='${search_text}']                                                                                            |xpath|true|
+|$indentassert=|isElementPresent;|//span[text()='${search_text}']                                                                                            |xpath     |
+|check         |isElementPresent;|//span[contains(text(),'${search_text}')]/ancestor::div[contains(@class,'row')]/child::div/span[contains(@class, 'status')]|xpath|true|
+|$status=      |getText;         |//span[contains(text(),'${search_text}')]/ancestor::div[contains(@class,'row')]/child::div/span[contains(@class, 'status')]|xpath     |

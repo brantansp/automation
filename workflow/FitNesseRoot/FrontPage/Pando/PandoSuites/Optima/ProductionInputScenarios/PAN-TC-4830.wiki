@@ -1,0 +1,38 @@
+---
+Help: SCN24_Material output quantity should be equivalent to material input quantity
+Test
+---
+!5 SCN24_Material output quantity should be equivalent to material input quantity
+
+-!|Comment|
+|Test case description|
+!5 For the below input
+-!|Comment|
+|Input                 |
+|Material quantity|4352|
+!5 Output should contain the same quantity of materials
+
+-!|Comment|
+|External links|
+https://gopando.atlassian.net/browse/PAN-974
+https://github.com/pandocorp/optima-v2/pull/21
+https://tm.gopando.co/linkto.php?tprojectPrefix=PD&item=testcase&id=PD-3181
+
+-!|Comment|
+|Test Script|
+!** Reading the Output file
+!|Script   |Common                                                                         |
+|$jsonpath=|getPath;|download/scn24_PAN-974_MaterialQuantityValidation_output.json|fullpath|
+*!
+
+!** Querying the json
+!|script       |QueryOptimaOutput                                        |
+|getParsedJson;|$jsonpath                                                |
+|$total_cost=  |getTotalMaterialQuantityForTheConsignee|cr120200709114420|
+*!
+
+!** Validating the Test result
+!|script  |common                                      |
+|$tresult=|checkIfStringAreEqual;|4352|$total_cost     |
+|check    |checkIfStringAreEqual;|4352|$total_cost|true|
+*!

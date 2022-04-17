@@ -1,0 +1,10 @@
+---
+Help: Contains script to send delivery pick list
+Test
+---
+!| Script   |Http                                      |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/erp/delivery_picklist/        |
+|$content=  |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|204                        |
+|wait;      |5                                         |

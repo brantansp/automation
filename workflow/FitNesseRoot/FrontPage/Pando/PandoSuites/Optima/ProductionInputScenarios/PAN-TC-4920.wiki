@@ -1,0 +1,29 @@
+---
+Help: SCN12_Ensure FDP is working for Marico
+Test
+---
+!|script       |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!|script       |CsvQuery                                                                                     |
+|getConnection;|$fileLocation|,                                                                              |
+|$tresult=     |executeQuery;|SELECT Rate FROM summary WHERE File LIKE 'scn12_%' AND Consignee = 'd673:'|Rate|
+
+!|script   |common                                     |
+|check     |checkIfStringAreEqual;|$tresult|9771.0|true|
+|$tresult1=|checkIfStringAreEqual;|$tresult|9771.0     |
+
+!|script  |CsvQuery                                                                                     |
+|$tresult=|executeQuery;|SELECT Rate FROM summary WHERE File LIKE 'scn12_%' AND Consignee = 'r394:'|Rate|
+
+!|script       |CsvQuery                                                                                                                                                                                           |
+|getConnection;|$fileLocation|,                                                                                                                                                                                    |
+|$tresult=     |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE File LIKE 'scn12_%' AND Consignee = 'd571:' AND (Rate LIKE '0%' OR "Truck Type" LIKE '2047.0 CFT - 14000.0 K%')|noOfOccurrences|
+|closeConnection;                                                                                                                                                                                                  |
+
+!|script   |common                                           |
+|check     |checkIfStringAreEqual;       |$tresult |1 |true|
+|$tresult2=|checkIfStringAreEqual;       |$tresult |1      |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2|
+
+ 

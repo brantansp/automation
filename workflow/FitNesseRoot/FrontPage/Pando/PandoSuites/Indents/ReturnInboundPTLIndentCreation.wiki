@@ -1,0 +1,26 @@
+---
+Help: Return inbound PTL indent creation
+---
+!|Script                     |Ui                                                                                                                                                                        |
+|navigateToUrl;              |${surl}/indents                                                                                                                                                           |
+|click;                      |//div[@id='filter']//input[@placeholder='Select']                                               |xpath                                                                    |
+|click;                      |//li/span[text()='Inbound']                                                                     |xpath                                                                    |
+|click;                      |//button[normalize-space(text())='Add Inbound']                                                 |xpath                                                                    |
+|click;                      |//a[text()='Returns']                                                                           |xpath                                                                    |
+|click;                      |//li[normalize-space(text())='Source Consignee']                                                |xpath                                                                    |
+|sendKeys;                   |//input[@placeholder='Search by Consignee details']                                             |xpath                                               |${source_depot_name}|
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='${source_depot_name}']                                          |xpath                                               |5                   |
+|click;                      |//span[normalize-space(text())='${source_depot_name}']/ancestor::td/preceding-sibling::td//label|xpath                                                                    |
+|wait;                       |2                                                                                                                                                                         |
+|click;                      |//button[normalize-space(text())='Submit']                                                      |xpath                                                                    |
+|click;                      |//input[@placeholder='Enter name here']                                                         |xpath                                                                    |
+|sendKeys;                   |//input[@placeholder='Enter name here']                                                         |xpath                                               |${destination_depot}|
+|click;                      |//li/span[text()='${destination_depot}']                                                        |xpath                                                                    |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='Switch to PTL']/ancestor::button                                |xpath                                               |5                   |
+|click;                      |//span[normalize-space(text())='Switch to PTL']/ancestor::button                                |xpath                                                                    |
+|click;                      |//input[@placeholder='Select Transporter']                                                      |xpath                                                                    |
+|sendKeys;                   |//input[@placeholder='Select Transporter']                                                      |xpath                                               |${transporter_name} |
+|click;                      |//li/span[starts-with(text(),'${transporter_name}')]                                            |xpath                                                                    |
+|click;                      |//button[normalize-space(text())='Indent']                                                      |xpath                                                                    |
+|waitForElementToBeDisplayed;|//div[contains(@class,'el-notification success')]                                               |xpath                                               |5                   |
+|$order_id=                  |getText;                                                                                        |//div[contains(@class,'el-notification success')]//b|xpath               |

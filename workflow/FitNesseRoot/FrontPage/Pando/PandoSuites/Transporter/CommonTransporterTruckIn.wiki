@@ -1,0 +1,17 @@
+!|script                     |ui                                                                                                                                                                               |
+|navigateToUrl               |${turl}/indents                                                                                                                                                                  |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row')]//span[text()='${vehicle_name}']                    |xpath                                                                     |20        |
+|check                       |isElementNotPresent;                                                                       |//span[contains(@class,'action-disabled') and contains(text(),'Truck in')]|xpath|true|
+|click;                      |//span[@class='link-action' and contains(text(),'Truck in')]                               |xpath                                                                                |
+|waitForElementToBeDisplayed;|//section[@class='el-drawer__body']                                                        |xpath                                                                     |10        |
+|click;                      |//span[contains(text(),'Gate 1')]/preceding-sibling::span                                  |xpath                                                                                |
+|click;                      |//label[text()='Date and Time']/..//div//input                                             |xpath                                                                                |
+|click;                      |//input[@placeholder='Select date']                                                        |xpath                                                                                |
+|clearAndSend;               |//input[@placeholder='Select date']                                                        |xpath                                                                     |${in_date}|
+|click;                      |//input[@placeholder='Select time']                                                        |xpath                                                                                |
+|clearAndSend;               |//input[@placeholder='Select time']                                                        |xpath                                                                     |${in_time}|
+|click;                      |//div[@class='el-picker-panel__footer']                                                    |xpath                                                                                |
+|click;                      |//div[@class='el-picker-panel__footer']/button/span[contains(text(),'OK')]                 |xpath                                                                                |
+|click;                      |//span[text()='Submit']/../self::button                                                    |xpath                                                                                |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span[text()='Truck arrived for indent $order_id']|xpath                                                                     |20        |
+|wait;                       |5                                                                                                                                                                                |

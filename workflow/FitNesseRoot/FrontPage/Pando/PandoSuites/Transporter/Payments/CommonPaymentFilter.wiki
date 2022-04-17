@@ -1,0 +1,7 @@
+!|script  |ui                                                            |
+|click;   |//button[@class='el-button el-button--default']|xpath         |
+|click;   |(//input[@placeholder='Select'])[3]            |xpath         |
+|sendKeys;|(//input[@placeholder='Select'])[3]            |xpath|${depot}|
+|click;   |//span[text()='${depot}']/../self::li          |xpath         |
+|wait;    |2                                                             |
+|click;   |//button[text()='APPLY']                       |xpath         |

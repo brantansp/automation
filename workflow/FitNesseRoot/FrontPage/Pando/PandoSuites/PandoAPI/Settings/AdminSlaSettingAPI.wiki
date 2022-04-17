@@ -1,0 +1,17 @@
+---
+Help: Use to set the SLA cutoffs
+Test
+---
+#{"data":{"depot_ids":["${depot_id}"],"movement":${vehicle_movement},"sla_configurations":[{"sla_type":2,"hours":${indent_cutoff_hour},"mins":${indent_cutoff_min}},{"sla_type":1,"hours":${arrival_cutoff_hour},"mins":${arrival_cutoff_min}}]}}
+
+#{"sla_type":1,"hours":17,"mins":30}, arrival
+#{"sla_type":2,"hours":14,"mins":0}, indentcutoff
+#{"sla_type":3,"days":5,"hours":22,"mins":0}, autocancellation
+#{"sla_type":4,"hours":0,"mins":0}, accep
+#{"sla_type":5,"startHours":1,"startMins":0,"endHours":5,"endMins":0}]}} working 
+
+!| Script   |Http                                     |
+|addHeader; |Authorization |bearer $stoken            |
+|setBaseUrl;|${surl}/api/settings/depot/sla           |
+|$response= |getResponse;  |Application/Json|put|$data|
+|check      |getStatusCode;|201                       |

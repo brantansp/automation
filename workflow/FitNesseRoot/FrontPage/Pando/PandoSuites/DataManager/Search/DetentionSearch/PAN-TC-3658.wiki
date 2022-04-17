@@ -1,0 +1,47 @@
+---
+Help: Detention Search
+Test
+---
+!*** Vehicle Creation
+
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!define row {Vehicle Name,Group Code,Movement,LOADING_DETENTION_DAY1,LOADING_DETENTION_DAY2,LOADING_DETENTION_DAY3,LOADING_DETENTION_DAY4,LOADING_DETENTION_DAY5,LOADING_DETENTION_MORETHAN_DAY5,UnLOADING_DETENTION_DAY1,UnLOADING_DETENTION_DAY2,UnLOADING_DETENTION_DAY3,UnLOADING_DETENTION_DAY4,UnLOADING_DETENTION_DAY5,UnLOADING_DETENTION_MORETHAN_DAY5,TRANSIT_DAY1,TRANSIT_DAY2,TRANSIT_DAY3,TRANSIT_DAY4,TRANSIT_DAY5,TRANSIT_MORETHAN_DAY5,TRANSIT_DELAY_PERCENTAGE}
+!define column {v$unique,D,Secondary,904,200,300,300,500,600,904,200,300,300,500,600,100,200,300,400,500,600,10}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/d_$unique.xlsx|fullpath|
+|$vname=|getSubString;|${vehicle_name}|0|10|
+
+!|Script|Excel|
+|newSheet;|${row}|${column}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/detentions                                         |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+
+!** Search by Truck name
+!define search_value {$vehicle_name}
+!define search_count {1} 
+
+!|Script|Ui|
+|navigateToUrl;|${surl}/mdm/detentions|
+|waitForElementToBeDisplayed; | //div[contains(@class,'card-row card-row-show')] | xpath | 30 |
+|sendHumanKeys;|//input[@placeholder='Search by Truck type']|xpath|${search_value}|
+|wait;|3|
+|check|getCountOfElements;|//div[@class='card-row card-row-show dowble-row']|xpath|${search_count}|
+|check|isElementPresent;|//span[contains(text(),'$vname')]|xpath|true|
+|$tresult=|isElementPresent;|//span[contains(text(),'$vname')]|xpath|
+
+**!
+
+ 
+
+

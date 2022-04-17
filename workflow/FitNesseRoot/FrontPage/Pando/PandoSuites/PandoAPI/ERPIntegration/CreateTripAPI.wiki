@@ -1,0 +1,10 @@
+---
+Help: Contains test script for creating a Trip
+Test
+---
+!|Script    |Http                                      |
+|wait;      |5                                         |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/erp/trip/v1                   |
+|$trip=     |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|200                        |

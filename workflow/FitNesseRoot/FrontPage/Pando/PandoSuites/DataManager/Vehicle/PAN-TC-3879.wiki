@@ -1,0 +1,91 @@
+---
+Help: Verify export button in vehicles
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!**> Vehicle Creation 
+!define vehicle_name {v$unique}
+!define cft {600}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Click export in vehicles
+!|Script                     |Ui                                                                                                           |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                         |
+|click;                      |//button[text()='Export']                     |xpath                                                         |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span|xpath                                         |30             |
+|$successMessage=            |getElementAttribute;                          |//h3[text()='Success']/following-sibling::span|xpath|innerText|
+
+!|Script   |common                                                                                                     |
+|check     |checkIfStringAreEqual;|$successMessage|You will receive the requested data via email in a few minutes!|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage|You will receive the requested data via email in a few minutes!     |
+**!
+
+!** Checking email and downloading the file sent to email
+!|Script                     |Ui                                                                 |
+|wait;                       |90                                                                 |
+|navigateToUrl;              |${mail_url}/email?page=0&size=60                                   |
+|waitForElementToBeDisplayed;|//table[@class='striped responsive-table']        |xpath|30        |
+|click;                      |//td[text()='${username}']/following-sibling::td/a|xpath           |
+|waitForElementToBeDisplayed;|//span[@class='card-title']/i[text()='email']     |xpath|10        |
+|$link_url=                  |getElementAttribute;                              |//p/a|xpath|href|
+**!
+
+!** Validating Excel sheet Report
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+
+!|Script       |Ui       |
+|navigateToUrl;|$link_url|
+|wait;         |20       |
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|script|ExcelQuery                                                                        |
+|$count=|getCountQuery;|$filename|select * from "Vehicles" where "Vehicle Name*" = '${vehicle_name}'|
+
+!|Script   |common                              |
+|check     |checkIfStringAreEqual;|$count|1|true|
+|$tresult2=|checkIfStringAreEqual;|$count|1     |
+**!
+
+!** Searching the created vehicle and Click export in vehicles for single record
+!|Script       |Ui                                                                                                       |
+|navigateToUrl;|${surl}/mdm/vehicles                                                                                     |
+|sendKeys;     |//input[@placeholder='Search by Vehicle Name']|xpath                                     |${vehicle_name}|
+|check         |isElementPresent;                             |//span[contains(text(),'${vehicle_name}')]|xpath   |true  |
+|$tresult3=    |isElementPresent;                             |//span[contains(text(),'${vehicle_name}')]|xpath          |
+
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+
+!|Script|Ui                             |
+|wait;  |5                              |
+|click; |//button[text()='Export']|xpath|
+|wait;  |5                              |
+**!
+
+!** Verifying the data in export file
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|script|ExcelQuery                                                                        |
+|$count=|getCountQuery;|$filename|select * from "Vehicles" where "Vehicle Name*" = '${vehicle_name}'|
+
+!|Script   |common                              |
+|check     |checkIfStringAreEqual;|$count|1|true|
+|$tresult4=|checkIfStringAreEqual;|$count|1     |
+
+!|Script  |Common                                                                    |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+**!

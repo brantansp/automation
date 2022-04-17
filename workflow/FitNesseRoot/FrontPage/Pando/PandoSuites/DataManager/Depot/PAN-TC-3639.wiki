@@ -1,0 +1,95 @@
+---
+Help: Ensure provision to add GSTIN in Gate+Docks for the gate have special tax rebate.
+Test
+---
+!*** Unique value assignment
+!| script|common                                |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss  |
+|$num=   |getRandomNumber;        |100000|999999|
+*!
+
+!define depot_name {depo$num}
+!define depot_state {s$unique}
+!define depot_city {c$unique}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {$num}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!** Gate Manager Creation
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+
+!** Checking Special Tax Rebet not Visiable
+!|script|ui|
+|navigateToUrl;| ${surl}/mdm/depots/$depot|
+|click;|//div[@class='add-gate']|xpath|
+|sendKeys;| //input[@placeholder='Enter Gate Name']| xpath | Gate 2 $unique|
+|sendKeys;| //input[@name='address']| xpath | ad$unique |
+|sendKeys;| //input[@name='city']| xpath | c$unique |
+|sendKeys;| //input[@name='state']| xpath | s$unique |
+|sendKeys;| //input[@name='pincode']| xpath | 600083 |
+|sendKeys;| //input[@name='region']| xpath | South |
+|sendKeys;| //input[@name='reference_id']| xpath | r$unique |
+|sendKeys;| //input[@name='short_code']| xpath | sc$unique |
+|sendKeys;| //input[@name='category']| xpath | cat$unique |
+|click;| //label[text()='SPECIAL TAX REBATE']//following-sibling::div/label| xpath |
+|sendKeys;| //input[@name='gstin']| xpath | gst$unique |
+
+!* Adding Gate Manager
+!|Script|Ui|
+|click;|//a[contains(text(),'GATE MANAGER')]|xpath|
+|click;|//span[contains(text(),'$unique')]|xpath|
+|click;|//li[contains(text(),'Save')]|xpath|
+**!
+
+!** Editing Tax Rebet
+!|Script|Ui|
+|click;|//div[text()='r$unique']/following-sibling::div[@class='table-td gate-actions']/a|xpath|
+|check|isElementPresent;|//label[text()='SPECIAL TAX REBATE']//following-sibling::p[text()='Yes']| xpath|true|
+|$tresult1=|isElementPresent;|//label[text()='SPECIAL TAX REBATE']//following-sibling::p[text()='Yes']| xpath|
+|check|isElementPresent;|//label[text()='GST IN']//following-sibling::p/span/span[contains(text(),'gst$unique')]| xpath|true|
+|$tresult2=|isElementPresent;|//label[text()='GST IN']//following-sibling::p/span/span[contains(text(),'gst$unique')]| xpath|
+
+!|Script|Common|
+|check|checkIfStringExistsIn;| $tresult1| $tresult2 |true|
+|$tresult=|checkIfStringExistsIn;| $tresult1| $tresult2 |
+**!
+
+!*** updating the results
+ 
+*!

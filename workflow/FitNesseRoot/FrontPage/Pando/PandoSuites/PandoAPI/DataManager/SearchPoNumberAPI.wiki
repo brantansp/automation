@@ -1,0 +1,15 @@
+---
+Help: Contains script to search the PO Number
+Test
+---
+!|Script             |Http                                                              |
+|addHeader;          |Authorization         |bearer $stoken                             |
+|setBaseUrl;         |${surl}/api/purchase_order/search?page=1&query=${search_parameter}|
+|$po_number_response=|getResponse;          |Application/Json        |get       |       |
+|check               |getStatusCode;        |200                                        |
+
+!|Script                       |json                                                                                      |
+|$po_number_response=          |getArrayValueFromJSON; |$po_number_response|data                                          |
+|$po_number_id=                |getValueFromJSONByType;|$po_number_response|[0].id                       |java.lang.String|
+|$po_number=                   |getValueFromJSONByType;|$po_number_response|[0].po_number                |java.lang.String|
+|$po_account_assignment_number=|getValueFromJSONByType;|$po_number_response|[0].account_assignment_number|java.lang.String|

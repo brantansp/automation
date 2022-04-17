@@ -1,0 +1,138 @@
+---
+Help: Ensure data gets reseted once we click reset button
+Test
+---
+!** Unique values assignment
+!|Script       |DateUtil                               |
+|$unique=      |getCurrentDateTimeStamp;|yMMddHHmmss   |
+|$truckoutdate=|dateCalculation;        |yyyy/MM/dd|-1 |
+|$rdate=       |dateCalculation;        |yyyy/MM/dd|0  |
+|$truckoutdate=|utcConversion;          |$truckoutdate |
+|$rdate=       |utcConversion;          |$rdate        |
+|$indate=      |getCurrentDateTimeStamp;|yyyy/MM/dd    |
+|$fromdate=    |dateCalculation;        |yyyy/MM/dd|-5 |
+|$todate=      |dateCalculation;        |yyyy/MM/dd|365|
+**!
+
+!** Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Krishnan nager}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Rate Matrix creation
+!|Script|Common                                                                                                                                                                                                                                                                                                                            |
+|$data= |getTrim;|{"data":[{"contract_type":"City","source":"Nellore","destination":"city$unique","vehicle_type":"965 MRT","distance":"100","transporter_reference_number":"pandopay001","transporter_name":"Pando Payment","transit_days":"1","freight_rate":"1000","freight_unit":"trip","valid_from":"$fromdate","valid_to":"$todate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.RateMatrixDynamicAPI
+*!
+
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {5c750bf26e2ae92e2d5bc600}
+!define location_id {5c7519e829f3d92e2db4ae38}
+!define gate_id {5c752c1529f3d92e2db4ae39}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define unloader_available {false}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define expected_delivery_at {$expected_date}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+*!
+
+!** validating and Assinging The Truck
+!define vechicle_number {tn 09 AT 9013}
+!define driver_name  {pay driver}
+!define phone_number  {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!** Create Material invoice 
+!define mrp_price {1000}
+!define quantity1 {10} 
+!define quantity2 {10} 
+!define quantity3 {10} 
+!define quantity_unit {cases}
+!define weight {400}
+!define weight_unit {KG}
+!define volume {1000}
+!define volume_unit {CFT}
+!define type {PRIMARY}
+!define invoice_amount {20000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+!define erp_depo_id_api {NLR01}
+!define erp_gate_id_api {NG01} 
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialsInvoiceERPAPI
+**!
+
+!** EPOD Calculation
+!define no_of_shortage {0}
+!define no_of_shortage1 {0}
+!define no_of_shortage2 {0}
+!define no_of_shortage3 {0} 
+!define no_of_leakage {0}
+!define no_of_leakage1 {0}
+!define no_of_leakage2 {0}
+!define no_of_leakage3 {0} 
+!define mrp {${mrp_price}}
+!define no_of_excess {0}
+!define no_of_excess1 {0}
+!define no_of_excess2 {0}
+!define no_of_excess3 {0} 
+!define no_of_damage {0}
+!define no_of_carton_damage {0}
+!define no_of_carton_damage1 {0}
+!define no_of_carton_damage2 {0}
+!define no_of_carton_damage3 {0} 
+!define release_date {$rdate}
+!define release_date1 {$rdate}
+!define release_date2 {$rdate}
+!define release_date3 {$rdate}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodSingleIndentErpAPI
+**!
+
+!** Filter setting 
+!define client {Automation}
+!define depo {Nellore Depot} 
+!define invoice_type {All Indents}
+!define delivery_type {All delivery types}
+
+!|Script       |DateUtil                     |
+|$filter_start=|dateCalculation;|yyyy-MM-dd|0|
+|$filter_end=  |dateCalculation;|yyyy-MM-dd|1|
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.Filter.CommonFilterPage
+**!
+
+!** Validating Apply list page
+!|Script|Ui                                                                                                 |
+|check  |isElementPresent;|//div[contains(@class,'card-row')]//span[contains(text(),'$order_id')]|xpath|true|
+**!
+
+!** Reset all
+!|Script  |Ui                                                                                                                                                              |
+|click;   |//button[@class='el-button el-button--default']|xpath                                                                                                           |
+|click;   |//button[text()='RESET ALL']                   |xpath                                                                                                           |
+|check    |isElementNotPresent;                           |//div[contains(@class,'card-row') or contains(@class,'list-row')]//span[contains(text(),'$order_id')]|xpath|true|
+|$tresult=|isElementNotPresent;                           |//div[contains(@class,'card-row') or contains(@class,'list-row')]//span[contains(text(),'$order_id')]|xpath     |
+**!

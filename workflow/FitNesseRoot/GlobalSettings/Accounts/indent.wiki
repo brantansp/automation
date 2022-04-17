@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://indent-auto.pandostaging.in}
+!define username {pandoindent@gmail.com}
+!define password {test@1234}
+!define shipper_client_id {5dca5a7619412301719092cb}

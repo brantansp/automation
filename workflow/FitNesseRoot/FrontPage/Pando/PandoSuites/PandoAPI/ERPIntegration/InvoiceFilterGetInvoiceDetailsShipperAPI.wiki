@@ -1,0 +1,39 @@
+---
+Help: To get invoice details in pay using API
+Test
+---
+!**> status reference
+id: 1,
+        name: 'Generated',
+        id: 2,
+        name: 'Checked',
+        id: 4,
+        name: 'Returned',
+        id: 13,
+        name: 'Re Submitted',
+        id: 8,
+        name: 'On Hold',
+        id: 3,
+        name: 'Approved',
+        id: 7,
+        name: 'Verified',
+        id: 9,
+        name: 'Posted',
+        id: 10,
+        name: 'Payment Hold',
+**!
+
+!|Script    |Http                                                                                                                                                              |
+|wait;      |5                                                                                                                                                                 |
+|addHeader; |Authorization                                 |bearer $stoken                                                                                                     |
+|setBaseUrl;|${surl}/api/v2/shipper/invoice?depot_id=$depot_id&status=1,2,3,4,5,6,7,8&start_date=${invoice_start_date}&end_date=${invoice_end_date}&page_number=1&page_limit=25|
+|$data=     |getResponse;                                  |Application/Json                                |get                               |                               |
+|check      |getStatusCode;                                |200                                                                                                                |
+
+!|Script     |json                                                                         |
+|$array=     |getArrayValueFromJSON;               |$data |data                            |
+|$position=  |getKeyIndexFromJSONByKeyAndValueType;|$array|invoice_number|${invoice_number}|
+|$array=     |getJSONObjectFromJsonArray;          |$array|$position                       |
+|$status=    |getValueFromJSON;                    |$array|status                          |
+|$invoice_id=|getValueFromJSON;                    |$array|id                              |
+

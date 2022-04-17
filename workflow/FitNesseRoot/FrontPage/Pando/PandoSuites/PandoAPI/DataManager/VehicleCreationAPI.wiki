@@ -1,0 +1,13 @@
+---
+Help: Use to Create Vehicle
+Test
+---
+!|Script    |Http                                                                                                                                   |
+|addHeader; |Authorization |bearer $stoken                                                                                                          |
+|setBaseUrl;|${surl}/api/vehicle/                                                                                                                   |
+|$vehicle=  |getResponse;  |Application/Json|post|{"data":{"short_form":"${vehicle_name}","cft":${cft},"kg":${kg},"vehicle_type":"${vehicle_type}"}}|
+|check      |getStatusCode;|200                                                                                                                     |
+
+!|Script       |json                                      |
+|$vehicle_id=  |getValueFromJSON;|$vehicle|data.id        |
+|$vehicle_name=|getValueFromJSON;|$vehicle|data.short_form|

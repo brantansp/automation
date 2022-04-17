@@ -1,0 +1,776 @@
+---
+Help: Validate payments and invoice posting covering holiday transit delay for primary indents
+Suites: marico2
+Test
+---
+!5 Primary - Transit Delay | Today is !today | VRD on !today -14| Truck Out (3rd gate) !today -13 | EDD !today -12 | Consignee 1 Reported !today -3 => 9 days delay| Consignee 2 Reported !today -2 => 10days delay| Consignee 3 Reported !today -1 => 11days delay|
+
+!5 Leave on  !today -6, !today -5, !today -4 | So the Transit delay should be 6 days instead of 9 days
+
+!***> Unique values assignment
+!|Script      |Common                                     |
+|$unique=     |getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num=        |getRandomNumber;        |100    |999       |
+|$num1=       |getRandomNumber;        |20     |76        |
+|$num2=       |getRandomNumber;        |1000   |9999      |
+|$rand1=      |getRandomString;        |2      |ALPHAUPPER|
+|$year=       |getSubString;           |$unique|0    |4   |
+|$indate=     |getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1=      |getRandomNumber;        |20     |76        |
+|$vno_2=      |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3=      |getRandomNumber;        |1000   |9999      |
+|$invoicedate=|getCurrentDateTimeStamp;|yyyy-MM-dd        |
+
+!|Script            |DateUtil                                              |
+|$monthAndYear=     |dateCalculation;     |MMMM yyyy                   |0  |
+|$todayDate=        |dateCalculation;     |d                           |0  |
+|$ordinalDateSuffix=|getOrdinalDateSuffix;|$todayDate                      |
+|$loadingDate1=     |dateCalculation;     |yyyy-MM-dd'T'HH:mm:ss.SSSXXX|-14|
+
+!| Script          |DateUtil                       |
+|$truckindate_1=   |dateCalculation;|yyyy/MM/dd|-13|
+|$truckoutdate_1=  |dateCalculation;|yyyy/MM/dd|-13|
+|$truckindate_2=   |dateCalculation;|yyyy/MM/dd|-13|
+|$truckoutdate_2=  |dateCalculation;|yyyy/MM/dd|-13|
+|$truckindate_3=   |dateCalculation;|yyyy/MM/dd|-13|
+|$truckoutdate_3=  |dateCalculation;|yyyy/MM/dd|-13|
+|$arrivedDate_1=   |dateCalculation;|yyyy/MM/dd|-3 |
+|$arrivedDate_2=   |dateCalculation;|yyyy/MM/dd|-2 |
+|$arrivedDate_3=   |dateCalculation;|yyyy/MM/dd|-1 |
+|$dispatchedDate_1=|dateCalculation;|yyyy/MM/dd|-1 |
+
+!| Script          |Common                                              |
+|$truckindate_1=   |stringConcatenation;|$truckindate_1   |!- 14:30:00-!|
+|$truckoutdate_1=  |stringConcatenation;|$truckoutdate_1  |!- 14:00:00-!|
+|$truckindate_2=   |stringConcatenation;|$truckindate_2   |!- 14:30:00-!|
+|$truckoutdate_2=  |stringConcatenation;|$truckoutdate_2  |!- 14:00:00-!|
+|$truckindate_3=   |stringConcatenation;|$truckindate_3   |!- 14:30:00-!|
+|$truckoutdate_3=  |stringConcatenation;|$truckoutdate_3  |!- 22:30:00-!|
+|$arrivedDate_1=   |stringConcatenation;|$arrivedDate_1   |!- 14:30:00-!|
+|$arrivedDate_2=   |stringConcatenation;|$arrivedDate_2   |!- 14:30:00-!|
+|$arrivedDate_3=   |stringConcatenation;|$arrivedDate_3   |!- 14:30:00-!|
+|$dispatchedDate_1=|stringConcatenation;|$dispatchedDate_1|!- 22:30:00-!|
+|$dispatchedDate_2=|stringConcatenation;|$dispatchedDate_2|!- 22:30:00-!|
+|$dispatchedDate_3=|stringConcatenation;|$dispatchedDate_3|!- 22:30:00-!|
+
+!| Script             |DateUtil                                          |
+|$truckindate_1=      |utcConversion;  |$truckindate_1                   |
+|$truckoutdate_1=     |utcConversion;  |$truckoutdate_1                  |
+|$truckindate_2=      |utcConversion;  |$truckindate_2                   |
+|$truckoutdate_2=     |utcConversion;  |$truckoutdate_2                  |
+|$truckindate_3=      |utcConversion;  |$truckindate_3                   |
+|$truckoutdate_3=     |utcConversion;  |$truckoutdate_3                  |
+|$arrivedDate_1=      |utcConversion;  |$arrivedDate_1                   |
+|$arrivedDate_2=      |utcConversion;  |$arrivedDate_2                   |
+|$arrivedDate_3=      |utcConversion;  |$arrivedDate_3                   |
+|$dispatchedDate_1=   |utcConversion;  |$dispatchedDate_1                |
+|$invoice_filter_date=|dateCalculation;|yyyy-MM-dd                  |0   |
+|$weeklyHoliday1=     |dateCalculation;|dayOfWeek                   |d|-6|
+|$weeklyHoliday2=     |dateCalculation;|dayOfWeek                   |d|-5|
+|$yearlyHoliday1=     |dateCalculation;|yyyy-MM-dd'T'HH:mm:ss.SSSXXX|-4  |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+#!***> Destination Depot Creation
+#!define destination_depot_name_1 {Holiday Depot}
+#!define destination_depot_id_1 {62050c94cd733700441c250e}
+#!define destination_depot_refid_1 {HOLDEPOT}
+#!define destination_depot_gateid_1 {HOLGATE1}
+#!define destination_depot_gate_1 {62050cc2cd733700441c250f}
+#!define destination_depot_gateid_2 {HOLGATE2}
+#!define destination_depot_gate_2 {62050ce2cd733700441c2510}
+#!define destination_depot_gateid_3 {HOLGATE3}
+#!define destination_depot_gate_3 {62050dfbe109a90044c3cfed}
+
+#!|script                         |common                              |
+#|$destination_location_id_1=     |getTrim;|${destination_depot_id_1}  |
+#|$destination_gate_location_id_1=|getTrim;|${destination_depot_gate_1}|
+#|$destination_gate_location_id_2=|getTrim;|${destination_depot_gate_2}|
+#|$destination_gate_location_id_3=|getTrim;|${destination_depot_gate_3}|
+#*!
+
+!**> Destination Depot Creation
+!define depot_name {dest$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {KOCHI}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {DT$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define destination_depot_refid_1 {${depot_reference_id}}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!|script                    |common                        |
+|$destination_location_id_1=|getTrim;|$depot               |
+|$destination_depot_refid_1=|getTrim;|${depot_reference_id}|
+*!
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u2$unique}
+!define user_email {pandoindent+2$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation 1
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {DG1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|script                     |common                 |
+|$destination_depot_gateid_1=|getTrim;|${gate_ref_id}|
+
+!define destination_depot_gateid_1 {DG1$unique}
+
+!|Script                         |json                                |
+|$destination_gate_location_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Gate Creation 2
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {DG2$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|script                     |common                 |
+|$destination_depot_gateid_2=|getTrim;|${gate_ref_id}|
+
+!define destination_depot_gateid_2 {DG2$unique}
+
+!|Script                         |json                                |
+|$destination_gate_location_id_2=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Gate Creation 3
+!define depot_id {$depot}
+!define gate_name {Gate 3}
+!define gate_ref_id {DG3$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G3$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|script                     |common                 |
+|$destination_depot_gateid_3=|getTrim;|${gate_ref_id}|
+
+!define destination_depot_gateid_3 {DG3$unique}
+
+!|Script                         |json                                |
+|$destination_gate_location_id_3=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!***> Transporter with discount
+!define transporter_name {TRANSPORTER MARICO D}
+!define transporter_ref_id {TRANSMARICOD}
+!define discount {10}
+!define gst_percentage {5}
+!define manager_email {pandotransporter+m1@outlook.com}
+!define transporter_id {61cbf78f7270d2004935257d}
+
+!| Script        |Common                    |
+|$transporter_id=|getTrim;|${transporter_id}|
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation
+!define vehicle_name {VEHICLE 900 CFT}
+!define cft {900}
+!define kg {1000}
+!define vehicle_type {FTL}
+!define vehicle_id {61cbfaa97270d200493525b7}
+
+!| Script    |Common                |
+|$vehicle_id=|getTrim;|${vehicle_id}|
+*!
+
+!***> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$unique}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!***> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$unique}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+
+!|Script         |Common           |
+|$location_id=   |getTrim;|$depot  |
+|$source_gate_id=|getTrim;|$gate_id|
+*!
+
+!**> Material Creation 1
+!define material_name_1 {PARACHUTE OIL}
+!define material_code_1 {PARACHUTE}
+**!
+
+!**> Material Creation 2
+!define material_name_2 {SAFFOLA MASALA OATS}
+!define material_code_2 {SAFFOLAOATS}
+**!
+
+!**> Material Creation 3
+!define material_name_3 {Livon Hair serum}
+!define material_code_3 {LIVON}
+**!
+
+!** Upload Loading and Unloading charges
+!define src_depot_Ref_Id {R$unique}
+!define destination_depot_refid_1 {DT$unique}
+!define Loading_Cost1 {400}
+!define Unloading_Cost1 {520}
+!define ODA_Cost1 {100}
+!define Loading_Cost1 {400}
+!define Unloading_Cost1 {520}
+!define ODA_Cost1 {100}
+!define Loading_Cost2 {680}
+!define Unloading_Cost2 {740}
+!define ODA_Cost2 {100}
+!define unit {per_trip}
+
+!define row {Vehicle Type,Movement,Depot REF ID,Loading cost,Unloading cost,ODA cost,Unit}
+!define column {${vehicle_name},Primary,${src_depot_Ref_Id},${Loading_Cost1},${Unloading_Cost1},${ODA_Cost1},${unit}|${vehicle_name},Primary,${destination_depot_refid_1},${Loading_Cost2},${Unloading_Cost2},${ODA_Cost2},${unit}}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.LoadingAndUnloadingSearch.CommonLUDynamicUpload
+*!
+
+!**> Enable Admin setting
+!define movement {Primary}
+!define amount_type {INR}
+!define threshold_amount {0}
+!define type1 {Shortage}
+!define s_value {Fixed Price}
+!define s_factor {0.85}
+!define type2 {Damage}
+!define d_value {Fixed Price}
+!define d_factor {1}
+!define type3 {Carton Damage}
+!define cd_value {Fixed Price}
+!define cd_factor {30}
+
+!|script|common                                                                                                                                                                        |
+|$data= |getTrim;|{"insurance_threshold":${threshold_amount},"shortage":{"value":1,"factor":0.85},"damage":{"value":1,"factor":1},"carton_damage":{"value":1,"factor":30},"movement":2}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.AdminSettings.ShortageDamageSettingAPI
+**!
+
+!** Detention Upload
+!define row {Vehicle Name,Group Code,Movement,LOADING_DETENTION_DAY1,LOADING_DETENTION_DAY2,LOADING_DETENTION_DAY3,LOADING_DETENTION_DAY4,LOADING_DETENTION_DAY5,LOADING_DETENTION_MORETHAN_DAY5,UnLOADING_DETENTION_DAY1,UnLOADING_DETENTION_DAY2,UnLOADING_DETENTION_DAY3,UnLOADING_DETENTION_DAY4,UnLOADING_DETENTION_DAY5,UnLOADING_DETENTION_MORETHAN_DAY5,TRANSIT_DAY1,TRANSIT_DAY2,TRANSIT_DAY3,TRANSIT_DAY4,TRANSIT_DAY5,TRANSIT_MORETHAN_DAY5,TRANSIT_DELAY_PERCENTAGE}
+!define column {${vehicle_name},U,Primary,100,200,300,400,500,600,110,210,310,410,510,610,120,220,320,420,520,620,10}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonDetentionBulkUpload
+**!
+
+!** Holiday for consignee depot one
+!define depot_id {$destination_location_id_1}
+!define weeklyHoliday1 {$weeklyHoliday1}
+!define weeklyHoliday2 {$weeklyHoliday2}
+!define yearlyHoliday1 {$yearlyHoliday1}
+
+!|script|common                                                                                                                                                                                  |
+|$data= |getTrim;|{"depot_ids":["${depot_id}"],"holidays":{"weekly_holidays":["$weeklyHoliday1","$weeklyHoliday2"],"yearly_holidays":[{"date":"${yearlyHoliday1}","reason":"Regional holiday"}]}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Settings.AdminWeeklyHolidaySettingAPI
+*!
+
+!***> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Drop Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,Chennai,KOCHI,${vehicle_name},100,${transporter_ref_id},${transporter_name},1,12000,per_trip,01-Jan-$year,31-Dec-2030,100,1,U,PC,550,770,Per trip,500,300,no,0}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!**> Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$location_id}
+!define gate_id {$source_gate_id}
+!define vehicle_requirement_date {$loadingDate1}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id_1 {$destination_location_id_1}
+!define sold_to_id_1 {$destination_gate_location_id_1}
+!define destination_location_id_2 {$destination_location_id_1}
+!define sold_to_id_2 {$destination_gate_location_id_2}
+!define destination_location_id_3 {$destination_location_id_1}
+!define sold_to_id_3 {$destination_gate_location_id_3}
+!define unloader_available {false}
+!define expected_delivery_at {$loadingDate1}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice}}],"destinations":[{"type":1,"location_id":"${destination_location_id_1}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id_1}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id_1}"},{"type":1,"location_id":"${destination_location_id_2}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id_2}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id_2}"},{"type":1,"location_id":"${destination_location_id_3}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id_3}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id_3}"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+*!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!*** Truck In
+!| Script       |Common                 |
+|$truck_in_date=|getTrim;|$truckindate_1|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!**> Update LR for destination 1
+!define consignee_id {$destination_location_id_1}
+!define lr_number {l1}
+
+!|script|common                                                                                                                                       |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","source_location_id":"$depot","lr_number":"${lr_number}","source_gate_id":"$gate_id"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateDynamicAPI
+**!
+
+!**> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {1000} 
+!define quantity_unit {cases}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {1000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"${material_code_1}","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"DG1$unique","sold_to":"DG1$unique","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"200","material_code":"${material_code_2}","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"200","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"DG2$unique","sold_to":"DG2$unique","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D3$unique","mrp_price":"300","material_code":"${material_code_3}","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"400","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"DG3$unique","sold_to":"DG3$unique","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!***> Reached Load point
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LoadingPointAPI
+*!
+
+!**> Start Loading
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.StartLoadAPI
+*!
+
+!***> End Loading
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.EndPointAPI
+*!
+
+!**> Truck Out
+!| Script        |Common                  |
+|$truck_out_date=|getTrim;|$truckoutdate_3|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckOutAPI
+*!
+
+!** Mark as delivered
+!|script|common                                                                                                                             |
+|$data= |getTrim;|{"data":[{"destination_id":"$destination_location_id_1","reported_at":"$arrivedDate_1","release_at":"$dispatchedDate_1"}]}|
+**!
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+**!
+
+!**> Transporter login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+**!
+
+!* Ready for billing page
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+
+!|script                     |Ui                                                                        |
+|navigateToUrl;              |${turl}/v2/payments?depot=${depot_name}                                   |
+|waitForElementToBeDisplayed;|//div[starts-with(@class,'card-row row')]                |xpath|30        |
+|click;                      |//span[normalize-space(text())='Filter']                 |xpath           |
+|click;                      |//button[text()='APPLY']                                 |xpath           |
+|click;                      |//span[normalize-space(text())='Update']                 |xpath           |
+|wait;                       |3                                                                         |
+|sendKeys;                   |(//input[@class='el-upload__input'])[1]                  |xpath|${lr_copy}|
+|click;                      |//div[@class='formfooter']//button//span[text()='Update']|xpath           |
+|wait;                       |5                                                                         |
+|click;                      |//div[@class='close-sidebar']                            |xpath           |
+|click;                      |//span[@class='el-checkbox__inner']                      |xpath           |
+|click;                      |//button[text()='Create Invoice']                        |xpath           |
+*!
+
+!**> Checking the charges in transporter invoice
+!define header_name1 {Freight}
+!define header_name2 {Transit Delay - 6 Days}
+!define header_name3 {Loading}
+!define header_name4 {Loading Detention - 1 Days}
+!define header_name5 {UnLoading Detention - 3 Days}
+!define header_name6 {ODA}
+!define header_name7 {Fixed Charge}
+!define header_name8 {Shortage}
+!define header_name9 {Damage}
+!define header_name10 {Carton Damage}
+!define header_name11 {Unloading}
+!define header_name12 {Additional Point}
+
+!|script                         |ui                                                                                                                                                                                                                                                                 |
+|click;                          |//div[@class='el-table__fixed']//*[normalize-space(text())='$order_id']               |xpath                                                                                                                                                                       |
+|waitForElementToBeDisplayed;    |//div[@id='pane-Details']//div[starts-with(normalize-space(@class),'tab-content')]    |xpath                                                                                                                                                |15                    |
+|click;                          |//div[@id='tab-Charges']                                                              |xpath                                                                                                                                                                       |
+|waitForElementToBeDisplayed;    |//div[@id='pane-Charges']//div[starts-with(normalize-space(@class),'tab-content')]    |xpath                                                                                                                                                |15                    |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name1} |
+|$freight_shipper=               |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$freight_transporter=           |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name2} |
+|$transitdelay_shipper=          |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$transitdelay_transporter=      |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name3} |
+|$loading_shipper=               |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$loading_transporter=           |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name4} |
+|$loadingdetention_shipper=      |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$loadingdetention_transporter=  |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name5} |
+|$unloadingdetention_shipper=    |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$unloadingdetention_transporter=|getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name6} |
+|$oda_shipper=                   |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$oda_transporter=               |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name7} |
+|$fixedrate_shipper=             |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$fixedrate_transporter=         |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name8} |
+|$shortage_shipper=              |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$shortage_transporter=          |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name9} |
+|$damage_shipper=                |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$damage_transporter=            |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name10}|
+|$cartondamage_shipper=          |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$cartondamage_transporter=      |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name11}|
+|$unloading_shipper=             |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$unloading_transporter=         |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name12}|
+|$additionalpoint_shipper=       |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$additionalpoint_transporter=   |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$total_shipper=                 |getText;                                                                              |(//*[text()='TOTAL']/..//following-sibling::div)[1]                                                                                                  |xpath                 |
+|$total_transporter=             |getText;                                                                              |(//*[text()='TOTAL']/..//following-sibling::div)[2]                                                                                                  |xpath                 |
+|click;                          |//div[contains(text(),'$order_id')]/..//button//i[contains(@class,'el-dialog__close')]|xpath                                                                                                                                                                       |
+
+!|Script|common                                                           |
+|check  |checkIfStringAreEqual;|$freight_shipper               |12000|true|
+|check  |checkIfStringAreEqual;|$freight_transporter           |12000|true|
+|check  |checkIfStringAreEqual;|$transitdelay_shipper          |2220 |true|
+|check  |checkIfStringAreEqual;|$transitdelay_transporter      |2220 |true|
+|check  |checkIfStringAreEqual;|$loading_transporter           |400  |true|
+|check  |checkIfStringAreEqual;|$loading_shipper               |400  |true|
+|check  |checkIfStringAreEqual;|$loadingdetention_shipper      |100  |true|
+|check  |checkIfStringAreEqual;|$loadingdetention_transporter  |100  |true|
+|check  |checkIfStringAreEqual;|$unloadingdetention_shipper    |630  |true|
+|check  |checkIfStringAreEqual;|$unloadingdetention_transporter|630  |true|
+|check  |checkIfStringAreEqual;|$oda_shipper                   |770  |true|
+|check  |checkIfStringAreEqual;|$oda_transporter               |770  |true|
+|check  |checkIfStringAreEqual;|$fixedrate_shipper             |550  |true|
+|check  |checkIfStringAreEqual;|$fixedrate_transporter         |550  |true|
+|check  |checkIfStringAreEqual;|$shortage_shipper              |0    |true|
+|check  |checkIfStringAreEqual;|$shortage_transporter          |0    |true|
+|check  |checkIfStringAreEqual;|$damage_shipper                |0    |true|
+|check  |checkIfStringAreEqual;|$damage_transporter            |0    |true|
+|check  |checkIfStringAreEqual;|$cartondamage_shipper          |0    |true|
+|check  |checkIfStringAreEqual;|$cartondamage_transporter      |0    |true|
+|check  |checkIfStringAreEqual;|$unloading_shipper             |740  |true|
+|check  |checkIfStringAreEqual;|$unloading_transporter         |740  |true|
+|check  |checkIfStringAreEqual;|$additionalpoint_shipper       |0    |true|
+|check  |checkIfStringAreEqual;|$additionalpoint_transporter   |0    |true|
+|check  |checkIfStringAreEqual;|$total_shipper                 |12970|true|
+|check  |checkIfStringAreEqual;|$total_transporter             |12970|true|
+*!
+
+!** Verify Summary
+!|Script                     |Ui                                                                                                                                    |
+|waitForElementToBeDisplayed;|//div[contains(@class,'table__body')]|xpath                                                                                |20        |
+|click;                      |//button[contains(text(),'Summary')] |xpath                                                                                           |
+|check                       |isElementPresent;                    |//div[contains(text(),'discount (10%)')]                                             |xpath|true|
+|$totalinvoicevalue=         |getText;                             |//div[@class='bgfooter']/div/div[@class='col-6 floatright']                          |xpath     |
+|$totaltaxablevalue=         |getText;                             |//span[contains(text(),'Total Taxable Value')]/../parent::div//following-sibling::div|xpath     |
+|$discountvalue=             |getText;                             |//div[contains(text(),'discount (10%)')]/../following-sibling::div                   |xpath     |
+|$igstvalue=                 |getText;                             |//div[contains(text(),'IGST (5%)')]/../following-sibling::div                        |xpath     |
+
+!|Script|common                                                  |
+|check  |checkIfStringAreEqual;|$totalinvoicevalue|12,256.65|true|
+|check  |checkIfStringAreEqual;|$totaltaxablevalue|12,970   |true|
+|check  |checkIfStringAreEqual;|$discountvalue    |1297     |true|
+|check  |checkIfStringAreEqual;|$igstvalue        |583.65   |true|
+**!
+
+!**> Generating Invoice in transporter
+!define invoice_number {i$unique}
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceGeneration
+
+!|Script|Ui|
+|wait;  |90|
+*!
+
+!** Approve invoice in Shipper 
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceApprove
+
+!|Script|Ui|
+|wait;  |90|
+**!
+
+!** Validating freight invoice posting
+!|Script              |MongoDBQuery                                                                                                                  |
+|getMongoConnection;  |${connection}                               |db_pando_testing                                                                 |
+|$total_invoice_sent1=|getTotalNoOfStrategy1InvoicePostingSent;    |${invoice_number}                                                                |
+|$erp_invoice_details=|getStrategy1InvoicePostingPayload;          |${invoice_number}                                                                |
+|check                |getValuesFromInvoicePayload;                |transporter_code|TRANSMARICOD                                                    |
+|check                |getValuesFromInvoicePayload;                |invoice_number  |${invoice_number}                                               |
+|check                |getValuesFromInvoicePayload;                |invoice_total   |11672.99                                                        |
+|check                |getValuesFromInvoicePayload;                |invoice_date    |$invoicedate                                                    |
+|check                |getValuesFromInvoicePayload;                |tax_code        |1                                                               |
+|check                |getValuesFromInvoicePayload;                |tax_type        |1                                                               |
+|check                |getValuesFromInvoicePayload;                |tax_percentage  |5                                                               |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|indent_id              |$order_id                   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|order_reference        |$order_id                   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|movement               |2                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|material_invoice_number|INV-$unique                 |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|sku                    |SAFFOLAOATS                 |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|source                 |Chennai                     |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|source_ref_id          |R$unique                    |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|gate_ref_id            |RQ$unique                   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|destination            |KOCHI                       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|destination_ref_id     |${destination_depot_refid_1}|
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|destination_gate_ref_id|DG2$unique                  |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|quantity               |200                         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|weight                 |480                         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|volume                 |450                         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|invoice_value_freight  |1          |3647.7          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|invoice_value_detention|243.33                      |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|invoice_value_defect   |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|consignee_category     |                            |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|line_item_number       |NA                          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|oda_freight_charge     |1          |256.7           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|fixed_charge           |1          |183.3           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|additional_point_charge|0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|miscellaneous_charge   |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|loading_charge         |1          |133.3           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|unloading_charge       |1          |246.7           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|lr_charge              |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|sla_delay              |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|transit_delay          |740                         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|penalty                |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|shortage               |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|damage                 |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|carton_damage          |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|debit_adjustment       |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|extra_km_charge        |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|base_freight_charge    |4000                        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|weight_unit            |kg                          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|quantity_unit          |cases                       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |SAFFOLAOATS|volume_unit            |cft                         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |indent_id              |$order_id                   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |order_reference        |$order_id                   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |movement               |2                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |material_invoice_number|INV-$unique                 |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |sku                    |PARACHUTE                   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |source                 |Chennai                     |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |source_ref_id          |R$unique                    |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |gate_ref_id            |RQ$unique                   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |destination            |KOCHI                       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |destination_ref_id     |${destination_depot_refid_1}|
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |destination_gate_ref_id|DG1$unique                  |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |quantity               |1000                        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |weight                 |480                         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |volume                 |450                         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |invoice_value_freight  |1          |3647.7          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |invoice_value_detention|243.33                      |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |invoice_value_defect   |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |consignee_category     |                            |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |line_item_number       |NA                          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |oda_freight_charge     |1          |256.7           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |fixed_charge           |1          |183.3           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |additional_point_charge|0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |miscellaneous_charge   |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |loading_charge         |1          |133.3           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |unloading_charge       |1          |246.7           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |lr_charge              |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |sla_delay              |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |transit_delay          |740                         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |penalty                |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |shortage               |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |damage                 |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |carton_damage          |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |debit_adjustment       |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |extra_km_charge        |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |base_freight_charge    |4000                        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |weight_unit            |kg                          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |quantity_unit          |cases                       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |PARACHUTE  |volume_unit            |cft                         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |indent_id              |$order_id                   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |order_reference        |$order_id                   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |movement               |2                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |material_invoice_number|INV-$unique                 |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |sku                    |LIVON                       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |source                 |Chennai                     |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |source_ref_id          |R$unique                    |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |gate_ref_id            |RQ$unique                   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |destination            |KOCHI                       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |destination_ref_id     |${destination_depot_refid_1}|
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |destination_gate_ref_id|DG3$unique                  |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |quantity               |400                         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |weight                 |480                         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |volume                 |450                         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |invoice_value_freight  |1          |3647.7          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |invoice_value_detention|243.33                      |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |invoice_value_defect   |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |consignee_category     |                            |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |line_item_number       |NA                          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |oda_freight_charge     |1          |256.7           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |fixed_charge           |1          |183.3           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |additional_point_charge|0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |miscellaneous_charge   |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |loading_charge         |1          |133.3           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |unloading_charge       |1          |246.7           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |lr_charge              |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |sla_delay              |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |transit_delay          |740                         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |penalty                |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |shortage               |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |damage                 |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |carton_damage          |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |debit_adjustment       |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |extra_km_charge        |0                           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |base_freight_charge    |4000                        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |weight_unit            |kg                          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |quantity_unit          |cases                       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|sku             |LIVON      |volume_unit            |cft                         |
+
+!|Script         |Common                                                                  |
+|$schemaFilePath=|getPath;|data/schemafiles/strategy1_invoice_posting_schema.json|fullpath|
+
+!|script|json                                                           |
+|check  |validateJsonDocument;|$schemaFilePath|$erp_invoice_details|true|
+
+!|script   |common                                             |
+|check     |comparisonResult;|$total_invoice_sent1|equal|1|true|
+|$tresult1=|comparisonResult;|$total_invoice_sent1|equal|1     |
+*!
+
+!**> Validating the print preview
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+
+!|Script                     |ui                                                   |
+|click;                      |//span[contains(text(),'${invoice_number}')]|xpath   |
+|waitForElementToBeDisplayed;|//div[contains(@class,'table__body')]       |xpath|20|
+|clickJS;                    |//a[text()='Preview']                       |xpath   |
+|wait;                       |10                                                   |
+
+!|script           |common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$expected_content=|getTrim;|REMARKS remarks $unique Powered by pando This is an electronic invoice issued in accordance with the provisions of the InformationTechnology Act, 2000 (21 of 2000). Hence, does not require any signature or digital signature PLACE OF SUPPLY: TAMIL NADU 12970 1297 583.65 12256.65 TOTAL TAXABLE VALUE: DISCOUNT (10%) TAX IGST 5% TOTAL INVOICE VALUE BILL TO PARTY MARICO-AUTO NO 15,GST STREET, CHENNAI - 123456, GSTIN : 123 SERVICE PROVIDER STATE: BIHAR GST: GST$unique TAX PAYABLE ON REVERSE CHARGE: NO SERVICE DESCRIPTION: MOVEMENT OF GOODS BY ROAD HSN/SAC: - PO NUMBER: - T TRANSPORTER MARICO D CHENNAI - 600001 TAMIL NADU i$unique $todayDate$ordinalDateSuffix $monthAndYear ORIGINAL FOR RECIPIENT TAX INVOICE Indent ID Delivery Mode Vehicle Type Taxable Value MR-R$unique-M-1 FTL VEHICLE 900 CFT 12970 REMARKS remarks $unique Powered by pando This is an electronic invoice issued in accordance with the provisions of the InformationTechnology Act, 2000 (21 of 2000). Hence, does not require any signature or digital signature PLACE OF SUPPLY: TAMIL NADU 12970 1297 583.65 12256.65 TOTAL TAXABLE VALUE: DISCOUNT (10%) TAX IGST 5% TOTAL INVOICE VALUE BILL TO PARTY MARICO-AUTO NO 15,GST STREET, CHENNAI - 123456, GSTIN : 123 SERVICE PROVIDER STATE: BIHAR GST: GST$unique TAX PAYABLE ON REVERSE CHARGE: NO SERVICE DESCRIPTION: MOVEMENT OF GOODS BY ROAD HSN/SAC: - PO NUMBER: - T TRANSPORTER MARICO D CHENNAI - 600001 TAMIL NADU i$unique $todayDate$ordinalDateSuffix $monthAndYear DUPLICATE FOR SUPPLIER TAX INVOICE Indent ID Delivery Mode Vehicle Type Taxable Value MR-R$unique-M-1 FTL VEHICLE 900 CFT 12970|
+
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|script         |FileUtil                          |
+|$filename=      |getLastModifiedFile;|$downloadPath|
+|$actual_content=|readPdfFile;        |$filename    |
+
+!|Script            |Common                                                          |
+|$difference_in_pdf=|stringCompareForDifference;|$actual_content   |$expected_content|
+|check              |checkIfStringAreEqual;     |$difference_in_pdf|[]     |true     |
+|$tresult2=         |checkIfStringAreEqual;     |$difference_in_pdf|[]               |
+
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+*!
+
+!**> Validating test result
+!|script  |common                                                     |
+|check    |checkIfStringAreEqualInArray;|$tresult1,$tresult2,true|true|
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,true     |
+*!

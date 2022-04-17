@@ -1,0 +1,14 @@
+---
+Test
+---
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetDepotDetailsAPI
+
+!|script          |json                                                        |
+|$depot_managers= |getValueFromJSON;             |$depotDetails  |data.managers|
+|$existing_users =|getValuesAsArrayFromJSONArray;|$depot_managers|id           |
+
+!|script        |common                                         |
+|$new_user_list=|appendValueToArray;|$existing_users|${new_user}|
+
+!define users {$new_user_list}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserDepoMappingAPI

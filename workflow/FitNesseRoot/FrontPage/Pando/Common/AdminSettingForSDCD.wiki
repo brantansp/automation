@@ -1,0 +1,47 @@
+---
+Help: Admin setting for S D CD
+---
+!5 movement 		-> Primary, Secondary, Vendor, Return
+!5 amount_type 		-> INR
+!5 threshold_amount -> values must be one integer or float 
+!5 type1 			-> Shortage, Damage, Carton Damage
+!5 value1			-> Material MRP, Material Invoice, Fixed Price
+!5 factor1			-> must be integer or float (for Material MRP, Material Invoice it must be 0 to 1)
+!5 type2 			-> Shortage, Damage, Carton Damage
+!5 value2			-> Material MRP, Material Invoice, Fixed Price
+!5 factor2			-> must be integer or float (for Material MRP, Material Invoice it must be 0 to 1)
+!5 type2 			-> Shortage, Damage, Carton Damage
+!5 value2			-> Material MRP, Material Invoice, Fixed Price
+!5 factor2			-> must be integer or float (for Material MRP, Material Invoice it must be 0 to 1. Fixed Price can have any value)
+
+!|script       |ui                                                      |
+|navigateToUrl;|${surl}/admin                                           |
+|click;        |//div[contains(@class,'categoryselect')]          |xpath|
+|click;        |//span[normalize-space(text())='Movement setting']|xpath|
+|click;        |//a[contains(text(),'Shortage/Damage')]           |xpath|
+|click;        |//div[text()='Movement']/..//input                |xpath|
+|click;        |//span[text()='${movement}']                      |xpath|
+
+!|script    |ui                                                                                              |
+|click;     |//div[normalize-space(text())='TRANSPORTER DEDUCTION LIMIT']/..//input|xpath                    |
+|clearValue;|//div[normalize-space(text())='TRANSPORTER DEDUCTION LIMIT']/..//input|xpath                    |
+|sendKeys;  |//div[normalize-space(text())='TRANSPORTER DEDUCTION LIMIT']/..//input|xpath|${threshold_amount}|
+
+!|script    |ui                                                                           |
+|click;     |(//div[text()='${type1}']/..//input)[1]                     |xpath           |
+|click;     |//div[contains(@style,'absolute')]//span[text()='${value1}']|xpath           |
+|clearValue;|(//div[text()='${type1}']/..//input)[2]                     |xpath           |
+|sendKeys;  |(//div[text()='${type1}']/..//input)[2]                     |xpath|${factor1}|
+
+!|script    |ui                                                                           |
+|click;     |(//div[text()='${type2}']/..//input)[1]                     |xpath           |
+|click;     |//div[contains(@style,'absolute')]//span[text()='${value2}']|xpath           |
+|clearValue;|(//div[text()='${type2}']/..//input)[2]                     |xpath           |
+|sendKeys;  |(//div[text()='${type2}']/..//input)[2]                     |xpath|${factor2}|
+
+!|script    |ui                                                                           |
+|click;     |(//div[text()='${type3}']/..//input)[1]                     |xpath           |
+|click;     |//div[contains(@style,'absolute')]//span[text()='${value3}']|xpath           |
+|clearValue;|(//div[text()='${type3}']/..//input)[2]                     |xpath           |
+|sendKeys;  |(//div[text()='${type3}']/..//input)[2]                     |xpath|${factor3}|
+|click;     |//button                                                    |xpath           |

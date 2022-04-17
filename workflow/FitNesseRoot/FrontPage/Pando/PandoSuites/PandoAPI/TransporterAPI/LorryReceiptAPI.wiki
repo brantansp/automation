@@ -1,0 +1,12 @@
+---
+Help: Lorry receipt API
+Test
+---
+!|Script     |Http                                                                                                                                                          |
+|wait;       |5                                                                                                                                                             |
+|setBaseUrl; |${turl}/api/login                                                                                                                                             |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}                                                                   |
+|$token=     |getHeader;      |x-auth-token                                                                                                                                 |
+|addHeader;  |Authorization   |bearer $token                                                                                                                                |
+|setBaseUrl; |${turl}/api/order/${indent_id}/lorry_receipt                                                                                                                      |
+|$receipt_id=     |getResponse;    |Application/Json|put|$data|

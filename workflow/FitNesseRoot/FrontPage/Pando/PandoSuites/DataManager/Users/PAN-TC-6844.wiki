@@ -1,0 +1,62 @@
+---
+Help: Audit in DB - Role change history & User Id disabling
+Suites: dm2
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!**> Create user
+!*** User Role ID Retrieval
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!** User creation
+!define role_id {$retrieve_key_value}
+!define user_number {9235678654}
+!define user_name {u$unique}
+!define user_email {pandoindent$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+**!
+
+!** Change user_role and status
+!define new_role {Checker}
+
+!|Script                     |Ui                                                                                                                 |
+|navigateToUrl;              |${surl}/mdm/users                                                                                                  |
+|sendHumanKeys;              |//input[@placeholder='Search by user name']                                                     |xpath|${user_name}|
+|wait;                       |2                                                                                                                  |
+|click;                      |//a[contains(text(),'Edit')]                                                                    |xpath             |
+|click;                      |//label[contains(text(),'Role')]/following-sibling::div[@class='dropdown-section']/div/div/input|xpath             |
+|click;                      |//ul/li/span[contains(text(),'${new_role}')]                                                    |xpath             |
+|click;                      |//label[contains(text(),'Status')]/parent::div//span[@class='el-checkbox__inner']               |xpath             |
+|click;                      |//ul[@class='action-list']/li[contains(text(),'Update')]                                        |xpath             |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']                                                      |xpath|30          |
+**!
+
+!** Verify audit log in postgres DB
+!define query1 {SELECT message FROM public."Audits" where reference_id='$user_id' and audit_type='66';}
+!define query2 {SELECT message FROM public."Audits" where reference_id='$user_id' and audit_type='67';}
+
+!|script              |PostgresDB                                       |
+|$auditmessage_in_db1=|getDataFromPostgresDb;|${pg_connection}|${query1}|
+|$auditmessage_in_db2=|getDataFromPostgresDb;|${pg_connection}|${query2}|
+
+!|Script   |common                                                                                                    |
+|check     |checkIfStringAreEqual;|$auditmessage_in_db1|Role change for ${user_name} from ${role_type} to checker|true|
+|$tresult1=|checkIfStringAreEqual;|$auditmessage_in_db1|Role change for ${user_name} from ${role_type} to checker     |
+|check     |checkIfStringAreEqual;|$auditmessage_in_db2|Status Change from Active to Inactive                    |true|
+|$tresult2=|checkIfStringAreEqual;|$auditmessage_in_db2|Status Change from Active to Inactive                         |
+**!
+
+!** Validating Test case
+!|Script  |Common                                                |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,true|
+*!

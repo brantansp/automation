@@ -1,0 +1,15 @@
+!|script                     |ui                                                                                                                         |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row')]//span[text()='${vehicle_name}']                          |xpath|20                 |
+|click;                      |//span[@class='link-action']/span[text()='Accept']                                               |xpath                    |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span[text()='Indent Accepted']                         |xpath|20                 |
+|click;                      |//span[@class='link-action']/span[text()='Assign Truck']                                         |xpath                    |
+|waitForElementToBeDisplayed;|//section[@class='el-drawer__body']                                                              |xpath|10                 |
+|sendKeys;                   |((//span[contains(text(),'Vehicle Number')]/ancestor::label)[1]/following-sibling::div//input)[1]|xpath|${vehicle_no_1}    |
+|sendKeys;                   |((//span[contains(text(),'Vehicle Number')]/ancestor::label)[1]/following-sibling::div//input)[2]|xpath|${vehicle_no_2}    |
+|sendKeys;                   |((//span[contains(text(),'Vehicle Number')]/ancestor::label)[1]/following-sibling::div//input)[3]|xpath|${vehicle_no_3}    |
+|sendKeys;                   |((//span[contains(text(),'Vehicle Number')]/ancestor::label)[1]/following-sibling::div//input)[4]|xpath|${vehicle_no_4}    |
+|sendKeys;                   |//label[contains(text(),'Driver Mobile Number')]/following-sibling::div//input                   |xpath|${driver_mobile_no}|
+|sendKeys;                   |//label[contains(text(),'DRIVER NAME')]/following-sibling::div//input                            |xpath|TestDriver         |
+|click;                      |//span[text()='Submit']/../self::button                                                          |xpath                    |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span[text()='Truck assigned for indent $order_id']     |xpath|20                 |
+|wait;                       |3                                                                                                                          |

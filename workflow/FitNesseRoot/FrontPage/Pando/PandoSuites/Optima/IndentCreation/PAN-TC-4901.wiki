@@ -1,0 +1,183 @@
+---
+Help: Ensure that Modified pick list is sent for order created via Optima - Marico
+Suites: optscn8
+Test
+---
+!5 PD-3791 Ensure that Modified pick list is sent for order created via Optima - Marico
+!5 1. From the Optima Listing indent all deliveries
+!5 2. Then check the Modified Picklist sent from Pando-app
+!5 3. It should have the correct details sent in modified picklist
+
+!***> Unique values assignment
+!|Script          |Common                                       |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$currDate=       |getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique  |0   |4    |
+|$detention_group=|getRandomString;        |4        |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000   |999999    |
+|$today=          |getSubString;           |$currDate|0   |10   |
+|$pincode1=       |getRandomNumber;        |111001   |999999    |
+|$pincode2=       |getRandomNumber;        |111001   |999999    |
+|$vno_1=          |getRandomNumber;        |20       |76        |
+|$vno_2=          |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=          |getRandomNumber;        |1000     |9999      |
+|$delivery_num=   |getSubString;           |$unique  |4   |14   |
+
+!|Script  |DateUtil                      |
+|$today=  |dateCalculation;|yyyy-MM-dd |0|
+|$rdate=  |dateCalculation;|yyyy/MM/dd |0|
+|$thisday=|dateCalculation;|dd MMM yyyy|0|
+
+!| Script     |Common                                      |
+|$rdate=      |stringConcatenation;   |$rdate|!- 10:00:00-!|
+|$loadingDate=|getCurrentDateTimeStamp|iso                 |
+*!
+
+!** Depot Optima Setting
+!define depo {Nagpur CDC}
+!define max_split {2}
+!define split_factor {5}
+!define ftl_certify {false}
+!define algorithm {3}
+!define distance_deviation {100}
+!define degree_of_deviation {50}
+!define optima_type {1}
+!define weight {1}
+!define volume {1}
+!define mode {0}
+!define max_pickup {2}
+!define fitment {0}
+!define max_dropoff {3}
+!define optima_for_ptl {false}
+!define ptl_club_gates {false}
+!define limited_truck_count {false}
+!define hybrid_split {false}
+!define depot_id {5f76f4c57e91f8004d578206}
+!define movement {2}
+!define movement_type {Primary}
+!define ptl_contracts {2}
+!define material_category {"MT","GT"}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split": ${max_split},"split_factor": ${split_factor},"ftl_certify": ${ftl_certify},"algorithm": ${algorithm},"distance_deviation":"${distance_deviation}","degree_of_deviation":${degree_of_deviation},"optima_type":${optima_type},"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":${weight},"volume":${volume}},"material_categories":[${material_category}],"mode":${mode},"max_pickup_points":${max_pickup},"fitment":${fitment},"max_drop_points":${max_dropoff},"drop_off_rule":[],"optima_for_ptl":${optima_for_ptl},"ptl_club_gates":${ptl_club_gates},"limited_truck_count":${limited_truck_count},"hybrid_split": ${hybrid_split},"ptl_contracts":${ptl_contracts}},"depot_ids":["${depot_id}"],"movement":${movement}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!** Uploading Rate Matrix
+!define erp_gate_id_api_1 {rq1$unique}
+!define distance {830}
+!define transit_days {1}
+!define ratec {1000}
+!define rtrip {per_trip}
+!define mrate {10000}
+!define mfactor {1}
+!define transporter_name {RASTUS LOGISTICS}
+!define transporter_ref_id {402838}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,Nagpur,Cuttack,2x Axle 16 MT,${distance},${transporter_ref_id},${transporter_name},${transit_days},10000,per_trip,01-Jan-$year,31-Dec-2030,0,${mfactor},$detention_group,,0,0,Per KG,0,0}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!** Delivery Picklist API 
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"A$delivery_num","material_code":"mat036","pickup_reference_number":"R394","gate_ref_id":"R394","division":"DIV","quantity":10.00,"quantity_unit":"NOS","weight":7400.00,"weight_unit":"KG","volume":"100.00","volume_unit":"CFT","lr_number":"lr_number","ship_to":"D535","sold_to":"D535","line_item":"","type":"Primary","category":"oil","category_priority":"GT","stn":"0","date":"$today","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":""},{"delivery_number":"B$delivery_num","material_code":"mat035","pickup_reference_number":"R395","gate_ref_id":"R394","division":"DIV","quantity":15.00,"quantity_unit":"NOS","weight":7450.00,"weight_unit":"KG","volume":"200.00","volume_unit":"CFT","lr_number":"lr_number","ship_to":"D536","sold_to":"D536","line_item":"","type":"Primary","category":"oil","category_priority":"GT","stn":"0","date":"$today","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DeliveryPicklistAPI
+**!
+
+!** Delete the Line item from Depot via API
+!|script|common                           |
+|$depot=|getTrim;|5f76f4c57e91f8004d578206|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DiscardLineItemOptimaAPI
+**!
+
+!*** Validating Line Item in UI and Indenting D1
+!define depot_selection  {Nagpur CDC}
+!define depot {Nagpur CDC}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimisingDeliveryPicklist
+**!
+
+!*** Validating that Indent is directly created and available in Indents page
+!|Script       |Ui                                                                                                   |
+|navigateToUrl;|${surl}/indents                                                                                      |
+|click;        |//button[@class='el-button el-button--default']|xpath                                                |
+|click;        |(//div[@class='slideleft_menu']//input)[1]     |xpath                                                |
+|sendKeys;     |(//div[@class='slideleft_menu']//input)[1]     |xpath                             |${depot_selection}|
+|click;        |//span[text()='${depot_selection}']            |xpath                                                |
+|wait;         |2                                                                                                    |
+|click;        |//button[text()='APPLY']                       |xpath                                                |
+|$order_id=    |getText;                                       |(//div[@class='order-row']/div)[1]|xpath             |
+
+!|script   |common                            |
+|$order_id=|replaceString;|$order_id|$thisday||
+|$order_id=|replaceString;|$order_id|\n      ||
+
+!|Script                     |Ui                                                                                                                                                                                                                                          |
+|check                       |isElementPresent;                             |//span[contains(text(),'${transporter_name}')]                                                                                                                                    |xpath|true|
+|click;                      |//span[contains(text(),'${transporter_name}')]|xpath                                                                                                                                                                                        |
+|waitForElementToBeDisplayed;|//div[contains(@class,'drawer-header')]       |xpath                                                                                                                                                                             |30        |
+|check                       |isElementPresent;                             |//div[text()='Gate R394']/../self::div/following-sibling::div//strong[text()='R394']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D535')]|xpath|true|
+|$tresult1=                  |isElementPresent;                             |//div[text()='Gate R394']/../self::div/following-sibling::div//strong[text()='R394']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D535')]|xpath     |
+|click;                      |//div[text()='Gate R395']                     |xpath                                                                                                                                                                                        |
+|check                       |isElementPresent;                             |//div[text()='Gate R395']/../self::div/following-sibling::div//strong[text()='R395']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D536')]|xpath|true|
+|$tresult2=                  |isElementPresent;                             |//div[text()='Gate R395']/../self::div/following-sibling::div//strong[text()='R395']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D536')]|xpath     |
+|click;                      |//a[contains(@class,'close')]                 |xpath                                                                                                                                                                                        |
+
+!|script                     |ui                                                                                                                                         |
+|click;                      |//span[text()='Document'] |xpath                                                                                                           |
+|waitForElementToBeDisplayed;|//div[@class='card-right']|xpath                                                                                                |30        |
+|check                       |isElementPresent;         |(//span[contains(text(),'A')]/ancestor::tr[contains(@class,'row')])[1]//span[contains(text(),'R394')]|xpath|true|
+|$tresult3=                  |isElementPresent;         |(//span[contains(text(),'A')]/ancestor::tr[contains(@class,'row')])[1]//span[contains(text(),'R394')]|xpath     |
+|check                       |isElementPresent;         |(//span[contains(text(),'B')]/ancestor::tr[contains(@class,'row')])[1]//span[contains(text(),'R395')]|xpath|true|
+|$tresult4=                  |isElementPresent;         |(//span[contains(text(),'B')]/ancestor::tr[contains(@class,'row')])[1]//span[contains(text(),'R395')]|xpath     |
+
+!|Script  |Common                                                               |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4|
+*!
+
+!** Validating the delivery picklist
+!|Script              |MongoDBQuery                                                                  |
+|getMongoConnection;  |${connection}                |db_pando_testing                                |
+|$modified_picklist_1=|getModifiedPicklist;         |$order_id        |delivery_number|A$delivery_num|
+|check                |getValueFromModifiedPicklist;|type             |PRIMARY                       |
+|check                |getValueFromModifiedPicklist;|vehicle_type     |2x Axle 16 MT                 |
+|check                |getValueFromModifiedPicklist;|indication       |CREATE                        |
+|check                |getValueFromModifiedPicklist;|transporter_code |402838                        |
+|check                |getValueFromModifiedPicklist;|depot_code       |R394                          |
+|check                |getValueFromModifiedPicklist;|pickup_code      |R394                          |
+|check                |getValueFromModifiedPicklist;|sku              |mat036                        |
+|check                |getValueFromModifiedPicklist;|quantity         |10.00                         |
+|check                |getValueFromModifiedPicklist;|weight           |7400.00                       |
+|check                |getValueFromModifiedPicklist;|volume           |100.00                        |
+|check                |getValueFromModifiedPicklist;|category         |oil                           |
+|check                |getValueFromModifiedPicklist;|category_priority|GT                            |
+|check                |getValueFromModifiedPicklist;|ship_to          |D535                          |
+|check                |getValueFromModifiedPicklist;|sold_to          |D535                          |
+|$modified_picklist_2=|getModifiedPicklist;         |$order_id        |delivery_number|B$delivery_num|
+|check                |getValueFromModifiedPicklist;|type             |PRIMARY                       |
+|check                |getValueFromModifiedPicklist;|vehicle_type     |2x Axle 16 MT                 |
+|check                |getValueFromModifiedPicklist;|indication       |CREATE                        |
+|check                |getValueFromModifiedPicklist;|transporter_code |402838                        |
+|check                |getValueFromModifiedPicklist;|depot_code       |R394                          |
+|check                |getValueFromModifiedPicklist;|pickup_code      |R395                          |
+|check                |getValueFromModifiedPicklist;|sku              |mat035                        |
+|check                |getValueFromModifiedPicklist;|quantity         |15.00                         |
+|check                |getValueFromModifiedPicklist;|weight           |7450.00                       |
+|check                |getValueFromModifiedPicklist;|volume           |200.00                        |
+|check                |getValueFromModifiedPicklist;|category         |oil                           |
+|check                |getValueFromModifiedPicklist;|category_priority|GT                            |
+|check                |getValueFromModifiedPicklist;|ship_to          |D536                          |
+|check                |getValueFromModifiedPicklist;|sold_to          |D536                          |
+*!
+
+!** Retrieving the Job ID using API
+!|script|common                           |
+|$depot=|getTrim;|5f76f4c57e91f8004d578206|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.RetrieveOptimaJobIDAPI
+*!

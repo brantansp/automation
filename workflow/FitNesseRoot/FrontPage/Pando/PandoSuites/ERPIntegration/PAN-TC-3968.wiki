@@ -1,0 +1,31 @@
+---
+Help: Create Material ERP
+Suites: erp1
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** ERP  Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!| Script    |Http                                                                                                                                                                                                                                        |
+|setBaseUrl; |${surl}/api/login                                                                                                                                                                                                                           |
+|getResponse;|Application/Json|put             |{"data":{"email":"${username}","password":"${password}"}}                                                                                                                                                 |
+|$token=     |getHeader;      |x-auth-token                                                                                                                                                                                                               |
+|addHeader;  |Authorization   |bearer $token                                                                                                                                                                                                              |
+|setBaseUrl; |${surl}/api/erp/material                                                                                                                                                                                                                    |
+|$mdata=     |getResponse;    |Application/Json|post|{"data":[{"code":"${material_code}","name":"${material_name}","bu":"BELTS","division":"B1","piece_box":"3","box_length":"0.0001","box_width":"0.0001","box_height":"0.0001","box_weight":"100.000"}]}|
+|check       |getStatusCode;  |204                                                                                                                                                                                                                        |
+*!
+
+!*** Validating in UI
+!|Script                     |Ui                                                                                                |
+|navigateToUrl;              |${surl}/mdm/materials                                                                             |
+|waitForElementToBeDisplayed;|//span[contains(text(),'${material_name}')]|xpath                                      |30        |
+|check                       |isElementPresent;                          |//span[contains(text(),'${material_name}')]|xpath|true|
+|$tresult=                   |isElementPresent;                          |//span[contains(text(),'${material_name}')]|xpath     |
+**!

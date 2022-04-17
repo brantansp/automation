@@ -1,0 +1,92 @@
+---
+Help: “Party Collect” in No Freight with configuration
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Kovur}
+!define city {Nellore}
+!define state {Andhra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Creating Indent 
+!define switch_depo {DEPOT}
+!define source_location {Chennai Mail Depot}
+
+!|Script                     |Ui                                                                                                                                                          |
+|navigateToUrl;              |${surl}/indents                                                                                                                                             |
+|click;                      |//a[contains(@href,'/indent/create')]                                                                                              |xpath                   |
+|click;                      |//input[@class='el-input__inner']                                                                                                  |xpath                   |
+|click;                      |//span[text()='No Freight']                                                                                                        |xpath                   |
+|click;                      |//div[@class='card-list list-plain']                                                                                               |xpath                   |
+|click;                      |//div[text()='${switch_depo}']                                                                                                     |xpath                   |
+|waitForElementToBeDisplayed;|(//section//div[contains(@class,'table-striped')])[1]                                                                              |xpath|10                |
+|sendKeys;                   |//section[@class='el-drawer__body']//input[@type='text']                                                                           |xpath|${source_location}|
+|waitForElementToDisappear;  |//div[@class='status-msg']//img                                                                                                    |xpath|20                |
+|waitForElementToBeDisplayed;|(//section//div[contains(@class,'table-striped')])[1]                                                                              |xpath|10                |
+|click;                      |(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${source_location}']/ancestor::td/preceding-sibling::td//span|xpath                   |
+|wait;                       |3                                                                                                                                                           |
+|click;                      |//span[text()='Add']                                                                                                               |xpath                   |
+**!
+
+!* Destination Depo Selection
+!|Script                     |Ui                                                                                                                                                         |
+|click;                      |//div[@class='el-select select-default']                                                                                           |xpath                  |
+|click;                      |//span[contains(text(),'cmailgate1 - Chennai Mail Gate1')]                                                                         |xpath                  |
+|click;                      |//div[@class='add-block']                                                                                                          |xpath                  |
+|click;                      |//div[text()='Consignee']                                                                                                          |xpath                  |
+|waitForElementToBeDisplayed;|(//section//div[contains(@class,'table-striped')])[2]                                                                              |xpath|10               |
+|sendKeys;                   |(//section[@class='el-drawer__body']//input[@type='text'])[2]                                                                      |xpath|${consignee_name}|
+|waitForElementToDisappear;  |//div[@class='status-msg']//img                                                                                                    |xpath|20               |
+|waitForElementToBeDisplayed;|(//section//div[contains(@class,'table-striped')])[2]                                                                              |xpath|10               |
+|click;                      |(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${consignee_name}']/ancestor::td/preceding-sibling::td//label|xpath                  |
+|wait;                       |2                                                                                                                                                          |
+|click;                      |//span[text()='Add']                                                                                                               |xpath                  |
+*!
+
+!* Selecting Types 
+!|Script|Ui                                                                |
+|click; |//label[text()='Freight type']/following-sibling::div//input|xpath|
+|click; |//span[text()='Party Collect']                              |xpath|
+|click; |//span[text()='Indent']                                     |xpath|
+*!
+
+!** Getting Order id
+!|Script                   |Ui                                             |
+|waitForElementToBePresent;|//div[@role='alert']|xpath               |20   |
+|$data=                    |getText;            |//div[@role='alert']|xpath|
+
+!|Script   |Common                                                    |
+|$data=    |stringConcatenation; |$data|xxx                           |
+|$order_id=|getSubStringByString;|$data|Indent created with number|xxx|
+|$order_id=|getTrim;             |$order_id                           |
+
+!| Script      |Ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define filter_by {Enter Indent ID}
+!define search_text {$order_id}
+!*** Search for Indent ID
+!include .FrontPage.Pando.Common.CommonSearchTrigger
+*!
+
+!| Script |Ui                                                                                          |
+|$tresult=|isElementPresent;|//div[@class='order-row']//span[normalize-space(text())='$order_id']|xpath|
+
+!|Script|Common                                   |
+|check  |checkIfStringAreEqual;|$tresult|true|true|
+**!

@@ -1,0 +1,46 @@
+---
+Help: Materials Manual Upload
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!define rejection_name  {Materials}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+
+!** Uploading Materials
+!define row {Code*,Name*,BU,Piece per Box*,Length(cm)*,Width(cm)*,Height (cm)*,Weight (kg)*,Volume (CFT),Division,GST Exempt (Yes/No),Category,Volume Per Piece (Liter),Pallets,Brand,Sub Brand,Thickness,Load Sequence,Can Telescope (Yes/No)}
+!define column {mc$unique,,10,1,10,20,5,15,10,1,}
+
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+
+!|Script  |Excel                      |
+|newSheet;|${row}|${column}|$excelpath|
+
+!|Script       |Ui                                                              |
+|navigateToUrl;|${surl}/mdm/materials                                           |
+|click;        |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;     |.upload-material                         |cssselector|$excelpath|
+|wait;         |5                                                               |
+
+
+
+!|Script |Common                            |
+|$result=|getResultOfCalculation;|$count|+|1|
+*!
+
+!** Validating Rejection list
+!define rejection_name  {Materials}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+**!
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.ValidateRejections
+
+
+!define tname {TC-167}
+ 

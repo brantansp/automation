@@ -1,0 +1,18 @@
+---
+Help: Contains the script to add new vehicle
+---
+!|script                     |ui                                                                                                  |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                |
+|click;                      |//button[normalize-space(text())='Add']                               |xpath                        |
+|sendKeys;                   |//input[@placeholder='Enter Vehicle Name']                            |xpath|${vehicle_name}        |
+|sendKeys;                   |//input[@placeholder='Enter CFT']                                     |xpath|${cft}                 |
+|sendKeys;                   |//input[@placeholder='Enter KG']                                      |xpath|${kg}                  |
+|sendKeys;                   |//input[@placeholder='Enter WEIGHTAGE']                               |xpath|${weightage}           |
+|click;                      |//label[contains(text(),'Vehicle Type')]/following-sibling::div//input|xpath                        |
+|click;                      |//span[text()='${vehicle_type}']                                      |xpath                        |
+|sendKeys;                   |//label[text()='EXCLUDE SKU CATEGORIES']/following-sibling::input     |xpath|${exclude_sku_category}|
+|sendKeys;                   |//input[@placeholder='Enter Length factor']                           |xpath|${length_factor}       |
+|sendKeys;                   |//input[@placeholder='Enter breadth factor']                          |xpath|${breadth_factor}      |
+|sendKeys;                   |//input[@placeholder='Enter height factor']                           |xpath|${height_factor}       |
+|click;                      |//li[normalize-space(text())='Save']                                  |xpath                        |
+|waitForElementToBeDisplayed;|//h3[text()='Success']                                                |xpath|10                     |

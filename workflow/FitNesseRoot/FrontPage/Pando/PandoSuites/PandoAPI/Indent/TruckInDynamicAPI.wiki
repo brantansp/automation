@@ -1,0 +1,8 @@
+---
+Test
+---
+!|Script            |Http                                     |
+|addHeader;         |Authorization |bearer $stoken            |
+|setBaseUrl;        |${surl}/api/order/$order_id/truck_in     |
+|$truck_in_response=|getResponse;  |Application/Json|put|$data|
+|check              |getStatusCode;|200                       |

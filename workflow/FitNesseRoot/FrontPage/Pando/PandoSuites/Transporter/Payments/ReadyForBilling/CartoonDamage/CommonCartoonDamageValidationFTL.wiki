@@ -1,0 +1,15 @@
+---
+Help: Cartoon Damage FTL
+---
+!|Script   |Common            |
+|$order_id=|getTrim;|$order_id|
+
+!define validate_text {$order_id}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.Search.CommonIndentSearch
+
+!|Script      |Ui                                                                                                                                           |
+|click;       |//span[normalize-space(text())='Update']                 |xpath                                                                                               |
+|click;       |//div[normalize-space(text())='CHARGES']|xpath                                                                                               |
+|scrollToView;|//*[normalize-space(text())='TOTAL']    |xpath                                                                                               |
+|$calResult=  |getText;                                |(//span[normalize-space(text())='Carton Damage']/../parent::div/following-sibling::div)[1]/div|xpath|

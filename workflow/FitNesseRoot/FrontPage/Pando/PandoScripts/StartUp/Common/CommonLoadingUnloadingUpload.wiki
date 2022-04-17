@@ -1,0 +1,12 @@
+---
+Test
+---
+!|Script    |Common                                                              |
+|$excelpath=|getPath;|optimaAttachment/auto_loadingUnloadingCharges.xlsx|fullpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/loading                                             |
+|wait;                     |5                                                               |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |

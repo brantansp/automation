@@ -1,0 +1,9 @@
+---
+Help: Delete the Line item using API
+Test
+---
+!| Script   |Http                                                                        |
+|addHeader; |Authorization         |bearer $stoken                                       |
+|setBaseUrl;|${surl}/api/optima                                                          |
+|$response= |deleteRequestWithBody;|{"ids":[],"depot_id":"$depot","movement":${movement}}|
+|check      |getStatusCode;        |204                                                  |

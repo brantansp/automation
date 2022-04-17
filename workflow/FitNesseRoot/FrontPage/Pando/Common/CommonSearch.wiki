@@ -1,0 +1,8 @@
+---
+Help: Use to Search in module
+---
+!|Script       |Ui                                                                                                   |
+|click;        |//span[normalize-space(text())='Filter']                                        |xpath               |
+|sendHumanKeys;|//label[normalize-space(text())='${filter_by}']/../following-sibling::div//input|xpath|${search_text}|
+|click;        |//button[normalize-space(text())='APPLY']                                       |xpath               |
+|wait;         |3                                                                                                    |

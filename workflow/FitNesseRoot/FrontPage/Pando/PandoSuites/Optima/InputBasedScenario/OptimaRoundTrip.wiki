@@ -1,0 +1,7 @@
+---
+Help: Contains Optima Round Trip contract based test cases
+Suite
+Suites: optscn9
+---
+!1 Test suite Optima Round Trip Contracts
+!contents -R2 -g -p -f -h

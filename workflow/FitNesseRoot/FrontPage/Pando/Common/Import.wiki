@@ -1,0 +1,21 @@
+|import     |
+|common     |
+|Database   |
+|environment|
+|tools      |
+|web        |
+|optima     |
+
+!** Unique values assignment
+!|Script      |Common                              |
+|$unique=     |getCurrentDateTimeStamp;|yMMddHHmmss|
+|$loadingDate=|getCurrentDateTimeStamp |iso        |
+|$num1=       |getRandomNumber;        |1000 |9999 |
+|$num2=       |getRandomNumber;        |100  |999  |
+|$num=        |stringConcatenation;    |$num1|$num2|
+
+!|Script        |DateUtil                                     |
+|$expected_date=|dateCalculation;|yyyy/MM/dd        |0        |
+|$expected_date=|utcConversion;  |$expected_date !- 10:00:00-!|
+|$timer=        |dateCalculation;|hh:mm:a           |0        |
+**!

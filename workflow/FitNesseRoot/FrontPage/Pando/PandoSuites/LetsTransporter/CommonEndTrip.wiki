@@ -1,0 +1,10 @@
+---
+Help: Contains steps to End a Test
+---
+!|script       |ui                                                                                                                                                      |
+|navigateToUrl;|${turl}/tracking                                                                                                                                        |
+|click;        |//span[text()='$trip_id']/../parent::div//span[text()='DETAILS']|xpath                                                                                  |
+|click;        |//button[text()='End Trip']                                     |xpath                                                                                  |
+|check         |isElementPresent;                                               |//div[contains(@class,'el-message el-message--success')]/p[text()='Trip ended successfully']|xpath|true|
+|click;        |//div[@class='close-sidebar']                                   |xpath                                                                                  |
+|wait;         |1                                                                                                                                                       |

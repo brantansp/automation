@@ -1,0 +1,42 @@
+node('slave_label') { //Node where autoscaling occur
+
+
+ sh '$(aws ecr get-login --no-include-email --region ap-south-1)' //login to image
+
+
+//try-catch block
+ try {
+
+       //Image name where this job has to run
+       docker.image('669650451927.dkr.ecr.ap-south-1.amazonaws.com/pando-fitnesse:c96').inside {
+ 
+              
+		  //The checkout stage is used to switch between branches.
+          //If it is a pullrequest job, then the appropriate configurations are made
+          //Else, that branch is checked out.
+          stage('Checkout') {
+
+            
+                  checkout([$class: 'GitSCM', branches: [[name: "$params.ghprbSourceBranch"]], doGenerateSubmoduleConfigurations: false,
+                         extensions: [[$class: 'PreBuildMerge', options: [mergeRemote: 'origin', mergeTarget: 'main']]], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '30a3a50f-826d-4349-bfb9-e3b9208ac50e',url: 'https://github.com/pandocorp/automation.git']]])
+            
+             }
+
+          
+       }
+   }
+
+      //In case there are any errors in the above stages, this catch block will display an error message
+      catch (e) {
+
+          echo 'Issue ' + e
+          sh 'exit 1'
+
+      } finally {
+
+        //Finally all the reports are published to the user
+          stage('Publish Reports') {
+             echo "All Updated"
+          }
+      }
+}

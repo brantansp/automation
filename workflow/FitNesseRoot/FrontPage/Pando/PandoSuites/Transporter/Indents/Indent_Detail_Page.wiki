@@ -1,0 +1,5 @@
+---
+Suite
+---
+!1 Test suite for Indent Detail Page
+!contents -R2 -g -p -f -h

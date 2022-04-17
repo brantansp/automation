@@ -1,0 +1,13 @@
+!|script                     |Ui                                                                         |
+|navigateToUrl;              |${turl}/v2/payments?depot=${depot_name}                                    |
+|refreshForElementToBeDisplayed;|(//div[contains(@class,'list-row') or contains(@class,'card-row row')])[1]|xpath|5|2|
+|waitForElementToBeDisplayed;|//div[@class='card-row row']                                      |xpath|30|
+|click;                      |//span[@class='el-checkbox__inner']                               |xpath   |
+|wait;                       |3                                                                          |
+|click;                      |//div[@class='card-header row']//span[@class='el-checkbox__inner']|xpath   |
+|click;                      |//button[text()='Create Invoice']                                 |xpath   |
+|waitForElementToBeDisplayed;|//tr[@class='el-table__row']                                      |xpath|30|
+|$payment_url=               |currentUrl;                                                                |
+
+!|script     |Common                                                 |
+|$payment_id=|getSubStringByStringWithStartString;|$payment_url|?ids=|

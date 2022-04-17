@@ -1,0 +1,7 @@
+---
+Help: Contains Test Scripts for Optima Auto Run Feature
+Suite
+Suites: optscn4
+---
+!1 Test suite Auto Run Feature
+!contents -R2 -g -p -f -h

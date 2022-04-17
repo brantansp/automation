@@ -1,0 +1,3 @@
+!|Script     |Ui                                                                                                                                      |
+|endTestCase;|${test_cycle}|${RUNNING_PAGE_NAME}|$tresult|$unique|${surl}|${extent_tag}|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME}|$testCaseDescription|
+|closeBrowser;                                                                                                                                        |

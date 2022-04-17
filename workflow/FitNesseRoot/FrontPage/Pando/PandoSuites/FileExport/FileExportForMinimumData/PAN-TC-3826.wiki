@@ -1,0 +1,20 @@
+---
+Help: DM Transporter Direct Downloading if Data <500
+Suites: export1
+Test
+---
+
+!|Script|Ui|
+|navigateToUrl;|${surl}/mdm/transporter|
+|click;|//button[text()='Export']|xpath|
+|wait;|5|
+
+!** Verifying the File download
+!|script               |common                                            |
+|$downloadPath=        |getPath;              |download|fullpath          |
+|check                 |checkIfFileDownloaded;|transporter-export |$downloadPath|true|
+|$tresult=            |checkIfFileDownloaded;|transporter-export |$downloadPath     |
+|cleanFilesInDirectory;|$downloadPath                                     |
+*!
+
+ 

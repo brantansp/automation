@@ -1,0 +1,64 @@
+---
+Help: SCN25_Ensure that rejected materials are in RejectionList in single iteration flow
+Test
+---
+!5 SCN25_Ensure that rejected materials are in RejectionList in single iteration flow
+
+-!|Comment|
+|Test case description|
+!5 For the below input
+-!|Comment|
+|Input                                       |
+|3 Consignees with materials|Truck count is 0|
+!5 Expected - All materials should be in rejection list with respective weight, volume, and quantity
+-!|Comment|
+|External links|
+https://gopando.atlassian.net/browse/PAN-3153
+https://github.com/pandocorp/optima-v2/pull/77
+https://tm.gopando.co/linkto.php?tprojectPrefix=PD&item=testcase&id=PD-3594
+
+-!|Comment|
+|Test Script|
+!** Reading the Output file
+!|Script   |Common                                                                     |
+|$jsonpath=|getPath;|download/scn25_PAN-3153_allMaterialRejections_output.json|fullpath|
+*!
+
+!** Querying the json
+!|script         |QueryOptimaOutput                                  |
+|getParsedJson;  |$jsonpath                                          |
+|$isDel1Rejected=|isDeliveryInRejections;                     |DEL001|
+|$del1Weight=    |getTotalRejectedMaterialWeightForDelivery;  |DEL001|
+|$del1Volume=    |getTotalRejectedMaterialVolumeForDelivery;  |DEL001|
+|$del1Quantity=  |getTotalRejectedMaterialQuantityForDelivery;|DEL001|
+|$isDel2Rejected=|isDeliveryInRejections;                     |DEL002|
+|$del2Weight=    |getTotalRejectedMaterialWeightForDelivery;  |DEL002|
+|$del2Volume=    |getTotalRejectedMaterialVolumeForDelivery;  |DEL002|
+|$del2Quantity=  |getTotalRejectedMaterialQuantityForDelivery;|DEL002|
+|$isDel3Rejected=|isDeliveryInRejections;                     |DEL003|
+|$del3Weight=    |getTotalRejectedMaterialWeightForDelivery;  |DEL003|
+|$del3Volume=    |getTotalRejectedMaterialVolumeForDelivery;  |DEL003|
+|$del3Quantity=  |getTotalRejectedMaterialQuantityForDelivery;|DEL003|
+*!
+
+!** Validating the Test result
+!|script    |common                                                                                                                                                       |
+|$tresult1= |checkIfStringAreEqual;       |$isDel1Rejected                                                                                                           |true|
+|$tresult2= |checkIfStringAreEqual;       |$del1Weight                                                                                                               |900 |
+|$tresult3= |checkIfStringAreEqual;       |$del1Volume                                                                                                               |900 |
+|$tresult4= |checkIfStringAreEqual;       |$del1Quantity                                                                                                             |10  |
+|$tresult5= |checkIfStringAreEqual;       |$isDel2Rejected                                                                                                           |true|
+|$tresult6= |checkIfStringAreEqual;       |$del2Weight                                                                                                               |900 |
+|$tresult7= |checkIfStringAreEqual;       |$del2Volume                                                                                                               |500 |
+|$tresult8= |checkIfStringAreEqual;       |$del2Quantity                                                                                                             |10  |
+|$tresult9= |checkIfStringAreEqual;       |$isDel3Rejected                                                                                                           |true|
+|$tresult10=|checkIfStringAreEqual;       |$del3Weight                                                                                                               |500 |
+|$tresult11=|checkIfStringAreEqual;       |$del3Volume                                                                                                               |400 |
+|$tresult12=|checkIfStringAreEqual;       |$del3Quantity                                                                                                             |10  |
+|check      |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,$tresult11,$tresult12|true|
+|$tresult=  |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,$tresult11,$tresult12     |
+*!
+
+!** Test Result Update
+ 
+*!

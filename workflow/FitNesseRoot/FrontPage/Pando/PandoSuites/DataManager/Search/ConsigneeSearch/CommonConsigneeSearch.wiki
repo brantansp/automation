@@ -1,0 +1,12 @@
+---
+Help: CommonConsigneeSearch
+---
+!|Script       |Ui                                                                                                 |
+|navigateToUrl;|${surl}/mdm/consignees                                                                             |
+|click;        |//div[@class='app-search-label']      |xpath                                                       |
+|click;        |//button[text()='Clear']              |xpath                                                       |
+|sendHumanKeys;|//input[@placeholder='${search_text}']|xpath                                 |${search_value}      |
+|wait;         |3                                                                                                  |
+|click;        |//button[text()='Search']             |xpath                                                       |
+|check         |getCountOfElements;                   |//div[contains(@class,'grid-list-row')]|xpath|${search_count}|
+|$totalCount=  |getCountOfElements;                   |//div[contains(@class,'grid-list-row')]|xpath                |

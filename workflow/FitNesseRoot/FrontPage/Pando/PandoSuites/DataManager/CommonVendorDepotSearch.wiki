@@ -1,0 +1,9 @@
+---
+Help: Common page to search DM-Vendor Depot
+---
+!|script                     |ui                                                                                |
+|navigateToUrl;              |${surl}/mdm/vendor-depots                                                         |
+|waitForElementToBeDisplayed;|//input[@placeholder='Search by Vendor Depot Name / Ref id']|xpath|30             |
+|sendHumanKeys;              |//input[@placeholder='Search by Vendor Depot Name / Ref id']|xpath|${search_value}|
+|sendControlKey;             |//input[@placeholder='Search by Vendor Depot Name / Ref id']|xpath|ENTER          |
+|wait;                       |3                                                                                 |

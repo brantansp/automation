@@ -1,0 +1,6 @@
+---
+Help: Contains test cases for Modified picklist with indent mapping
+Suite
+---
+!1 Test suite Modified picklist with indent mapping
+!contents -R2 -g -p -f -h

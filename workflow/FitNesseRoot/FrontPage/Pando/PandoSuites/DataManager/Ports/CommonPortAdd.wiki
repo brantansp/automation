@@ -1,0 +1,18 @@
+---
+Help: Contains the script to add new Port
+---
+!|Script       |Ui                                                                                           |
+|navigateToUrl;|${surl}/mdm/port                                                                             |
+|click;        |//button[contains(text(),'Add')]                                    |xpath                   |
+|sendKeys;     |//input[@placeholder='Enter Name here']                             |xpath|${ports_name}     |
+|sendKeys;     |//input[@placeholder='Enter Ref Id here']                           |xpath|${ports_refid}    |
+|sendKeys;     |//input[@placeholder='Enter Short Code here']                       |xpath|${ports_shortcode}|
+|click;        |//label[contains(text(),'PORT TYPE')]/following-sibling::div/div/div|xpath                   |
+|click;        |//span[text()='Sea']                                                |xpath                   |
+|sendKeys;     |//input[@placeholder='Enter City here']                             |xpath|${city}           |
+|sendKeys;     |//input[@placeholder='Enter State here']                            |xpath|${state}          |
+|sendKeys;     |//input[@placeholder='Enter Address here']                          |xpath|${address}        |
+|sendKeys;     |//input[@placeholder='Enter Country here']                          |xpath|${country}        |
+|sendKeys;     |//input[@placeholder='Enter GEO Code here']                         |xpath|${geocode}        |
+|sendKeys;     |//input[@placeholder='Enter Postal Code here']                          |xpath|${pincode}        |
+|click;        |//span[contains(text(),'Save')]                                     |xpath                   |

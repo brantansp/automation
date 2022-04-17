@@ -1,0 +1,15 @@
+---
+Help: DetentionValidationForXDays
+---
+!|Script                     |Ui                                                                                                                                                                                                              |
+|waitForElementToBeDisplayed;|//div[@class='el-table__header-wrapper']                                 |xpath                                                                                                                      |30        |
+|click;                      |(//tr[@class='el-table__row'])[${detention_row}]//td[${detention_column}]|xpath                                                                                                                                 |
+|check                       |getCountOfElements;                                                      |//div[@class='focus-contain active']/div[@class='focus-contain-div']//div[@class='primary-text bold' and (text()=${value})]|xpath|1   |
+|$counts=                    |getCountOfElements;                                                      |//div[@class='focus-contain active']/div[@class='focus-contain-div']//div[@class='primary-text bold' and (text()=${value})]|xpath     |
+|check                       |isElementPresent;                                                        |//div[@class='focus-contain active']/div[@class='focus-contain-div']//div[@class='primary-text bold' and (text()=${value})]|xpath|true|
+|$result1=                   |isElementPresent;                                                        |//div[@class='focus-contain active']/div[@class='focus-contain-div']//div[@class='primary-text bold' and (text()=${value})]|xpath     |
+|click;                      |//span[text()='Invoice']                                                 |xpath                                                                                                                                 |
+
+|Script   |Common                                                |
+|$counts= |checkIfStringAreEqualIgnoreCase;|$counts      |1      |
+|$tresult=|checkIfStringAreEqualInArray;   |$result1,$counts,true|

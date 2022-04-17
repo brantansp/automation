@@ -1,0 +1,12 @@
+---
+Files: no
+Help: To create Transporter through ERP with dynamic data
+RecentChanges: no
+Search: no
+Test
+---
+!| Script    |Http                           |
+|addHeader;  |Authorization   |bearer $stoken|
+|setBaseUrl; |${surl}/api/erp/transporter    |
+|getResponse;|Application/Json|post  |$data  |
+|check       |getStatusCode;  |204           |

@@ -1,0 +1,11 @@
+---
+Help: Common rate matrix search by transporter
+---
+!|script       |ui                                                              |
+|navigateToUrl;|${surl}/mdm/rate-matrix                                         |
+|wait;         |2                                                               |
+|click;        |//div[starts-with(@class,'searchterm')]   |xpath                |
+|clearValue;   |//input[@placeholder='${search_field}']   |xpath                |
+|sendHumanKeys;|//input[@placeholder='${search_field}']   |xpath|${search_value}|
+|click;        |//button[normalize-space(text())='Search']|xpath                |
+|wait;         |3                                                               |

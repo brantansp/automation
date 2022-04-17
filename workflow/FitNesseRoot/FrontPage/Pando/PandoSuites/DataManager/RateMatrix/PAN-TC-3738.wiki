@@ -1,0 +1,198 @@
+---
+Help: Rate Matrix export to include Route Exclude
+Suites: export1
+Test
+---
+!** Unique values assignment
+!|Script   |Common                                         |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss           |
+|$currDate=|getCurrentDateTimeStamp |default               |
+|$year=           |getSubString;           |$unique|0   |4    |
+|$rand=    |getRandomString;        |5        |ALPHANUMERIC|
+|$num=     |getRandomNumber;        |100000   |999999      |
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {optima}
+!define city {oc$unique}
+!define state {os$unique}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+!define movement_type {Secondary}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!** Vehicle Creation 1
+!define vehicle_name {vA$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Vehicle Creation 2
+!define vehicle_name {vB$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!** Depot Optima Setting
+!define depo {d$unique}
+!define max_split {2}
+!define split_factor {5}
+!define ftl_certify {false}
+!define algorithm {1}
+!define distance_deviation {500}
+!define degree_of_deviation {30}
+!define optima_type {1}
+!define weight {1}
+!define volume {1}
+!define mode {0}
+!define max_pickup {2}
+!define fitment {1}
+!define max_dropoff {2}
+!define optima_for_ptl {false}
+!define ptl_club_gates {false}
+!define limited_truck_count {false}
+!define hybrid_split {false}
+!define depot_id {$depot}
+!define movement {1}
+!define movement_type {Secondary}
+!define material_category {"GT","MT"}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split": ${max_split},"split_factor": ${split_factor},"ftl_certify": ${ftl_certify},"algorithm": ${algorithm},"distance_deviation":"${distance_deviation}","degree_of_deviation":${degree_of_deviation},"optima_type":${optima_type},"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":${weight},"volume":${volume}},"material_categories":[${material_category}],"mode":${mode},"max_pickup_points":${max_pickup},"fitment":${fitment},"max_drop_points":${max_dropoff},"drop_off_rule":[],"optima_for_ptl":${optima_for_ptl},"ptl_club_gates":${ptl_club_gates},"limited_truck_count":${limited_truck_count},"hybrid_split": ${hybrid_split}},"depot_ids":["${depot_id}"],"movement":${movement}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!** Gate Manager Creation
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+*!
+
+!** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,${depot_city},oc$unique,vA$unique,100,${transporter_ref_id},${transporter_name},1,1000,per_trip,01-Jan-$year,31-Dec-2030,100,1,|City,${depot_city},oc$unique,vB$unique,100,${transporter_ref_id},${transporter_name},1,1000,per_trip,01-Jan-$year,31-Dec-2030,100,1,}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+
+!|Script       |Ui                                                              |
+|navigateToUrl;|${surl}/mdm/rate-matrix                                         |
+|check         |isElementPresent;|//span[contains(text(),'t$unique')]|xpath|true|
+**!
+
+!** Uploading the Rate Matrix vehicle exclude
+!define row {Source,Destination,Vehicle Type,Exclude,trip count}
+!define column {${depot_city},oc$unique,vA$unique,yes,1}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.RateMatrixVehicleExclude
+*!
+
+!** Exporting the Rate Matrices to Email
+
+!|Script       |Ui                                                                                                                |
+|navigateToUrl;|${surl}/mdm/rate-matrix                                                                                           |
+|click;        |//button[text()='Export']|xpath                                                                                   |
+|check         |isElementPresent;        |//span[text()='You will receive the requested data via email in a few minutes!']|xpath|true|
+*!
+
+!** Validate Email
+!define email {pandoautomation@gmail.com}
+
+!|Script|Ui|
+|wait;|25|
+|navigateToUrl;|${mail_url}/email?page=0&size=60|
+|waitForElementToBeDisplayed;|//table[@class='striped responsive-table']|xpath|30|
+|click;|//td[text()='${email}']/following-sibling::td/a|xpath|
+|waitForElementToBeDisplayed;   |//span[@class='card-title']/i[text()='email']                                                      |xpath                                |10   |
+|$link_url=|getElementAttribute;|//p/a| xpath|href|
+
+**!
+
+!** Validating Excel sheet Report
+!|Script|Ui|
+|navigateToUrl;|$link_url|
+|wait;|20|
+
+!|script               |common                                            |
+|$downloadPath=        |getPath;              |download|fullpath          |
+
+!|script|file util|
+|$filename=|getLastModifiedFile| $downloadPath|
+
+!|script|ExcelQuery|
+|$count=|getCountQuery;|$filename|select * from "Contract" where "Route Exclude" = 'TRUE' and "Transporter Name" = 't$unique'|
+
+!|Script|common|
+|check|checkIfStringAreEqual; | $count | 1 | true|
+|$tresult=|checkIfStringAreEqual; | $count | 1 |
+**!
+

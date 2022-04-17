@@ -1,0 +1,639 @@
+---
+Help: Validate Contribution and Base freight/other charges are matching in invoice preview
+Suites: pg2
+Test
+---
+!5 Test coverage : 
+!5 1. Creating a dircet dispatch indent with freight charge and other charge
+!5 2. Verify the freight charge,ODA_freight,loading detention,fixed charge in postgresDB
+!5 3.Verify the above in Preview page in invoices
+
+!**> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script                    |DateUtil                                                 |
+|$contractDate=             |dateCalculation;               |dd-MMM-yyyy         |2   |
+|$invoicedate=              |dateCalculation;               |dd-MM-yyyy          |2   |
+|$loadingDate=              |dateCalculation;               |yyyy/MM/dd          |-2  |
+|$truckindate=              |dateCalculation;               |yyyy/MM/dd          |-5  |
+|$truckoutdate=             |dateCalculation;               |yyyy/MM/dd          |-1  |
+|$thisday=                  |dateCalculation;               |dd                  |0   |
+|$nMinus3day=               |getNPreviousDateInCurrentMonth;|$thisday            |-3|1|
+|$nMinus1day=               |getNPreviousDateInCurrentMonth;|$thisday            |-1|0|
+|$today=                    |getNPreviousDateInCurrentMonth;|$thisday            |0 |1|
+|$nMinus5day=               |getNPreviousDateInCurrentMonth;|$thisday            |-5|1|
+|$nMinus4day=               |getNPreviousDateInCurrentMonth;|$thisday            |-4|1|
+|$monthAndYear=             |dateCalculation;               |MMMM yyyy           |0   |
+|$todayDate=                |dateCalculation;               |d                   |0   |
+|$ordinalDateSuffix=        |getOrdinalDateSuffix;          |$todayDate               |
+|$expected_date_in_postgres=|dateCalculation;               |yyyy-MM-dd HH:mm:00Z|-1  |
+
+!|Script            |Common                                        |
+|$truckindate=      |stringConcatenation;|$truckindate |!- $timer-!|
+|$truckoutdate=     |stringConcatenation;|$truckoutdate|!- $timer-!|
+|$detention_group_1=|getRandomString;    |4            |ALPHAUPPER |
+|$detention_group_2=|getRandomString;    |4            |ALPHAUPPER |
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+
+!|Script               |DateUtil                               |
+|$truckinbacktimegate1=|dateCalculation;|hour       |hh:mma |-2|
+|$truckinbackdategate1=|dateCalculation;|dd-MM-yyyy |-4        |
+|$currenthrampmgate1=  |dateCalculation;|hour       |hh:mm a|-2|
+|$monthgate1=          |dateCalculation;|dd MMM yyyy|-4        |
+|$truckinbacktimegate2=|dateCalculation;|hour       |hh:mma |-3|
+|$truckinbackdategate2=|dateCalculation;|dd-MM-yyyy |-3        |
+|$currenthrampmgate2=  |dateCalculation;|hour       |hh:mm a|-3|
+|$monthgate2=          |dateCalculation;|dd MMM yyyy|-3        |
+
+!|Script                               |Common                                                   |
+|$expected_gate1_ArrivedDateInTimeline=|stringConcatenation;|$monthgate1|!- $currenthrampmgate1-!|
+|$expected_gate2_ArrivedDateInTimeline=|stringConcatenation;|$monthgate2|!- $currenthrampmgate2-!|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Updating the client config for Freight bill
+!|Script                              |MongoDB                                      |
+|initialize;                          |${connection}|${database}                    |
+|wait;                                |2                                            |
+|updateFreightBillClientConfiguration;|${surl}      |category1|start_day|$nMinus3day|
+|updateFreightBillClientConfiguration;|${surl}      |category1|end_day  |$today     |
+|updateFreightBillClientConfiguration;|${surl}      |category2|start_day|$nMinus5day|
+|updateFreightBillClientConfiguration;|${surl}      |category2|end_day  |$nMinus4day|
+|updateFreightBillClientConfiguration;|${surl}      |category3|start_day|$nMinus3day|
+|updateFreightBillClientConfiguration;|${surl}      |category3|end_day  |$today     |
+*!
+
+!**> Data creation
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {dc$unique}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandopg2+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation one
+
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+
+*!
+
+!***> Gate Creation two
+
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {RQ2$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_2=|getValueFromJSON;|$depotResp|data.id|
+
+*!
+
+!**> Consignee Creation one
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Egmore}
+!define city {cc$unique}
+!define state {Madya Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+**!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {2048}
+!define kg {12000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Uploading Detention for the Vehicle Group
+!define row {Vehicle Name,Group Code,Movement,LOADING_DETENTION_DAY1,LOADING_DETENTION_DAY2,LOADING_DETENTION_DAY3,LOADING_DETENTION_DAY4,LOADING_DETENTION_DAY5,LOADING_DETENTION_MORETHAN_DAY5,UnLOADING_DETENTION_DAY1,UnLOADING_DETENTION_DAY2,UnLOADING_DETENTION_DAY3,UnLOADING_DETENTION_DAY4,UnLOADING_DETENTION_DAY5,UnLOADING_DETENTION_MORETHAN_DAY5,TRANSIT_DAY1,TRANSIT_DAY2,TRANSIT_DAY3,TRANSIT_DAY4,TRANSIT_DAY5,TRANSIT_MORETHAN_DAY5,TRANSIT_DELAY_PERCENTAGE}
+!define column1 {${vehicle_name},$detention_group_1,Secondary,100,200,300,400,500,600,100,200,300,400,500,600,100,200,300,400,500,600,|${vehicle_name},$detention_group_2,Secondary,111,222,333,444,555,666,777,888,999,111,222,333,444,555,666,777,888,999,}
+
+!|Script    |Common                                          |
+|$excelpath=|getPath;|testAttachment/d2_$unique.xlsx|fullpath|
+
+!|Script                |Excel                       |
+|newSheetDynamicColumns;|${row}|${column1}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/detentions                                          |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|wait;                     |5                                                               |
+**!
+
+!** Admin settings for Detention
+!define loadingdetention_days {1}
+!define loadingdetention_hrs {0}
+
+!|Script|Http                                                                                                                                                                                                                                                                                       |
+|$data= |getJsonTrim;|{"data":{"depot_ids":["$depot"],"movement":1,"include_holiday":false,"threshold_time":"23:59","start_time":"00:00","detention_configurations":[{"detention_type":2,"days":0,"hours":0},{"detention_type":1,"days":${loadingdetention_days},"hours":${loadingdetention_hrs}}]}}|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.AdminSettings.DetentionAdminSettingsAPI
+**!
+
+!**> Material Creation 1
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"5"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!**> Material Creation 2
+!define material_name {m2$unique}
+!define material_code {mc2$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"5"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!**> Material Creation 3
+!define material_name {m3$unique}
+!define material_code {mc3$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"5"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!**> Uploading Rate Matrix with vehicle 1
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Drop Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,RQ1$unique,cr1$unique,v$unique,700,$transporter_ref_id,$transporter_name,1,1000,per trip,01-Jan-$year,31-Dec-2030,100,1,$detention_group_1,,100,1,per_kg,100,0,,,0-250,600,15,22,,}
+
+!include -c  .FrontPage.Pando.Common.RateMatrix
+*!
+
+!**> Purchase order creation
+!define ponumber {po$unique}
+!define netvalue {10000}
+!define balvalue {5000}
+!define legalentity1 {le1$unique}
+!define legalentity2 {le2$unique}
+!define legalentity3 {le3$unique}
+!define validfrom {2021-01-01}
+!define validto {2025-12-31}
+
+!define row {Purchase Order Number,Purchase Order Net Value,Purchase Order Balance value,Transporter Ref ID,Legal Entity,Valid From(YYYY-MM-DD),Valid To(YYYY-MM-DD)}
+!define column {${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity1},${validfrom},${validto}|${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity2},${validfrom},${validto}|${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity3},${validfrom},${validto}}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonPOupload
+**!
+**!
+
+!**> Direct Dispatch Contract Indent creation
+!define delivery_number {d1$unique}
+!define mrp_price {1000}
+!define material_code {mc$unique}
+!define depot_ref_id {R$unique}
+!define gate_ref_id_1 {RQ1$unique}
+!define division {DV}
+!define quantity {100}
+!define quantity_unit {NOS}
+!define weight {100}
+!define weight_unit {KG}
+!define volume {1024}
+!define volume_unit {CFT}
+!define ship_to {cr1$unique}
+!define sold_to {cr1$unique}
+!define type {Secondary}
+!define shipment_number {s1$unique}
+!define invoice_number {INV1$unique}
+!define invoice_amount {10000}
+!define category {20a}
+!define lr_number {lr1$unique}
+!define invoice_date {$invoicedate}
+!define transporter {tr$unique}
+!define vehicle_type {v$unique}
+!define vehicle_number {TN $vno_1 $vno_2 $vno_3}
+!define lr_number_1 {lr1$unique}
+!define lr_number_2 {lr2$unique}
+!define lr_number_3 {lr3$unique}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"${delivery_number}","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id_1}","division":"${legalentity1}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number_1}","truck_out":""},{"delivery_number":"${delivery_number}","mrp_price":"${mrp_price}","material_code":"mc2$unique","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id_1}","division":"${legalentity2}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number_2}","truck_out":""},{"delivery_number":"${delivery_number}","mrp_price":"${mrp_price}","material_code":"mc3$unique","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id_1}","division":"${legalentity3}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number_3}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+*!
+
+!**> Filter indent after direct_dispatch
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|script                     |ui                                                                                                                                                                                        |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                                                                                  |20        |
+|check                       |isElementPresent;                                                                      |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|mouseHover;                 |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]                   |xpath                                                                                             |
+|$order_id=                  |getText;                                                                               |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)                    |xpath     |
+**!
+
+!**> Edit Truck in for both gates in dispatched status
+!|Script               |common                        |
+|$truckinbackdategate1=|getTrim;|$truckinbackdategate1|
+|$truckinbacktimegate1=|getTrim;|$truckinbacktimegate1|
+|$truckinbackdategate2=|getTrim;|$truckinbackdategate2|
+|$truckinbacktimegate2=|getTrim;|$truckinbacktimegate2|
+
+!|Script                     |Ui                                                                                                                                                               |
+|click;                      |//span[contains(text(),'Edit Truck In')]                                                    |xpath                                                               |
+|click;                      |(//label[contains(text(),'Truck In- Date & Time')]/..//input[@placeholder='Pick a date'])[1]|xpath                                                               |
+|clearAndSend;               |//input[@placeholder='Select date']                                                         |xpath                                         |$truckinbackdategate1|
+|click;                      |//input[@placeholder='Select time']                                                         |xpath                                                               |
+|clearAndSend;               |//input[@placeholder='Select time']                                                         |xpath                                         |$truckinbacktimegate1|
+|click;                      |//div[@class='el-picker-panel__footer']                                                     |xpath                                                               |
+|click;                      |//div[@class='el-picker-panel__footer']/button/span[contains(text(),'OK')]                  |xpath                                                               |
+|wait;                       |2                                                                                                                                                                |
+|click;                      |//div[contains(text(),'Edit Truck In')]/..//*[contains(text(),'Submit')]                    |xpath                                                               |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span                                              |xpath                                         |20                   |
+|$successMessage=            |getElementAttribute;                                                                        |//h3[text()='Success']/following-sibling::span|xpath   |innerText   |
+
+!|Script   |common                                                        |
+|check     |checkIfStringAreEqual;|$successMessage|Timestamps Updated|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage|Timestamps Updated     |
+**!
+
+!**> Move to delivered
+!**> EPOD submission through Consignee APP
+!define consignee_id {$consignee_id_1}
+!define cusername {pandoconsignee+1$unique@gmail.com}
+!define cpassword {12345}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GetMaterialThroughConsigneeMobileAppAPI
+
+!|Script|Common                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":{"materials":[{"id":"$material_ref_id","leakage_count":"0","damage_count":"1","excess_count":"0","shortage_count":"2","carton_damage_count":"3","comment":"","shortage_charge":"120","damage_charge":"507.56","carton_damage_charge":"305.67"}],"packages":[]}}|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GRNSubmissionThroughConsigneeMobileApp
+
+!**> Verify EPOD submission
+!|Script                     |Ui                                                                                                                                                          |
+|click;                      |//span[text()='Document']             |xpath                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]|xpath                                                                                              |30               |
+|$epodstatus_column=         |getHeaderColumnNumber;                |//div[@class='el-table__header-wrapper']//div[@class='cell']                                       |xpath|EPOD status|
+|$material_row_number=       |getHeaderColumnNumber;                |//div[contains(@class,'scrolling')]//span[contains(text(),'kg')]                                   |xpath|100 kg     |
+|$epodstatus=                |getText;                              |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+
+!|Script|Common                                           |
+|check  |checkIfStringAreEqual;|$epodstatus|Submitted|true|
+**!
+**!
+
+!**> LR Upload in shipper
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!|Script  |Ui                                                                                         |
+|sendKeys;|//input[@class='el-upload__input']|xpath                                        |$pdfpath  |
+|check    |isElementPresent;                 |//span[@class='el-upload-list__item-preview']|xpath|true|
+**!
+
+!**> Marking Indent as delivered
+!define consignee_id {$consignee_id}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+
+!|script                     |ui                                                                                                                                    |
+|navigateToUrl;              |${surl}/indents                                                                                                                       |
+|refresh;                                                                                                                                                           |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                              |30        |
+|check                       |isElementPresent;                                                                      |//div[contains(text(),'Delivered')]|xpath|true|
+*!
+**!
+
+!**> Transporter Login
+!define transporter_email {pandotransporter+$unique@outlook.com}
+!define transporter_password {$password}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!**> Checking the Freight bill posted
+!|script                     |ui                                                                                                                                                |
+|click;                      |//li[@class='app-side-menu']                      |xpath                                                                                          |
+|click;                      |//li/a[contains(text(),'Pay')]                    |xpath                                                                                          |
+|click;                      |//li[@class='app-side-menu']/following-sibling::li|xpath                                                                                          |
+|click;                      |//li/span[text()='Freight Bill']                  |xpath                                                                                          |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row')]           |xpath                                                                                    |20   |
+|$freight_bill_no=           |getText;                                          |(//span[text()='CATEGORY1']/ancestor::div[contains(@class,'grid-list-row')]/div)[1]//span|xpath|
+|$other_charges_bill_no=     |getText;                                          |(//span[text()='CATEGORY3']/ancestor::div[contains(@class,'grid-list-row')]/div)[1]//span|xpath|
+*!
+
+!**> Changing the Freight end day for the category 1 and category 3
+!|Script                              |MongoDB                              |
+|updateFreightBillClientConfiguration;|${surl}|category1|end_day|$nMinus1day|
+|updateFreightBillClientConfiguration;|${surl}|category3|end_day|$nMinus1day|
+*!
+
+!**> Changing the Freight bill end day for the category 1 and category 3 in Postgres DB
+!define updatequery_1 {update public."FreightBills" set expected_erp_post_date='$expected_date_in_postgres' where bill_no='$freight_bill_no';}
+!define updatequery_2 {update public."FreightBills" set expected_erp_post_date='$expected_date_in_postgres' where bill_no='$other_charges_bill_no';}
+
+!|script|PostgresDB                                               |
+|$db1=  |updateDataInPostgresDb;|${pg_connection}|${updatequery_1}|
+|$db2=  |updateDataInPostgresDb;|${pg_connection}|${updatequery_2}|
+**!
+
+!**> Verify freight charge in the created Freight Bill
+!|script                     |ui                                                                                                                                                                 |
+|navigateToUrl;              |${turl}/v2/freight                                                                                                                                                 |
+|click;                      |//span[text()='CATEGORY1']                                                         |xpath                                                                          |
+|waitForElementToBeDisplayed;|//div[@class='el-table__fixed']//span[normalize-space(text())='$order_id!--cat1-!']|xpath                                                                    |20   |
+|$total_freight_bill_amount= |getText;                                                                           |//div[contains(@class,'el-table__fixed-right')]//div[@class='totalvalue']|xpath|
+
+!|Script              |common                                                     |
+|check                |checkIfStringAreEqual;|$total_freight_bill_amount|1000|true|
+|$total_freightcharge=|checkIfStringAreEqual;|$total_freight_bill_amount|1000     |
+**!
+
+!**> Verify other charges in the created Freight Bill
+!|script                     |ui                                                                                                                                                                 |
+|navigateToUrl;              |${turl}/v2/freight                                                                                                                                                 |
+|click;                      |//span[text()='CATEGORY3']                                                         |xpath                                                                          |
+|waitForElementToBeDisplayed;|//div[@class='el-table__fixed']//span[normalize-space(text())='$order_id!--cat3-!']|xpath                                                                    |20   |
+|$total_freight_bill_amount= |getText;                                                                           |//div[contains(@class,'el-table__fixed-right')]//div[@class='totalvalue']|xpath|
+
+!|Script            |common                                                     |
+|check              |checkIfStringAreEqual;|$total_freight_bill_amount|4172|true|
+|$total_othercharge=|checkIfStringAreEqual;|$total_freight_bill_amount|4172     |
+**!
+
+!** Generate Invoice
+!**> Check preview and Generate invoice for cat 1
+!define fb_category {CATEGORY1}
+!define fb_order_id {$order_id!--cat1-!}
+
+!** Validating the print preview for freight bill
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|script                     |ui                                                                               |
+|navigateToUrl;              |${turl}/v2/freight                                                               |
+|click;                      |//span[text()='${fb_category}']                                         |xpath   |
+|waitForElementToBeDisplayed;|//div[@class='el-table__fixed']//span[contains(text(),'${fb_order_id}')]|xpath|20|
+|click;                      |//a[contains(text(),'Preview')]                                         |xpath   |
+|wait;                       |3                                                                                |
+
+!|Script               |Common                       |
+|$uniquecaps=          |upperCase;|$unique           |
+|$freight_bill_no_caps=|upperCase;|$freight_bill_no  |
+|$monthAndYear=        |upperCase;|$monthAndYear     |
+|$ordinalDateSuffix=   |upperCase;|$ordinalDateSuffix|
+
+!|script           |common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|$expected_content=|getTrim;|Powered by pando This is an electronic invoice issued in accordance with the provisions of the InformationTechnology Act, 2000 (21 of 2000). Hence, does not require any signature or digital signature t T$uniquecaps ASHOK NAGER CHENNAI - 600083 TAMIL NADU GSTIN: 123 ORIGINAL FOR RECIPIENT FREIGHT BILL BILL TO PARTY P&G-AUTO NO 15,GST STREET, DC$uniquecaps - 123456, LEGAL ENTITY EXEMPTED/NON EXEMPTED PO NUMBER AMOUNT LE1$uniquecaps NON EXEMPTED PO$uniquecaps 333.34 LE2$uniquecaps NON EXEMPTED PO$uniquecaps 333.33 LE3$uniquecaps NON EXEMPTED PO$uniquecaps 333.33 TOTAL VALUE 1000 $freight_bill_no_caps $todayDate$ordinalDateSuffix $monthAndYear Powered by pando This is an electronic invoice issued in accordance with the provisions of the InformationTechnology Act, 2000 (21 of 2000). Hence, does not require any signature or digital signature t T$uniquecaps ASHOK NAGER CHENNAI - 600083 TAMIL NADU GSTIN: 123 DUPLICATE FOR SUPPLIER FREIGHT BILL BILL TO PARTY P&G-AUTO NO 15,GST STREET, DC$uniquecaps - 123456, LEGAL ENTITY EXEMPTED/NON EXEMPTED PO NUMBER AMOUNT LE1$uniquecaps NON EXEMPTED PO$uniquecaps 333.34 LE2$uniquecaps NON EXEMPTED PO$uniquecaps 333.33 LE3$uniquecaps NON EXEMPTED PO$uniquecaps 333.33 TOTAL VALUE 1000 $freight_bill_no_caps $todayDate$ordinalDateSuffix $monthAndYear|
+
+!|script         |FileUtil                          |
+|$filename=      |getLastModifiedFile;|$downloadPath|
+|$actual_content=|readPdfFile;        |$filename    |
+
+!|Script            |Common                                                          |
+|$difference_in_pdf=|stringCompareForDifference;|$actual_content   |$expected_content|
+|check              |checkIfStringAreEqual;     |$difference_in_pdf|[]     |true     |
+|$previewresult_1=  |checkIfStringAreEqual;     |$difference_in_pdf|[]               |
+
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+*!
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.FreightWorkingV2.PGFrieghtBill.CommonFreightbillGenerateForCategory
+**!
+
+!**> Check preview and Generate invoice for cat 3
+!define fb_category {CATEGORY3}
+!define fb_order_id {$order_id!--cat3-!}
+
+!** Validating the print preview for other bill
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|script                     |ui                                                                               |
+|navigateToUrl;              |${turl}/v2/freight                                                               |
+|click;                      |//span[text()='${fb_category}']                                         |xpath   |
+|waitForElementToBeDisplayed;|//div[@class='el-table__fixed']//span[contains(text(),'${fb_order_id}')]|xpath|20|
+|click;                      |//a[contains(text(),'Preview')]                                         |xpath   |
+|wait;                       |3                                                                                |
+
+!|Script                     |Common                           |
+|$other_charges_bill_no_caps=|upperCase;|$other_charges_bill_no|
+
+!|script           |common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|$expected_content=|getTrim;|Powered by pando This is an electronic invoice issued in accordance with the provisions of the InformationTechnology Act, 2000 (21 of 2000). Hence, does not require any signature or digital signature t T$uniquecaps ASHOK NAGER CHENNAI - 600083 TAMIL NADU GSTIN: 123 ORIGINAL FOR RECIPIENT FREIGHT BILL BILL TO PARTY P&G-AUTO NO 15,GST STREET, DC$uniquecaps - 123456, LEGAL ENTITY EXEMPTED/NON EXEMPTED PO NUMBER AMOUNT LE1$uniquecaps NON EXEMPTED PO$uniquecaps 1390.68 LE2$uniquecaps NON EXEMPTED PO$uniquecaps 1390.66 LE3$uniquecaps NON EXEMPTED PO$uniquecaps 1390.66 TOTAL VALUE 4172 $other_charges_bill_no_caps $todayDate$ordinalDateSuffix $monthAndYear Powered by pando This is an electronic invoice issued in accordance with the provisions of the InformationTechnology Act, 2000 (21 of 2000). Hence, does not require any signature or digital signature t T$uniquecaps ASHOK NAGER CHENNAI - 600083 TAMIL NADU GSTIN: 123 DUPLICATE FOR SUPPLIER FREIGHT BILL BILL TO PARTY P&G-AUTO NO 15,GST STREET, DC$uniquecaps - 123456, LEGAL ENTITY EXEMPTED/NON EXEMPTED PO NUMBER AMOUNT LE1$uniquecaps NON EXEMPTED PO$uniquecaps 1390.68 LE2$uniquecaps NON EXEMPTED PO$uniquecaps 1390.66 LE3$uniquecaps NON EXEMPTED PO$uniquecaps 1390.66 TOTAL VALUE 4172 $other_charges_bill_no_caps $todayDate$ordinalDateSuffix $monthAndYear|
+
+!|script         |FileUtil                          |
+|$filename=      |getLastModifiedFile;|$downloadPath|
+|$actual_content=|readPdfFile;        |$filename    |
+
+!|Script            |Common                                                          |
+|$difference_in_pdf=|stringCompareForDifference;|$actual_content   |$expected_content|
+|check              |checkIfStringAreEqual;     |$difference_in_pdf|[]     |true     |
+|$previewresult_2=  |checkIfStringAreEqual;     |$difference_in_pdf|[]               |
+
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+*!
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.FreightWorkingV2.PGFrieghtBill.CommonFreightbillGenerateForCategory
+
+!|script|ui|
+|wait;  |5 |
+*!
+*!
+
+!**> Check values in Postgres DB
+!define cat1_id_fetch_query {Select id from "Invoices" where invoice_number = '$freight_bill_no'}
+!define cat3_id_fetch_query {Select id from "Invoices" where invoice_number = '$other_charges_bill_no'}
+
+!|script          |PostgresDB                                                    |
+|$cat1_invoice_id=|getDataFromPostgresDb;|${pg_connection}|${cat1_id_fetch_query}|
+|$cat3_invoice_id=|getDataFromPostgresDb;|${pg_connection}|${cat3_id_fetch_query}|
+
+!define payquery1 {Select round(cast(contribution as numeric),2)  from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments" where invoice_id = '$cat1_invoice_id') and name = 'm$unique' and order_no='$order_id'}
+!define payquery2 {Select round(cast(contribution as numeric),2)  from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments"  where invoice_id = '$cat1_invoice_id') and name = 'm2$unique' and order_no='$order_id'}
+!define payquery3 {Select round(cast(contribution as numeric),2)  from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments" where invoice_id = '$cat1_invoice_id') and name = 'm3$unique' and order_no='$order_id'}
+!define payquery4 {Select round(cast(contribution as numeric),2)  from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments"  where invoice_id = '$cat3_invoice_id') and name = 'm$unique' and order_no='$order_id'}
+!define payquery5 {Select round(cast(contribution as numeric),2)  from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments" where invoice_id = '$cat3_invoice_id') and name = 'm2$unique' and order_no='$order_id'}
+!define payquery6 {Select round(cast(contribution as numeric),2)  from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments"  where invoice_id = '$cat3_invoice_id') and name = 'm3$unique' and order_no='$order_id'}
+!define payquery7 {Select round(cast(fixed_charge as numeric),2)  from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments"  where invoice_id = '$cat3_invoice_id') and name = 'm$unique' and order_no='$order_id'}
+!define payquery8 {Select round(cast(fixed_charge as numeric),2)  from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments" where invoice_id = '$cat3_invoice_id') and name = 'm2$unique' and order_no='$order_id'}
+!define payquery9 {Select round(cast(fixed_charge as numeric),2)  from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments"  where invoice_id = '$cat3_invoice_id') and name = 'm3$unique' and order_no='$order_id'}
+!define payquery10 {Select round(cast(loading_detention as numeric),2)  from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments"  where invoice_id = '$cat3_invoice_id') and name = 'm$unique' and order_no='$order_id'}
+!define payquery11 {Select round(cast(loading_detention as numeric),2)  from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments" where invoice_id = '$cat3_invoice_id') and name = 'm2$unique' and order_no='$order_id'}
+!define payquery12 {Select round(cast(loading_detention as numeric),2)  from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments"  where invoice_id = '$cat3_invoice_id') and name = 'm3$unique' and order_no='$order_id'}
+!define payquery13 {Select oda_freight from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments"  where invoice_id = '$cat3_invoice_id') and name = 'm$unique' and order_no='$order_id'}
+!define payquery14 {Select oda_freight from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments" where invoice_id = '$cat3_invoice_id') and name = 'm2$unique' and order_no='$order_id'}
+!define payquery15 {Select oda_freight from public."PaymentMaterialCostcenters" where payment_id in (select id from "Payments"  where invoice_id = '$cat3_invoice_id') and name = 'm3$unique' and order_no='$order_id'}
+
+!|script                      |PostgresDB                                           |
+|$freightrate_mat1_in_db=     |getDataFromPostgresDb;|${pg_connection}|${payquery1} |
+|$freightrate_mat2_in_db=     |getDataFromPostgresDb;|${pg_connection}|${payquery2} |
+|$freightrate_mat3_in_db=     |getDataFromPostgresDb;|${pg_connection}|${payquery3} |
+|$othercharges_mat1_in_db=    |getDataFromPostgresDb;|${pg_connection}|${payquery4} |
+|$othercharges_mat2_in_db=    |getDataFromPostgresDb;|${pg_connection}|${payquery5} |
+|$othercharges_mat3_in_db=    |getDataFromPostgresDb;|${pg_connection}|${payquery6} |
+|$fixedcharges_mat1_in_db=    |getDataFromPostgresDb;|${pg_connection}|${payquery7} |
+|$fixedcharges_mat2_in_db=    |getDataFromPostgresDb;|${pg_connection}|${payquery8} |
+|$fixedcharges_mat3_in_db=    |getDataFromPostgresDb;|${pg_connection}|${payquery9} |
+|$loadingdetention_mat1_in_db=|getDataFromPostgresDb;|${pg_connection}|${payquery10}|
+|$loadingdetention_mat2_in_db=|getDataFromPostgresDb;|${pg_connection}|${payquery11}|
+|$loadingdetention_mat3_in_db=|getDataFromPostgresDb;|${pg_connection}|${payquery12}|
+|$odacharges_mat1_in_db=      |getDataFromPostgresDb;|${pg_connection}|${payquery13}|
+|$odacharges_mat2_in_db=      |getDataFromPostgresDb;|${pg_connection}|${payquery14}|
+|$odacharges_mat3_in_db=      |getDataFromPostgresDb;|${pg_connection}|${payquery15}|
+
+!|Script            |common                                                                                                                                                                                                                      |
+|check              |checkIfStringAreEqual;       |$freightrate_mat1_in_db                                                       |333.33                                                   |true                                                 |
+|$dbresult_1=       |checkIfStringAreEqual;       |$freightrate_mat1_in_db                                                       |333.33                                                                                                         |
+|check              |checkIfStringAreEqual;       |$freightrate_mat2_in_db                                                       |333.33                                                   |true                                                 |
+|$dbresult_2=       |checkIfStringAreEqual;       |$freightrate_mat2_in_db                                                       |333.33                                                                                                         |
+|check              |checkIfStringAreEqual;       |$freightrate_mat3_in_db                                                       |333.34                                                   |true                                                 |
+|$dbresult_3=       |checkIfStringAreEqual;       |$freightrate_mat3_in_db                                                       |333.34                                                                                                         |
+|check              |checkIfStringAreEqual;       |$othercharges_mat1_in_db                                                      |1390.67                                                  |true                                                 |
+|$dbresult_4=       |checkIfStringAreEqual;       |$othercharges_mat1_in_db                                                      |1390.67                                                                                                        |
+|check              |checkIfStringAreEqual;       |$othercharges_mat2_in_db                                                      |1390.67                                                  |true                                                 |
+|$dbresult_5=       |checkIfStringAreEqual;       |$othercharges_mat2_in_db                                                      |1390.67                                                                                                        |
+|check              |checkIfStringAreEqual;       |$othercharges_mat3_in_db                                                      |1390.66                                                  |true                                                 |
+|$dbresult_6=       |checkIfStringAreEqual;       |$othercharges_mat3_in_db                                                      |1390.66                                                                                                        |
+|$dbresult_7=       |checkIfStringAreEqual;       |$fixedcharges_mat1_in_db                                                      |33.33                                                                                                          |
+|check              |checkIfStringAreEqual;       |$fixedcharges_mat1_in_db                                                      |33.33                                                    |true                                                 |
+|$dbresult_8=       |checkIfStringAreEqual;       |$fixedcharges_mat2_in_db                                                      |33.33                                                                                                          |
+|check              |checkIfStringAreEqual;       |$fixedcharges_mat2_in_db                                                      |33.33                                                    |true                                                 |
+|$dbresult_9=       |checkIfStringAreEqual;       |$fixedcharges_mat3_in_db                                                      |33.34                                                                                                          |
+|check              |checkIfStringAreEqual;       |$fixedcharges_mat3_in_db                                                      |33.34                                                    |true                                                 |
+|$dbresult_10=      |checkIfStringAreEqual;       |$loadingdetention_mat1_in_db                                                  |333.33                                                                                                         |
+|check              |checkIfStringAreEqual;       |$loadingdetention_mat1_in_db                                                  |333.33                                                   |true                                                 |
+|$dbresult_11=      |checkIfStringAreEqual;       |$loadingdetention_mat2_in_db                                                  |333.33                                                                                                         |
+|check              |checkIfStringAreEqual;       |$loadingdetention_mat2_in_db                                                  |333.33                                                   |true                                                 |
+|$dbresult_12=      |checkIfStringAreEqual;       |$loadingdetention_mat3_in_db                                                  |333.34                                                                                                         |
+|check              |checkIfStringAreEqual;       |$loadingdetention_mat3_in_db                                                  |333.34                                                   |true                                                 |
+|$dbresult_13=      |checkIfStringAreEqual;       |$odacharges_mat1_in_db                                                        |1024                                                                                                           |
+|check              |checkIfStringAreEqual;       |$odacharges_mat1_in_db                                                        |1024                                                     |true                                                 |
+|$dbresult_14=      |checkIfStringAreEqual;       |$odacharges_mat2_in_db                                                        |1024                                                                                                           |
+|check              |checkIfStringAreEqual;       |$odacharges_mat2_in_db                                                        |1024                                                     |true                                                 |
+|$dbresult_15=      |checkIfStringAreEqual;       |$odacharges_mat3_in_db                                                        |1024                                                                                                           |
+|$postgresdb_result=|checkIfStringAreEqualInArray;|$dbresult_1,$dbresult_2,$dbresult_3,$dbresult_4,$dbresult_5,$dbresult_6,$dbresult_7,$dbresult_8,$dbresult_9,$dbresult_10,$dbresult_11,$dbresult_12,$dbresult_13,$dbresult_14,$dbresult_15,true|
+**!
+
+!**> Validating test result
+!|Script  |Common                                                                                                                         |
+|$tresult=|checkIfStringAreEqualInArray;|$total_freightcharge,$total_othercharge,$postgresdb_result,$previewresult_1,$previewresult_2,true|
+**!
+
+!**> Reverting the Freight bill configuration to default
+!|Script                              |MongoDB                       |
+|updateFreightBillClientConfiguration;|${surl}|category1|start_day|1 |
+|updateFreightBillClientConfiguration;|${surl}|category1|end_day  |15|
+|updateFreightBillClientConfiguration;|${surl}|category2|start_day|16|
+|updateFreightBillClientConfiguration;|${surl}|category2|end_day  |31|
+|updateFreightBillClientConfiguration;|${surl}|category3|start_day|1 |
+|updateFreightBillClientConfiguration;|${surl}|category3|end_day  |31|
+*!

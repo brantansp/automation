@@ -1,0 +1,9 @@
+---
+Help: Contains Column enabled check for Transporter
+---
+!|Script    |Ui                                                                                                                                                                                                     |
+|click;     |//div[@class='el-popover__reference']                                      |xpath                                                                                                                      |
+|$isChecked=|getElementAttribute;                                                       |//span[normalize-space(text())='${column_name}']/../preceding-sibling::span/parent::div                 |xpath|aria-checked|
+|click;     |//span[normalize-space(text())='${column_name}']/../preceding-sibling::span|xpath                                                                                                                      |
+|click;     |//div[@class='el-popover__reference']                                      |xpath                                                                                                                      |
+|check      |isElementPresentNoReporting;                                               |//div[contains(@class,'grid-header el-row')]//child::div//span[normalize-space(text())='${column_name}']|xpath|${visiblity}|

@@ -1,0 +1,271 @@
+---
+Help: Adding multiple GSTIN states updating states and checking rejections through Transporter ERP
+Suites: dm2
+Test
+---
+!**> Unique values assignment
+!|script |common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!**> Transporter Creation via ERP API with Transporter GSTIN
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!define gst_number {GST$unique}
+!define gst_type {FCM}
+!define gst_percentage {10}
+!define gstinstate1 {Assam}
+!define gstin1 {12}
+!define gstinstate2 {Meghalaya}
+!define gstin2 {45}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":[{"name": "${transporter_name}","reference_number": "${transporter_ref_id}","address": "${address}, ","city": "${city}","state": "${state}","pincode": "${pincode}","contact_name": "${manager_name}","contact_mobile": "${manager_mobile}","contact_email": "${manager_email}","gst_number": "${gst_number}","pan_number": "${pancard}","gst_type": "${gst_type}","percentage": "${gst_percentage}","transporter_gst_states": "${gstinstate1}, ${gstinstate2}","transporter_gst_numbers": "${gstin1}, ${gstin2}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.TransporterCreationDynamicERPAPI
+**!
+
+!** Validating Transporter GSTIN multiple states in UI
+!define search_field {Enter Transporter Name}
+!define search_text {${transporter_name}}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonTransporterSearchInDataManager
+
+!|Script        |Ui                                                                                                                     |
+|click;         |//span[contains(text(),'Edit')]|xpath                                                                                  |
+|wait;          |2                                                                                                                      |
+|$stateHeaderNo=|getHeaderColumnNumber;         |(//div[@class='el-table__header-wrapper'])[1]//th/div[@class='cell']|xpath|State       |
+|$gstinHeaderNo=|getHeaderColumnNumber;         |(//div[@class='el-table__header-wrapper'])[1]//th/div[@class='cell']|xpath|GSTIN       |
+|$refidHeaderNo=|getHeaderColumnNumber;         |(//div[@class='el-table__header-wrapper'])[1]//th/div[@class='cell']|xpath|Reference Id|
+|$state1=       |getValue;                      |(//tr[@class='el-table__row'])[1]/td[$stateHeaderNo]//input         |xpath             |
+|$state2=       |getValue;                      |(//tr[@class='el-table__row'])[2]/td[$stateHeaderNo]//input         |xpath             |
+|$gstin1=       |getValue;                      |(//tr[@class='el-table__row'])[1]/td[$gstinHeaderNo]//input         |xpath             |
+|$gstin2=       |getValue;                      |(//tr[@class='el-table__row'])[2]/td[$gstinHeaderNo]//input         |xpath             |
+|$refid1=       |getValue;                      |(//tr[@class='el-table__row'])[1]/td[$refidHeaderNo]//input         |xpath             |
+|$refid2=       |getValue;                      |(//tr[@class='el-table__row'])[2]/td[$refidHeaderNo]//input         |xpath             |
+
+!|Script   |common                                            |
+|check     |checkIfStringAreEqual;|$state1|${gstinstate1}|true|
+|$tresult1=|checkIfStringAreEqual;|$state1|${gstinstate1}     |
+|check     |checkIfStringAreEqual;|$gstin1|${gstin1}     |true|
+|$tresult2=|checkIfStringAreEqual;|$gstin1|${gstin1}          |
+|check     |checkIfStringAreEqual;|$refid1|tr$unique     |true|
+|$tresult3=|checkIfStringAreEqual;|$refid1|tr$unique          |
+|check     |checkIfStringAreEqual;|$state2|${gstinstate2}|true|
+|$tresult4=|checkIfStringAreEqual;|$state2|${gstinstate2}     |
+|check     |checkIfStringAreEqual;|$gstin2|${gstin2}     |true|
+|$tresult5=|checkIfStringAreEqual;|$gstin2|${gstin2}          |
+|check     |checkIfStringAreEqual;|$refid2|tr$unique     |true|
+|$tresult6=|checkIfStringAreEqual;|$refid2|tr$unique          |
+
+!|Script                   |Common                                                                                        |
+|$addmultiplestates_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,true|
+**!
+
+!**> Update Transporter via ERP API with new GSTIN states
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!define gst_number {GST$unique}
+!define gst_type {FCM}
+!define gst_percentage {10}
+!define gstinstate3 {Bihar}
+!define gstin3 {20}
+
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":[{"name": "${transporter_name}","reference_number": "${transporter_ref_id}","address": "${address}, ","city": "${city}","state": "${state}","pincode": "${pincode}","contact_name": "${manager_name}","contact_mobile": "${manager_mobile}","contact_email": "${manager_email}","gst_number": "${gst_number}","pan_number": "${pancard}","gst_type": "${gst_type}","percentage": "${gst_percentage}","transporter_gst_states": "${gstinstate3}","transporter_gst_numbers": "${gstin3}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.TransporterCreationDynamicERPAPI
+**!
+
+!** Validating Transporter GSTIN multiple states in UI
+!define search_field {Enter Transporter Name}
+!define search_text {${transporter_name}}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonTransporterSearchInDataManager
+
+!|Script        |Ui                                                                                                                     |
+|click;         |//span[contains(text(),'Edit')]|xpath                                                                                  |
+|wait;          |2                                                                                                                      |
+|$stateHeaderNo=|getHeaderColumnNumber;         |(//div[@class='el-table__header-wrapper'])[1]//th/div[@class='cell']|xpath|State       |
+|$gstinHeaderNo=|getHeaderColumnNumber;         |(//div[@class='el-table__header-wrapper'])[1]//th/div[@class='cell']|xpath|GSTIN       |
+|$refidHeaderNo=|getHeaderColumnNumber;         |(//div[@class='el-table__header-wrapper'])[1]//th/div[@class='cell']|xpath|Reference Id|
+|$state1=       |getValue;                      |(//tr[@class='el-table__row'])[1]/td[$stateHeaderNo]//input         |xpath             |
+|$state2=       |getValue;                      |(//tr[@class='el-table__row'])[2]/td[$stateHeaderNo]//input         |xpath             |
+|$state3=       |getValue;                      |(//tr[@class='el-table__row'])[3]/td[$stateHeaderNo]//input         |xpath             |
+|$gstin1=       |getValue;                      |(//tr[@class='el-table__row'])[1]/td[$gstinHeaderNo]//input         |xpath             |
+|$gstin2=       |getValue;                      |(//tr[@class='el-table__row'])[2]/td[$gstinHeaderNo]//input         |xpath             |
+|$gstin3=       |getValue;                      |(//tr[@class='el-table__row'])[3]/td[$gstinHeaderNo]//input         |xpath             |
+|$refid1=       |getValue;                      |(//tr[@class='el-table__row'])[1]/td[$refidHeaderNo]//input         |xpath             |
+|$refid2=       |getValue;                      |(//tr[@class='el-table__row'])[2]/td[$refidHeaderNo]//input         |xpath             |
+|$refid3=       |getValue;                      |(//tr[@class='el-table__row'])[3]/td[$refidHeaderNo]//input         |xpath             |
+
+!|Script   |common                                            |
+|check     |checkIfStringAreEqual;|$state1|${gstinstate1}|true|
+|$tresult1=|checkIfStringAreEqual;|$state1|${gstinstate1}     |
+|check     |checkIfStringAreEqual;|$gstin1|${gstin1}     |true|
+|$tresult2=|checkIfStringAreEqual;|$gstin1|${gstin1}          |
+|check     |checkIfStringAreEqual;|$refid1|tr$unique     |true|
+|$tresult3=|checkIfStringAreEqual;|$refid1|tr$unique          |
+|check     |checkIfStringAreEqual;|$state2|${gstinstate2}|true|
+|$tresult4=|checkIfStringAreEqual;|$state2|${gstinstate2}     |
+|check     |checkIfStringAreEqual;|$gstin2|${gstin2}     |true|
+|$tresult5=|checkIfStringAreEqual;|$gstin2|${gstin2}          |
+|check     |checkIfStringAreEqual;|$refid2|tr$unique     |true|
+|$tresult6=|checkIfStringAreEqual;|$refid2|tr$unique          |
+|check     |checkIfStringAreEqual;|$state3|${gstinstate3}|true|
+|$tresult7=|checkIfStringAreEqual;|$state3|${gstinstate3}     |
+|check     |checkIfStringAreEqual;|$gstin3|${gstin3}     |true|
+|$tresult8=|checkIfStringAreEqual;|$gstin3|${gstin3}          |
+|check     |checkIfStringAreEqual;|$refid3|tr$unique     |true|
+|$tresult9=|checkIfStringAreEqual;|$refid3|tr$unique          |
+
+!|Script              |Common                                                                                                                      |
+|$updatestates_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,true|
+**!
+
+!**> Update Transporter via ERP API with same states with different GSTIN
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!define gst_number {GST$unique}
+!define gst_type {FCM}
+!define gst_percentage {10}
+!define gstinstate1 {Assam}
+!define gstin1 {55}
+!define gstinstate2 {Meghalaya}
+!define gstin2 {66}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":[{"name": "${transporter_name}","reference_number": "${transporter_ref_id}","address": "${address}, ","city": "${city}","state": "${state}","pincode": "${pincode}","contact_name": "${manager_name}","contact_mobile": "${manager_mobile}","contact_email": "${manager_email}","gst_number": "${gst_number}","pan_number": "${pancard}","gst_type": "${gst_type}","percentage": "${gst_percentage}","transporter_gst_states": "${gstinstate1}, ${gstinstate2}","transporter_gst_numbers": "${gstin1}, ${gstin2}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.TransporterCreationDynamicERPAPI
+**!
+
+!** Validating Transporter GSTIN multiple states in UI
+!define search_field {Enter Transporter Name}
+!define search_text {${transporter_name}}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonTransporterSearchInDataManager
+
+!|Script        |Ui                                                                                                                     |
+|click;         |//span[contains(text(),'Edit')]|xpath                                                                                  |
+|wait;          |2                                                                                                                      |
+|$stateHeaderNo=|getHeaderColumnNumber;         |(//div[@class='el-table__header-wrapper'])[1]//th/div[@class='cell']|xpath|State       |
+|$gstinHeaderNo=|getHeaderColumnNumber;         |(//div[@class='el-table__header-wrapper'])[1]//th/div[@class='cell']|xpath|GSTIN       |
+|$refidHeaderNo=|getHeaderColumnNumber;         |(//div[@class='el-table__header-wrapper'])[1]//th/div[@class='cell']|xpath|Reference Id|
+|$state1=       |getValue;                      |(//tr[@class='el-table__row'])[1]/td[$stateHeaderNo]//input         |xpath             |
+|$state2=       |getValue;                      |(//tr[@class='el-table__row'])[2]/td[$stateHeaderNo]//input         |xpath             |
+|$state3=       |getValue;                      |(//tr[@class='el-table__row'])[3]/td[$stateHeaderNo]//input         |xpath             |
+|$gstin1=       |getValue;                      |(//tr[@class='el-table__row'])[1]/td[$gstinHeaderNo]//input         |xpath             |
+|$gstin2=       |getValue;                      |(//tr[@class='el-table__row'])[2]/td[$gstinHeaderNo]//input         |xpath             |
+|$gstin3=       |getValue;                      |(//tr[@class='el-table__row'])[3]/td[$gstinHeaderNo]//input         |xpath             |
+|$refid1=       |getValue;                      |(//tr[@class='el-table__row'])[1]/td[$refidHeaderNo]//input         |xpath             |
+|$refid2=       |getValue;                      |(//tr[@class='el-table__row'])[2]/td[$refidHeaderNo]//input         |xpath             |
+|$refid3=       |getValue;                      |(//tr[@class='el-table__row'])[3]/td[$refidHeaderNo]//input         |xpath             |
+
+!|Script   |common                                            |
+|check     |checkIfStringAreEqual;|$state1|${gstinstate1}|true|
+|$tresult1=|checkIfStringAreEqual;|$state1|${gstinstate1}     |
+|check     |checkIfStringAreEqual;|$gstin1|${gstin1}     |true|
+|$tresult2=|checkIfStringAreEqual;|$gstin1|${gstin1}          |
+|check     |checkIfStringAreEqual;|$refid1|tr$unique     |true|
+|$tresult3=|checkIfStringAreEqual;|$refid1|tr$unique          |
+|check     |checkIfStringAreEqual;|$state2|${gstinstate2}|true|
+|$tresult4=|checkIfStringAreEqual;|$state2|${gstinstate2}     |
+|check     |checkIfStringAreEqual;|$gstin2|${gstin2}     |true|
+|$tresult5=|checkIfStringAreEqual;|$gstin2|${gstin2}          |
+|check     |checkIfStringAreEqual;|$refid2|tr$unique     |true|
+|$tresult6=|checkIfStringAreEqual;|$refid2|tr$unique          |
+|check     |checkIfStringAreEqual;|$state3|${gstinstate3}|true|
+|$tresult7=|checkIfStringAreEqual;|$state3|${gstinstate3}     |
+|check     |checkIfStringAreEqual;|$gstin3|${gstin3}     |true|
+|$tresult8=|checkIfStringAreEqual;|$gstin3|${gstin3}          |
+|check     |checkIfStringAreEqual;|$refid3|tr$unique     |true|
+|$tresult9=|checkIfStringAreEqual;|$refid3|tr$unique          |
+
+!|Script             |Common                                                                                                                      |
+|$updategstin_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,true|
+**!
+
+!**> Update Transporter via ERP API with invalid spelling in GSTIN states
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!define gst_number {GST$unique}
+!define gst_type {FCM}
+!define gst_percentage {10}
+!define gstinstate1 {Assa}
+!define gstin1 {55}
+!define gstinstate2 {Meghlaya}
+!define gstin2 {66}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":[{"name": "${transporter_name}","reference_number": "${transporter_ref_id}","address": "${address}, ","city": "${city}","state": "${state}","pincode": "${pincode}","contact_name": "${manager_name}","contact_mobile": "${manager_mobile}","contact_email": "${manager_email}","gst_number": "${gst_number}","pan_number": "${pancard}","gst_type": "${gst_type}","percentage": "${gst_percentage}","transporter_gst_states": "${gstinstate1}, ${gstinstate2}","transporter_gst_numbers": "${gstin1}, ${gstin2}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.TransporterCreationDynamicERPAPI
+**!
+
+!** Check Rejection for invalid States
+!**> Download Rejection list
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|Script                     |Ui                                                                                |
+|navigateToUrl;              |${surl}/mdm/rejection                                                             |
+|waitForElementToBeDisplayed;|//div[contains(text(),'Transporters')]//following-sibling::div           |xpath|20|
+|click;                      |//div[contains(text(),'Transporters')]/parent::div/following-sibling::div|xpath   |
+|wait;                       |10                                                                                |
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+**!
+
+!** Verify Rejection list
+!|script |ExcelQuery                                                                                                 |
+|$count1=|getCountQuery;|$filename|select * from "Pando Rejections" where "Transporter Name*" = 't$unique'            |
+|$reason=|selectQuery;  |$filename|select Reason from "Pando Rejections" where "Transporter Name*" = 't$unique'|Reason|
+
+!|Script           |common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|check             |checkIfStringAreEqual;|$count1|1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |true|
+|$rejectionresult1=|checkIfStringAreEqual;|$count1|1                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|check             |checkIfStringAreEqual;|$reason|[Invalid State name or GSTIN Missing: Please check the state is either of Andaman and Nicobar Islands,Andhra Pradesh,Arunachal Pradesh,Assam,Bihar,Chandigarh,Chattisgarh,Dadra and Nagar Haveli,Daman and Diu,Delhi,Goa,Gujarat,Haryana,Himachal Pradesh,Jammu and Kashmir,Jharkhand,Karnataka,Kerala,Lakshadweep,Madhya Pradesh,Maharashtra,Manipur,Meghalaya,Mizoram,Nagaland,Odisha,Puducherry,Punjab,Rajasthan,Sikkim,Tamil Nadu,Telangana,Tripura,Uttarakhand,Uttar Pradesh,West Bengal]|true|
+|$rejectionresult2=|checkIfStringAreEqual;|$reason|[Invalid State name or GSTIN Missing: Please check the state is either of Andaman and Nicobar Islands,Andhra Pradesh,Arunachal Pradesh,Assam,Bihar,Chandigarh,Chattisgarh,Dadra and Nagar Haveli,Daman and Diu,Delhi,Goa,Gujarat,Haryana,Himachal Pradesh,Jammu and Kashmir,Jharkhand,Karnataka,Kerala,Lakshadweep,Madhya Pradesh,Maharashtra,Manipur,Meghalaya,Mizoram,Nagaland,Odisha,Puducherry,Punjab,Rajasthan,Sikkim,Tamil Nadu,Telangana,Tripura,Uttarakhand,Uttar Pradesh,West Bengal]     |
+**!
+**!
+
+!** Validating results
+!|Script  |Common                                                                                                                                        |
+|check    |checkIfStringAreEqualInArray;|$addmultiplestates_result,$updatestates_result,$updategstin_result,$rejectionresult1,$rejectionresult2,true|true|
+|$tresult=|checkIfStringAreEqualInArray;|$addmultiplestates_result,$updatestates_result,$updategstin_result,$rejectionresult1,$rejectionresult2,true     |
+**!

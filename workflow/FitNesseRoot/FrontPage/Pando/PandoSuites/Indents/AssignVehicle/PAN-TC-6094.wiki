@@ -1,0 +1,337 @@
+---
+Help: Changing vehicle number along with vehicle details while in transit
+Suites: indent1
+Test
+---
+!**> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-4|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-3|
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0 |
+|$cdate=       |dateCalculation;|yyyy/MM/dd |1 |
+
+!|Script       |Common                                          |
+|$truckindate= |stringConcatenation;|$truckindate |!- 10:00:00-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- 10:00:00-!|
+|$rdate=       |stringConcatenation;|$rdate       |!- 10:00:00-!|
+
+!|Script         |DateUtil                             |
+|$loadingDate=   |utcConversion;  |$loadingDate        |
+|$truckindate=   |utcConversion;  |$truckindate        |
+|$truckoutdate=  |utcConversion;  |$truckoutdate       |
+|$reporttime=    |dateCalculation;|hour      |hh:mma|0 |
+|$reportdate=    |dateCalculation;|dd-MM-yyyy|0        |
+|$backreporttime=|dateCalculation;|hour      |hh:mma|-3|
+|$backreportdate=|dateCalculation;|dd-MM-yyyy|-3       |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Consignee Creation 
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!**> Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Gate Manager Creation
+!**> User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Material Creation 
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!**> Uploading Rate Matrix for 1st vechicle
+!**> Vehicle Creation 
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!|Script|Common                                                                                                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":[{"contract_type":"City","source":"${depot_city}","destination":"city$unique","vehicle_type":"${vehicle_name}","distance":"100","transporter_reference_number":"${transporter_ref_id}","transporter_name":"${transporter_name}","transit_days":"1","freight_rate":"1000","freight_unit":"trip","valid_from":"2019/01/01","valid_to":"$cdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.RateMatrixDynamicAPI
+*!
+
+!**> Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+*!
+
+!**> Adding vehicle number
+!define vechicle_number {TN $num1 $rand1 $num2}
+!define driver_name {d$unique}
+!define phone_number {1234567890}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!**> Verify Truck Number before Truck-in
+!define depot_selection {d$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|Script   |Ui                                                                         |
+|check     |isElementPresent;|//span[contains(text(), '${vechicle_number}')]|xpath|true|
+|$tresult1=|isElementPresent;|//span[contains(text(), '${vechicle_number}')]|xpath     |
+**!
+
+!**> Truck In
+!|Script        |Common               |
+|$truck_in_date=|getTrim;|$truckindate|
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+**!
+
+!**> Change vehicle number
+!define vechicle_number {MH $num1 $rand1 $num2}
+!define driver_name {d$unique}
+!define phone_number {1234567891}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckUpdateAPI
+*!
+
+!**> Verify Truck Number after Truck-in
+!define depot_selection {d$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!|Script   |Ui                                                                         |
+|check     |isElementPresent;|//span[contains(text(), '${vechicle_number}')]|xpath|true|
+|$tresult2=|isElementPresent;|//span[contains(text(), '${vechicle_number}')]|xpath     |
+**!
+
+!**> Reached Load point
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LoadingPointAPI
+*!
+
+!**> Change vehicle number
+!define vechicle_number {OD $num1 $rand1 $num2}
+!define driver_name {d$unique}
+!define phone_number {1234567892}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckUpdateAPI
+*!
+
+!**> Verify Truck Number after reaching load point
+!define depot_selection {d$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!|Script   |Ui                                                                         |
+|check     |isElementPresent;|//span[contains(text(), '${vechicle_number}')]|xpath|true|
+|$tresult3=|isElementPresent;|//span[contains(text(), '${vechicle_number}')]|xpath     |
+**!
+
+!**> Start Loading
+!define gate_id {$gate_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.StartLoadAPI
+*!
+
+!**> End Loading
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.EndPointAPI
+*!
+
+!**> Adding LR Receipt
+!define consignee_id {$consignee_id}
+!define lr_number {$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+*!
+
+!**> Change vehicle number
+!define vechicle_number {MP $num1 $rand1 $num2}
+!define driver_name {d$unique}
+!define phone_number {1234567893}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckUpdateAPI
+*!
+
+!**> Verify Truck Number after loading 
+!define depot_selection {d$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!|Script   |Ui                                                                         |
+|check     |isElementPresent;|//span[contains(text(), '${vechicle_number}')]|xpath|true|
+|$tresult4=|isElementPresent;|//span[contains(text(), '${vechicle_number}')]|xpath     |
+**!
+
+!**> Truck Out
+!|Script         |Common                |
+|$truck_out_date=|getTrim;|$truckoutdate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckOutAPI
+*!
+
+!**> Change vehicle number
+!define vechicle_number {AP $num1 $rand1 $num2}
+!define driver_name {d$unique}
+!define phone_number {1234567894}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckUpdateAPI
+*!
+
+!**> Verify Truck Number after Truckout 
+!define depot_selection {d$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!|Script   |Ui                                                                         |
+|check     |isElementPresent;|//span[contains(text(), '${vechicle_number}')]|xpath|true|
+|$tresult5=|isElementPresent;|//span[contains(text(), '${vechicle_number}')]|xpath     |
+**!
+
+!**> Transporter Login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!**> Transporter Depot Filter
+!define depot_name {d$unique}
+
+!include -c .FrontPage.Pando.Common.CommonTransporterDepoFilter
+*!
+
+!** Validate truck number,mobile number, driver name as editable till Delivered. It gets disabled only after Delivered.
+!define truck_no {2124}
+
+!|Script      |Ui                                                                                                   |
+|click;       |//span[contains(text(), '${vechicle_number}')]|xpath                                                 |
+|check        |isElementPresent;                             |//div[@class = 'el-form-item is-required']|xpath |true|
+|$tresult5=   |isElementPresent;                             |//div[@class = 'el-form-item is-required']|xpath      |
+|check        |isElementPresent;                             |(//div[@class = 'el-form-item'])[1]       |xpath |true|
+|$tresult6=   |isElementPresent;                             |(//div[@class = 'el-form-item'])[1]       |xpath      |
+|clearAndSend;|(//input[@placeholder = '0000'])[1]           |xpath                                     |${truck_no}|
+|click;       |//span[contains(text(), 'Submit')]            |xpath                                                 |
+|wait;        |5                                                                                                    |
+|check        |isElementPresent;                             |//span[contains(text(),'${truck_no}')]    |xpath |true|
+|$tresult7=   |isElementPresent;                             |//span[contains(text(),'${truck_no}')]    |xpath      |
+**!
+
+!** Validating the test results
+!|Script  |Common                                                                                             |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7|
+|check    |checkIfStringAreEqual;       |$tresult                 |true                 |true                 |
+*!

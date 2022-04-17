@@ -1,0 +1,12 @@
+---
+Test
+---
+!|Script     |Http                                                                                         |
+|wait;       |5                                                                                            |
+|setBaseUrl; |${curl}/api/login                                                                            |
+|getResponse;|Application/Json|put             |{"data":{"email":"${cusername}","password":"${cpassword}"}}|
+|$token=     |getHeader;      |x-auth-token                                                                |
+|addHeader;  |Authorization   |bearer $token                                                               |
+|setBaseUrl; |${curl}/api/order/$order_id/${consignee_id}/materials/                                       |
+|$data=      |getResponse;    |Application/Json|get                            |                           |
+|$status=    |getStatusCode;                                                                               |

@@ -1,0 +1,435 @@
+---
+Help: Verify whether freight rate is editable till Del pending status
+Suites: indent3
+Test
+---
+!**> Unique Value assignment
+!| Script  |Common                                       |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$cGroup=  |getRandomString;        |5        |ALPHAUPPER|
+|$vno_1=   |getRandomNumber;        |20       |76        |
+|$vno_2=   |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=   |getRandomNumber;        |1000     |9999      |
+|$currDate=|getCurrentDateTimeStamp |iso                 |
+|$year=    |getSubString;           |$unique  |0   |4    |
+|$today=   |getSubString;           |$currDate|8   |10   |
+|$indate=  |getCurrentDateTimeStamp;|yyyy/MM/dd          |
+
+!| Script      |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |0 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |0 |
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0 |
+
+!| Script      |Common                                         |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer -!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer -!|
+|$rdate=       |stringConcatenation;|$rdate       |!- $timer -!|
+
+!| Script      |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=       |utcConversion;|$rdate       |
+
+!|Script        |DateUtil                                     |
+|$expected_date=|dateCalculation;|yyyy/MM/dd   |0             |
+|$expected_date=|utcConversion;  |$expected_date !- 10:00:00-!|
+|$reporttime=   |dateCalculation;|hour         |hh:mma   |0   |
+|$reportdate=   |dateCalculation;|dd-MM-yyyy   |0             |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+
+!|Script|DateUtil                      |
+|$month=|dateCalculation;|dd MMM yyyy|0|
+
+!|Script   |Common                                   |
+|$validate=|stringConcatenation;|$month|!- 12:00 AM-!|
+
+*!
+
+!**> Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Kakinada Road}
+!define city {Kakinada}
+!define state {Andra Pradesh}
+!define pincode {321001}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Material Creation 1
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!**> Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Gate Manager Creation
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {rt$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+*!
+
+!** Creating Secondary - Open Indent in UI
+!define type {Outbound}
+!define source_location {d$unique}
+!define destination_location {c$unique}
+!define switch_depo {Consignee} 
+!define switch_type {2}
+!define gate_id {rt$unique}
+!define delivery_type {FTL}
+!define base_freight {4500}
+!define freight_type {Per Trip}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonSecondaryOpenIndentWithBaseFreightInUI
+**!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!*> Filter depot
+!define depot_selection {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+*!
+
+!** Update freight rate after assigned
+!define new_freight_rate {4599.89}
+!define new_freight_type {Per Trip}
+
+!|Script|ui                                                             |
+|check  |isElementPresent;|//div[contains(text(),'Assigned')]|xpath|true|
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.FreightWorkingV2.CommonOpenIndentUpdateFreightChargeInUI
+
+!| Script  |Common                                                                            |
+|check     |checkIfStringAreEqual;|$successMessage|Updated the freight rate for $order_id|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage|Updated the freight rate for $order_id     |
+**!
+
+!***> Truck In
+!| Script       |Common               |
+|$truck_in_date=|getTrim;|$truckindate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!** Update freight rate after arrived
+!define new_freight_rate {4699.44}
+!define new_freight_type {Per Ton}
+
+!|Script|ui                                                            |
+|refresh;                                                              |
+|wait;  |2                                                             |
+|check  |isElementPresent;|//div[contains(text(),'Arrived')]|xpath|true|
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.FreightWorkingV2.CommonOpenIndentUpdateFreightChargeInUI
+
+!| Script  |Common                                                                            |
+|check     |checkIfStringAreEqual;|$successMessage|Updated the freight rate for $order_id|true|
+|$tresult2=|checkIfStringAreEqual;|$successMessage|Updated the freight rate for $order_id     |
+
+!** Verify Base freight rate
+!|Script       |Ui                                                                                   |
+|click;        |//span[contains(text(),'t$unique')]|xpath                                            |
+|$finalfreight=|getText;                           |//p[contains(text(),'Base Freight')]/Strong|xpath|
+
+!| Script  |Common                                                       |
+|check     |checkIfStringAreEqual;|$finalfreight|₹ 4699.44 / Per Ton|true|
+|$tresult3=|checkIfStringAreEqual;|$finalfreight|₹ 4699.44 / Per Ton     |
+**!
+**!
+
+!**> Truck out indent
+!*** Reached Load point
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LoadingPointAPI
+*!
+
+!*** Start Loading
+!define gate_id {$gate_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.StartLoadAPI
+*!
+
+!*** End Loading
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.EndPointAPI
+*!
+
+!*** Adding LR Receipt
+
+!define consignee_id {$consignee_id}
+!define lr_number {$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+*!
+!*** Truck Out
+
+!| Script        |Common                |
+|$truck_out_date=|getTrim;|$truckoutdate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckOutAPI
+*!
+**!
+
+!** Update freight rate after dispatched
+!define new_freight_rate {4708.10}
+!define new_freight_type {Per Kg}
+
+!|Script|ui                                                               |
+|refresh;                                                                 |
+|wait;  |2                                                                |
+|check  |isElementPresent;|//div[contains(text(),'Dispatched')]|xpath|true|
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.FreightWorkingV2.CommonOpenIndentUpdateFreightChargeInUI
+
+!| Script  |Common                                                                            |
+|check     |checkIfStringAreEqual;|$successMessage|Updated the freight rate for $order_id|true|
+|$tresult4=|checkIfStringAreEqual;|$successMessage|Updated the freight rate for $order_id     |
+
+!** Verify Base freight rate
+!|Script       |Ui                                                                                   |
+|click;        |//span[contains(text(),'t$unique')]|xpath                                            |
+|$finalfreight=|getText;                           |//p[contains(text(),'Base Freight')]/Strong|xpath|
+
+!| Script  |Common                                                      |
+|check     |checkIfStringAreEqual;|$finalfreight|₹ 4708.10 / Per Kg|true|
+|$tresult5=|checkIfStringAreEqual;|$finalfreight|₹ 4708.10 / Per Kg     |
+**!
+**!
+
+!***> Marking Indent as delivered
+!define consignee_id {$consignee_id}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+*!
+
+!** Update freight rate after delivery pending
+!define new_freight_rate {4180.99}
+!define new_freight_type {Per Trip}
+
+!|Script|ui                                                                |
+|refresh;                                                                  |
+|wait;  |2                                                                 |
+|check  |isElementPresent;|//div[contains(text(),'Del Pending')]|xpath|true|
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.FreightWorkingV2.CommonOpenIndentUpdateFreightChargeInUI
+
+!| Script  |Common                                                                            |
+|check     |checkIfStringAreEqual;|$successMessage|Updated the freight rate for $order_id|true|
+|$tresult6=|checkIfStringAreEqual;|$successMessage|Updated the freight rate for $order_id     |
+
+!** Verify Base freight rate
+!|Script       |Ui                                                                                              |
+|click;        |//span[contains(text(),'t$unique')]|xpath                                                       |
+|$finalfreight=|getText;                           |//p[contains(text(),'Base Freight')]/Strong           |xpath|
+|$deliverytype=|getText;                           |//p[normalize-space(text())='Delivery Type :']//strong|xpath|
+
+!| Script  |Common                                                        |
+|check     |checkIfStringAreEqual;|$finalfreight|₹ 4180.99 / Per Trip|true|
+|$tresult7=|checkIfStringAreEqual;|$finalfreight|₹ 4180.99 / Per Trip     |
+|check     |checkIfStringAreEqual;|$deliverytype|FTL - ROAD          |true|
+|$tresult8=|checkIfStringAreEqual;|$deliverytype|FTL - ROAD               |
+**!
+**!
+
+!* Mark indent as delivered
+!**> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {cases}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {9000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"r$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"cr$unique","sold_to":"cr$unique","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!|Script|ui|
+|wait;  |60|
+
+!| Script|DateUtil                     |
+|$rdate= |dateCalculation;|yyyy/MM/dd|0|
+
+!| Script|Common                                  |
+|$rdate= |stringConcatenation;|$rdate|!- $timer -!|
+
+!| Script|DateUtil             |
+|$rdate= |utcConversion;|$rdate|
+
+!**> ERP Upload for Consignee 1
+!|script|common                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"cr$unique","sold_to":"cr$unique","material_invoice_number":"INV-$unique","material_code":"mc$unique","no_of_shortage":"0","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+**!
+
+!**> Transporter login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+**!
+
+!*> Ready for billing page
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!include -c .FrontPage.Pando.Common.CommonPDFUploadInReadyForBilling
+*!
+
+!** Validating payments on ready for billing
+!define header_name {Freight}
+!define consignee_name {Kakinada}
+
+!|script                     |ui                                            |
+|waitForElementToBeDisplayed;|//div[contains(@class,'table__body')]|xpath|20|
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationByConsigneeInReadyForBilling
+
+!| Script                    |Common                           |
+|$transporter_freight_charge=|getTrim;|$system_generated_amount|
+
+!| Script  |Common                                                                     |
+|check     |checkIfStringAreEqual;|$transporter_freight_charge|${new_freight_rate}|true|
+|$tresult9=|checkIfStringAreEqual;|$transporter_freight_charge|${new_freight_rate}     |
+**!
+
+!**> Generate Invoice
+!define invoice_number {ic$unique}
+!define gstn_no {gst$unique}
+!define remarks {remarks $unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonGenerateInvoice
+
+**!
+
+!** Validating Data on shipper invoice
+!define depot_name {d$unique}
+
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!define click_invoice {t$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.CommonNavigatingToInvoiceDetailsShipperInvoice
+
+!define header_name {Freight}
+!define consignee_name {Kakinada}
+
+!|script                     |ui                                            |
+|waitForElementToBeDisplayed;|//div[contains(@class,'table__body')]|xpath|20|
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.CommonPaymentValidationByConsigneeInShipperInvoice
+
+!| Script                |Common                         |
+|$shipper_freight_charge=|getTrim;|$shipper_payment_value|
+
+!| Script   |Common                                                                 |
+|check      |checkIfStringAreEqual;|$shipper_freight_charge|${new_freight_rate}|true|
+|$tresult10=|checkIfStringAreEqual;|$shipper_freight_charge|${new_freight_rate}     |
+**!
+
+!**> Validating the Result
+!|Script  |Common                                                                                                                                 |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,true|
+*!

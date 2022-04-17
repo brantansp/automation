@@ -1,0 +1,256 @@
+{
+	"definitions": {},
+	"$schema": "http://json-schema.org/draft-07/schema#", 
+	"$id": "https://example.com/object1629375044.json", 
+	"title": "Root", 
+	"type": "object",
+	"required": [
+		"_id",
+		"ModifiedPicklist"
+	],
+	"additionalProperties": false,
+	"properties": {
+		"_id": {
+			"$id": "#root/_id", 
+			"title": "_id", 
+			"default": "",
+			"pattern": "^.*$"
+		},
+		"ModifiedPicklist": {
+			"$id": "#root/ModifiedPicklist", 
+			"title": "Modifiedpicklist", 
+			"type": "object",
+			"required": [
+				"ItemModifiedPicklist"
+			],
+			"additionalProperties": false,
+			"properties": {
+				"ItemModifiedPicklist": {
+					"$id": "#root/ModifiedPicklist/ItemModifiedPicklist", 
+					"title": "Itemmodifiedpicklist", 
+					"type": "array",
+					"default": [],
+					"items":{
+						"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items", 
+						"title": "Items", 
+						"type": "object",
+						"required": [
+							"indent_id",
+							"type",
+							"vehicle_number",
+							"vehicle_type",
+							"indication",
+							"transporter_code",
+							"created_date",
+							"truck_in_date_and_time",
+							"depot_code",
+							"pickup_code",
+							"delivery_number",
+							"line_item_no",
+							"sku",
+							"division",
+							"quantity",
+							"quantity_unit",
+							"N",
+							"weight",
+							"weight_unit",
+							"volume",
+							"volume_unit",
+							"category",
+							"lr_number",
+							"ship_to",
+							"sold_to"
+						],
+						"additionalProperties": false,
+						"properties": {
+							"indent_id": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/indent_id", 
+								"title": "Indent_id", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"type": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/type", 
+								"title": "Type", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"vehicle_number": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/vehicle_number", 
+								"title": "Vehicle_number", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"vehicle_type": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/vehicle_type", 
+								"title": "Vehicle_type", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"indication": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/indication", 
+								"title": "Indication", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"transporter_code": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/transporter_code", 
+								"title": "Transporter_code", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"created_date": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/created_date", 
+								"title": "Created_date", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"truck_in_date_and_time": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/truck_in_date_and_time", 
+								"title": "Truck_in_date_and_time", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"depot_code": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/depot_code", 
+								"title": "Depot_code", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"pickup_code": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/pickup_code", 
+								"title": "Pickup_code", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"delivery_number": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/delivery_number", 
+								"title": "Delivery_number", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"line_item_no": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/line_item_no", 
+								"title": "Line_item_no", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"sku": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/sku", 
+								"title": "Sku", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"division": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/division", 
+								"title": "Division", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"quantity": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/quantity", 
+								"title": "Quantity", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"quantity_unit": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/quantity_unit", 
+								"title": "Quantity_unit", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"N": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/N", 
+								"title": "N", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"weight": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/weight", 
+								"title": "Weight", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"weight_unit": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/weight_unit", 
+								"title": "Weight_unit", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"volume": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/volume", 
+								"title": "Volume", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"volume_unit": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/volume_unit", 
+								"title": "Volume_unit", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"category": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/category", 
+								"title": "Category", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"category_priority": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/category_priority", 
+								"title": "Category_priority", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"lr_number": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/lr_number", 
+								"title": "Lr_number", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"ship_to": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/ship_to", 
+								"title": "Ship_to", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							},
+							"sold_to": {
+								"$id": "#root/ModifiedPicklist/ItemModifiedPicklist/items/sold_to", 
+								"title": "Sold_to", 
+								"type": "string",
+								"default": "",
+								"pattern": "^.*$"
+							}
+						}
+					}
+
+				}
+			}
+		}
+
+	}
+}

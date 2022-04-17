@@ -1,0 +1,11 @@
+---
+Help: UpdateLR
+---
+!|Script|Ui|
+|navigateToUrl;|${surl}/indents/$order_id/details/0?category=0|
+|click;|//div[contains(text(),'LR')]|xpath|
+|waitForElementToBeDisplayed;|//div[@class='table-td w300']|xpath|30|
+|click;|//div[@class='table-td w300']|xpath|
+|wait;|1|
+|sendKeys;|//input|xpath|$unique|
+|click;|//button[text()='Save']|xpath|

@@ -1,0 +1,862 @@
+---
+Help: Ensure after approval of invoice any change in invoice value reflected in shipper side
+Suites: pay2
+Test
+---
+!***> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-6|
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-4|
+|$rdate=       |dateCalculation;|yyyy/MM/dd |-1|
+
+!|Script       |Common                                          |
+|$truckindate= |stringConcatenation;|$truckindate |!- 10:00:00-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- 10:00:00-!|
+|$rdate=       |stringConcatenation;|$rdate       |!- 10:00:00-!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Data Setup
+!***> Consignee Creation one
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {A Nagar}
+!define city {c1$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!***> Consignee Creation two
+!define consignee_name {c2$unique}
+!define consignee_ref_id {cr2$unique}
+!define address {A Nagar}
+!define city {c2$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+2+$unique@gmail.com}
+!define region {South}
+!define site {2}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_2=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_2=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee2_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!***> Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!***> Retrieving Password for the Created Transporter
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {0}
+!define kg {0}
+!define vehicle_type {PTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!***> Gate Manager Creation
+!***> User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!***> Material Creation 1
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!***> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,${depot_city},c1$unique,${vehicle_name},100,${transporter_ref_id},${transporter_name},1,1000,per_trip,01-Jan-$year,31-Dec-2030,100,1,|City,${depot_city},c2$unique,${vehicle_name},100,${transporter_ref_id},${transporter_name},1,1000,per_trip,01-Jan-$year,31-Dec-2030,100,1,}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+*!
+
+!***> Indent Creation and Generating Invoice in Transporter
+!***> Indent creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define unloader_available {false}
+!define destination_location_id_1 {$consignee_id_1}
+!define sold_to_id_1 {$consignee_id_1}
+!define expected_delivery_at_1 {$expected_date}
+!define destination_location_id_2 {$consignee_id_2}
+!define sold_to_id_2 {$consignee_id_2}
+!define expected_delivery_at_2 {$expected_date}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"$transporter_id","vehicle_type_id":"$vehicle_id","sources":[{"type":1,"location_id":"$depot","gate_id":"$gate_id","vehicle_requirement_date":"$loadingDate","loader_available":false,"add_to_invoice":false}],"destinations":[{"type":2,"location_id":"$consignee_id_1","source_location_id":"$depot","source_gate_id":"$gate_id","sold_to_id":"$consignee_id_1","unloader_available":false,"add_to_invoice":false,"expected_delivery_at":"$expected_date"},{"type":2,"location_id":"$consignee_id_2","source_location_id":"$depot","source_gate_id":"$gate_id","sold_to_id":"$consignee_id_2","unloader_available":false,"add_to_invoice":false,"expected_delivery_at":"$expected_date"}],"no_of_vehicles":1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+*!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!***> Update LR for Consignees
+!define consignee_id {$consignee_id_1}
+!define lr_number {l1$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+
+!define consignee_id {$consignee_id_2}
+!define lr_number {l2$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!***> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {case}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {10000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0"},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"$consignee_id_ref_2","sold_to":"$consignee_id_ref_2","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!***> ERP Upload for Consignee 1
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"${invoice_number}","material_code":"mc$unique","no_of_shortage":"3","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"2","no_of_carton_damage":"1","release_date":"$rdate"},{"indent_number":"$order_id","ship_to":"$consignee_id_ref_2","sold_to":"$consignee_id_ref_2","material_invoice_number":"${invoice_number}","material_code":"mc$unique","no_of_shortage":"1","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"2","no_of_carton_damage":"3","release_date":"$rdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!***> Transporter Login
+!define transporter_email {pandotransporter+$unique@outlook.com}
+!define transporter_password {$password}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!***> Enabling Lorry Receipt in Ready for Billing page
+!define indent_id {$order_id}
+!define tusername {${transporter_email}}
+!define tpassword {${transporter_password}}
+
+!|script|common                                                                                                                                                       |
+|$data= |getTrim;|{"data":[{"destination_id":"${destination_location_id_1}","source_location_id":"${location_id}","lr_number":"l1$unique","document_available":true}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.TransporterAPI.LorryReceiptAPI
+
+!|script|common                                                                                                                                                       |
+|$data= |getTrim;|{"data":[{"destination_id":"${destination_location_id_2}","source_location_id":"${location_id}","lr_number":"l2$unique","document_available":true}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.TransporterAPI.LorryReceiptAPI
+
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+
+!***> Ready for billing page
+!include -c .FrontPage.Pando.Common.CommonPDFUploadInReadyForBilling
+*!
+*!
+*!
+
+!** Transporter editing charges before Generating the Invoice for consignee 1
+!define location {c1$unique}
+!define transporter_loading_c1 {2.5}
+!define transporter_loading_detention_c1 {3.9}
+!define transporter_unloading_detention_c1 {4}
+!define transporter_additional_point_c1 {5}
+!define transporter_oda_c1 {6}
+!define transporter_miscellaneous_charge_c1 {7}
+!define transporter_sla_delay_c1 {8}
+
+!include -c .FrontPage.Pando.Common.CommonInvoicePopupChargesSelection
+
+!define header_name {Loading}
+!define transporter_charge {${transporter_loading_c1}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {Loading Detention - 0 Days}
+!define transporter_charge {${transporter_loading_detention_c1}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {UnLoading Detention - 0 Days}
+!define transporter_charge {${transporter_unloading_detention_c1}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {Additional Point}
+!define transporter_charge {${transporter_additional_point_c1}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {ODA}
+!define transporter_charge {${transporter_oda_c1}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {Miscellaneous charge}
+!define transporter_charge {${transporter_miscellaneous_charge_c1}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {SLA Delay - 0 Days}
+!define transporter_charge {${transporter_sla_delay_c1}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!|script                           |ui                                                                                                                                                       |
+|wait;                             |5                                                                                                                                                        |
+|$t_system_generated_total_c1=     |getText;                                                                     |//*[normalize-space(text())='TOTAL']/../following-sibling::div       |xpath|
+|$t_transporter_generated_total_c1=|getText;                                                                     |(//*[normalize-space(text())='TOTAL']/../following-sibling::div)[2]/*|xpath|
+|click;                            |//span[normalize-space(text())='Save']/../self::button                       |xpath                                                                      |
+|waitForElementToBeDisplayed;      |//h3/following-sibling::span[text()='Changes has been successfully updated!']|xpath                                                                |20   |
+|click;                            |//div[contains(@class,'dialog__title')]/..//button[@aria-label='Close']      |xpath                                                                      |
+|wait;                             |5                                                                                                                                                        |
+*!
+
+!** Transporter editing charges before Generating the Invoice for consignee 2
+!define location {c2$unique}
+!define transporter_loading_c2 {6}
+!define transporter_loading_detention_c2 {5}
+!define transporter_unloading_detention_c2 {3}
+!define transporter_additional_point_c2 {2}
+!define transporter_oda_c2 {1}
+!define transporter_miscellaneous_charge_c2 {4.1}
+!define transporter_sla_delay_c2 {2.4}
+
+!include -c .FrontPage.Pando.Common.CommonInvoicePopupChargesSelection
+
+!define header_name {Loading}
+!define transporter_charge {${transporter_loading_c2}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {Loading Detention - 0 Days}
+!define transporter_charge {${transporter_loading_detention_c2}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {UnLoading Detention - 0 Days}
+!define transporter_charge {${transporter_unloading_detention_c2}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {Additional Point}
+!define transporter_charge {${transporter_additional_point_c2}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {ODA}
+!define transporter_charge {${transporter_oda_c2}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {Miscellaneous charge}
+!define transporter_charge {${transporter_miscellaneous_charge_c2}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {SLA Delay - 0 Days}
+!define transporter_charge {${transporter_sla_delay_c2}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!|script                           |ui                                                                                                                                                       |
+|wait;                             |5                                                                                                                                                        |
+|$t_system_generated_total_c2=     |getText;                                                                     |//*[normalize-space(text())='TOTAL']/../following-sibling::div       |xpath|
+|$t_transporter_generated_total_c2=|getText;                                                                     |(//*[normalize-space(text())='TOTAL']/../following-sibling::div)[2]/*|xpath|
+|click;                            |//span[normalize-space(text())='Save']/../self::button                       |xpath                                                                      |
+|waitForElementToBeDisplayed;      |//h3/following-sibling::span[text()='Changes has been successfully updated!']|xpath                                                                |20   |
+|click;                            |//div[contains(@class,'dialog__title')]/..//button[@aria-label='Close']      |xpath                                                                      |
+|wait;                             |5                                                                                                                                                        |
+*!
+
+!**> Transporter Generating invoice
+!include -c .FrontPage.Pando.Common.CommonInvoiceGeneration
+*!
+
+!*** Checking the Generated invoice in Shipper and returning the invoice
+!** Checking the Generated invoice in Shipper for Consignee 1
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!|Script|Ui                                                  |
+|click; |//span[contains(text(),'${transporter_name}')]|xpath|
+
+!define location {c1$unique}
+
+!include -c .FrontPage.Pando.Common.CommonInvoicePopupChargesSelection
+
+!define header_name {Loading}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script         |Common                             |
+|$shipper_loading=|getTrim;|$transporter_column_amount|
+
+!define header_name {Loading Detention - 0 Days}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                   |Common                             |
+|$shipper_loading_detention=|getTrim;|$transporter_column_amount|
+
+!define header_name {UnLoading Detention - 0 Days}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                     |Common                             |
+|$shipper_unloading_detention=|getTrim;|$transporter_column_amount|
+
+!define header_name {Additional Point}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                  |Common                             |
+|$shipper_additional_point=|getTrim;|$transporter_column_amount|
+
+!define header_name {ODA}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script     |Common                             |
+|$shipper_oda=|getTrim;|$transporter_column_amount|
+
+!define header_name {Miscellaneous charge}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script               |Common                             |
+|$shipper_miscellaneous=|getTrim;|$transporter_column_amount|
+
+!define header_name {SLA Delay - 0 Days}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script           |Common                             |
+|$shipper_sla_delay=|getTrim;|$transporter_column_amount|
+
+!|Script                           |Ui                                                                                                                                                 |
+|wait;                             |5                                                                                                                                                  |
+|$s_system_generated_total_c1=     |getText;                                                               |//*[normalize-space(text())='TOTAL']/../following-sibling::div       |xpath|
+|$s_transporter_generated_total_c1=|getText;                                                               |(//*[normalize-space(text())='TOTAL']/../following-sibling::div)[2]/*|xpath|
+|click;                            |//div[contains(@class,'dialog__title')]/..//button[@aria-label='Close']|xpath                                                                      |
+*!
+
+!** Verifying the Generated invoice has the Transporter edited values
+!| Script|Common                                                                                              |
+|check   |checkIfStringAreEqual;|$shipper_loading                 |${transporter_loading_c1}             |true|
+|check   |checkIfStringAreEqual;|$shipper_loading_detention       |${transporter_loading_detention_c1}   |true|
+|check   |checkIfStringAreEqual;|$shipper_unloading_detention     |${transporter_unloading_detention_c1} |true|
+|check   |checkIfStringAreEqual;|$shipper_additional_point        |${transporter_additional_point_c1}    |true|
+|check   |checkIfStringAreEqual;|$shipper_oda                     |${transporter_oda_c1}                 |true|
+|check   |checkIfStringAreEqual;|$shipper_miscellaneous           |${transporter_miscellaneous_charge_c1}|true|
+|check   |checkIfStringAreEqual;|$shipper_sla_delay               |${transporter_sla_delay_c1}           |true|
+|check   |checkIfStringAreEqual;|$s_system_generated_total_c1     |$t_system_generated_total_c1          |true|
+|check   |checkIfStringAreEqual;|$s_transporter_generated_total_c1|$t_transporter_generated_total_c1     |true|
+*!
+
+!** Checking the Generated invoice in Shipper for Consignee 2
+!define location {c2$unique}
+
+!include -c .FrontPage.Pando.Common.CommonInvoicePopupChargesSelection
+
+!define header_name {Loading}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script         |Common                             |
+|$shipper_loading=|getTrim;|$transporter_column_amount|
+
+!define header_name {Loading Detention - 0 Days}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                   |Common                             |
+|$shipper_loading_detention=|getTrim;|$transporter_column_amount|
+
+!define header_name {UnLoading Detention - 0 Days}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                     |Common                             |
+|$shipper_unloading_detention=|getTrim;|$transporter_column_amount|
+
+!define header_name {Additional Point}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                  |Common                             |
+|$shipper_additional_point=|getTrim;|$transporter_column_amount|
+
+!define header_name {ODA}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script     |Common                             |
+|$shipper_oda=|getTrim;|$transporter_column_amount|
+
+!define header_name {Miscellaneous charge}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script               |Common                             |
+|$shipper_miscellaneous=|getTrim;|$transporter_column_amount|
+
+!define header_name {SLA Delay - 0 Days}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script           |Common                             |
+|$shipper_sla_delay=|getTrim;|$transporter_column_amount|
+
+!|Script                           |Ui                                                                                                                                                 |
+|wait;                             |5                                                                                                                                                  |
+|$s_system_generated_total_c2=     |getText;                                                               |//*[normalize-space(text())='TOTAL']/../following-sibling::div       |xpath|
+|$s_transporter_generated_total_c2=|getText;                                                               |(//*[normalize-space(text())='TOTAL']/../following-sibling::div)[2]/*|xpath|
+|click;                            |//div[contains(@class,'dialog__title')]/..//button[@aria-label='Close']|xpath                                                                      |
+*!
+
+!** Verifying the Generated invoice has the Transporter edited values
+!| Script|Common                                                                                              |
+|check   |checkIfStringAreEqual;|$shipper_loading                 |${transporter_loading_c2}             |true|
+|check   |checkIfStringAreEqual;|$shipper_loading_detention       |${transporter_loading_detention_c2}   |true|
+|check   |checkIfStringAreEqual;|$shipper_unloading_detention     |${transporter_unloading_detention_c2} |true|
+|check   |checkIfStringAreEqual;|$shipper_additional_point        |${transporter_additional_point_c2}    |true|
+|check   |checkIfStringAreEqual;|$shipper_oda                     |${transporter_oda_c2}                 |true|
+|check   |checkIfStringAreEqual;|$shipper_miscellaneous           |${transporter_miscellaneous_charge_c2}|true|
+|check   |checkIfStringAreEqual;|$shipper_sla_delay               |${transporter_sla_delay_c2}           |true|
+|check   |checkIfStringAreEqual;|$s_system_generated_total_c2     |$t_system_generated_total_c2          |true|
+|check   |checkIfStringAreEqual;|$s_transporter_generated_total_c2|$t_transporter_generated_total_c2     |true|
+*!
+
+!|Script  |Ui                                                             |
+|click;   |//button[contains(text(),'Summary')]    |xpath                 |
+|click;   |//button/span[contains(text(),'Return')]|xpath                 |
+|sendKeys;|//textarea[@class='comments']           |xpath|Rejected $unique|
+|click;   |//button[text()='RETURN']               |xpath                 |
+|wait;    |5                                                              |
+**!
+
+!** Login to Transporter and check the returned Invoice. Edit some values and resubmit the Invoice
+!include -c .FrontPage.Pando.Common.CommonTransporterInvoiceFilter
+
+!|Script|Ui                                                                            |
+|click; |//span[contains(@class,'status') and normalize-space(text())='Returned']|xpath|
+
+!** Transporter editing charges for Returned invoice and Resubmiting it
+!define location {c1$unique}
+!define transporter_loading_c1 {1.6}
+!define transporter_loading_detention_c1 {2.4}
+!define transporter_unloading_detention_c1 {0}
+!define transporter_additional_point_c1 {2}
+!define transporter_oda_c1 {1}
+!define transporter_miscellaneous_charge_c1 {4}
+!define transporter_sla_delay_c1 {5}
+
+!include -c .FrontPage.Pando.Common.CommonInvoicePopupChargesSelection
+
+!define header_name {Loading}
+!define transporter_charge {${transporter_loading_c1}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {Loading Detention - 0 Days}
+!define transporter_charge {${transporter_loading_detention_c1}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {UnLoading Detention - 0 Days}
+!define transporter_charge {${transporter_unloading_detention_c1}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {Additional Point}
+!define transporter_charge {${transporter_additional_point_c1}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {ODA}
+!define transporter_charge {${transporter_oda_c1}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {Miscellaneous charge}
+!define transporter_charge {${transporter_miscellaneous_charge_c1}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!define header_name {SLA Delay - 0 Days}
+!define transporter_charge {${transporter_sla_delay_c1}}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentSetChargesInPopipDialogInReadyForBilling
+
+!|script                           |ui                                                                                                                                                       |
+|$t_system_generated_total_c1=     |getText;                                                                     |//*[normalize-space(text())='TOTAL']/../following-sibling::div       |xpath|
+|$t_transporter_generated_total_c1=|getText;                                                                     |(//*[normalize-space(text())='TOTAL']/../following-sibling::div)[2]/*|xpath|
+|click;                            |//span[normalize-space(text())='Save']/../self::button                       |xpath                                                                      |
+|waitForElementToBeDisplayed;      |//h3/following-sibling::span[text()='Changes has been successfully updated!']|xpath                                                                |20   |
+|click;                            |//div[contains(@class,'dialog__title')]/..//button[@aria-label='Close']      |xpath                                                                      |
+|wait;                             |5                                                                                                                                                        |
+*!
+
+!|Script   |Ui                                                                                                                            |
+|wait;     |5                                                                                                                             |
+|click;    |//button[contains(text(),'Summary')]  |xpath                                                                                  |
+|click;    |//button[contains(text(),'Re-Submit')]|xpath                                                                                  |
+|click; |//button/span[normalize-space(text())='YES']                    |xpath|
+|check     |isElementPresent;                     |//span[contains(@class,'status') and normalize-space(text())='Re-submitted']|xpath|true|
+|$tresult1=|isElementPresent;                     |//span[contains(@class,'status') and normalize-space(text())='Re-submitted']|xpath     |
+**!
+
+!** Login to Shipper and check the re-submitted Invoice with new values. Check the same and mark Checked
+!** Checking the Edited and Re Submitted invocie of consignee
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!|Script|Ui                                                  |
+|click; |//span[contains(text(),'${transporter_name}')]|xpath|
+
+!define location {c1$unique}
+
+!include -c .FrontPage.Pando.Common.CommonInvoicePopupChargesSelection
+
+!define header_name {Loading}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script         |Common                             |
+|$shipper_loading=|getTrim;|$transporter_column_amount|
+
+!define header_name {Loading Detention - 0 Days}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                   |Common                             |
+|$shipper_loading_detention=|getTrim;|$transporter_column_amount|
+
+!define header_name {UnLoading Detention - 0 Days}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                     |Common                             |
+|$shipper_unloading_detention=|getTrim;|$transporter_column_amount|
+
+!define header_name {Additional Point}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                  |Common                             |
+|$shipper_additional_point=|getTrim;|$transporter_column_amount|
+
+!define header_name {ODA}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script     |Common                             |
+|$shipper_oda=|getTrim;|$transporter_column_amount|
+
+!define header_name {Miscellaneous charge}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script               |Common                             |
+|$shipper_miscellaneous=|getTrim;|$transporter_column_amount|
+
+!define header_name {SLA Delay - 0 Days}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script           |Common                             |
+|$shipper_sla_delay=|getTrim;|$transporter_column_amount|
+
+!|Script                           |Ui                                                                                                                                                 |
+|wait;                             |5                                                                                                                                                  |
+|$s_system_generated_total_c1=     |getText;                                                               |//*[normalize-space(text())='TOTAL']/../following-sibling::div       |xpath|
+|$s_transporter_generated_total_c1=|getText;                                                               |(//*[normalize-space(text())='TOTAL']/../following-sibling::div)[2]/*|xpath|
+|click;                            |//div[contains(@class,'dialog__title')]/..//button[@aria-label='Close']|xpath                                                                      |
+
+!** Verifying the Generated invoice has the Transporter edited values
+!| Script|Common                                                                                              |
+|check   |checkIfStringAreEqual;|$shipper_loading                 |${transporter_loading_c1}             |true|
+|check   |checkIfStringAreEqual;|$shipper_loading_detention       |${transporter_loading_detention_c1}   |true|
+|check   |checkIfStringAreEqual;|$shipper_unloading_detention     |${transporter_unloading_detention_c1} |true|
+|check   |checkIfStringAreEqual;|$shipper_additional_point        |${transporter_additional_point_c1}    |true|
+|check   |checkIfStringAreEqual;|$shipper_oda                     |${transporter_oda_c1}                 |true|
+|check   |checkIfStringAreEqual;|$shipper_miscellaneous           |${transporter_miscellaneous_charge_c1}|true|
+|check   |checkIfStringAreEqual;|$shipper_sla_delay               |${transporter_sla_delay_c1}           |true|
+|check   |checkIfStringAreEqual;|$s_system_generated_total_c1     |$t_system_generated_total_c1          |true|
+|check   |checkIfStringAreEqual;|$s_transporter_generated_total_c1|$t_transporter_generated_total_c1     |true|
+*!
+
+!** Checking that values are not Edited and ReSubmitted for consignee 2
+!define location {c2$unique}
+
+!include -c .FrontPage.Pando.Common.CommonInvoicePopupChargesSelection
+
+!define header_name {Loading}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script         |Common                             |
+|$shipper_loading=|getTrim;|$transporter_column_amount|
+
+!define header_name {Loading Detention - 0 Days}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                   |Common                             |
+|$shipper_loading_detention=|getTrim;|$transporter_column_amount|
+
+!define header_name {UnLoading Detention - 0 Days}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                     |Common                             |
+|$shipper_unloading_detention=|getTrim;|$transporter_column_amount|
+
+!define header_name {Additional Point}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                  |Common                             |
+|$shipper_additional_point=|getTrim;|$transporter_column_amount|
+
+!define header_name {ODA}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script     |Common                             |
+|$shipper_oda=|getTrim;|$transporter_column_amount|
+
+!define header_name {Miscellaneous charge}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script               |Common                             |
+|$shipper_miscellaneous=|getTrim;|$transporter_column_amount|
+
+!define header_name {SLA Delay - 0 Days}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script           |Common                             |
+|$shipper_sla_delay=|getTrim;|$transporter_column_amount|
+
+!|Script                           |Ui                                                                                                                                                 |
+|wait;                             |5                                                                                                                                                  |
+|$s_system_generated_total_c2=     |getText;                                                               |//*[normalize-space(text())='TOTAL']/../following-sibling::div       |xpath|
+|$s_transporter_generated_total_c2=|getText;                                                               |(//*[normalize-space(text())='TOTAL']/../following-sibling::div)[2]/*|xpath|
+|click;                            |//div[contains(@class,'dialog__title')]/..//button[@aria-label='Close']|xpath                                                                      |
+
+!** Verifying the Generated invoice has the Transporter edited values
+!| Script|Common                                                                                              |
+|check   |checkIfStringAreEqual;|$shipper_loading                 |${transporter_loading_c2}             |true|
+|check   |checkIfStringAreEqual;|$shipper_loading_detention       |${transporter_loading_detention_c2}   |true|
+|check   |checkIfStringAreEqual;|$shipper_unloading_detention     |${transporter_unloading_detention_c2} |true|
+|check   |checkIfStringAreEqual;|$shipper_additional_point        |${transporter_additional_point_c2}    |true|
+|check   |checkIfStringAreEqual;|$shipper_oda                     |${transporter_oda_c2}                 |true|
+|check   |checkIfStringAreEqual;|$shipper_miscellaneous           |${transporter_miscellaneous_charge_c2}|true|
+|check   |checkIfStringAreEqual;|$shipper_sla_delay               |${transporter_sla_delay_c2}           |true|
+|check   |checkIfStringAreEqual;|$s_system_generated_total_c2     |$t_system_generated_total_c2          |true|
+|check   |checkIfStringAreEqual;|$s_transporter_generated_total_c2|$t_transporter_generated_total_c2     |true|
+*!
+*!
+
+!|Script|Ui                                             |
+|click; |//button[contains(text(),'Summary')]     |xpath|
+|click; |//button/span[contains(text(),'Checked')]|xpath|
+|click; |//button/span[normalize-space(text())='YES']                    |xpath|
+|wait;  |5                                              |
+
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|Script   |Ui                                                                                                  |
+|check     |isElementPresent;|//span[contains(@class,'status') and normalize-space(text())='Checked']|xpath|true|
+|$tresult2=|isElementPresent;|//span[contains(@class,'status') and normalize-space(text())='Checked']|xpath     |
+**!
+*!
+
+!** Invoice Approval by the Shipper
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!|Script|Ui                                                  |
+|click; |//span[contains(text(),'${transporter_name}')]|xpath|
+|wait;  |60                                                  |
+|click; |//button[contains(text(),'Summary')]          |xpath|
+|click; |//button/span[contains(text(),'Approve')]     |xpath|
+|click; |//button/span[normalize-space(text())='YES']                    |xpath|
+
+!|Script   |Ui                                                                                                   |
+|check     |isElementPresent;|//span[contains(@class,'status') and normalize-space(text())='Approved']|xpath|true|
+|$tresult3=|isElementPresent;|//span[contains(@class,'status') and normalize-space(text())='Approved']|xpath     |
+
+!|Script  |common                                                         |
+|$tresult=|checkIfStringAreEqualInArray|$tresult1,$tresult2,$tresult3,true|
+**!
+
+!5 invoice_value_freight = (base_freight_charge + lr_charge + extra_km_charge + unloading_charge + loading_charge + miscellaneous_charge + additional_point_charge + fixed_charge + oda_freight_charge) - (shortage + damage + carton_damage + transit_delay + sla_delay)
+
+!5 invoice_total (1209.66) = SUM OF invoice_value_freight (569.84+629.42) AND SUM OF invoice_value_detention (8+2.4)
+
+!**> Validating strategy 2 freight invoice posting
+!|Script              |MongoDBQuery                                                                                                   |
+|getMongoConnection;  |${connection}                              |db_pando_testing                                                   |
+|$erp_invoice_details=|getStrategy2InvoicePostingPayload;         |INV-$unique                                                        |
+|check                |getValuesFromInvoicePayload;               |transporter_code|tr$unique                                         |
+|check                |getValuesFromInvoicePayload;               |invoice_number  |INV-$unique                                       |
+|check                |getValuesFromInvoicePayload;               |invoice_total   |1209.66                                           |
+|check                |getValuesFromInvoicePayload;               |tax_code        |1                                                 |
+|check                |getValuesFromInvoicePayload;               |tax_type        |1                                                 |
+|check                |getValuesFromInvoicePayload;               |tax_percentage  |10                                                |
+|check                |getValuesFromShipment;                     |shipment_number |undefined                                         |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|movement               |1               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|sku                    |${material_code}|
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|source                 |${depot_city}   |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|source_ref_id          |R$unique        |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|gate_ref_id            |RQ$unique       |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|destination_ref_id     |cr1$unique      |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|quantity               |100             |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|weight                 |480             |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|volume                 |450             |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|invoice_value_freight  |569.84          |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|invoice_value_detention|2.4             |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|invoice_value_defect   |433.76          |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|oda_freight_charge     |1               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|fixed_charge           |0               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|additional_point_charge|2               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|miscellaneous_charge   |4               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|loading_charge         |1.6             |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|unloading_charge       |0               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|lr_charge              |0               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|sla_delay              |5               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|transit_delay          |0               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|penalty                |0               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|shortage               |210             |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|damage                 |180             |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|carton_damage          |43.76           |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|debit_adjustment       |0               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|extra_km_charge        |0               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|base_freight_charge    |1000            |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|weight_unit            |kg              |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|quantity_unit          |case            |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c1$unique|volume_unit            |cft             |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|movement               |1               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|sku                    |${material_code}|
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|source                 |${depot_city}   |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|source_ref_id          |R$unique        |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|gate_ref_id            |RQ$unique       |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|destination_ref_id     |cr2$unique      |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|quantity               |100             |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|weight                 |480             |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|volume                 |450             |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|invoice_value_freight  |629.42          |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|invoice_value_detention|8               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|invoice_value_defect   |381.28          |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|oda_freight_charge     |1               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|fixed_charge           |0               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|additional_point_charge|2               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|miscellaneous_charge   |4.1             |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|loading_charge         |6               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|unloading_charge       |0               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|lr_charge              |0               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|sla_delay              |2.4             |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|transit_delay          |0               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|penalty                |0               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|shortage               |70              |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|damage                 |180             |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|carton_damage          |131.28          |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|debit_adjustment       |0               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|extra_km_charge        |0               |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|base_freight_charge    |1000            |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|weight_unit            |kg              |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|quantity_unit          |case            |
+|check                |getIndentsValuesFromShipmentInvoicePayload;|destination     |c2$unique|volume_unit            |cft             |
+
+!|Script         |Common                                                                  |
+|$schemaFilePath=|getPath;|data/schemafiles/strategy2_invoice_posting_schema.json|fullpath|
+
+!|script|json                                                           |
+|check  |validateJsonDocument;|$schemaFilePath|$erp_invoice_details|true|
+*!

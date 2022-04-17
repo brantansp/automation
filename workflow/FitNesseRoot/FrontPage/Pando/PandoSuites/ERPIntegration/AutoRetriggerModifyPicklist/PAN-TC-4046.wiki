@@ -1,0 +1,314 @@
+---
+Help: Auto Re-trigger modify picklist on error response for Indents created through Optima
+Suites: optbrit
+Test
+---
+!5 PAN-TC-4046 Auto Re-trigger modify picklist on error response for Indents created through Optima
+!5 1. When ERP responds failure status 'E', then auto trigger of modified picklist should happen in 10 minutes interval for three times
+!5 2. When success response received then the retries should not happen also manual retry button should not be shown
+!5 3. It should have the correct details sent in modified picklist
+
+!***> Unique values assignment
+!|Script          |Common                                       |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$currDate=       |getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique  |0   |4    |
+|$detention_group=|getRandomString;        |4        |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000   |999999    |
+|$today=          |getSubString;           |$currDate|0   |10   |
+|$pincode1=       |getRandomNumber;        |111001   |999999    |
+|$pincode2=       |getRandomNumber;        |111001   |999999    |
+|$vno_1=          |getRandomNumber;        |20       |76        |
+|$vno_2=          |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=          |getRandomNumber;        |1000     |9999      |
+|$delivery_num=   |getSubString;           |$unique  |4   |14   |
+
+!|script      |DateUtil                      |
+|$truckindate=|dateCalculation;|yyyy/MM/dd|-2|
+
+!|Script      |Common                                         |
+|$truckindate=|stringConcatenation;|$truckindate|!- 10:00:00-!|
+
+!|Script      |DateUtil                      |
+|$today=      |dateCalculation;|yyyy-MM-dd |0|
+|$rdate=      |dateCalculation;|yyyy/MM/dd |0|
+|$thisday=    |dateCalculation;|dd MMM yyyy|0|
+|$loadingDate=|dateCalculation;|yyyy/MM/dd |0|
+|$truckindate=|utcConversion;  |$truckindate |
+|$loadingDate=|utcConversion;  |$loadingDate |
+
+!| Script     |Common                                      |
+|$rdate=      |stringConcatenation;   |$rdate|!- 10:00:00-!|
+|$loadingDate=|getCurrentDateTimeStamp|iso                 |
+
+!define truck_no {TN 09 CF 2857}
+*!
+
+!***> Depot Optima Setting
+!define depo {Delhi}
+!define max_split {1}
+!define split_factor {5}
+!define ftl_certify {false}
+!define algorithm {1}
+!define distance_deviation {100}
+!define degree_of_deviation {50}
+!define optima_type {1}
+!define weight {1}
+!define volume {1}
+!define mode {0}
+!define max_pickup {1}
+!define fitment {0}
+!define max_dropoff {3}
+!define optima_for_ptl {false}
+!define ptl_club_gates {false}
+!define limited_truck_count {false}
+!define hybrid_split {false}
+!define depot_id {5e687a8b52cf5b4800d91cc3}
+!define movement {1}
+!define movement_type {Secondary}
+!define ptl_contracts {2}
+!define material_category {"MT","GT"}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split": ${max_split},"split_factor": ${split_factor},"ftl_certify": ${ftl_certify},"algorithm": ${algorithm},"distance_deviation":"${distance_deviation}","degree_of_deviation":${degree_of_deviation},"optima_type":${optima_type},"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":${weight},"volume":${volume}},"material_categories":[${material_category}],"mode":${mode},"max_pickup_points":${max_pickup},"fitment":${fitment},"max_drop_points":${max_dropoff},"drop_off_rule":[],"optima_for_ptl":${optima_for_ptl},"ptl_club_gates":${ptl_club_gates},"limited_truck_count":${limited_truck_count},"hybrid_split": ${hybrid_split},"ptl_contracts":${ptl_contracts}},"depot_ids":["${depot_id}"],"movement":${movement}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!***> Uploading Rate Matrix
+!define distance {830}
+!define transit_days {1}
+!define ratec {30000}
+!define rtrip {per_trip}
+!define mrate {10000}
+!define mfactor {1}
+!define transporter_name {FLYTRONIC PRIVATE LIMITED}
+!define transporter_ref_id {0000603891}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,100111,18971,965 CFT,${distance},${transporter_ref_id},${transporter_name},${transit_days},30000,per_trip,01-Jan-$year,31-Dec-2030,0,${mfactor},$detention_group,,0,0,Per KG,0,0}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!***> Delivery Picklist API 
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                     |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"E1$delivery_num","material_code":"000000000000990225","depot_ref_id":"100111","gate_ref_id":"100111","division":"DIV","quantity":10.00,"quantity_unit":"NOS","weight":950.00,"weight_unit":"KG","volume":"500.00","volume_unit":"CFT","lr_number":"lr_number","ship_to":"18971","sold_to":"18971","line_item":"line_item","type":"SECONDARY"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DeliveryPicklistAPI
+**!
+
+!***> Delete the Line item from Depot via API
+!|script|common              |
+|$depot=|getTrim;|${depot_id}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DiscardLineItemOptimaAPI
+**!
+
+!***> Optima Auto Run via API
+!|script|common                                                           |
+|$data= |getTrim;|{"data":{"depot_id":"$depot","movement": "${movement}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.AutoRunViaAPI
+*!
+
+!***> Validating Optimized deliveries and Indenting
+!define depot_selection  {Delhi}
+
+!|Script                     |Ui                                                                                                                                                                          |
+|wait;                       |10                                                                                                                                                                          |
+|navigateToUrl;              |${surl}/optima                                                                                                                                                              |
+|click;                      |(//div[@class='cardfilter-grid']//input)[1]/../self::div                                                          |xpath                                                    |
+|sendKeys;                   |(//div[@class='cardfilter-grid']//input)[1]                                                                       |xpath                                 |${depot_selection}|
+|click;                      |//span[contains(text(),'${depot_selection}')]                                                                     |xpath                                                    |
+|wait                        |2                                                                                                                                                                           |
+|click;                      |(//div[@class='cardfilter-grid']//input)[2]                                                                       |xpath                                                    |
+|sendKeys;                   |(//div[@class='cardfilter-grid']//input)[2]                                                                       |xpath                                 |${movement_type}  |
+|click;                      |//span[contains(text(),'${movement_type}')]                                                                       |xpath                                                    |
+|waitForElementToBeDisplayed;|//div[contains(@class,'row-show')]                                                                                |xpath                                 |15                |
+|check                       |getCountOfElements;                                                                                               |//div[@class='card-row card-row-show']|xpath      |1     |
+|click;                      |//div[normalize-space(text())='950']/ancestor::div[contains(@class,'row-show')]//span[contains(@class,'checkbox')]|xpath                                                    |
+|click;                      |//button[contains(text(),'Indent')]                                                                               |xpath                                                    |
+|click;                      |//div[@class='el-message-box']//span[contains(text(),'Create')]                                                   |xpath                                                    |
+|waitForElementToBeDisplayed;|//div[@role='alert']/i[contains(@class,'success')]                                                                |xpath                                 |20                |
+**!
+
+!***> Validating that Indent in Indents page
+!|Script       |Ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {${depot_selection}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|Script   |Ui                                               |
+|$order_id=|getText;|(//div[@class='order-row']/div)[1]|xpath|
+
+!|script   |common                            |
+|$order_id=|replaceString;|$order_id|$thisday||
+|$order_id=|replaceString;|$order_id|\n      ||
+
+!define transporter_name {FLYTRONIC}
+
+!|Script                     |Ui                                                                                                                                                                                                                                          |
+|check                       |isElementPresent;                             |//span[contains(text(),'${transporter_name}')]                                                                                                                                    |xpath|true|
+|click;                      |//span[contains(text(),'${transporter_name}')]|xpath                                                                                                                                                                                        |
+|waitForElementToBeDisplayed;|//div[contains(@class,'drawer-header')]       |xpath                                                                                                                                                                             |30        |
+|check                       |isElementPresent;                             |//span[normalize-space(text())='RETRY MODIFIED PICKLIST']                                                                                                                         |xpath|true|
+|check                       |isElementPresent;                             |//div[text()='Gate 1']/../self::div/following-sibling::div//strong[text()='100111']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'18971')]|xpath|true|
+|$tresult1=                  |isElementPresent;                             |//div[text()='Gate 1']/../self::div/following-sibling::div//strong[text()='100111']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'18971')]|xpath     |
+|click;                      |//a[contains(@class,'close')]                 |xpath                                                                                                                                                                                        |
+
+!|script                     |ui                                                                                                                                          |
+|click;                      |//span[text()='Document']                                                  |xpath                                                           |
+|waitForElementToBeDisplayed;|//div[@class='card-right']                                                 |xpath                                                |30        |
+|mouseHover;                 |//div[contains(@class,'fixed-body')]//child::span[starts-with(text(),'E1')]|xpath                                                           |
+|check                       |isElementPresent;                                                          |//div[@role='tooltip']//div[text()='E1$delivery_num']|xpath|true|
+|$tresult2=                  |isElementPresent;                                                          |//div[@role='tooltip']//div[text()='E1$delivery_num']|xpath     |
+*!
+
+!** Validating the modified picklist
+!|Script                         |MongoDBQuery                                                                      |
+|getMongoConnection;             |${connection}                    |db_pando_testing                                |
+|$modified_picklist_1=           |getModifiedPicklist;             |$order_id       |delivery_number|E1$delivery_num|
+|$totalNoOfModifiedPickListSent1=|getTotalNoOfModifiedPicklistSent;|E1$delivery_num                                 |
+|check                           |getValueFromModifiedPicklist;    |type            |SECONDARY                      |
+|check                           |getValueFromModifiedPicklist;    |vehicle_type    |965 CFT                        |
+|check                           |getValueFromModifiedPicklist;    |indication      |CREATE                         |
+|check                           |getValueFromModifiedPicklist;    |transporter_code|0000603891                     |
+|check                           |getValueFromModifiedPicklist;    |depot_code      |100111                         |
+|check                           |getValueFromModifiedPicklist;    |pickup_code     |100111                         |
+|check                           |getValueFromModifiedPicklist;    |sku             |000000000000990225             |
+|check                           |getValueFromModifiedPicklist;    |quantity        |10.00                          |
+|check                           |getValueFromModifiedPicklist;    |weight          |950.00                         |
+|check                           |getValueFromModifiedPicklist;    |volume          |500.00                         |
+|check                           |getValueFromModifiedPicklist;    |category        |X                              |
+|check                           |getValueFromModifiedPicklist;    |ship_to         |18971                          |
+|check                           |getValueFromModifiedPicklist;    |sold_to         |18971                          |
+
+!|script   |common                                                        |
+|check     |comparisonResult;|$totalNoOfModifiedPickListSent1|equal|1|true|
+|$tresult3=|comparisonResult;|$totalNoOfModifiedPickListSent1|equal|1     |
+*!
+
+!** Waiting 10 minutes for next retry
+!|script|ui |
+|wait;  |660|
+*!
+
+!** Checking the total no of modified picklist sent
+!|Script                         |MongoDBQuery                                                                      |
+|getMongoConnection;             |${connection}                    |db_pando_testing                                |
+|$modified_picklist_2=           |getModifiedPicklist;             |$order_id       |delivery_number|E1$delivery_num|
+|$totalNoOfModifiedPickListSent2=|getTotalNoOfModifiedPicklistSent;|E1$delivery_num                                 |
+|check                           |getValueFromModifiedPicklist;    |type            |SECONDARY                      |
+|check                           |getValueFromModifiedPicklist;    |vehicle_type    |965 CFT                        |
+|check                           |getValueFromModifiedPicklist;    |indication      |CREATE                         |
+|check                           |getValueFromModifiedPicklist;    |transporter_code|0000603891                     |
+|check                           |getValueFromModifiedPicklist;    |depot_code      |100111                         |
+|check                           |getValueFromModifiedPicklist;    |pickup_code     |100111                         |
+|check                           |getValueFromModifiedPicklist;    |sku             |000000000000990225             |
+|check                           |getValueFromModifiedPicklist;    |quantity        |10.00                          |
+|check                           |getValueFromModifiedPicklist;    |weight          |950.00                         |
+|check                           |getValueFromModifiedPicklist;    |volume          |500.00                         |
+|check                           |getValueFromModifiedPicklist;    |category        |X                              |
+|check                           |getValueFromModifiedPicklist;    |ship_to         |18971                          |
+|check                           |getValueFromModifiedPicklist;    |sold_to         |18971                          |
+
+!|script   |common                                                        |
+|check     |comparisonResult;|$totalNoOfModifiedPickListSent2|equal|2|true|
+|$tresult4=|comparisonResult;|$totalNoOfModifiedPickListSent2|equal|2     |
+*!
+
+!*** Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!** Inspection Accept
+!|script|common                                                                                          |
+|$data= |getTrim;|{"data":{"accepted":true,"inspection":{},"documents":{},"comments":"Accepted $unique"}}|
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInspection
+**!
+
+!** Reported 
+!define loading_date {$loadingDate}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.ReportAtAPI
+**!
+
+!** Truck In
+!|script        |common               |
+|$truck_in_date=|getTrim;|$truckindate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+
+!|script|ui|
+|wait;  |10|
+**!
+
+!** Checking the total no of modified picklist sent
+!|Script                         |MongoDBQuery                                                                      |
+|getMongoConnection;             |${connection}                    |db_pando_testing                                |
+|$modified_picklist_3=           |getModifiedPicklist;             |$order_id       |delivery_number|E1$delivery_num|
+|$totalNoOfModifiedPickListSent3=|getTotalNoOfModifiedPicklistSent;|E1$delivery_num                                 |
+|check                           |getValueFromModifiedPicklist;    |type            |SECONDARY                      |
+|check                           |getValueFromModifiedPicklist;    |vehicle_type    |965 CFT                        |
+|check                           |getValueFromModifiedPicklist;    |indication      |UPDATE                         |
+|check                           |getValueFromModifiedPicklist;    |transporter_code|0000603891                     |
+|check                           |getValueFromModifiedPicklist;    |depot_code      |100111                         |
+|check                           |getValueFromModifiedPicklist;    |pickup_code     |100111                         |
+|check                           |getValueFromModifiedPicklist;    |sku             |000000000000990225             |
+|check                           |getValueFromModifiedPicklist;    |quantity        |10.00                          |
+|check                           |getValueFromModifiedPicklist;    |weight          |950.00                         |
+|check                           |getValueFromModifiedPicklist;    |volume          |500.00                         |
+|check                           |getValueFromModifiedPicklist;    |category        |X                              |
+|check                           |getValueFromModifiedPicklist;    |ship_to         |18971                          |
+|check                           |getValueFromModifiedPicklist;    |sold_to         |18971                          |
+
+!|script   |common                                                        |
+|check     |comparisonResult;|$totalNoOfModifiedPickListSent3|equal|3|true|
+|$tresult5=|comparisonResult;|$totalNoOfModifiedPickListSent3|equal|3     |
+*!
+
+!** Waiting 10 minutes for next retry
+!|script|ui |
+|wait;  |660|
+*!
+
+!** Checking the total no of modified picklist sent
+!|Script                         |MongoDBQuery                                                               |
+|getMongoConnection;             |${connection}                    |db_pando_testing                         |
+|$modified_picklist_4=           |getModifiedPicklist;             |$order_id|delivery_number|E1$delivery_num|
+|$totalNoOfModifiedPickListSent4=|getTotalNoOfModifiedPicklistSent;|E1$delivery_num                          |
+
+!|script   |common                                                        |
+|check     |comparisonResult;|$totalNoOfModifiedPickListSent4|equal|4|true|
+|$tresult6=|comparisonResult;|$totalNoOfModifiedPickListSent4|equal|4     |
+*!
+
+!*** Validating that Manual Retry button disappeared on sucess response
+!|Script       |Ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {${depot_selection}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!define search_text {$order_id}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|Script                     |Ui                                                                                                                                                                                              |
+|click;                      |//span[normalize-space(text())='$order_id']/ancestor::div[@class='order-row']//span[contains(text(),'${transporter_name}')]|xpath                                                               |
+|waitForElementToBeDisplayed;|//div[contains(@class,'drawer-header')]                                                                                    |xpath                                                    |30        |
+|check                       |isElementNotPresent;                                                                                                       |//span[normalize-space(text())='RETRY MODIFIED PICKLIST']|xpath|true|
+*!
+
+!***> Validating test result
+!|Script  |Common                                                                                        |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,true|
+*!
+
+!***> Retrieving the Job ID using API
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.RetrieveOptimaJobIDAPI
+*!

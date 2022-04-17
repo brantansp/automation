@@ -1,0 +1,17 @@
+---
+Help: TruckinSetting
+---
+!|Script                     |Ui                                                                                                                                                       |
+|navigateToUrl;              |${surl}/indents                                                                                                                                          |
+|waitForElementToBeDisplayed;|//span[contains(text(),'$order_id')]                                                                                                    |xpath|30        |
+|click;                      |//span[text()='TRUCK IN' or text()='Truck in']                                                                                          |xpath           |
+|waitForElementToBeDisplayed;|//div[@aria-hidden='false']//i[@class='el-input__icon el-icon-time']                                                                    |xpath|30        |
+|click;                      |//div[@aria-hidden='false']//i[@class='el-input__icon el-icon-time']                                                                    |xpath           |
+|click;                      |//input[@placeholder='Select date']                                                                                                     |xpath           |
+|clearAndSend;               |//input[@placeholder='Select date']                                                                                                     |xpath|${in_date}|
+|click;                      |//input[@placeholder='Select time']                                                                                                     |xpath           |
+|clearAndSend;               |//input[@placeholder='Select time']                                                                                                     |xpath|${in_time}|
+|click;                      |//div[@class='el-picker-panel__footer']                                                                                                 |xpath           |
+|click;                      |//div[@class='el-picker-panel__footer']/button[@class='el-button el-picker-panel__link-btn el-button--default el-button--mini is-plain']|xpath           |
+|click;                      |//div[@aria-hidden='false']//button[@class='btn primary-button']                                                                        |xpath           |
+|wait;                       |5                                                                                                                                                        |

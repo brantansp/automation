@@ -1,0 +1,6 @@
+---
+Test
+---
+!|Script     |Http  |                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+|setBaseUrl; |https://gopando.loggly.com/apiv2/ |                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+|addHeader;  |Authorization   |bearer c0d4e827-c885-4a4b-b939-e692c3915b5e       |   

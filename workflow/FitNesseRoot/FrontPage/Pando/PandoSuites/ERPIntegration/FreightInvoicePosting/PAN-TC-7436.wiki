@@ -1,0 +1,409 @@
+---
+Help: Validate payments for guwahati plant to Guwahati RDC replicating data in production - multi pickup single drop with SLA delay and reconciled invoice
+Suites: marico2
+Test
+---
+!** Test coverage
+Replicated MAR-PN2C-OM-6236 from production
+1. freight charge per trip along with SLA delay and reconciled - without invoice posting
+2. Tranporter discount 1.5% charges
+3. No SDCD or other charges
+**!
+
+!** Prerequisite - production data
+[Referred indent: MAR-PN2C-OM-6236 - SLA delay  (Reconciled - No invoice posting)]
+Source Depot- Guwahati plant - Gate 1 - PN2C, Gate 2 - PN2D
+Destination  depots - R595 -Guwahati RDC 
+(Multi pickup - single drop)
+Materials - 720146,704482,704663,705558,706591,706673,707612,707714,713056,715374,717556,
+719387,720006,720007,720088,720146,720475,720784,720785,720787,720789,720843,721009
+Transporter-VARUNA INTEGRATED LOGISTICS
+Vehicle - DOUBLE AX 32 FT CONTAINER-18MT
+Rate matrix - city contract with 1000 per trip
+SLA for vehicle type
+SLA admin settings
+**!
+
+!***> Unique values assignment
+!|Script      |Common                                     |
+|$unique=     |getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num=        |getRandomNumber;        |100    |999       |
+|$num1=       |getRandomNumber;        |20     |76        |
+|$num2=       |getRandomNumber;        |1000   |9999      |
+|$rand1=      |getRandomString;        |2      |ALPHAUPPER|
+|$year=       |getSubString;           |$unique|0    |4   |
+|$indate=     |getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1=      |getRandomNumber;        |20     |76        |
+|$vno_2=      |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3=      |getRandomNumber;        |1000   |9999      |
+|$invoicedate=|getCurrentDateTimeStamp;|yyyy-MM-dd        |
+
+!|Script            |DateUtil                         |
+|$monthAndYear=     |dateCalculation;     |MMMM yyyy|0|
+|$todayDate=        |dateCalculation;     |d        |0|
+|$ordinalDateSuffix=|getOrdinalDateSuffix;|$todayDate |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!***> Destination Depot Creation
+!define destination_depot_name {R595}
+!define destination_depot_id {61e5afaf79b7b000498d16e5}
+!define destination_depot_refid {R595}
+!define destination_depot_gateid {R595}
+!define destination_depot_gate {61e69b836ae4070049641187}
+
+!|script                       |common                            |
+|$destination_location_id=     |getTrim;|${destination_depot_id}  |
+|$destination_gate_location_id=|getTrim;|${destination_depot_gate}|
+*!
+
+!***> Transporter with discount
+!define transporter_name {VARUNA INTEGRATED LOGISTICS}
+!define transporter_ref_id {402673}
+!define discount {1.5}
+!define gst_percentage {12}
+!define manager_email {pandotransporter+varuna@outlook.com}
+!define transporter_id {61e69a5b0ed702004a77877a}
+
+!| Script        |Common                    |
+|$transporter_id=|getTrim;|${transporter_id}|
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation
+!define vehicle_name {DOUBLE AX 32 FT CONTAINER-18MT}
+!define cft {2047}
+!define kg {17500}
+!define vehicle_type {FTL}
+!define vehicle_id {61e6b8f50ed702004a778a72}
+
+!| Script    |Common                |
+|$vehicle_id=|getTrim;|${vehicle_id}|
+*!
+
+!***> Source Depot Creation
+!define depot_name {Guwahati Plant1}
+!define depot_reference_id {PN2C}
+!define source_depot_id {5fa370878afb3d004d7fbbee}
+!define depot_gate_id_1 {PN2C}
+!define source_gate_id_1 {5fa370d78afb3d004d7fbbef}
+!define depot_gate_id_2 {PN2D}
+!define source_gate_id_2 {5fa37110ac7811004debf5ba}
+
+!|Script           |Common                      |
+|$location_id=     |getTrim;|${source_depot_id} |
+|$source_gate_id_1=|getTrim;|${source_gate_id_1}|
+|$source_gate_id_2=|getTrim;|${source_gate_id_2}|
+*!
+
+!** Detention Upload
+!define row {Vehicle Name,Group Code,Movement,LOADING_DETENTION_DAY1,LOADING_DETENTION_DAY2,LOADING_DETENTION_DAY3,LOADING_DETENTION_DAY4,LOADING_DETENTION_DAY5,LOADING_DETENTION_MORETHAN_DAY5,UnLOADING_DETENTION_DAY1,UnLOADING_DETENTION_DAY2,UnLOADING_DETENTION_DAY3,UnLOADING_DETENTION_DAY4,UnLOADING_DETENTION_DAY5,UnLOADING_DETENTION_MORETHAN_DAY5,TRANSIT_DAY1,TRANSIT_DAY2,TRANSIT_DAY3,TRANSIT_DAY4,TRANSIT_DAY5,TRANSIT_MORETHAN_DAY5,TRANSIT_DELAY_PERCENTAGE}
+!define column {${vehicle_name},U,Primary,0,1000,1000,1000,1000,1000,0,1000,1000,1000,1000,1000,0,1000,1000,1000,1000,1000,0}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonDetentionBulkUpload
+**!
+
+!** Uploading the SLA Contract
+!define Vehicle_Type {DOUBLE AX 32 FT CONTAINER-18MT}
+!define Depot_Ref_Id {PN2C}
+!define Movement {Primary}
+
+!|script|common       |
+|$rand1=|getTrim;|0   |
+|$rand2=|getTrim;|0   |
+|$rand3=|getTrim;|2000|
+|$rand4=|getTrim;|0   |
+|$rand5=|getTrim;|0   |
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonSLAUpload
+*!
+
+!***> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Exclude,Trip Count}
+!define column {City,MIL- Guwahati Plant,Guwahati RDC,${vehicle_name},5,${transporter_ref_id},${transporter_name},1,1000,per_trip,01-Jan-$year,31-Dec-2030,0,0,U}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!**> SLA Setting in Admin
+!|Script               |DateUtil                   |
+|waitForRoundoffMinute;|30                         |
+|$indentCutoffHour=    |dateCalculation;|minute|H|3|
+|$indentCutoffMin=     |dateCalculation;|minute|m|3|
+|$arrivalCutoffHour=   |dateCalculation;|minute|H|4|
+|$arrivalCutoffMin=    |dateCalculation;|minute|m|4|
+
+!|script|common                                                                                                                                                                                                                                                              |
+|$data= |getTrim;|{"data":{"depot_ids":["$location_id"],"movement":2,"sla_configurations":[{"sla_type":2,"hours":$indentCutoffHour,"mins":$indentCutoffMin},{"sla_type":1,"hours":$arrivalCutoffHour,"mins":$arrivalCutoffMin},{"sla_type":3,"days":4,"hours":22,"mins":0}]}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Settings.AdminSlaSettingAPI
+*!
+
+!**> Indent Creation
+!|Script                   |DateUtil                                  |
+|$vehicle_requirement_date=|dateCalculation;|yyyy/MM/dd      |-1      |
+|$vehicle_requirement_date=|utcConversion;  |$vehicle_requirement_date|
+
+!|Script               |DateUtil                                            |
+|$expected_delivery_at=|dateCalculation;|yyyy/MM/dd            |0           |
+|$expected_delivery_at=|utcConversion;  |$expected_delivery_at !- 10:00:00-!|
+
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$location_id}
+!define gate_id_1 {$source_gate_id_1}
+!define gate_id_2 {$source_gate_id_2}
+!define vehicle_requirement_date {$vehicle_requirement_date}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$destination_location_id}
+!define sold_to_id {$destination_gate_location_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id_2}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice}},{"type":1,"location_id":"${location_id}","gate_id":"${gate_id_1}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice}}],"destinations":[{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id_2}","sold_to_id":"${sold_to_id}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id}"},{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id_1}","sold_to_id":"${sold_to_id}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id}"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+
+!|script           |DateUtil                         |
+|$indentCreateTime=|dateCalculation;|minute|hh:mm:a|0|
+
+*!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {1234567890}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!** Wait for SLA Breach
+!|Script|Ui |
+|wait;  |300|
+**!
+
+!*** Truck In
+!|Script           |DateUtil                                               |
+|$truckindate=     |dateCalculation;  |yyyy/MM/dd  |0                      |
+|$truckindateDelay=|dateCalculation;  |minute      |hh:mm:a       |0       |
+|$truckindate=     |appendDateAndTime;|$truckindate|!- $truckindateDelay -!|
+|$truck_in_date=   |utcConversion;    |$truckindate                        |
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!**> Update LR for Consignee
+!define consignee_id {$destination_location_id}
+!define lr_number {l1}
+
+!|script|common                                                                                                                                                           |
+|$data= |getTrim;|{"data":[{"destination_id":"${destination_depot_id}","source_location_id":"${source_depot_id}","gate_id":"${destination_depot_gate}","lr_number":"L1"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateDynamicAPI
+**!
+
+!**> Material upload for all consignee
+!|Script            |DateUtil                                                 |
+|$truckoutdate=     |dateCalculation;  |yyyy/MM/dd   |0                       |
+|$truckoutdateDelay=|dateCalculation;  |minute       |hh:mm:a        |0       |
+|$truckoutdate=     |appendDateAndTime;|$truckoutdate|!- $truckoutdateDelay -!|
+|$truckoutdate=     |utcConversion;    |$truckoutdate                         |
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"4680","material_code":"720146","depot_ref_id":"PN2D","gate_ref_id":"PN2E","division":"80","quantity":"129","quantity_unit":"CS","weight":"2328.409","weight_unit":"KG","volume":"188","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"358851","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"4800","material_code":"707612","depot_ref_id":"PN2D","gate_ref_id":"PN2E","division":"80","quantity":"10","quantity_unit":"CS","weight":"75.024","weight_unit":"KG","volume":"10","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"11897","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"13440","material_code":"720007","depot_ref_id":"PN2D","gate_ref_id":"PN2E","division":"80","quantity":"27","quantity_unit":"CS","weight":"189.99","weight_unit":"KG","volume":"25","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"120777","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"14400","material_code":"720475","depot_ref_id":"PN2D","gate_ref_id":"PN2E","division":"80","quantity":"2","quantity_unit":"CS","weight":"15","weight_unit":"KG","volume":"1","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"10082","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"15000","material_code":"720006","depot_ref_id":"PN2D","gate_ref_id":"PN2E","division":"80","quantity":"15","quantity_unit":"CS","weight":"134.604","weight_unit":"KG","volume":"16","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"76209","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"4800","material_code":"704663","depot_ref_id":"PN2D","gate_ref_id":"PN2E","division":"80","quantity":"74","quantity_unit":"CS","weight":"408","weight_unit":"KG","volume":"43","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"81465","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"1440","material_code":"720088","depot_ref_id":"PN2D","gate_ref_id":"PN2E","division":"80","quantity":"1757","quantity_unit":"CS","weight":"3213.202","weight_unit":"KG","volume":"477","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"1073260","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"5904","material_code":"715374","depot_ref_id":"PN2C","gate_ref_id":"PN2C","division":"80","quantity":"117","quantity_unit":"CS","weight":"1661","weight_unit":"KG","volume":"155","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"284583","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"7680","material_code":"721009","depot_ref_id":"PN2C","gate_ref_id":"PN2C","division":"80","quantity":"3","quantity_unit":"CS","weight":"53","weight_unit":"KG","volume":"6","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"12467","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"6984","material_code":"704482","depot_ref_id":"PN2C","gate_ref_id":"PN2C","division":"80","quantity":"9","quantity_unit":"CS","weight":"142","weight_unit":"KG","volume":"11","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"29413","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"6144","material_code":"717556","depot_ref_id":"PN2C","gate_ref_id":"PN2C","division":"80","quantity":"31","quantity_unit":"CS","weight":"449","weight_unit":"KG","volume":"29","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"75084","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"6624","material_code":"720789","depot_ref_id":"PN2C","gate_ref_id":"PN2C","division":"80","quantity":"39","quantity_unit":"CS","weight":"686","weight_unit":"KG","volume":"55","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"114814","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"5760","material_code":"707714","depot_ref_id":"PN2C","gate_ref_id":"PN2C","division":"80","quantity":"37","quantity_unit":"CS","weight":"553","weight_unit":"KG","volume":"53","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"112169","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"5940","material_code":"713056","depot_ref_id":"PN2C","gate_ref_id":"PN2C","division":"80","quantity":"8","quantity_unit":"CS","weight":"146","weight_unit":"KG","volume":"12","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"24201","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"7848","material_code":"706591","depot_ref_id":"PN2C","gate_ref_id":"PN2C","division":"80","quantity":"36","quantity_unit":"CS","weight":"568","weight_unit":"KG","volume":"45","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"117193","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"7680","material_code":"705558","depot_ref_id":"PN2C","gate_ref_id":"PN2C","division":"80","quantity":"109","quantity_unit":"CS","weight":"2073","weight_unit":"KG","volume":"201","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"330305","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"8400","material_code":"706673","depot_ref_id":"PN2C","gate_ref_id":"PN2C","division":"80","quantity":"6","quantity_unit":"CS","weight":"111","weight_unit":"KG","volume":"9","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"23057","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"6048","material_code":"720785","depot_ref_id":"PN2C","gate_ref_id":"PN2C","division":"80","quantity":"127","quantity_unit":"CS","weight":"1899","weight_unit":"KG","volume":"165","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"349974","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"8640","material_code":"719387","depot_ref_id":"PN2C","gate_ref_id":"PN2C","division":"80","quantity":"33","quantity_unit":"CS","weight":"494","weight_unit":"KG","volume":"44","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"114314","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"5400","material_code":"720843","depot_ref_id":"PN2C","gate_ref_id":"PN2C","division":"80","quantity":"163","quantity_unit":"CS","weight":"2177","weight_unit":"KG","volume":"206","volume_unit":"CFT","ship_to":"R595","sold_to":"R595","type":"Primary","invoice_number":"INV-$unique","invoice_amount":"392452","invoice_date":"$indate","category":"GT","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"9965","material_taxable_amount":"0","ext_ref_id":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** ERP Upload
+!**> Wait for 1 minute
+!|script|ui|
+|wait;  |60|
+**!
+
+!|Script        |DateUtil                                      |
+|$released_date=|dateCalculation;  |yyyy/MM/dd    |0           |
+|$timer=        |dateCalculation;  |hh:mm:a       |0           |
+|$released_date=|appendDateAndTime;|$released_date|!- $timer -!|
+|$released_date=|utcConversion;    |$released_date             |
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"720146","no_of_shortage":"0","no_of_leakage":"0","mrp":"4680","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"707612","no_of_shortage":"0","no_of_leakage":"0","mrp":"4800","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"720007","no_of_shortage":"0","no_of_leakage":"0","mrp":"13440","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"720475","no_of_shortage":"0","no_of_leakage":"0","mrp":"14400","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"720006","no_of_shortage":"0","no_of_leakage":"0","mrp":"15000","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"704663","no_of_shortage":"0","no_of_leakage":"0","mrp":"4800","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"720088","no_of_shortage":"0","no_of_leakage":"0","mrp":"1440","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"715374","no_of_shortage":"0","no_of_leakage":"0","mrp":"5904","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"721009","no_of_shortage":"0","no_of_leakage":"0","mrp":"7680","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"704482","no_of_shortage":"0","no_of_leakage":"0","mrp":"6984","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"717556","no_of_shortage":"0","no_of_leakage":"0","mrp":"6144","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"720789","no_of_shortage":"0","no_of_leakage":"0","mrp":"6624","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"707714","no_of_shortage":"0","no_of_leakage":"0","mrp":"5760","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"713056","no_of_shortage":"0","no_of_leakage":"0","mrp":"5940","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"706591","no_of_shortage":"0","no_of_leakage":"0","mrp":"7848","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"705558","no_of_shortage":"0","no_of_leakage":"0","mrp":"7680","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"706673","no_of_shortage":"0","no_of_leakage":"0","mrp":"8400","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"720785","no_of_shortage":"0","no_of_leakage":"0","mrp":"6048","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"719387","no_of_shortage":"0","no_of_leakage":"0","mrp":"8640","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"},{"indent_number":"$order_id","ship_to":"R595","sold_to":"R595","material_invoice_number":"INV-$unique","material_code":"720843","no_of_shortage":"0","no_of_leakage":"0","mrp":"5400","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$released_date"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!**> Transporter login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+**!
+
+!** Verify reconciled invoice
+!define search_text {$order_id}
+
+!include -c .FrontPage.Pando.Common.CommonTransporterInvoiceFilter
+
+!|Script                     |Ui                                                                                           |
+|click;                      |//span[text()='Search']                |xpath                                                |
+|sendKeys;                   |//input[@placeholder='Enter indent id']|xpath                                 |${search_text}|
+|click;                      |//button[text()='Search']              |xpath                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-row row')] |xpath                                 |20            |
+|check                       |isElementPresent;                      |//span[normalize-space(text())='Paid']|xpath  |true  |
+|$tresult1=                  |isElementPresent;                      |//span[normalize-space(text())='Paid']|xpath         |
+|click;                      |//div[contains(@class,'card-row row')] |xpath                                                |
+**!
+
+!**> Checking the charges in transporter invoice
+!define header_name1 {Freight}
+!define header_name2 {Transit Delay - 0 Days}
+!define header_name3 {Loading}
+!define header_name4 {Loading Detention - 0 Days}
+!define header_name5 {UnLoading Detention - 0 Days}
+!define header_name6 {ODA}
+!define header_name7 {Fixed Charge}
+!define header_name8 {Shortage}
+!define header_name9 {Damage}
+!define header_name10 {Carton Damage}
+!define header_name11 {Unloading}
+!define header_name12 {SLA Delay - 0 Days}
+
+!|script                         |ui                                                                                                                                                                                                                                                                 |
+|click;                          |//div[@class='el-table__fixed']//*[normalize-space(text())='$order_id']               |xpath                                                                                                                                                                       |
+|waitForElementToBeDisplayed;    |//div[@id='pane-Details']//div[starts-with(normalize-space(@class),'tab-content')]    |xpath                                                                                                                                                |15                    |
+|click;                          |//div[@id='tab-Charges']                                                              |xpath                                                                                                                                                                       |
+|waitForElementToBeDisplayed;    |//div[@id='pane-Charges']//div[starts-with(normalize-space(@class),'tab-content')]    |xpath                                                                                                                                                |15                    |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name1} |
+|$freight_shipper=               |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$freight_transporter=           |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name2} |
+|$transitdelay_shipper=          |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$transitdelay_transporter=      |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name3} |
+|$loading_shipper=               |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$loading_transporter=           |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name4} |
+|$loadingdetention_shipper=      |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$loadingdetention_transporter=  |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name5} |
+|$unloadingdetention_shipper=    |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$unloadingdetention_transporter=|getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name6} |
+|$oda_shipper=                   |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$oda_transporter=               |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name7} |
+|$fixedrate_shipper=             |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$fixedrate_transporter=         |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name8} |
+|$shortage_shipper=              |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$shortage_transporter=          |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name9} |
+|$damage_shipper=                |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$damage_transporter=            |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name10}|
+|$cartondamage_shipper=          |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$cartondamage_transporter=      |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name11}|
+|$unloading_shipper=             |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$unloading_transporter=         |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name12}|
+|$sladelay_shipper=              |getText;                                                                              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$sladelay_transporter=          |getValue;                                                                             |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$total_shipper=                 |getText;                                                                              |(//*[text()='TOTAL']/..//following-sibling::div)[1]                                                                                                  |xpath                 |
+|$total_transporter=             |getText;                                                                              |(//*[text()='TOTAL']/..//following-sibling::div)[2]                                                                                                  |xpath                 |
+|click;                          |//div[contains(text(),'$order_id')]/..//button//i[contains(@class,'el-dialog__close')]|xpath                                                                                                                                                                       |
+
+!|Script|common                                                           |
+|check  |checkIfStringAreEqual;|$freight_shipper               |1000 |true|
+|check  |checkIfStringAreEqual;|$freight_transporter           |1000 |true|
+|check  |checkIfStringAreEqual;|$transitdelay_shipper          |0    |true|
+|check  |checkIfStringAreEqual;|$transitdelay_transporter      |0    |true|
+|check  |checkIfStringAreEqual;|$loading_transporter           |0    |true|
+|check  |checkIfStringAreEqual;|$loading_shipper               |0    |true|
+|check  |checkIfStringAreEqual;|$loadingdetention_shipper      |0    |true|
+|check  |checkIfStringAreEqual;|$loadingdetention_transporter  |0    |true|
+|check  |checkIfStringAreEqual;|$unloadingdetention_shipper    |0    |true|
+|check  |checkIfStringAreEqual;|$unloadingdetention_transporter|0    |true|
+|check  |checkIfStringAreEqual;|$oda_shipper                   |0    |true|
+|check  |checkIfStringAreEqual;|$oda_transporter               |0    |true|
+|check  |checkIfStringAreEqual;|$fixedrate_shipper             |0    |true|
+|check  |checkIfStringAreEqual;|$fixedrate_transporter         |0    |true|
+|check  |checkIfStringAreEqual;|$shortage_shipper              |0    |true|
+|check  |checkIfStringAreEqual;|$shortage_transporter          |0    |true|
+|check  |checkIfStringAreEqual;|$damage_shipper                |0    |true|
+|check  |checkIfStringAreEqual;|$damage_transporter            |0    |true|
+|check  |checkIfStringAreEqual;|$cartondamage_shipper          |0    |true|
+|check  |checkIfStringAreEqual;|$cartondamage_transporter      |0    |true|
+|check  |checkIfStringAreEqual;|$unloading_shipper             |0    |true|
+|check  |checkIfStringAreEqual;|$unloading_transporter         |0    |true|
+|check  |checkIfStringAreEqual;|$sladelay_shipper              |2000 |true|
+|check  |checkIfStringAreEqual;|$sladelay_transporter          |2000 |true|
+|check  |checkIfStringAreEqual;|$total_shipper                 |0    |true|
+|check  |checkIfStringAreEqual;|$total_transporter             |-1000|true|
+*!
+
+!** Verify Summary
+!|Script                     |Ui                                                                                                                                  |
+|waitForElementToBeDisplayed;|//div[contains(@class,'table__body')]|xpath                                                                                   |20   |
+|click;                      |//button[contains(text(),'Summary')] |xpath                                                                                         |
+|$invoice_number=            |getText;                             |//div[text()='Invoice Number']/../following-sibling::div//span[last()]                  |xpath|
+|$billtoparty_value=         |getText;                             |//div[text()='Bill to Party']/../following-sibling::div//span[last()]                   |xpath|
+|$place_of_supply=           |getText;                             |//div[text()='PLACE OF SUPPLY']/../following-sibling::div//span[last()]                 |xpath|
+|$gst_in=                    |getText;                             |//div[normalize-space(text())='GSTIN']/../parent::div//following-sibling::div           |xpath|
+|$gst_method=                |getText;                             |//div[text()='GST Method']/../following-sibling::div//div[contains(@class,'text')]      |xpath|
+|$billtoparty_address=       |getText;                             |//div[text()='Bill to Party']/../parent::div/following::div[contains(@class,'bgfooter')]|xpath|
+|$totalinvoicevalue=         |getText;                             |//div[@class='bgfooter']/div/div[@class='col-6 floatright']                             |xpath|
+|$totaltaxablevalue=         |getText;                             |//span[contains(text(),'Total Taxable Value')]/../parent::div//following-sibling::div   |xpath|
+|$serviceproviderstate=      |getText;                             |//div[text()='Service provider state']/../following-sibling::div                        |xpath|
+|$cgst=                      |getText;                             |//div[normalize-space(text())='CGST (0%)']/../following-sibling::div                    |xpath|
+|$sgst=                      |getText;                             |//div[normalize-space(text())='SGST (0%)']/../following-sibling::div                    |xpath|
+|$discountvalue=             |getText;                             |//div[contains(text(),'discount (1.5%)')]/../following-sibling::div                     |xpath|
+
+!|Script   |common                                                                                                   |
+|check     |checkIfStringAreEqual;|$invoice_number                                         |RECONCILE-$order_id |true|
+|$tresult2=|checkIfStringAreEqual;|$invoice_number                                         |RECONCILE-$order_id      |
+|check     |checkIfStringAreEqual;|$billtoparty_value                                      |Source Depot        |true|
+|check     |checkIfStringExistsIn;|MIL- GUWAHATI PLANT, MIL- GUWAHATI PLANT, ASSAM - 781101|$billtoparty_address|true|
+|check     |checkIfStringAreEqual;|$place_of_supply                                        |Assam               |true|
+|check     |checkIfStringAreEqual;|$gst_method                                             |FORWARD             |true|
+|check     |checkIfStringAreEqual;|$gst_in                                                 |RECONCILE-$order_id |true|
+|check     |checkIfStringExistsIn;|GSTIN: 18AAACM7493G3Z4                                  |$billtoparty_address|true|
+|check     |checkIfStringAreEqual;|$totalinvoicevalue                                      |0                   |true|
+|check     |checkIfStringAreEqual;|$totaltaxablevalue                                      |0                   |true|
+|check     |checkIfStringAreEqual;|$discountvalue                                          |0                   |true|
+|check     |checkIfStringAreEqual;|$cgst                                                   |0                   |true|
+|check     |checkIfStringAreEqual;|$sgst                                                   |0                   |true|
+|check     |checkIfStringAreEqual;|$serviceproviderstate                                   |Assam               |true|
+**!
+
+!** Approve invoice in Shipper 
+!define search_text {$order_id}
+
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceNumberSearchInShipper
+
+!|Script|Ui                                                                 |
+|check  |isElementPresent;|//span[normalize-space(text())='Paid']|xpath|true|
+**!
+
+!**> Validating test result
+!|script  |common                                                     |
+|check    |checkIfStringAreEqualInArray;|$tresult1,$tresult2,true|true|
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,true     |
+*!
+
+!** Reverting SLA settings
+!|script|common                                                                                                                                                                                                   |
+|$data= |getTrim;|{"data":{"depot_ids":["${location_id}"],"movement":2,"sla_configurations":[{"sla_type":2,"hours":12,"mins":0},{"sla_type":1,"hours":17,"mins":30},{"sla_type":3,"days":5,"hours":22,"mins":0}]}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Settings.AdminSlaSettingAPI
+*!

@@ -1,0 +1,5 @@
+---
+Suite
+---
+!1 Test suite has all the ERP API as common static pages
+!contents -R2 -g -p -f -h

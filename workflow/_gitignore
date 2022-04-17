@@ -1,0 +1,6 @@
+/target/
+automation*
+/fitnesse20*
+/FitNesseRoot/**/**/2019*
+.classpath
+.DS_Store

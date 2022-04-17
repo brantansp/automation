@@ -1,0 +1,11 @@
+---
+Help: ERP EPOD Dynamic API
+Test
+---
+!|Script    |Http                                      |
+|wait;      |5                                         |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/erp/epod/                     |
+|$indent=   |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|204                        |
+|wait;      |2                                         |

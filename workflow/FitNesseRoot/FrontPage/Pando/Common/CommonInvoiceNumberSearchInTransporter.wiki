@@ -1,0 +1,7 @@
+!|Script  |Ui                                                                   |
+|click;   |//div[starts-with(@class,'searchterm tagblock')]|xpath               |
+|click;   |//*[text()='Clear']                             |xpath               |
+|sendKeys;|//input[@placeholder='Enter invoice number']    |xpath|${search_text}|
+|wait;    |2                                                                    |
+|click;   |//button[text()='Search']                       |xpath               |
+|wait;    |2                                                                    |

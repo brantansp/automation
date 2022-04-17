@@ -1,0 +1,7 @@
+---
+Help: Damage Calculation for Payment
+Suite
+Suites: pay1
+---
+!1 Test suite for Damage
+!contents -R2 -g -p -f -h

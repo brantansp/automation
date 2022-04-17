@@ -1,0 +1,32 @@
+---
+Help: Add Materials
+Suites: dm1
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!|Script       |Ui                                                                                        |
+|navigateToUrl;|${surl}/mdm/materials                                                                     |
+|click;        |//div/ul/li/button[text()='Add']                                   |xpath                 |
+|sendKeys;     |//input[@placeholder='Enter Material Code']                        |xpath|${material_code}|
+|sendKeys;     |//input[@placeholder='Enter Name']                                 |xpath|${material_name}|
+|sendKeys;     |//input[@placeholder='Enter Length']                               |xpath|15              |
+|sendKeys;     |//input[@placeholder='Enter Width']                                |xpath|20              |
+|sendKeys;     |//input[@placeholder='Enter Height']                               |xpath|25              |
+|sendKeys;     |//input[@placeholder='Enter Weight']                               |xpath|30              |
+|sendKeys;     |//label[normalize-space(text())='Volume']//following-sibling::input|xpath|1               |
+|sendKeys;     |//label[contains(text(),'Business Unit')]/following-sibling::input |xpath|10              |
+|sendKeys;     |//label[contains(text(),'PCE Per Box')]/following-sibling::input   |xpath|20              |
+|click;        |//ul[@class='action-list']/li[contains(text(),'Save')]             |xpath                 |
+
+!|Script  |Ui                                                              |
+|check    |isElementPresent;|//span[contains(text(),'m$unique')]|xpath|true|
+|$tresult=|isElementPresent;|//span[contains(text(),'m$unique')]|xpath     |
+**!

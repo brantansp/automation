@@ -1,0 +1,16 @@
+---
+Help: Contains the script to add new CHA
+---
+!|Script       |Ui                                                                 |
+|navigateToUrl;|${surl}/mdm/cha                                                    |
+|click;        |//button[contains(text(),'Add')]               |xpath              |
+|sendKeys;     |//input[@placeholder='Enter Name here']        |xpath|${cha_name}  |
+|sendKeys;     |//input[@placeholder='Enter Reference Id here']|xpath|${cha_refid} |
+|sendKeys;     |//input[@placeholder='Enter Pan Number here']  |xpath|${pan_number}|
+|sendKeys;     |//input[@placeholder='Select options']         |xpath|${ports_name}|
+|click;        |//span[text()='${ports_name}']                 |xpath              |
+|sendKeys;     |//input[@placeholder='Enter GST Number here']  |xpath|${gst_number}|
+|sendKeys;     |//input[@placeholder='Enter Admin Name here']  |xpath|${admin_name}|
+|sendKeys;     |//input[@placeholder='Enter Email here']       |xpath|${cha_email} |
+|sendKeys;     |//input[@placeholder='Enter Mobile here']      |xpath|${mobile}    |
+|click;        |//span[contains(text(),'Save')]                |xpath              |

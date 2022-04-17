@@ -1,0 +1,23 @@
+!|Script       |Ui                                                                            |
+|navigateToUrl;|${surl}/indents                                                               |
+|click;        |//button[@class='el-button el-button--default']           |xpath              |
+|click;        |(//div[@class='slideleft_menu']//input)[1]                |xpath              |
+|sendKeys;     |(//div[@class='slideleft_menu']//input)[1]                |xpath|${depot_name}|
+|click;        |//span[text()='${depot_name}']                            |xpath              |
+|click;        |//div[@class='datepicker-trigger']                        |xpath              |
+|clickJS;      |//button[@date='$filter_start']                           |xpath              |
+|clickJS;      |//button[@date='$filter_end']                             |xpath              |
+|click;        |//div[@class='asd__action-buttons']/button[text()='Apply']|xpath              |
+|click;        |(//div[@class='slideleft_menu']//input)[2]                |xpath              |
+|click;        |//span[text()='${indent_type}']                           |xpath              |
+|click;        |(//div[@class='slideleft_menu']//input)[3]                |xpath              |
+|click;        |//span[text()='${movement}']                              |xpath              |
+|click;        |(//div[@class='slideleft_menu']//input)[4]                |xpath              |
+|click;        |//span[text()='${delivery}']                              |xpath              |
+|click;        |(//div[@class='slideleft_menu']//input)[5]                |xpath              |
+|scrollToView; |//span[text()='${status}']                                |xpath              |
+|click;        |//span[text()='${status}']                                |xpath              |
+|click;        |(//div[@class='slideleft_menu']//input)[6]                |xpath              |
+|click;        |//span[text()='${utilization}']                           |xpath              |
+|wait;         |2                                                                             |
+|click;        |//button[text()='APPLY']                                  |xpath              |

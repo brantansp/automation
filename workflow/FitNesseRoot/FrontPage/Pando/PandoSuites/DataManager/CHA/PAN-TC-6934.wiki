@@ -1,0 +1,90 @@
+---
+Help: Edit CHA
+Suites: oel1
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!**> Ports Creation
+!define ports_name {ce$unique}
+!define ports_refid {cr$unique}
+!define ports_shortcode {cs$unique}
+!define ports_type {SEA_PORT}
+!define city {Nellore}
+!define state {Andhra Pradesh}
+!define address {12B,Ram mohan street}
+!define geocode {12.23,45.56}
+!define country {Dubai}
+!define pincode {789065}
+
+!|script|common                                                                                                                                                                                                                                                         |
+|$data= |getTrim;|{"data":{"name":"${ports_name}","ref_id":"${ports_refid}","display_reference_name": "","short_code":"${ports_shortcode}","type":"${ports_type}","city":"${city}","state":"${state}","address":"${address}","geo_code":"${geocode}","country":"${country}","pin_code":"${pincode}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.PortsCreationDynamicAPI
+**!
+
+!**> cha Creation
+!define cha_name {cha$unique}
+!define cha_refid {char$unique}
+!define pan_number {PAN$unique}
+!define gst_number {GST$unique}
+!define admin_name {Pando}
+!define cha_email {cha+$unique@gmail.com}
+!define mobile {7890654321}
+
+!|script|common                                                                                                                                                                                                                                   |
+|$data= |getTrim;|{"data":{"name":"${cha_name}","ref_id":"${cha_refid}","pan_number":"${pan_number}","ports_associated":["$port_id"],"gst_number":"${gst_number}","admin_name":"${admin_name}","email_id":"${cha_email}","mobile_no":"${mobile}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.CHACreationDynamicAPI
+**!
+
+!** CHA Edit
+!define cha_name {chae$unique}
+!define cha_referenceid {chare$unique}
+!define pan_number {PANE$unique}
+!define gst_number {GSTE$unique}
+**!
+
+!** CHA Edit xpath
+!|Script       |Ui                                                                      |
+|navigateToUrl;|${surl}/mdm/cha                                                         |
+|click;        |//span[@class='tagblock_list']                 |xpath                   |
+|sendKeys;     |//input[@placeholder='Enter Reference Id']     |xpath|${cha_refid}      |
+|wait;         |3                                                                       |
+|click;        |//button[contains(text(),'Search')]            |xpath                   |
+|click;        |//span[contains(text(),'Edit')]                |xpath                   |
+|click;        |//input[@placeholder='Enter Name here']        |xpath                   |
+|clearValueJS; |//input[@placeholder='Enter Name here']        |xpath                   |
+|sendKeys;     |//input[@placeholder='Enter Name here']        |xpath|${cha_name}       |
+|click;        |//input[@placeholder='Enter Reference Id here']|xpath                   |
+|clearValueJS; |//input[@placeholder='Enter Reference Id here']|xpath                   |
+|sendKeys;     |//input[@placeholder='Enter Reference Id here']|xpath|${cha_referenceid}|
+|click;        |//input[@placeholder='Enter Pan Number here']  |xpath                   |
+|clearValueJS; |//input[@placeholder='Enter Pan Number here']  |xpath                   |
+|sendKeys;     |//input[@placeholder='Enter Pan Number here']  |xpath|${pan_number}     |
+|click;        |//input[@placeholder='Enter GST Number here']  |xpath                   |
+|clearValueJS; |//input[@placeholder='Enter GST Number here']  |xpath                   |
+|sendKeys;     |//input[@placeholder='Enter GST Number here']  |xpath|${gst_number}     |
+|click;        |//span[contains(text(),'Update')]              |xpath                   |
+**!
+
+!** Cross verifying values
+!|script    |Ui                                                                                              |
+|check      |isElementPresent;                |//span[contains(text(),'chae$unique')]             |xpath|true|
+|$tresult1= |isElementPresent;                |//span[contains(text(),'chae$unique')]             |xpath     |
+|check      |isElementPresent;                |//span[contains(text(),'chare$unique')]            |xpath|true|
+|$tresult2= |isElementPresent;                |//span[contains(text(),'chare$unique')]            |xpath     |
+|mouseHover;|//span[contains(text(),'PANE20')]|xpath                                                         |
+|check      |isElementPresent;                |//div[@role='tooltip']//div[text()='${pan_number}']|xpath|true|
+|$tresult3= |isElementPresent;                |//div[@role='tooltip']//div[text()='${pan_number}']|xpath     |
+|mouseHover;|//span[contains(text(),'GSTE20')]|xpath                                                         |
+|check      |isElementPresent;                |//div[@role='tooltip']//div[text()='${gst_number}']|xpath|true|
+|$tresult4= |isElementPresent;                |//div[@role='tooltip']//div[text()='${gst_number}']|xpath     |
+
+!|Script  |Common                                                               |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4|
+**!
+

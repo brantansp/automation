@@ -1,0 +1,16 @@
+---
+Help: Contains Indent API
+Suites: hach
+Test
+---
+!|Script    |Http                                      |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/packing/create_indent         |
+|$indent=   |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|200                        |
+
+!|Script         |json                             |
+|$indent_numbers=|getValueFromJSON;|$indent|data[0]|
+
+!|Script         |Common                                      |
+|$indent_numbers=|getSubStringByString;|$indent|{"data":["|"]}|

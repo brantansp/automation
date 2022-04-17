@@ -1,0 +1,41 @@
+---
+Files: no
+RecentChanges: no
+Search: no
+Static
+---
+!** Discard Indent
+!|Script|Ui                                        |
+|click; |//button[contains(text(),'SESSION')]|xpath|
+|click; |//a[contains(text(),'DISCARD')]     |xpath|
+|click; |//span[contains(text(),'Delete')]   |xpath|
+|wait;  |3                                         |
+**!
+
+
+!** Saving Job ID
+!|Script                   |Ui                                                                                            |
+|navigateToUrl;            |${surl}/optima/settings                                                                       |
+|waitForElementToDisappear;|//p[text()='Please wait we are processing']        |xpath                             |8      |
+|click;                    |//a[contains(text(),'Job Status')]                 |xpath                                     |
+|click;                    |//div[normalize-space(text())='Depot']/..//input   |xpath                                     |
+|sendKeys;                 |//div[normalize-space(text())='Depot']/..//input   |xpath                             |${depo}|
+|click;                    |//span[contains(text(),'${depo}')]                 |xpath                                     |
+|click;                    |//div[normalize-space(text())='Movement']/..//input|xpath                                     |
+|click;                    |//span[contains(text(),'${movement_type}')]        |xpath                                     |
+|$jobid=                   |getEmptyText;                                                                                 |
+|$jobid=                   |getText;                                           |(//div[@class='table-th w200'])[1]|xpath  |
+
+!|Script|common                              |
+|$jobid=|replaceString;|$jobid|             ||
+|$jobid=|replaceString;|$jobid|\r           ||
+|$jobid=|replaceString;|$jobid|\n           ||
+|$jobid=|replaceString;|$jobid|"            ||
+|$id=   |replaceString;|$jobid|Current Job :||
+  
+
+!|Script     |json                                                                                                  |
+|$data=      |getValueFromJSONURL;       |http://job-master-933888225.ap-south-1.elb.amazonaws.com/job/$id|jobParams|
+|$tenidarray=|getJSONObjectFromJsonArray;|$data                                                           |0        |
+|$tenid=     |getValueFromJSON;          |$tenidarray                                                     |value    |
+**!

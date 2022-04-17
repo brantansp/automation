@@ -1,0 +1,23 @@
+---
+Help: Material bulk upload
+Suites: dm1
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Uploading Materials
+!define row {Code*,Name*,BU,Piece per Box*,Length(cm)*,Width(cm)*,Height (cm)*,Weight (kg)*,Volume (CFT),Division,GST Exempt (Yes/No),Category,Volume Per Piece (Liter),Pallets,Brand,Sub Brand,Thickness,Load Sequence,Can Telescope (Yes/No)}
+!define column {mc$unique,m$unique,10,1,10,20,5,15,10,1,No,}
+
+!define file_name {m$unique.xlsx}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonMaterialBulkUpload
+
+!|Script                     |Ui                                                                                |
+|navigateToUrl;              |${surl}/mdm/materials                                                             |
+|waitForElementToBeDisplayed;|//span[contains(text(),'m$unique')]|xpath                              |30        |
+|check                       |isElementPresent;                  |//span[contains(text(),'m$unique')]|xpath|true|
+|$tresult=                   |isElementPresent;                  |//span[contains(text(),'m$unique')]|xpath     |
+**!

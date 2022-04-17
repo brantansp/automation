@@ -1,0 +1,92 @@
+---
+Help: test6to10
+Suites: optscn3
+Test
+---
+!** Depot Optima Setting
+!define depot_name {Jalgaon}
+!define depo {Jalgaon}
+!define max_split {2}
+!define split_factor {5}
+!define ftl_certify {false}
+!define algorithm {3}
+!define distance_deviation {5000}
+!define degree_of_deviation {30}
+!define optima_type {1}
+!define weight {1}
+!define volume {1}
+!define mode {0}
+!define max_pickup {3}
+!define fitment {0}
+!define max_dropoff {2}
+!define optima_for_ptl {false}
+!define ptl_club_gates {false}
+!define limited_truck_count {false}
+!define hybrid_split {false}
+!define depot_id {5ccabd9b6cde363495ccb308}
+!define movement {2}
+!define movement_type {Primary}
+!define ptl_contracts {0}
+!define material_category {"MT","GT"}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split": ${max_split},"split_factor": ${split_factor},"ftl_certify": ${ftl_certify},"algorithm": ${algorithm},"distance_deviation":"${distance_deviation}","degree_of_deviation":${degree_of_deviation},"optima_type":${optima_type},"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":${weight},"volume":${volume}},"material_categories":[${material_category}],"mode":${mode},"max_pickup_points":${max_pickup},"fitment":${fitment},"max_drop_points":${max_dropoff},"drop_off_rule":[],"optima_for_ptl":${optima_for_ptl},"ptl_club_gates":${ptl_club_gates},"pickup_threshold": {"weight": 2000,"volume": 200},"floor_one": {"weight": 5400,"volume": 600},"floor_two": {"weight": 90,"volume": 90},"limited_truck_count":${limited_truck_count},"hybrid_split": ${hybrid_split},"ptl_contracts":${ptl_contracts}},"depot_ids":["${depot_id}"],"movement":${movement}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!** Uploading the Material and Optimizing
+#!define surl {https://optima-auto.pandostaging.in}
+!define items {6}
+!define mcount {32}
+!define mcount1 {33}
+!define movement_type {Primary}
+!define depo {Jalgaon}
+
+!|Script    |Common                                            |
+|$excelpath=|getPath;|optimaAttachment/test_06_10.xlsx|fullpath|
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.CommonOptimaRun
+*!
+
+!** Validating the Line item
+#|check|getText;|//span[@class='cfamount']|xpath|${items}|
+!|Script|Ui                                                                                                                                       |
+|check  |getText;|(//span[contains(text(),'D115')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[2]|xpath|!-15600
+97.5%-!|
+|check|getText;|(//span[contains(text(),'9194')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[2]|xpath|!-14400
+90%-!|
+|check|getText;|(//span[contains(text(),'9169')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[2]|xpath|!-15600
+97.5%-!|
+|check|getText;|(//span[contains(text(),'274')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[2]|xpath|!-15600
+97.5%-!|
+|check     |isElementPresent;|//span[contains(text(),'8060')]/../parent::div/../following-sibling::utilization//div[starts-with(normalize-space(),'15840')]|xpath|true|
+|check     |isElementPresent;|//span[contains(text(),'8060')]/../parent::div/../following-sibling::utilization//div[starts-with(normalize-space(),'14400')]|xpath|true|
+|$volume1= |getText;         |(//span[contains(text(),'D115')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[3]   |xpath     |
+|$volume2= |getText;         |(//span[contains(text(),'9194')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[3]   |xpath     |
+|$volume3= |getText;         |(//span[contains(text(),'9169')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[3]   |xpath     |
+|$volume4= |getText;         |(//span[contains(text(),'274')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[3]    |xpath     |
+|check     |isElementPresent;|//span[contains(text(),'8060')]/../parent::div/../following-sibling::utilization//div[contains(text(),'974')]                |xpath|true|
+|$tresult5=|isElementPresent;|//span[contains(text(),'8060')]/../parent::div/../following-sibling::utilization//div[contains(text(),'974')]                |xpath     |
+|check     |isElementPresent;|//span[contains(text(),'8060')]/../parent::div/../following-sibling::utilization//div[contains(text(),'1072')]               |xpath|true|
+|$tresult6=|isElementPresent;|//span[contains(text(),'8060')]/../parent::div/../following-sibling::utilization//div[contains(text(),'1072')]               |xpath     |
+
+!|Script   |Common                                   |
+|check     |checkIfStringExistsIn;|1055|$volume1|true|
+|$tresult1=|checkIfStringExistsIn;|1055|$volume1     |
+|check     |checkIfStringExistsIn;|974 |$volume2|true|
+|$tresult2=|checkIfStringExistsIn;|974 |$volume2     |
+|check     |checkIfStringExistsIn;|1055|$volume3|true|
+|$tresult3=|checkIfStringExistsIn;|1055|$volume3     |
+|check     |checkIfStringExistsIn;|1055|$volume4|true|
+|$tresult4=|checkIfStringExistsIn;|1055|$volume4     |
+*!
+
+!** Validating Test Result
+!|Script  |Common                                                                                   |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6|
+*!
+
+!** Retrieving the Job ID
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.CommonTenantId
+*!

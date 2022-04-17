@@ -1,0 +1,56 @@
+---
+Help: Adding port to MDM
+Suites: oel1
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Ports Creation
+!define ports_name {c$unique}
+!define ports_refid {cr$unique}
+!define ports_shortcode {cs$unique}
+!define ports_type {Sea}
+!define city {Nellore}
+!define state {Andhra Pradesh}
+!define address {12B,Ram mohan street}
+!define geocode {12.23,45.56}
+!define country {Dubai}
+!define pincode {789065}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Ports.CommonPortAdd
+**!
+
+!** Cross verifying values
+!|script    |Ui                                                                                                                  |
+|click;     |//span[@class='tagblock_list']            |xpath                                                                    |
+|sendKeys;  |//input[@placeholder='Enter Reference Id']|xpath                                                     |${ports_refid}|
+|click;     |//button[@class='btn section_pbtn']       |xpath                                                                    |
+|check      |isElementPresent;                         |//span[contains(text(),'c$unique')]                       |xpath  |true  |
+|$tresult1= |isElementPresent;                         |//span[contains(text(),'c$unique')]                       |xpath         |
+|check      |isElementPresent;                         |//span[contains(text(),'${ports_refid}')]                 |xpath  |true  |
+|$tresult2= |isElementPresent;                         |//span[contains(text(),'${ports_refid}')]                 |xpath         |
+|check      |isElementPresent;                         |//span[contains(text(),'${ports_shortcode}')]             |xpath  |true  |
+|$tresult3= |isElementPresent;                         |//span[contains(text(),'${ports_shortcode}')]             |xpath         |
+|check      |isElementPresent;                         |//span[contains(text(),'Sea')]                            |xpath  |true  |
+|$tresult4= |isElementPresent;                         |//span[contains(text(),'Sea')]                            |xpath         |
+|check      |isElementPresent;                         |//span[contains(text(),'${city}')]                        |xpath  |true  |
+|$tresult5= |isElementPresent;                         |//span[contains(text(),'${city}')]                        |xpath         |
+|mouseHover;|//span[contains(text(),'Andhra')]         |xpath                                                                    |
+|check      |isElementPresent;                         |//div[@role='tooltip']//div[text()='Andhra Pradesh']      |xpath  |true  |
+|$tresult6= |isElementPresent;                         |//div[@role='tooltip']//div[text()='Andhra Pradesh']      |xpath         |
+|mouseHover;|//span[contains(text(),'12B')]            |xpath                                                                    |
+|check      |isElementPresent;                         |//div[@role='tooltip']//div[text()='12B,Ram mohan street']|xpath  |true  |
+|$tresult7= |isElementPresent;                         |//div[@role='tooltip']//div[text()='12B,Ram mohan street']|xpath         |
+|check      |isElementPresent;                         |//span[contains(text(),'${country}')]                     |xpath  |true  |
+|$tresult8= |isElementPresent;                         |//span[contains(text(),'${country}')]                     |xpath         |
+|check      |isElementPresent;                         |//span[contains(text(),'${geocode}')]                     |xpath  |true  |
+|$tresult9= |isElementPresent;                         |//span[contains(text(),'${geocode}')]                     |xpath         |
+|check      |isElementPresent;                         |//span[contains(text(),'${pincode}')]                     |xpath  |true  |
+|$tresult10=|isElementPresent;                         |//span[contains(text(),'${pincode}')]                     |xpath         |
+
+!|Script  |Common                                                                                                                            |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10|
+**!

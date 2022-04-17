@@ -1,0 +1,27 @@
+---
+Help: Lets Transporter - Status Filter
+Test
+---
+!** Filter for the Status Started
+
+!define truck_num {TN $vno_1 $vno_2 $vno_3}
+
+!define filter_type {Status}
+!define filter_value {PENDING}
+
+!include -c .FrontPage.Pando.PandoSuites.LetsTransporter.CommonTripFilter
+
+*!
+
+!** Verifying the Search result
+
+!|script  |ui                                                                                                   |
+|$trip_id=|getText;         |(//span[text()='TN $vno_1 $vno_2 $vno_3']/../parent::div/div)[1]/span   |xpath     |
+|check    |isElementPresent;|//span[text()='$trip_id']/../parent::div//span[text()='${filter_value}']|xpath|true|
+|$tresult=|isElementPresent;|//span[text()='$trip_id']/../parent::div//span[text()='${filter_value}']|xpath     |
+
+*!
+
+!**> Update result
+!include .FrontPage.Pando.Common.CommonResultImage
+*!

@@ -1,0 +1,8 @@
+---
+Test
+---
+!define surl {https://castrol-auto.pandostaging.in}
+!define username {pandocastrolauto@outlook.com}
+!define password {test@1234}
+!define shipper_client_id {619b49a7cce5fc68bbd31295}
+

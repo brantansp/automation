@@ -1,0 +1,15 @@
+---
+Help: Trip Details validation
+Test
+---
+!** Validating created Indent
+!define is_jio {true}
+!define driver_number {8778602561}
+!define truck_num {TN $vno_1 $vno_2 $vno_3}
+
+!include -c .FrontPage.Pando.PandoSuites.LetsTransporter.CommonValidateTrip
+*!
+
+!**> Update result
+!include .FrontPage.Pando.Common.CommonResultImage
+*!

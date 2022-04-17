@@ -1,0 +1,11 @@
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentDepotSelection
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentConsigneeSelection
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentDeliveryTypeSelectionAndIndent
+
+!** Getting Order id
+!|Script|Ui                                                      |
+|$data= |getText;|//span[contains(text(),'Indent created')]|xpath|
+|wait;  |3                                                       |
+**!

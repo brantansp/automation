@@ -1,0 +1,9 @@
+---
+Help: Contains Shortage Damage API settings
+Test
+---
+!|Script                |Http                                     |
+|addHeader;             |Authorization |bearer $stoken            |
+|setBaseUrl;            |${surl}/api/settings/ShortageDamage      |
+|$sdcd_setting_response=|getResponse;  |Application/Json|put|$data|
+|check                  |getStatusCode;|200                       |

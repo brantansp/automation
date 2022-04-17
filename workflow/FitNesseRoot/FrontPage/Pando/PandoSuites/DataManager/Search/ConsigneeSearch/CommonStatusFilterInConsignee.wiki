@@ -1,0 +1,10 @@
+---
+Help: Status filter in consignee
+---
+!|Script       |Ui                                                   |
+|navigateToUrl;|${surl}/mdm/consignees                               |
+|click;        |//button[@class='el-button el-button--default']|xpath|
+|click;        |//label[text()='Status']/..//following::input  |xpath|
+|click;        |//span[text()='${status_value}']               |xpath|
+|wait;         |3                                                    |
+|click;        |//button[text()='APPLY']                       |xpath|

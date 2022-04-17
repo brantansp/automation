@@ -1,0 +1,14 @@
+---
+Help: Contains Material cluster creation API script
+Test
+---
+!|Script    |Http                                      |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/materialcategory/             |
+|$material= |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|200                        |
+
+!|Script            |json                                    |
+|$material_id=      |getValueFromJSON;|$material|data.id     |
+|$material_category=|getValueFromJSON;|$material|data.name   |
+|$material_cluster= |getValueFromJSON;|$material|data.cluster|

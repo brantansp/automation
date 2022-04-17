@@ -1,0 +1,9 @@
+---
+Help: Search with different filters in invoice page of transporter
+---
+!|script  |Ui                                                                                                                                               |
+|click;   |//div[@class='app-search-label']      |xpath                                                                                                     |
+|click;   |//button[text()='Clear']              |xpath                                                                                                     |
+|sendKeys;|//input[@placeholder='${search_text}']|xpath                                                                                     |${search_value}|
+|click;   |//button[text()='Search']             |xpath                                                                                                     |
+|check    |isElementPresent;                     |//div[contains(@class,'card-row row')][1]//child::span[contains(text(),'${verify_value}')]|xpath   |true  |

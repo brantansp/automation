@@ -1,0 +1,3 @@
+!|Script|MongoDB|
+|initialize;|${connection}|${database}|
+|$json=|roleId;|depo_manager|${surl}|

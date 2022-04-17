@@ -1,0 +1,20 @@
+---
+Help: Use to upload Certification in Transporter login
+---
+!| script                    |ui                                                                                                                                                                                                 |
+|navigateToUrl;              |${turl}/profile                                                                                                                                                                                    |
+|click;                      |//li[normalize-space(text())='CERTIFICATIONS']                                                     |xpath                                                                                          |
+|sendKeys;                   |//div[normalize-space(text())='${certification_type}']/..//input[@id='file']                       |xpath                                                                    |${file_path}         |
+|wait;                       |3                                                                                                                                                                                                  |
+|click;                      |//button[text()='SAVE']                                                                            |xpath                                                                                          |
+|sendKeys;                   |//div[normalize-space(text())='${certification_type}']/..//input[@placeholder='Certificate Number']|xpath                                                                    |${certificate_number}|
+|sendKeys;                   |//div[normalize-space(text())='${certification_type}']/..//input[@placeholder='Pick a day']        |xpath                                                                    |${certification_date}|
+|click;                      |//button[text()='SAVE']                                                                            |xpath                                                                                          |
+|waitForElementToBeDisplayed;|//div[@class='el-notification success right']                                                      |xpath                                                                    |5                    |
+|check                       |isElementPresent;                                                                                  |//div[@class='el-notification success right']                            |xpath      |true     |
+|$tresult1=                  |isElementPresent;                                                                                  |//div[@class='el-notification success right']                            |xpath                |
+|waitForElementToDisappear;  |//div[@class='el-notification success right']                                                      |xpath                                                                    |5                    |
+|refresh;                                                                                                                                                                                                                        |
+|click;                      |//li[normalize-space(text())='CERTIFICATIONS']                                                     |xpath                                                                                          |
+|check                       |isElementPresent;                                                                                  |//div[normalize-space(text())='${certification_type}']/../child::div//img|xpath      |true     |
+|$tresult2=                  |isElementPresent;                                                                                  |//div[normalize-space(text())='${certification_type}']/../child::div//img|xpath                |

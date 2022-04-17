@@ -1,0 +1,8 @@
+!|Script                |Excel                      |
+|newSheetDynamicColumns;|${row}|${column}|$excelpath|
+
+!|Script                     |Ui                                                                                              |
+|navigateToUrl;              |${surl}/indents/$order_id/details/0                                                             |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]|xpath                                         |30        |
+|check                       |isElementPresent;                     |//strong[contains(text(),'${consignee_name}')]|xpath|true|
+|sendKeys;                   |.upload-material                      |cssselector                                   |$excelpath|

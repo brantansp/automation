@@ -1,0 +1,6 @@
+---
+Help: validation
+---
+!|Script|Common|
+|check|checkIfStringAreEqual;|$count|$result|true|
+|$tresult=|checkIfStringAreEqual;|$count|$result|

@@ -1,0 +1,61 @@
+---
+Help: max drop off 2
+Test
+---
+!** Depot Optima Setting
+!define depo {Chennai Depot}
+!define movement_type {Secondary}
+!define split_factor {5}
+!define max_split {2}
+!define algorithm_mode {Default}
+!define angle {30}
+!define optima_type {2D}
+!define mode {0}
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.RouteSettingCS
+
+!define max_pick_up {1}
+!define max_drop_off {2}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.RouteSetting
+
+!define option {(//span[@class='el-radio__inner'])[1]}
+!define weight {1}
+!define volume {1}
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.VehicalsSetting
+*!
+
+!** Uploading the Material and Optimizing
+#!define surl {https://optima-auto.pandostaging.in}
+!define depo {Chennai Depot}
+!define items {2}
+!define mcount {4}
+!define mcount1 {4}
+!define movement_type {Secondary}
+
+!|Script    |Common                                                |
+|$excelpath=|getPath;|optimaAttachment/max_drop_off_2.xlsx|fullpath|
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.CommonOptimaRun
+*!
+
+!** Validating the Line item
+#|check|getText;|//span[@class='cfamount']|xpath|${items}|
+!|Script   |Ui                                                                   |
+|check     |getCountOfElements;|//span[contains(text(),'Z009')]       |xpath|2   |
+|check     |isElementPresent;  |//span[contains(text(),'Consignee 4')]|xpath|true|
+|$tresult1=|isElementPresent;  |//span[contains(text(),'Consignee 4')]|xpath     |
+|check     |isElementPresent;  |//span[contains(text(),'Consignee 3')]|xpath|true|
+|$tresult2=|isElementPresent;  |//span[contains(text(),'Consignee 3')]|xpath     |
+|check     |isElementPresent;  |//span[contains(text(),'Consignee 5')]|xpath|true|
+|$tresult3=|isElementPresent;  |//span[contains(text(),'Consignee 5')]|xpath     |
+|check     |getCountOfElements;|//span[contains(text(),'IN01')]       |xpath|2   |
+*!
+
+!** Validating the Test Result
+!|Script  |Common                                                     |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3|
+*!
+
+!** Retrieving the Job ID
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.CommonTenantId
+*!

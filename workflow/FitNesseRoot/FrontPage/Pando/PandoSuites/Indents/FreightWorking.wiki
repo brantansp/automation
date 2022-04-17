@@ -1,0 +1,6 @@
+---
+Help: All Freight Working cases will be handled here
+Suite
+---
+!1 Test suite for Freight Working
+!contents -R2 -g -p -f -h

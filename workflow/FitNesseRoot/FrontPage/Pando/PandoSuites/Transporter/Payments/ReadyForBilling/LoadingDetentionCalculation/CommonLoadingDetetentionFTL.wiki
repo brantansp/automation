@@ -1,0 +1,7 @@
+---
+Help: Detention calculation loading
+---
+!|Script    |Ui                                                                                                                                                      |
+|click;     |//span[normalize-space(text())='Update']                 |xpath                                                                                                          |
+|click;     |//div[normalize-space(text())='CHARGES']|xpath                                                                                                          |
+|$calResult=|getText;                                |(//span[starts-with(normalize-space(),'Loading Detention')]/../parent::div/following-sibling::div)[1]/div|xpath|

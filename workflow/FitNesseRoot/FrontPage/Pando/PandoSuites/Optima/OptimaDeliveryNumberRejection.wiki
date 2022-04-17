@@ -1,0 +1,6 @@
+---
+Help: Contains Delivery rejection mail test cases
+Suite
+---
+!1 Test suite Optima Delivery Number Rejection
+!contents -R2 -g -p -f -h

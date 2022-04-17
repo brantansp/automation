@@ -1,0 +1,226 @@
+---
+Help: Verify whether shipment number is updated through Bulk indent api
+Suites: common
+Test
+---
+!***> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-4|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-3|
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0 |
+
+!|Script      |DateUtil                             |
+|$currentTime=|getCurrentDateTimeStamp;|hh:mm:a     |
+|$truckouthr= |dateCalculation;        |hour|hh  |-1|
+|$truckoutmin=|dateCalculation;        |date|mm:a|0 |
+
+!|Script       |Common                                                |
+|$truckouttime=|stringConcatenation;|$truckouthr: |$truckoutmin       |
+|$truckindate= |stringConcatenation;|$truckindate |!- $currentTime -! |
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $truckouttime -!|
+|$rdate=       |stringConcatenation;|$rdate       |!- $currentTime -! |
+
+!|Script         |DateUtil                             |
+|$loadingDate=   |utcConversion;  |$loadingDate        |
+|$truckindate=   |utcConversion;  |$truckindate        |
+|$truckoutdate=  |utcConversion;  |$truckoutdate       |
+|$rdate=         |utcConversion;  |$rdate              |
+|$reporttime=    |dateCalculation;|hour      |hh:mma|0 |
+|$reportdate=    |dateCalculation;|dd-MM-yyyy|0        |
+|$backreporttime=|dateCalculation;|hour      |hh:mma|-3|
+|$backreportdate=|dateCalculation;|dd-MM-yyyy|-3       |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Source Depot Creation
+!define depot_name {s$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {s1$unique}
+!define depot_region {South}
+!define depot_short_code {s1$num}
+!define depot_reference_id {s1$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {SG1$unique}
+!define g_user_email {pandoindent+1$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script          |common           |
+|$location1_id=   |getTrim;|$depot  |
+|$source1_gate_id=|getTrim;|$gate_id|
+*!
+
+!***> Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+
+!|script           |common                  |
+|$transporter_id_1=|getTrim;|$transporter_id|
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!***> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {PTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+
+!define vehicle_name {v2$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Destination Depot 1 Creation
+!define depot_name {d$unique}
+!define depot_state {Hariyana}
+!define depot_city {d$unique}
+!define depot_region {South}
+!define depot_short_code {d$num}
+!define depot_reference_id {d$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {DG$unique}
+!define g_user_email {pandoindent+2$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script                       |common           |
+|$destination_location_id=     |getTrim;|$depot  |
+|$destination_gate_location_id=|getTrim;|$gate_id|
+*!
+
+!***> Destination Depot 2 Creation
+!define depot_name {d2$unique}
+!define depot_state {Karnataka}
+!define depot_city {d2$unique}
+!define depot_region {South}
+!define depot_short_code {d2$num}
+!define depot_reference_id {d2$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {DG2$unique}
+!define g_user_email {pandoindent+3$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script                         |common           |
+|$destination_location_id_2=     |getTrim;|$depot  |
+|$destination_gate_location_id_2=|getTrim;|$gate_id|
+*!
+
+!***> Uploading Rate Matrix for source 1 to destination depot
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,SG1$unique,DG$unique,v$unique,100,tr$unique,t$unique,2,40000,per_trip,01-Jan-$year,31-Dec-2030,100,1,|Point,SG1$unique,DG2$unique,v2$unique,100,tr$unique,t$unique,2,40000,per_trip,01-Jan-$year,31-Dec-2030,100,1,}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!**> Indent Creation through bulk indent API
+!define order_type  {0}
+!define transporter_id {$transporter_id_1}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$location1_id}
+!define gate_id {$source1_gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$destination_location_id}
+!define sold_to_id {$destination_gate_location_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|$data= |getTrim;|{"data":[{"transporter_reference_id":"tr$unique","vehicle_type":"v$unique","delivery_type":"PTL","vehicle_requirement_date":"$rdate","shipment_number":"ship$unique","drop_off":[{"pick_up":"SG1$unique","pick_up_type":"DEPOT","ship_to_type":"DEPOT","ship_to":"DG$unique","sold_to":"DG$unique","materials":[{"delivery_number":"12313213","material_code":"mc$unique","category":"GT","division":"ST","mrp":"100","weight":{"value":"80","unit":"KG"},"volume":{"value":"20","unit":"CFT"},"quantity":{"value":"45","unit":"NOS"},"invoice_number":"","invoice_amount":"","invoice_date":""}]}]},{"transporter_reference_id":"tr$unique","vehicle_type":"v2$unique","delivery_type":"FTL","vehicle_requirement_date":"$rdate","shipment_number":"sh$unique","drop_off":[{"pick_up":"SG1$unique","pick_up_type":"DEPOT","ship_to_type":"DEPOT","ship_to":"DG2$unique","sold_to":"DG2$unique","materials":[{"delivery_number":"12313666","material_code":"mc$unique","category":"GT","division":"ST","mrp":"100","weight":{"value":"80","unit":"KG"},"volume":{"value":"20","unit":"CFT"},"quantity":{"value":"45","unit":"NOS"},"invoice_number":"","invoice_amount":"","invoice_date":""}]}]}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationBulkThroughAPI
+*!
+
+!**> Filter indent after bulk indent API
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {s$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+**!
+
+!** Check whether shipment number is displayed in indent
+!|script   |ui                                                                                                                                            |
+|$tresult1=|isElementPresent;                          |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath     |
+|$count=   |getCountOfElements;                        |//div[@class='order-row']                                                              |xpath     |
+|click;    |//span[normalize-space(text())='v$unique'] |xpath                                                                                             |
+|check     |isElementPresent;                          |//p[contains(text(),'Shipment Number')]                                                |xpath|true|
+|$tresult2=|isElementPresent;                          |//p[contains(text(),'Shipment Number')]                                                |xpath     |
+|$snumber= |getText;                                   |//p[contains(text(),'Shipment Number')]/strong                                         |xpath     |
+|click;    |//span[@class='el-link--inner']            |xpath                                                                                             |
+|click;    |//span[normalize-space(text())='v2$unique']|xpath                                                                                             |
+|check     |isElementPresent;                          |//p[contains(text(),'Shipment Number')]                                                |xpath|true|
+|$tresult3=|isElementPresent;                          |//p[contains(text(),'Shipment Number')]                                                |xpath     |
+|$snumber2=|getText;                                   |//p[contains(text(),'Shipment Number')]/strong                                         |xpath     |
+
+!|script   |common                                           |
+|check     |checkIfStringAreEqual;|$snumber |ship$unique|true|
+|$tresult4=|checkIfStringAreEqual;|$snumber |ship$unique     |
+|check     |checkIfStringAreEqual;|$snumber2|sh$unique  |true|
+|$tresult5=|checkIfStringAreEqual;|$snumber2|sh$unique       |
+|check     |checkIfStringAreEqual;|$count   |2          |true|
+|$tresult6=|checkIfStringAreEqual;|$count   |2               |
+*!
+
+!**> Validating results
+!|script  |common                                                                                   |
+|check    |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|true|
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true     |
+**!

@@ -1,0 +1,51 @@
+---
+Help: Transporter ERP
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!define rejection_name  {Transporters}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+
+!*** ERP Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+
+!| Script    |Http                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|setBaseUrl; |${surl}/api/login                                                                                                                                                                                                                                                                                                                                                                                                           |
+|getResponse;|Application/Json|put |{"data":{"email":"${username}","password":"${password}"}}                                                                                                                                                                                                                                                                                                                                             |
+|$token=     |getHeader;      |x-auth-token                                                                                                                                                                                                                                                                                                                                                                                               |
+|addHeader;  |Authorization   |bearer $token                                                                                                                                                                                                                                                                                                                                                                                              |
+|setBaseUrl; |${surl}/api/erp/transporter                                                                                                                                                                                                                                                                                                                                                                                                 |
+|getResponse;|Application/Json|post|{"data":[{"name":"${transporter_name}","reference_number":"","address":"${address}","city":"${city}","state":"${state}","pincode":"${pincode}","contact_name":"${manager_name}","contact_mobile":${manager_mobile},"contact_email":"${manager_email}","gst_number":"GST$unique","pan_number":"${pancard}","gst_type":"FCM","percentage":12,"transporter_gst_states":"","transporter_gst_numbers":""}]}|
+|check       |getStatusCode;  |204                                                                                                                                                                                                                                                                                                                                                                                                        |
+
+
+!|Script |Common                            |
+|$result=|getResultOfCalculation;|$count|+|1|
+
+**!
+
+!** Validating Rejection list
+!define rejection_name  {Transporters}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+**!
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.ValidateRejections
+
+
+!define tname {TC-176}
+ 
+

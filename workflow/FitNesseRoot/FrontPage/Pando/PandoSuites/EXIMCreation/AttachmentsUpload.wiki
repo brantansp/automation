@@ -1,0 +1,23 @@
+---
+Help: Used to add the files
+---
+!|Script   |Common                                           |
+|$pdfpath1=|getPath;|testAttachment/pdf1_$unique.pdf|fullpath|
+|$pdfpath2=|getPath;|testAttachment/pdf2_$unique.pdf|fullpath|
+|$pdfpath3=|getPath;|testAttachment/pdf3_$unique.pdf|fullpath|
+
+!|Script               |FileUtil            |
+|createFileFromContent;|$pdfpath1|test|UTF-8|
+|createFileFromContent;|$pdfpath2|test|UTF-8|
+|createFileFromContent;|$pdfpath3|test|UTF-8|
+
+!|Script  |Ui                                                                                                                      |
+|click;   |//li//label[normalize-space(text())='PACKING LIST']/..//div[@class='el-upload el-upload--picture-card'] |xpath          |
+|sendKeys;|//li//label[normalize-space(text())='PACKING LIST']/..//input                                           |xpath|$pdfpath1|
+|wait;    |3                                                                                                                       |
+|click;   |//li//label[normalize-space(text())='INVOICE']/..//div[@class='el-upload el-upload--picture-card']      |xpath          |
+|sendKeys;|//li//label[normalize-space(text())='INVOICE']/..//input                                                |xpath|$pdfpath2|
+|wait;    |3                                                                                                                       |
+|click;   |//li//label[normalize-space(text())='Miscellaneous']/..//div[@class='el-upload el-upload--picture-card']|xpath          |
+|sendKeys;|//li//label[normalize-space(text())='Miscellaneous']/..//input                                          |xpath|$pdfpath3|
+|wait;    |3                                                                                                                       |

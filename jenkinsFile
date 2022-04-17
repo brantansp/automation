@@ -1,0 +1,223 @@
+jobName      = env.JOB_NAME
+notification = "good"
+jobStatus    = 0
+client       = params.CLIENT
+username     = params.USERNAME
+notify       = params.NOTIFICATION
+runid        = params.RUNID
+tag_name     = params.TAG
+rerun_count  = params.RERUN_COUNT == null ? "0" : params.RERUN_COUNT
+append_report  = params.appendReport == null ? "YES" : params.appendReport
+
+image = "669650451927.dkr.ecr.ap-south-1.amazonaws.com/pando-fitnesse:c96"
+
+node('automation_label') { //Node where autoscaling occur
+
+ sh '$(aws ecr get-login --no-include-email --region ap-south-1)' //login to image
+ 
+ try {
+
+       docker.image(image).inside('--privileged') {
+       
+          stage('Checkout') {
+
+               checkout([$class: 'GitSCM', branches: [[name: params.BRANCH]], doGenerateSubmoduleConfigurations: false,
+                         extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '30a3a50f-826d-4349-bfb9-e3b9208ac50e',url: 'https://github.com/pandocorp/automation.git']]])
+
+           }
+           
+          stage('Version') {
+
+              sh  """#!/bin/bash
+					chromedriver -v
+					google-chrome-stable --version
+			      """
+          }
+ 
+           stage('Data Settings') {
+           
+                  imgurl = env.BUILD_URL
+                  
+                  imgurl = imgurl.substring(imgurl.lastIndexOf("//")+2)    
+           
+                  echo "$imgurl"
+                  
+	               if(client!=null) {
+		              sh  """#!/bin/bash
+							cd  workflow/FitNesseRoot/GlobalSettings
+		                    rpl build_no_x  ${env.BUILD_NUMBER} CommonVariables.wiki
+							rpl build_job_x ${env.JOB_NAME} CommonVariables.wiki
+							rpl build_url_x $imgurl CommonVariables.wiki
+							rpl cfeatures $client CommonVariables.wiki
+					  """
+	              } else {
+		              sh  """#!/bin/bash
+							cd  workflow/FitNesseRoot/GlobalSettings
+							rpl build_no_x  ${env.BUILD_NUMBER} CommonVariables.wiki
+							rpl build_job_x ${env.JOB_NAME} CommonVariables.wiki
+							rpl build_url_x $imgurl CommonVariables.wiki
+					  """
+	           }
+
+	           if(notify.equals("yes")) {
+	                sh  """#!/bin/bash
+							cd  workflow/FitNesseRoot/GlobalSettings
+							rpl notxxx  notify CommonVariables.wiki
+					      """
+	           }
+	           
+	                sh  """#!/bin/bash
+							cd  workflow/FitNesseRoot/GlobalSettings
+							rpl no_testlink yes Testlink.wiki
+							rpl tagx $tag_name ExtendReport.wiki
+					"""
+					    
+				    sh """#!/bin/bash
+				 	   rm -rf  workflow/FitNesseRoot/files/screen/*.png
+                    """
+          } 
+
+          stage('Build') {
+
+			 sh 'sudo -- sh -c "echo tmpfs      /dev/shm      tmpfs   defaults,size=2g   0   0  >> /etc/fstab"'
+             sh 'sudo mount -o remount /dev/shm'
+             sh 'df -k | grep shm'
+
+             sh  """#!/bin/bash
+					cd  commonlibrary
+					mvn -Dmaven.javadoc.skip=true install
+			 """
+
+			 sh  """#!/bin/bash
+					cd  workflow
+					rm -rf FitNesseRoot/files/screen/*.png
+					rm -rf FitNesseRoot/files/testResults/*.png
+					rm -rf FitNesseRoot/RerunLastFailures*
+					rm -rf fitnesse-*.xml
+					rm -rf er/report.html
+					rm -rf er/*.png
+			 """
+			 
+			 if(append_report == "YES") {
+			     
+			     try {
+			     	sh """#!/bin/bash
+			        	df=\$(date +"%d%m%y")
+			        	echo "Folder : \$df"
+				  		aws s3 cp s3://b4a112d42948772cf082d/${env.JOB_NAME}/\$df/report.html workflow/er/
+               		"""
+			 	} catch (e) {
+			      
+				}
+			 }
+          }
+
+          stage('Test') {
+
+                def jlist = ["TestCaseRun", "Full-Regression","ReadyForBilling","TestCaseRun-Indent-Check"]; 
+          
+                if (params.RERUN_LAST_FAILED == "YES") {
+                        def lastFailedBuildID = 0
+        			    def build = currentBuild.previousBuild
+        				while (build != null) {
+            				if (build.result == "UNSTABLE") {
+					            lastFailedBuildID = build.id as Integer
+                				break
+            				}
+            				build = build.previousBuild
+        				}
+        				println "Running the failed cases in the last run - " +lastFailedBuildID 
+        
+        				sh """#!/bin/bash
+				  			aws s3 cp s3://b4a112d42948772cf082d/${env.JOB_NAME}/$lastFailedBuildID/failed/RerunLastFailures_FrontPage-Pando.wiki workflow/FitNesseRoot/
+               			"""
+                } else {
+                     if(jlist.contains(jobName)) {
+					   testcase = params.TESTCASE
+					   
+					   sh """#!/bin/bash
+				            cd workflow
+				            mvn -Dmaven.javadoc.skip=true -Pfitnesse test -Dfitnesse.command='-c $testcase?suite&format=xml&includehtml' -Dfitnesse.result='fitnesse-data-result.xml'
+				        """
+				  	} else {
+				       sh """#!/bin/bash
+				            cd workflow
+						    mvn -Dmaven.javadoc.skip=true -Pfitnesse test -Dfitnesse.command='-c FrontPage.Pando?suite&suiteFilter=$tag_name&format=xml&includehtml' -Dfitnesse.result='fitnesse-data-result.xml' -Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=86400
+				        """
+				  	}
+               }
+		  }
+		  
+		 sleep 5
+		  
+		 def reruncount = 1
+		 Integer.parseInt(rerun_count).times{
+            
+         stage('Rerun - '+reruncount) {
+
+			def exists = fileExists "/var/lib/jenkins/workspace/$jobName/workflow/FitNesseRoot/RerunLastFailures_FrontPage-Pando.wiki"
+			if (exists) {
+				//Modifing userdata
+		        sh  """#!/bin/bash
+		                cp /var/lib/jenkins/workspace/$jobName/workflow/FitNesseRoot/RerunLastFailures_FrontPage-Pando.wiki /var/lib/jenkins/workspace/$jobName/workflow/FitNesseRoot/RerunLastFailures_FrontPage-Pando.wiki_$reruncount
+				        cd  workflow/FitNesseRoot/GlobalSettings
+						rpl 0  1 ExtendReport.wiki
+				"""
+						 
+				sh """#!/bin/bash
+				        cd workflow
+				        mvn -Dmaven.javadoc.skip=true -Pfitnesse test -Dfitnesse.command='-c RerunLastFailures_FrontPage-Pando?suite&format=xml&includehtml' -Dfitnesse.result='fitnesse-data-result.xml'
+						rm -rf /var/lib/jenkins/workspace/$jobName/workflow/FitNesseRoot/RerunLastFailures_FrontPage-Pando.wiki				        
+                """
+                
+                sleep 5
+                
+                def failedExists = fileExists "/var/lib/jenkins/workspace/$jobName/workflow/FitNesseRoot/RerunLastFailures_RerunLastFailures_FrontPage-Pando.wiki"
+                
+                if(failedExists) {
+                
+				sh """#!/bin/bash
+				        mv /var/lib/jenkins/workspace/$jobName/workflow/FitNesseRoot/RerunLastFailures_RerunLastFailures_FrontPage-Pando.wiki /var/lib/jenkins/workspace/$jobName/workflow/FitNesseRoot/RerunLastFailures_FrontPage-Pando.wiki
+                """
+                }
+               } 
+              reruncount = reruncount +1
+              }
+          }
+		 
+		 stage("Saving Test result") {
+		 
+		       //aws s3 cp workflow/FitNesseRoot/files/screen/ s3://b4a112d42948772cf082d/${env.JOB_NAME}/${env.BUILD_NUMBER}/screen/ --recursive
+		       sh """#!/bin/bash
+		          df=\$(date +"%d%m%y")
+				  aws s3 cp workflow/FitNesseRoot/files/testResults/ s3://b4a112d42948772cf082d/${env.JOB_NAME}/${env.BUILD_NUMBER}/testResults/ --recursive
+				  aws s3 cp workflow/FitNesseRoot/ s3://b4a112d42948772cf082d/${env.JOB_NAME}/${env.BUILD_NUMBER}/failed/ --recursive  --exclude "*" --include "RerunLastFailures*" --exclude "*/*"
+				  aws s3 cp workflow/er/ s3://b4a112d42948772cf082d/${env.JOB_NAME}/\$df/ --recursive  --exclude "*" --include "report*" --exclude "*/*"
+               """
+		 }
+     }
+   } catch (e) {
+          echo 'Issue ' + e
+          currentBuild.result = 'FAILED'
+          notification = "danger"
+          sh 'exit 1'
+      } finally {
+      
+          stage('Publish Reports') {
+               step([$class: 'FitnesseResultsRecorder',fitnessePathToXmlResultsIn: 'workflow/fitnesse-data-result.xml'])
+              
+               if(currentBuild.result == 'UNSTABLE') {
+	             notification = "warning"
+	           }
+
+	           if(!jobName.contains("Phase") && notification !='good') {
+	               slackSend color:"$notification", channel: "#automation-status", message: "Automation Completed - ${env.JOB_NAME} (<${env.BUILD_URL}|Open>)"
+	           }
+	           
+	           publishHTML([allowMissing: true,alwaysLinkToLastBuild: true, keepAll: true, reportDir: 'workflow/er', reportFiles: 'report.html', reportName: 'Report'])
+
+	           manager.addHtmlBadge("<a href='https://tm.gopando.co/lnl.php?type=metricsdashboard&apikey=dde03a7149cd15e0197c9369ce68b682dbff757773a9c1349ecdeedfb3e509d9' target='blank'>Report</a>");
+			   manager.createSummary("http://ci.gopando.co/static/243b2051/images/48x48/search.png").appendText("<a href='https://s3.console.aws.amazon.com/s3/buckets/b4a112d42948772cf082d/${env.JOB_NAME}/${env.BUILD_NUMBER}/testResults/' target='blank'>Test Results</a>", false)
+	      }
+      }
+}

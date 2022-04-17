@@ -1,0 +1,45 @@
+---
+Help: Bulk Upload for User Module
+Suites: dm2
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Uploading New User
+!define row {Name*,Email*,Role*,Phone,User Permission(Default - BOTH)}
+!define column {username$unique,pandoautomation+$unique@gmail.com,Accountant}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+!|Script  |Excel                      |
+|newSheet;|${row}|${column}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/users                                               |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |60        |
+
+!|script       |common            |
+|$email_suffix=|lowerCase;|$unique|
+
+!|Script       |Ui                                                                                             |
+|navigateToUrl;|${surl}/mdm/users                                                                              |
+|check         |isElementPresent;|//span[contains(text(),'pandoautomation+$email_suffix@gmail.com')]|xpath|true|
+
+!|Script|Ui                                   |
+|click; |//span[@class='pointer']       |xpath|
+|click; |//a[contains(text(),'LOG OUT')]|xpath|
+|wait;  |3                                    |
+
+!** Unique values assignment
+!|Script     |Common                                          |
+|$user_email=|getTrim;|pandoautomation+$email_suffix@gmail.com|
+**!
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Users.CommonResetLogin
+**!

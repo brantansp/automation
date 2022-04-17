@@ -1,0 +1,12 @@
+---
+Test
+secure-read
+secure-test
+secure-write
+---
+!|Script         |Http                                     |
+|wait;           |5                                        |
+|addHeader;      |Authorization |bearer $stoken            |
+|setBaseUrl;     |${surl}/api/order/$order_id/deliver      |
+|$mark_delivered=|getResponse;  |Application/Json|put|$data|
+|check           |getStatusCode;|200                       |

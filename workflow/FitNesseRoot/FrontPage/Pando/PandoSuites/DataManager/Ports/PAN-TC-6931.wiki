@@ -1,0 +1,111 @@
+---
+Help: Edit port
+Suites: oel1
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!**> Ports Creation
+!define ports_name {c$unique}
+!define ports_refid {cr$unique}
+!define ports_shortcode {cs$unique}
+!define ports_type {SEA_PORT}
+!define city {Nellore}
+!define state {Andhra Pradesh}
+!define address {12B,Ram mohan street}
+!define geocode {12.23,45.56}
+!define country {Dubai}
+!define pincode {789065}
+
+!|script|common                                                                                                                                                                                                                                                         |
+|$data= |getTrim;|{"data":{"name":"${ports_name}","ref_id":"${ports_refid}","display_reference_name": "","short_code":"${ports_shortcode}","type":"${ports_type}","city":"${city}","state":"${state}","address":"${address}","geo_code":"${geocode}","country":"${country}","pin_code":"${pincode}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.PortsCreationDynamicAPI
+**!
+
+!** Ports Edit
+!define port_name {ca$unique}
+!define port_refid {cb$unique}
+!define port_shortcode {cc$unique}
+!define city {Chennai}
+!define state {TamilNadu}
+!define address {Tnagar usman Road}
+!define country {India}
+!define geocode {28.05,16.02}
+!define pincode {978963}
+**!
+
+!** Editing Ports existing values
+!|Script       |Ui                                                                                          |
+|navigateToUrl;|${surl}/mdm/port                                                                            |
+|click;        |//span[@class='tagblock_list']                                      |xpath                  |
+|sendKeys;     |//input[@placeholder='Enter Reference Id']                          |xpath|${ports_refid}   |
+|wait;         |3                                                                                           |
+|click;        |//button[contains(text(),'Search')]                                 |xpath                  |
+|click;        |//span[contains(text(),'Edit')]                                     |xpath                  |
+|click;        |//input[@placeholder='Enter Name here']                             |xpath                  |
+|clearValueJS; |//input[@placeholder='Enter Name here']                             |xpath                  |
+|sendKeys;     |//input[@placeholder='Enter Name here']                             |xpath|${port_name}     |
+|click;        |//input[@placeholder='Enter Ref Id here']                           |xpath                  |
+|clearValueJS; |//input[@placeholder='Enter Ref Id here']                           |xpath                  |
+|sendKeys;     |//input[@placeholder='Enter Ref Id here']                           |xpath|${port_refid}    |
+|click;        |//input[@placeholder='Enter Short Code here']                       |xpath                  |
+|clearValueJS; |//input[@placeholder='Enter Short Code here']                       |xpath                  |
+|sendKeys;     |//input[@placeholder='Enter Short Code here']                       |xpath|${port_shortcode}|
+|click;        |//label[contains(text(),'PORT TYPE')]/following-sibling::div/div/div|xpath                  |
+|click;        |//span[text()='Dry']                                                |xpath                  |
+|click;        |//input[@placeholder='Enter City here']                             |xpath                  |
+|clearValueJS; |//input[@placeholder='Enter City here']                             |xpath                  |
+|sendKeys;     |//input[@placeholder='Enter City here']                             |xpath|${city}          |
+|click;        |//input[@placeholder='Enter State here']                            |xpath                  |
+|clearValueJS; |//input[@placeholder='Enter State here']                            |xpath                  |
+|sendKeys;     |//input[@placeholder='Enter State here']                            |xpath|${state}         |
+|click;        |//input[@placeholder='Enter Address here']                          |xpath                  |
+|clearValueJS; |//input[@placeholder='Enter Address here']                          |xpath                  |
+|sendKeys;     |//input[@placeholder='Enter Address here']                          |xpath|${address}       |
+|click;        |//input[@placeholder='Enter Country here']                          |xpath                  |
+|clearValueJS; |//input[@placeholder='Enter Country here']                          |xpath                  |
+|sendKeys;     |//input[@placeholder='Enter Country here']                          |xpath|${country}       |
+|click;        |//input[@placeholder='Enter GEO Code here']                         |xpath                  |
+|clearValueJS; |//input[@placeholder='Enter GEO Code here']                         |xpath                  |
+|sendKeys;     |//input[@placeholder='Enter GEO Code here']                         |xpath|${geocode}       |
+|click;        |//input[@placeholder='Enter Postal Code here']                      |xpath                  |
+|clearValueJS; |//input[@placeholder='Enter Postal Code here']                      |xpath                  |
+|sendKeys;     |//input[@placeholder='Enter Postal Code here']                      |xpath|${pincode}       |
+|click;        |//button[@type='button']/span[contains(text(),'Update')]            |xpath                  |
+**!
+
+!** Cross verifying values
+!|script    |Ui                                                                                                  |
+|check      |isElementPresent;                |//span[contains(text(),'${port_name}')]                |xpath|true|
+|$tresult1= |isElementPresent;                |//span[contains(text(),'${port_name}')]                |xpath     |
+|check      |isElementPresent;                |//span[contains(text(),'${port_refid}')]               |xpath|true|
+|$tresult2= |isElementPresent;                |//span[contains(text(),'${port_refid}')]               |xpath     |
+|check      |isElementPresent;                |//span[contains(text(),'${port_shortcode}')]           |xpath|true|
+|$tresult3= |isElementPresent;                |//span[contains(text(),'${port_shortcode}')]           |xpath     |
+|check      |isElementPresent;                |//span[contains(text(),'Dry')]                         |xpath|true|
+|$tresult4= |isElementPresent;                |//span[contains(text(),'Dry')]                         |xpath     |
+|check      |isElementPresent;                |//span[contains(text(),'${city}')]                     |xpath|true|
+|$tresult5= |isElementPresent;                |//span[contains(text(),'${city}')]                     |xpath     |
+|check      |isElementPresent;                |//span[contains(text(),'${state}')]                    |xpath|true|
+|$tresult6= |isElementPresent;                |//span[contains(text(),'${state}')]                    |xpath     |
+|mouseHover;|//span[contains(text(),'Tnagar')]|xpath                                                             |
+|check      |isElementPresent;                |//div[@role='tooltip']//div[text()='Tnagar usman Road']|xpath|true|
+|$tresult7= |isElementPresent;                |//div[@role='tooltip']//div[text()='Tnagar usman Road']|xpath     |
+|check      |isElementPresent;                |//span[contains(text(),'${country}')]                  |xpath|true|
+|$tresult8= |isElementPresent;                |//span[contains(text(),'${country}')]                  |xpath     |
+|check      |isElementPresent;                |//span[contains(text(),'${geocode}')]                  |xpath|true|
+|$tresult9= |isElementPresent;                |//span[contains(text(),'${geocode}')]                  |xpath     |
+|check      |isElementPresent;                |//span[contains(text(),'${pincode}')]                  |xpath|true|
+|$tresult10=|isElementPresent;                |//span[contains(text(),'${pincode}')]                  |xpath     |
+
+!|Script  |Common                                                                                                                            |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10|
+**!
+
+
+
+

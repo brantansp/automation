@@ -1,0 +1,12 @@
+---
+Help: Contains script to filter the depots in Payments V2
+---
+!|Script       |Ui                                                                         |
+|navigateToUrl;|${surl}/v2/payIndents                                                      |
+|click;        |//button[@class='el-button el-button--default']                      |xpath|
+|click;        |(//div[@class='slideleft_menu']//input)[1]                           |xpath|
+|click;        |//span[text()='${depot_selection}']                                  |xpath|
+|click;        |(//div[@class='slideleft_menu']//input)[2]                           |xpath|
+|click;        |//li[contains(@class,'select-dropdown')]/span[text()='${tax_filter}']|xpath|
+|wait;                       |2                                                                       |
+|click;        |//button[text()='APPLY']                                             |xpath|

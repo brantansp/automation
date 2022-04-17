@@ -1,0 +1,13 @@
+!|Script       |Ui                                                                                       |
+|navigateToUrl;|${surl}/indents                                                                          |
+|click;        |//button[@class='el-button el-button--default']|xpath                                    |
+|click;        |(//div[@class='slideleft_menu']//input)[1]     |xpath                                    |
+|sendKeys;     |(//div[@class='slideleft_menu']//input)[1]     |xpath                     |${search_text}|
+|click;        |//li/span[text()='${search_text}']             |xpath                                    |
+|click;        |//div[@id='Creation Date']                     |xpath                                    |
+|click;        |(//button[@date='${creation_fromdate}'])[1]    |xpath                                    |
+|click;        |(//button[@date='${creation_todate}'])[1]      |xpath                                    |
+|wait;         |2                                                                                        |
+|click;        |(//button[text()='Apply'])[1]                  |xpath                                    |
+|$selectedtext=|getText;                                       |//div[@id='Creation Date']|xpath         |
+|click;        |//button[text()='APPLY']                       |xpath                                    |

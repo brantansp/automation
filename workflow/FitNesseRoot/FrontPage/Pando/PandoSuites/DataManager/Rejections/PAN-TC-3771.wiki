@@ -1,0 +1,53 @@
+---
+Help: RateMatrix Manual
+Test
+---
+!** Unique values assignment
+!|Script|Common|
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!define rejection_name  {Rate Matrix}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+
+
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+
+!** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,Chennai,Nellore,965 CFT,100,,${transporter_name},1,1000,per_trip,01-Jan-2019,31-Dec-2030,100,1,}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+
+
+!|Script|Common|
+|$result=|getResultOfCalculation;|$count|+|1|
+
+
+!** Validating Rejection list
+!define rejection_name  {Rate Matrix}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+**!
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.ValidateRejections
+
+
+!define tname {TC-170}
+ 
+
+**!

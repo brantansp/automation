@@ -1,0 +1,15 @@
+---
+Static
+---
+!|Script       |Ui                                                                                                      |
+|navigateToUrl;|${turl}/indents                                                                                         |
+|click;        |//button[@class='el-button el-button--default']                                     |xpath              |
+|click;        |//div[@class='multiselect']                                                         |xpath              |
+|sendKeys;     |//input[@placeholder='Select depots']                                               |xpath|${depot_name}|
+|click;        |//li//span[normalize-space(text())='${depot_name}']                                 |xpath              |
+|clearValueWA; |//input[@placeholder='Select depots']                                               |xpath              |
+|wait;         |1                                                                                                       |
+|click;        |(//span[normalize-space(text())='Select All']/ancestor::li/following-sibling::li)[1]|xpath              |
+|click;        |//span[starts-with(@class,'tag-default')]                                           |xpath              |
+|wait;         |2                                                                                                       |
+|click;        |//button[text()='APPLY']                                                            |xpath              |

@@ -1,0 +1,10 @@
+---
+Help: Multiple invoice Change status API
+Test
+---
+!|Script    |Http                                           |
+|wait;      |5                                              |
+|addHeader; |Authorization   |bearer $stoken                |
+|setBaseUrl;|${surl}/api/v2/shipper/invoice/multi_erp_status|
+|$indent=   |getResponse;    |Application/Json |post |$data |
+|check      |getStatusCode;  |202                           |

@@ -1,0 +1,10 @@
+!|Script                     |Ui                                                                      |
+|navigateToUrl;              |${surl}/indents                                                         |
+|waitForElementToBeDisplayed;|//button[@class='el-button el-button--default']|xpath|30                |
+|click;                      |//button[@class='el-button el-button--default']|xpath                   |
+|click;                      |(//div[@class='slideleft_menu']//input)[1]     |xpath                   |
+|sendHumanKeys;              |(//div[@class='slideleft_menu']//input)[1]     |xpath|${depot_selection}|
+|click;                      |//li/span[text()='${depot_selection}']         |xpath                   |
+|wait;                       |5                                                                       |
+|click;                      |//button[text()='APPLY']                       |xpath                   |
+|waitForElementToBeDisplayed;|//div[@class='order-list-wrapper']             |xpath|20                |

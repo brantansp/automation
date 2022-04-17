@@ -1,0 +1,33 @@
+---
+Help: create primary indent in ui
+---
+!** Source Selection
+!include .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentDepotSelection
+**!
+
+!** Destination Selection
+!|Script                     |Ui                                                                                                                                                                                                                                        |
+|click;                      |//div[@class='add-block']                                                                               |xpath                                                                                                                            |
+|waitForElementToBeDisplayed;|(//section//div[contains(@class,'table-striped')])[1]                                                   |xpath                                                                                                    |10                     |
+|sendKeys;                   |//section[@class='el-drawer__body']//input[@type='text']                                                |xpath                                                                                                    |${destination_location}|
+|waitForElementToBeDisplayed;|(//section//div[contains(@class,'table-striped')])[1]                                                   |xpath                                                                                                    |10                     |
+|click;                      |(//span[normalize-space(text())='${destination_location}'])[1]/ancestor::td/preceding-sibling::td//label|xpath                                                                                                                            |
+|wait;                       |3                                                                                                                                                                                                                                         |
+|click;                      |//span[text()='Add']                                                                                    |xpath                                                                                                                            |
+|check                       |isElementDisplayed;                                                                                     |//div[@class='add-block']/following-sibling::div//span[normalize-space(text())='${destination_location}']|xpath       |true      |
+**!
+
+!* Selecting Types
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentCreationSelectTypesInUI
+*!
+
+!** Getting Order id
+!|Script|Ui                                                      |
+|$data= |getText;|//span[contains(text(),'Indent created')]|xpath|
+|wait;  |3                                                       |
+
+!|Script   |Common                                                      |
+|$data1=   |stringConcatenation; |$data |last                           |
+|$order_id=|getSubStringByString;|$data1|Indent created with number|last|
+|$order_id=|getTrim;             |$order_id                             |
+**!

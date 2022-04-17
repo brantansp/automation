@@ -1,0 +1,411 @@
+---
+Help: Validating quote history based on same city scenario
+Suites: oel2
+Test
+---
+!** Unique values assignment
+!|script   |common                                 |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss   |
+|$num=     |getRandomNumber;        |100000 |999999|
+|$currDate=|getCurrentDateTimeStamp |default       |
+|$year=    |getSubString;           |$unique|0  |4 |
+
+!|script            |DateUtil                             |
+|$indentCutoffTime= |dateCalculation;|minute    |hh:mm:a|2|
+|$arrivalCutoffTime=|dateCalculation;|minute    |hh:mm:a|4|
+|$truckindate=      |dateCalculation;|yyyy/MM/dd|         |
+|$cdate=            |dateCalculation;|yyyy/MM/dd|1        |
+
+!| Script     |Common                                         |
+|$truckindate=|stringConcatenation;|$truckindate|!- 10:00:00-!|
+
+!|script      |DateUtil                   |
+|$truckindate=|utcConversion;|$truckindate|
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Thanesar Road}
+!define city {concity$unique}
+!define state {Haryana}
+!define pincode {120100}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {North}
+!define site {2}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!** Gate Manager Creation
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {South}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {rt$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {South}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+*!
+
+!** Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationSignifyAPI
+**!
+
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!** Uploading Rate Matrix for transporter 1
+!|Script|Common                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getTrim;|{"data":[{"contract_type":"City","source":"Chennai","destination":"concity$unique","vehicle_type":"${vehicle_name}","distance":"100","transporter_reference_number":"${transporter_ref_id}","transporter_name":"${transporter_name}","transit_days":"1","freight_rate":"5000","freight_unit":"trip","valid_from":"2019/01/01","valid_to":"$cdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.RateMatrixDynamicAPI
+
+**!
+
+!** Indent Creation 1
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|Script     |Common            |
+|$order_id_1=|getTrim;|$order_id|
+
+**!
+
+!** Indent Creation 2
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|Script     |Common            |
+|$order_id_2=|getTrim;|$order_id|
+**!
+
+!** Indent Creation 3
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|Script     |Common            |
+|$order_id_3=|getTrim;|$order_id|
+**!
+
+!** Indent Creation 4
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|Script     |Common            |
+|$order_id_4=|getTrim;|$order_id|
+**!
+
+**!
+
+!** Transporter Creation 1
+
+!define transporter_name {t1$unique}
+!define transporter_ref_id {tr1$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+1$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationSignifyAPI
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!** Uploading Rate Matrix for transporter 1
+!|Script|Common                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getTrim;|{"data":[{"contract_type":"City","source":"Chennai","destination":"concity$unique","vehicle_type":"${vehicle_name}","distance":"100","transporter_reference_number":"${transporter_ref_id}","transporter_name":"${transporter_name}","transit_days":"1","freight_rate":"5000","freight_unit":"trip","valid_from":"2019/01/01","valid_to":"$cdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.RateMatrixDynamicAPI
+**!
+
+!** Shipper Bid Request To Transporter
+!|Script   |Common                                                                                 |
+|$data=    |getTrim;|{"data":{"loading_date":"$truckindate","transporter_ids":["$transporter_id"]}}|
+|$order_id=|getTrim;|$order_id_1                                                                   |
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqSendBidRequest
+**!
+
+!** Bids quotes from transporter side for indent 1
+!|Script     |DateUtil                                    |
+|$arrival_at=|getCurrentDateTimeStamp;|yyyy/MM/dd HH:mm:ss|
+|$arrival_at=|utcConversion;          |$arrival_at        |
+!define freight_charge {6000}
+!define rfq_status {3}
+!define vehicle_type_id {$vehicle_id}
+
+!define tusername {pandotransporter+1$unique@outlook.com}
+!define tpassword {$password}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqStatus
+**!
+
+!** Bids Accepted by Shipper from Transporter
+!|Script   |Common                                                                                     |
+|$data=    |getTrim;|{"data":{"comment":"","quotes":[{"transporter_id":"$transporter_id","status":2}]}}|
+|$order_id=|getTrim;|$order_id_1                                                                       |
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqAcceptBidRequest
+**!
+
+**!
+
+!** Transporter Creation 2
+!define transporter_name {t2$unique}
+!define transporter_ref_id {tr2$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+2$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationSignifyAPI
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!** Uploading Rate Matrix for transporter 2
+!|Script|Common                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getTrim;|{"data":[{"contract_type":"City","source":"Chennai","destination":"concity$unique","vehicle_type":"${vehicle_name}","distance":"100","transporter_reference_number":"${transporter_ref_id}","transporter_name":"${transporter_name}","transit_days":"1","freight_rate":"5000","freight_unit":"trip","valid_from":"2019/01/01","valid_to":"$cdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.RateMatrixDynamicAPI
+**!
+
+!** Shipper Bid Request To Transporter
+!|Script   |Common                                                                                 |
+|$data=    |getTrim;|{"data":{"loading_date":"$truckindate","transporter_ids":["$transporter_id"]}}|
+|$order_id=|getTrim;|$order_id_2                                                                   |
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqSendBidRequest
+**!
+
+!** Bids quotes from transporter side for indent 2
+!|Script     |DateUtil                                    |
+|$arrival_at=|getCurrentDateTimeStamp;|yyyy/MM/dd HH:mm:ss|
+|$arrival_at=|utcConversion;          |$arrival_at        |
+!define freight_charge {7000}
+!define rfq_status {3}
+!define vehicle_type_id {$vehicle_id}
+
+!define tusername {pandotransporter+2$unique@outlook.com}
+!define tpassword {$password}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqStatus
+**!
+
+!** Bids Accepted by Shipper from Transporter
+!|Script   |Common                                                                                     |
+|$data=    |getTrim;|{"data":{"comment":"","quotes":[{"transporter_id":"$transporter_id","status":2}]}}|
+|$order_id=|getTrim;|$order_id_2                                                                       |
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqAcceptBidRequest
+**!
+
+**!
+
+!** Transporter Creation 3
+!define transporter_name {t3$unique}
+!define transporter_ref_id {tr3$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+3$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationSignifyAPI
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!** Uploading Rate Matrix for transporter 3
+!|Script|Common                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getTrim;|{"data":[{"contract_type":"City","source":"Chennai","destination":"concity$unique","vehicle_type":"${vehicle_name}","distance":"100","transporter_reference_number":"${transporter_ref_id}","transporter_name":"${transporter_name}","transit_days":"1","freight_rate":"5000","freight_unit":"trip","valid_from":"2019/01/01","valid_to":"$cdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.RateMatrixDynamicAPI
+**!
+
+!** Shipper Bid Request To Transporter
+!|Script   |Common                                                                                 |
+|$data=    |getTrim;|{"data":{"loading_date":"$truckindate","transporter_ids":["$transporter_id"]}}|
+|$order_id=|getTrim;|$order_id_3                                                                   |
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqSendBidRequest
+**!
+
+!** Bids quotes from transporter side for indent 3
+!|Script     |DateUtil                                    |
+|$arrival_at=|getCurrentDateTimeStamp;|yyyy/MM/dd HH:mm:ss|
+|$arrival_at=|utcConversion;          |$arrival_at        |
+!define freight_charge {8000}
+!define rfq_status {3}
+!define vehicle_type_id {$vehicle_id}
+
+!define tusername {pandotransporter+3$unique@outlook.com}
+!define tpassword {$password}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqStatus
+**!
+
+!** Bids Accepted by Shipper from Transporter
+!|Script   |Common                                                                                     |
+|$data=    |getTrim;|{"data":{"comment":"","quotes":[{"transporter_id":"$transporter_id","status":2}]}}|
+|$order_id=|getTrim;|$order_id_3                                                                       |
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqAcceptBidRequest
+**!
+
+**!
+
+!** Validating History from Transporter side
+
+!|Script   |Common                                                                                 |
+|$data=    |getTrim;|{"data":{"loading_date":"$truckindate","transporter_ids":["$transporter_id"]}}|
+|$order_id=|getTrim;|$order_id_4                                                                   |
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqSendBidRequest
+
+!define depot_selection {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|script                     |ui                                                                                                                                                                                    |
+|click;                      |//span[text()='Quotes']                                                |xpath                                                                                                         |
+|waitForElementToBeDisplayed;|//div[contains(@class,'newpopover')]//div[contains(@class,'table-row')]|xpath                                                                                              |10        |
+|check                       |getCountOfElements;                                                    |//i[contains(text(),'Previously Accepted Quotes')]/../parent::div//span[contains(text(),'concity')]|xpath|3   |
+|check                       |isElementPresent;                                                      |//strong[text()='INR 6000']                                                                        |xpath|true|
+|check                       |isElementPresent;                                                      |//strong[text()='INR 7000']                                                                        |xpath|true|
+|check                       |isElementPresent;                                                      |//strong[text()='INR 8000']                                                                        |xpath|true|
+|$result1=                   |isElementPresent;                                                      |//strong[text()='INR 6000']                                                                        |xpath     |
+|$result2=                   |isElementPresent;                                                      |//strong[text()='INR 7000']                                                                        |xpath     |
+|$result3=                   |isElementPresent;                                                      |//strong[text()='INR 8000']                                                                        |xpath     |
+
+!|Script  |Common                                                  |
+|$tresult=|checkIfStringAreEqualInArray;|$result1,$result2,$result3|
+*!

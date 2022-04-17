@@ -1,0 +1,12 @@
+!|script       |ui                                                                                                                        |
+|navigateToUrl;|${turl}/rfq                                                                                                               |
+|click;        |//button[@class='el-button el-button--default']                                                       |xpath              |
+|click;        |//label[normalize-space(text())='DEPOT']/../following-sibling::div//span[@class='multiselect__single']|xpath              |
+|click;        |//span[normalize-space(text())='Select All']                                                          |xpath              |
+|sendKeys;     |(//div[@class='slideleft_menu']//input)[1]                                                            |xpath|${depot_name}|
+|click;        |//span[text()='${depot_name}']                                                                        |xpath              |
+|clearValueWA; |(//div[@class='slideleft_menu']//input)[1]                                                            |xpath              |
+|click;        |((//span[normalize-space(text())='Select All']/ancestor::li/following-sibling::li)[1]//span)[last()]  |xpath              |
+|click;        |//div[@class='flex-container page-filter']                                                            |xpath              |
+|wait;         |1                                                                                                                         |
+|click;        |//button[text()='APPLY']                                                                              |xpath              |

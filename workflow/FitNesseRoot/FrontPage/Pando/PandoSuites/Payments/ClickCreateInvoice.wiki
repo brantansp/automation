@@ -1,0 +1,15 @@
+---
+Help: Contains the steps to click on Create Invoice button in old payments in Transporter application
+---
+!|script                     |ui                                                                                                                                                                                            |
+|navigateToUrl;              |${turl}/payments                                                                                                                                                                              |
+|click;                      |//input[@placeholder='Select Depot']                                                              |xpath                                                                                      |
+|sendKeys;                   |//input[@class='el-input__inner']                                                                 |xpath                                                                        |${depot_name}|
+|click;                      |//span[text()='${depot_name}']/../self::li                                                        |xpath                                                                                      |
+|check                       |isElementPresent;                                                                                 |//div[contains(@class,'show row')]//span[normalize-space(text())='$order_id']|xpath  |true |
+|click;                      |//div[contains(@class,'show row')]//span[@class='lrnumber-pending']                               |xpath                                                                                      |
+|click;                      |//span[text()='Physical LR available']/preceding-sibling::label//span[@class='el-checkbox__input']|xpath                                                                                      |
+|waitForElementToBeDisplayed;|//div[@class='el-notification success right']                                                     |xpath                                                                        |5            |
+|click;                      |//div[@class='el-notification__closeBtn el-icon-close']                                           |xpath                                                                                      |
+|click;                      |//div[contains(@class,'row-show')]//label[@class='el-checkbox']                                   |xpath                                                                                      |
+|click;                      |//button[text()='Create Invoice']                                                                 |xpath                                                                                      |

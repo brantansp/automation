@@ -1,0 +1,14 @@
+---
+Help: Contains API for creating Transporter in Signify
+Test
+---
+!|Script      |Http                                                                                                                                                                                                                                                                                                                                                                                                       |
+|addHeader;   |Authorization |bearer $stoken                                                                                                                                                                                                                                                                                                                                                                              |
+|setBaseUrl;  |${surl}/api/transporter/                                                                                                                                                                                                                                                                                                                                                                                   |
+|$transporter=|getResponse;  |Application/Json|post|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+|check        |getStatusCode;|200                                                                                                                                                                                                                                                                                                                                                                                         |
+
+!|Script             |json                                            |
+|$transporter_id=    |getValueFromJSON;|$transporter|data.id          |
+|$transporter_name=  |getValueFromJSON;|$transporter|data.name        |
+|$transporter_ref_id=|getValueFromJSON;|$transporter|data.reference_id|

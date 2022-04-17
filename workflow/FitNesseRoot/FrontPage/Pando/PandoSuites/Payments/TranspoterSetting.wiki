@@ -1,0 +1,12 @@
+!|Script                        |Ui                                                                                                                                                                                                                  |
+|navigateToUrl;                 |${turl}/payments                                                                                                                                                                                                    |
+|waitForElementToBeDisplayed;   |//div[contains(@class,'card-row card-row-show')]                                                                                                                                                          |xpath|30 |
+|refreshForElementToBeDisplayed;|//span[contains(text(),'$order_id')]                                                                                                                                                                      |xpath|3|3|
+|click;                         |//span[contains(text(),'$order_id')]/ancestor::div[@class='card-row card-row-show rowdisabled']//div[@class='action']/span/span/div/span[@class='lrnumber-pending']                                       |xpath    |
+|click;                         |//div[@aria-hidden='false']/div[@class='popover-primary']/div[@class='popover-primary-body']/div[@class='physical-copy-container']/../following-sibling::div//label/span/span[@class='el-checkbox__inner']|xpath    |
+|waitForElementToBeDisplayed;   |//div[@class='el-notification success right']                                                                                                                                                             |xpath|5  |
+|click;                         |//div[@class='el-notification__closeBtn el-icon-close']                                                                                                                                                   |xpath    |
+|click;                         |//span[contains(text(),'$order_id')]/ancestor::div[@class='card-row card-row-show']/div[@class='card-header-col card-col w50']/label/span/span[@class='el-checkbox__inner']                               |xpath    |
+|click;                         |//button[text()='Create Invoice']                                                                                                                                                                         |xpath    |
+
+

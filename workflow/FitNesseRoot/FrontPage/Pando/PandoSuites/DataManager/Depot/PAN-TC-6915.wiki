@@ -1,0 +1,39 @@
+---
+Help: To verify Depot Bulk Upload
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Uploading Depot in Bulk
+!define row {Depot Name,Reference Id,Display Reference Name,City,State,Pincode,Region,Phone,Delivery Type,Short Code,Address,GST IN,Manager email ids,Depot type,Ports Associated}
+!define column {d1$unique,r1$unique,,Chennai,Tamil Nadu,600001,South,9874647488,Shipper Site,D1$unique,Chennai,123,${username},Depot,|d2$unique,r2$unique,,Salem,Tamil Nadu,636001,South,9874647448,Shipper Site,D2$unique,Chennai,123,${username},Depot,}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Depot.CommonDepotBulkUpload
+
+!|Script   |Common                                                                               |
+|check     |checkIfStringAreEqual;|$successMessage|2 Uploaded and 0 Invalid records out of 2|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage|2 Uploaded and 0 Invalid records out of 2     |
+**!
+
+!** Verifying Depot after upload
+!|Script                     |Ui                                                                                                              |
+|navigateToUrl;              |${surl}/mdm/depots                                                                                              |
+|click;                      |//input[@placeholder='Search by Depot Name / Ref id']|xpath                                                     |
+|sendKeys;                   |//input[@placeholder='Search by Depot Name / Ref id']|xpath                                          |$unique   |
+|waitForElementToBeDisplayed;|//span[contains(text(),'d1')]                        |xpath                                          |10        |
+|mouseHover;                 |//span[contains(text(),'d2')]                        |xpath                                                     |
+|check                       |isElementPresent;                                    |//div[@role='tooltip']//div[text()='d2$unique']|xpath|true|
+|$tresult2=                  |isElementPresent;                                    |//div[@role='tooltip']//div[text()='d2$unique']|xpath     |
+|mouseHover;                 |//span[contains(text(),'d1')]                        |xpath                                                     |
+|check                       |isElementPresent;                                    |//div[@role='tooltip']//div[text()='d1$unique']|xpath|true|
+|$tresult3=                  |isElementPresent;                                    |//div[@role='tooltip']//div[text()='d1$unique']|xpath     |
+**!
+
+!**> Validating test results
+!|Script  |Common                                                               |
+|check    |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,true|true|
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,true     |
+**!

@@ -1,0 +1,15 @@
+---
+Help: SCN3_FTL Per case - '0000016950' consignee should be assigned with one vehicle
+Test
+---
+!|script       |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!|script       |CsvQuery                                                                                                                                |
+|getConnection;|$fileLocation|,                                                                                                                         |
+|$tresult=     |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE File LIKE 'scn3_%' AND Consignee LIKE '%0000016950%'|noOfOccurrences|
+|closeConnection;                                                                                                                                       |
+
+!|script  |common                                |
+|check    |checkIfStringAreEqual;|$tresult|1|true|
+|$tresult=|checkIfStringAreEqual;|$tresult|1     |

@@ -1,0 +1,60 @@
+---
+Help: CHA Bulk upload
+Suites: oel1
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$num=   |getRandomNumber;        |10000|99999|
+**!
+
+!**> Ports Creation
+!define ports_name {ce$unique}
+!define ports_refid {cr$unique}
+!define ports_shortcode {cs$unique}
+!define ports_type {SEA_PORT}
+!define city {Nellore}
+!define state {Andhra Pradesh}
+!define address {12B,Ram mohan street}
+!define geocode {12.23,45.56}
+!define country {Dubai}
+!define pincode {789065}
+
+!|script|common                                                                                                                                                                                                                                                         |
+|$data= |getTrim;|{"data":{"name":"${ports_name}","ref_id":"${ports_refid}","display_reference_name": "","short_code":"${ports_shortcode}","type":"${ports_type}","city":"${city}","state":"${state}","address":"${address}","geo_code":"${geocode}","country":"${country}","pin_code":"${pincode}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.PortsCreationDynamicAPI
+**!
+
+!** CHA bulk upload
+!define cha_name {c$unique BU}
+!define cha_refid {pr$unique}
+!define pan_number {PAN$num}
+!define gst_number {GST$num}
+!define admin_name {Pando$num}
+!define cha_email {chab+$unique@gmail.com}
+
+!define row {Name,Ref Id,Pan Number,Gst Number,Ports Associated,Admin Name,Email Id,Mobile Number}
+!define column {${cha_name},${cha_refid},${pan_number},${gst_number},${ports_refid},${admin_name},${cha_email},7890654321}
+
+!include -c .FrontPage.Pando.Common.ChaBulkUpload
+**!
+
+!** Cross verifying values
+!|script   |Ui                                                                                            |
+|click;    |//span[@class='tagblock_list']            |xpath                                              |
+|sendKeys; |//input[@placeholder='Enter Reference Id']|xpath                                 |${cha_refid}|
+|click;    |//button[@class='btn section_pbtn']       |xpath                                              |
+|check     |isElementPresent;                         |//span[contains(text(),'c$unique BU')]|xpath |true |
+|$tresult1=|isElementPresent;                         |//span[contains(text(),'c$unique BU')]|xpath       |
+|check     |isElementPresent;                         |//span[contains(text(),'PAN$num')]    |xpath |true |
+|$tresult2=|isElementPresent;                         |//span[contains(text(),'PAN$num')]    |xpath       |
+|check     |isElementPresent;                         |//span[contains(text(),'GST$num')]    |xpath |true |
+|$tresult3=|isElementPresent;                         |//span[contains(text(),'GST$num')]    |xpath       |
+|check     |isElementPresent;                         |//span[contains(text(),'ce$unique')]  |xpath |true |
+|$tresult4=|isElementPresent;                         |//span[contains(text(),'ce$unique')]  |xpath       |
+
+!|Script  |Common                                                               |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4|
+**!

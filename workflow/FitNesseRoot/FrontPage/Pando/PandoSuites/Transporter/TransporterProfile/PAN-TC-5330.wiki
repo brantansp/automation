@@ -1,0 +1,67 @@
+---
+Help: User adding TDS Certification document in Transporter login
+Suites: tprofile1
+Test
+---
+!** Unique values assignment
+!|Script    |Common                              |
+|$unique=   |getCurrentDateTimeStamp;|yMMddHHmmss|
+|$cert_date=|getCurrentDateTimeStamp;|yyyy-MM-dd |
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!** Transporter login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+!include -c  .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!** Uploading TDS Certification
+
+!|Script    |Common                                     |
+|$cert_path=|getPath;|testAttachment/images/TDS|fullpath|
+
+!|Script        |Ui        |
+|takeScreenshot;|$cert_path|
+
+!define certification_type {tds CERTIFICATION}
+!define file_path {$cert_path.png}
+!define certificate_number {cert$unique}
+!define certification_date {$cert_date}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.TransporterProfile.CommonCertificationUpload
+*!
+
+!** Logging out Transporter
+!|script       |ui                                          |
+|navigateToUrl;|${turl}                                     |
+|click;        |//li[@class='app-side-menu']          |xpath|
+|click;        |//a[normalize-space(text())='LOG OUT']|xpath|
+*!
+
+!** Validating the test
+!|script  |common                                           |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2|
+*!
+
+!*** Update result
+ 
+*!

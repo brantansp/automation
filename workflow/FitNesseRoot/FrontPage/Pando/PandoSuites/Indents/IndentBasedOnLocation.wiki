@@ -1,0 +1,6 @@
+---
+Suite
+Suites: indent3
+---
+!1 Test suite for indent creation based on location
+!contents -R2 -g -p -f -h

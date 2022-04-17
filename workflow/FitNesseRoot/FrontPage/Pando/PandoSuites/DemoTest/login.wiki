@@ -1,0 +1,8 @@
+!|Script                     |Ui                                                                                           |
+|initialize;                 |${browser}                                   |${remoteURL}                                   |
+|navigateToUrl;              |${surl}                                                                                      |
+|sendKeys;                   |${userNameInputBox}                          |xpath                              |${username}|
+|sendKeys;                   |${passwordInputBox}                          |xpath                              |${password}|
+|click;                      |//button[@class='primary-btn']               |xpath                                          |
+|waitForElementToBeDisplayed;|//main[@class='container-fluid main-content']|xpath                              |40         |
+|check                       |isElementPresent;                            |//h1[text()='Automation - Indents']|xpath |true|

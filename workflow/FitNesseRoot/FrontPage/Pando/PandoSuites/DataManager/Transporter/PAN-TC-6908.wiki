@@ -1,0 +1,218 @@
+---
+Help: Transporter GSTIN states add in Transporter-DM and also check Transporter Profile add/edit states-gstin
+Suites: dm2
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Transporter Creation in UI
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!define discount {5}
+!define gstinstate1 {Assam}
+!define gstin1 {12}
+!define gstinstate2 {Meghalaya}
+!define gstin2 {45}
+
+!**> Add Transporter details
+!|Script       |Ui                                                                                                                                   |
+|navigateToUrl;|${surl}/mdm/transporter                                                                                                              |
+|click;        |//button[contains(text(),'Add')]                                                                         |xpath                      |
+|sendKeys;     |//input[@placeholder='Enter Transporter Name here']                                                      |xpath|${transporter_name}  |
+|sendKeys;     |//input[@placeholder='Enter Reference Id here']                                                          |xpath|${transporter_ref_id}|
+|sendKeys;     |//input[@placeholder='Enter Address here']                                                               |xpath|${address}           |
+|sendKeys;     |//input[@placeholder='Enter City here']                                                                  |xpath|${city}              |
+|sendKeys;     |//input[@placeholder='Enter State here']                                                                 |xpath|${state}             |
+|sendKeys;     |//input[@placeholder='Enter Postal code here']                                                               |xpath|${pincode}           |
+|sendKeys;     |//input[@placeholder='Enter PAN Number here']                                                            |xpath|${pancard}           |
+|click;        |//label[contains(text(),'GST Type')]/following-sibling::div[@class='el-form-item__content']/div/div/input|xpath                      |
+|click;        |(//li//span[text()='FCM'])[2]                                                                            |xpath                      |
+|sendKeys;     |//input[@placeholder='Enter GST Percentage here']                                                        |xpath|10                   |
+|click;        |//label[contains(text(),'Status')]/following-sibling::div[@class='el-form-item__content']/div/div/input  |xpath                      |
+|click;        |(//li//span[text()='Active'])[2]                                                                         |xpath                      |
+|sendKeys;     |//input[@placeholder='Enter Discount(%) here']                                                           |xpath|${discount}          |
+**!
+
+!** Add GSTIN details
+!|Script         |Ui                                                                                                                                                               |
+|click;          |(//span[contains(text(),'ADD')])[1]                        |xpath                                                                                                |
+|$stateHeaderNo= |getHeaderColumnNumber;                                     |(//div[@class='el-table__header-wrapper'])[1]//th/div[@class='cell']           |xpath  |State        |
+|$gstinHeaderNo= |getHeaderColumnNumber;                                     |(//div[@class='el-table__header-wrapper'])[1]//th/div[@class='cell']           |xpath  |GSTIN        |
+|$refidHeaderNo= |getHeaderColumnNumber;                                     |(//div[@class='el-table__header-wrapper'])[1]//th/div[@class='cell']           |xpath  |Reference Id |
+|click;          |(//tr[@class='el-table__row'])[1]/td[$stateHeaderNo]//input|xpath                                                                                                |
+|wait;           |2                                                                                                                                                                |
+|sendKeys;       |(//tr[@class='el-table__row'])[1]/td[$stateHeaderNo]//input|xpath                                                                          |${gstinstate1}       |
+|click;          |//li/span[text()='${gstinstate1}']                         |xpath                                                                                                |
+|sendKeys;       |(//tr[@class='el-table__row'])[1]/td[$gstinHeaderNo]//input|xpath                                                                          |${gstin1}            |
+|sendKeys;       |(//tr[@class='el-table__row'])[1]/td[$refidHeaderNo]//input|xpath                                                                          |${transporter_ref_id}|
+|click;          |(//span[contains(text(),'ADD')])[1]                        |xpath                                                                                                |
+|click;          |(//tr[@class='el-table__row'])[2]/td[$stateHeaderNo]//input|xpath                                                                                                |
+|wait;           |2                                                                                                                                                                |
+|sendKeys;       |(//tr[@class='el-table__row'])[2]/td[$stateHeaderNo]//input|xpath                                                                          |${gstinstate2}       |
+|click;          |(//li/span[text()='${gstinstate2}'])[2]                    |xpath                                                                                                |
+|sendKeys;       |(//tr[@class='el-table__row'])[2]/td[$gstinHeaderNo]//input|xpath                                                                          |${gstin2}            |
+|click;          |(//span[contains(text(),'ADD')])[1]                        |xpath                                                                                                |
+|click;          |(//tr[@class='el-table__row'])[3]/td[$stateHeaderNo]//input|xpath                                                                                                |
+|check           |isElementPresent;                                          |(//span[text()='${gstinstate1}'])[3]/parent::li[contains(@class,'is-disabled')]|xpath  |true         |
+|$statedisabled1=|isElementPresent;                                          |(//span[text()='${gstinstate1}'])[3]/parent::li[contains(@class,'is-disabled')]|xpath                |
+|check           |isElementPresent;                                          |(//span[text()='${gstinstate2}'])[3]/parent::li[contains(@class,'is-disabled')]|xpath  |true         |
+|$statedisabled2=|isElementPresent;                                          |(//span[text()='${gstinstate2}'])[3]/parent::li[contains(@class,'is-disabled')]|xpath                |
+|click;          |(//tr[@class='el-table__row'])[3]/td[1]//span              |xpath                                                                                                |
+|click;          |(//span[contains(text(),'DELETE')])[1]                     |xpath                                                                                                |
+**!
+
+!**> Add Manager details
+!|Script                     |Ui                                                                                                                                                           |
+|click;                      |(//span[contains(text(),'ADD')])[2]                         |xpath                                                                                           |
+|$NameHeaderNo=              |getHeaderColumnNumber;                                      |(//div[@class='el-table__header-wrapper'])[2]//th/div[@class='cell']|xpath|Manager              |
+|$MobileHeaderNo=            |getHeaderColumnNumber;                                      |(//div[@class='el-table__header-wrapper'])[2]//th/div[@class='cell']|xpath|Representative Mobile|
+|$EmailHeaderNo=             |getHeaderColumnNumber;                                      |(//div[@class='el-table__header-wrapper'])[2]//th/div[@class='cell']|xpath|Representative Email |
+|sendKeys;                   |(//tr[@class='el-table__row'])[3]/td[$NameHeaderNo]//input  |xpath                                                               |${manager_name}            |
+|sendKeys;                   |(//tr[@class='el-table__row'])[3]/td[$MobileHeaderNo]//input|xpath                                                               |${manager_mobile}          |
+|sendKeys;                   |(//tr[@class='el-table__row'])[3]/td[$EmailHeaderNo]//input |xpath                                                               |${manager_email}           |
+|click;                      |//span[contains(text(),'Create')]                           |xpath                                                                                           |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[contains(text(),'Success')]        |xpath                                                               |30                         |
+|$successMessage=            |getElementAttribute;                                        |//h3[text()='Success']/following-sibling::span                      |xpath|innerText            |
+**!
+**!
+
+!** Validating Transporter GSTIN multiple states in UI
+!define search_field {Enter Transporter Name}
+!define search_text {${transporter_name}}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonTransporterSearchInDataManager
+
+!|Script           |Ui                                                                                                    |
+|check             |isElementPresent;              |//span[contains(text(),'t$unique')]                        |xpath|true|
+|$addrecord_result=|isElementPresent;              |//span[contains(text(),'t$unique')]                        |xpath     |
+|click;            |//span[contains(text(),'Edit')]|xpath                                                                 |
+|wait;             |2                                                                                                     |
+|$state1=          |getValue;                      |(//tr[@class='el-table__row'])[1]/td[$stateHeaderNo]//input|xpath     |
+|$state2=          |getValue;                      |(//tr[@class='el-table__row'])[2]/td[$stateHeaderNo]//input|xpath     |
+|$gstin1=          |getValue;                      |(//tr[@class='el-table__row'])[1]/td[$gstinHeaderNo]//input|xpath     |
+|$gstin2=          |getValue;                      |(//tr[@class='el-table__row'])[2]/td[$gstinHeaderNo]//input|xpath     |
+|$refid1=          |getValue;                      |(//tr[@class='el-table__row'])[1]/td[$refidHeaderNo]//input|xpath     |
+
+!|Script   |common                                            |
+|check     |checkIfStringAreEqual;|$state1|${gstinstate1}|true|
+|$tresult1=|checkIfStringAreEqual;|$state1|${gstinstate1}     |
+|check     |checkIfStringAreEqual;|$gstin1|${gstin1}     |true|
+|$tresult2=|checkIfStringAreEqual;|$gstin1|${gstin1}          |
+|check     |checkIfStringAreEqual;|$refid1|tr$unique     |true|
+|$tresult3=|checkIfStringAreEqual;|$refid1|tr$unique          |
+|check     |checkIfStringAreEqual;|$state2|${gstinstate2}|true|
+|$tresult4=|checkIfStringAreEqual;|$state2|${gstinstate2}     |
+|check     |checkIfStringAreEqual;|$gstin2|${gstin2}     |true|
+|$tresult5=|checkIfStringAreEqual;|$gstin2|${gstin2}          |
+
+!|Script                   |Common                                                                              |
+|$addmultiplestates_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|
+**!
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!** Transporter Login
+!define transporter_email {pandotransporter+$unique@outlook.com}
+!define transporter_password {$password}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!* Checking GSTIN states in transporter profile
+!** Add new GSTIN state and edit existing GSTIN in Transporter 
+!define gstinstate3 {Bihar}
+!define gstin3 {456789}
+!define gstinstatenew {Haryana}
+!define gstinnew {678456}
+!** Verifying existing record
+!|script                     |ui                                                                                    |
+|navigateToUrl;              |${turl}/profile                                                                       |
+|waitForElementToBeDisplayed;|//div[contains(@class,'profile-name')]|xpath                                    |20   |
+|scrollToView;               |(//a[contains(text(),'Add')])[2]      |xpath                                          |
+|$state1_profile=            |getValue;                             |((//div[@class='tablerow'])[1]//input)[2]|xpath|
+|$gstin1_profile=            |getValue;                             |((//div[@class='tablerow'])[1]//input)[3]|xpath|
+|$state2_profile=            |getValue;                             |((//div[@class='tablerow'])[2]//input)[2]|xpath|
+|$gstin2_profile=            |getValue;                             |((//div[@class='tablerow'])[2]//input)[3]|xpath|
+
+!|Script                     |common                                                                    |
+|check                       |checkIfStringAreEqual;       |$state1_profile   |${gstinstate1}   |true   |
+|$tresult1=                  |checkIfStringAreEqual;       |$state1_profile   |${gstinstate1}           |
+|check                       |checkIfStringAreEqual;       |$gstin1_profile   |${gstin1}        |true   |
+|$tresult2=                  |checkIfStringAreEqual;       |$gstin1_profile   |${gstin1}                |
+|check                       |checkIfStringAreEqual;       |$state2_profile   |${gstinstate2}   |true   |
+|$tresult3=                  |checkIfStringAreEqual;       |$state2_profile   |${gstinstate2}           |
+|check                       |checkIfStringAreEqual;       |$gstin2_profile   |${gstin2}        |true   |
+|$tresult4=                  |checkIfStringAreEqual;       |$gstin2_profile   |${gstin2}                |
+|$transporterprofile_result1=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+
+**!
+
+!** Adding new record
+!|script                     |ui                                                                   |
+|click;                      |(//a[contains(text(),'Add')])[2]         |xpath                      |
+|click;                      |((//div[@class='tablerow'])[3]//input)[2]|xpath                      |
+|wait;                       |2                                                                    |
+|sendKeys;                   |((//div[@class='tablerow'])[3]//input)[2]|xpath|${gstinstate3}       |
+|click;                      |(//li/span[text()='${gstinstate3}'])[3]  |xpath                      |
+|sendKeys;                   |((//div[@class='tablerow'])[3]//input)[3]|xpath|${gstin3}            |
+|sendKeys;                   |((//div[@class='tablerow'])[3]//input)[4]|xpath|${transporter_ref_id}|
+|click;                      |(//button[contains(text(),'SAVE')])[3]   |xpath                      |
+|waitForElementToBeDisplayed;|//p[contains(text(),'GSTIN saved')]      |xpath|5                    |
+**!
+
+!** Editing existing record
+!|script                     |ui                                                              |
+|click;                      |((//div[@class='tablerow'])[1]//input)[2]|xpath                 |
+|wait;                       |2                                                               |
+|sendKeys;                   |((//div[@class='tablerow'])[1]//input)[2]|xpath|${gstinstatenew}|
+|click;                      |(//li/span[text()='${gstinstatenew}'])[3]|xpath                 |
+|clearAndSend;               |((//div[@class='tablerow'])[1]//input)[3]|xpath|${gstinnew}     |
+|click;                      |(//button[contains(text(),'SAVE')])[3]   |xpath                 |
+|waitForElementToBeDisplayed;|//p[contains(text(),'GSTIN saved')]      |xpath|5               |
+**!
+**!
+**!
+
+!** Validating Transporter GSTIN multiple states in UI after editing in Transporter profile
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonTransporterSearchInDataManager
+
+!|Script |Ui                                                                                                    |
+|check   |isElementPresent;              |//span[contains(text(),'t$unique')]                        |xpath|true|
+|click;  |//span[contains(text(),'Edit')]|xpath                                                                 |
+|wait;   |2                                                                                                     |
+|$state1=|getValue;                      |(//tr[@class='el-table__row'])[1]/td[$stateHeaderNo]//input|xpath     |
+|$state3=|getValue;                      |(//tr[@class='el-table__row'])[3]/td[$stateHeaderNo]//input|xpath     |
+|$gstin1=|getValue;                      |(//tr[@class='el-table__row'])[1]/td[$gstinHeaderNo]//input|xpath     |
+|$gstin3=|getValue;                      |(//tr[@class='el-table__row'])[3]/td[$gstinHeaderNo]//input|xpath     |
+
+!|Script   |common                                              |
+|check     |checkIfStringAreEqual;|$state1|${gstinstatenew}|true|
+|$tresult1=|checkIfStringAreEqual;|$state1|${gstinstatenew}     |
+|check     |checkIfStringAreEqual;|$gstin1|${gstinnew}     |true|
+|$tresult2=|checkIfStringAreEqual;|$gstin1|${gstinnew}          |
+|check     |checkIfStringAreEqual;|$state3|${gstinstate3}  |true|
+|$tresult3=|checkIfStringAreEqual;|$state3|${gstinstate3}       |
+|check     |checkIfStringAreEqual;|$gstin3|${gstin3}       |true|
+|$tresult4=|checkIfStringAreEqual;|$gstin3|${gstin3}            |
+
+!|Script                     |Common                                                                    |
+|$transporterprofile_result2=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+**!
+
+!** Verifying result
+!|Script  |Common                                                                                                                                                                |
+|$tresult=|checkIfStringAreEqualInArray;|$statedisabled1,$statedisabled2,$addrecord_result,$addmultiplestates_result,$transporterprofile_result1,$transporterprofile_result2,true|
+**!

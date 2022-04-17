@@ -1,0 +1,16 @@
+---
+Help: Contains test case to End Trip
+Test
+---
+!| Script    |Http                                                                                                               |
+|setBaseUrl; |${turl}/api/login                                                                                                  |
+|getResponse;|Application/Json|put             |{"data":{"email":"${transporter_username}","password":"${transporter_password}"}}|
+|$token=     |getHeader;      |x-auth-token                                                                                      |
+|addHeader;  |Authorization   |bearer $token                                                                                     |
+|setBaseUrl; |${turl}/api/transporter/trip/${trip_id}/endTrip                                                                    |
+|$response=  |getResponse;    |Application/Json|put                                 |{"data":[]}                                 |
+|$status=    |getStatusCode;                                                                                                     |
+
+!| Script     |json                                    |
+|$trip_id=    |getValueFromJSON;|$response|data.trip_id|
+|$trip_status=|getValueFromJSON;|$response|data.status |

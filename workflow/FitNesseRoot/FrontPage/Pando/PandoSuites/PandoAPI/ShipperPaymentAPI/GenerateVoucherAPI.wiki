@@ -1,0 +1,32 @@
+---
+Help: Contains test case for Generating the Voucher
+Test
+---
+!** Click on Generate Voucher
+!|Script    |Http                                                                   |
+|addHeader; |Authorization |bearer $stoken                                          |
+|setBaseUrl;|${surl}/api/invoice/generate_voucher                                   |
+|$response= |getResponse;  |Application/Json|post|{"data":{"ids":["${invoice_id}"]}}|
+|check      |getStatusCode;|200                                                     |
+*!
+
+!** Retrieving Voucher number
+!|Script         |json                                           |
+|$voucher_number=|getValueFromJSON;|$response|data.voucher_number|
+*!
+
+!** Retrieving Voucher ID
+!|Script    |Http                                                    |
+|setBaseUrl;|${surl}/api/invoice/search/?page=1&status=3&type=voucher|
+|$response= |getResponse;       |Application/Json     |get     |     |
+|check      |getStatusCode;     |200                                 |
+
+|Script    |Common                           |
+|$len=     |getStringLength;|$response       |
+|$response=|getSubString;   |$response|8|$len|
+
+!|script     |json                                                                          |
+|$loc=       |getKeyIndexFromJSONByKeyAndValueType;|$response|voucher_number|$voucher_number|
+|$response=  |getJSONObjectFromJsonArray;          |$response|$loc                          |
+|$voucher_id=|getValueFromJSON;                    |$response|id                            |
+*!

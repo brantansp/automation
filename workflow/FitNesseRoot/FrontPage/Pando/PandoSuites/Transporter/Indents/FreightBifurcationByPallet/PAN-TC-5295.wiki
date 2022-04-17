@@ -1,0 +1,1163 @@
+---
+Help: Material Bifurcation for material done with pallet equivalent ratio for FTL per trip quantity unit as
+Suites: pg2
+Test
+---
+!** Description
+MDM Materials will have "PCE PER BOX" and "Pallet" details
+Eg, If PCE PER BOX = 10 and PALLET = 100, then 10 pieces makes one box and 100 such boxes makes one pallet. i.e 1000 pieces makes 1 pallet
+
+Conversions covered :
+    c/s: 'cases'
+    s/o: 'cases'
+    cs: 'cases'
+    box: 'cases'
+    pce: 'pieces'
+    no: 'pieces'
+    pcs: 'pieces'
+    
+FTL PER-TRIP Single Order Multiple material and Muliple Order single materials each.
+*!
+
+!**> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$invoicedate= |dateCalculation;|dd-MM-yyyy |2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-2|
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-1|
+
+!|Script       |Common                                        |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer-!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+
+!|Script                    |DateUtil                                                   |
+|$expected_date=            |dateCalculation;               |yyyy/MM/dd           |0    |
+|$expected_date=            |utcConversion;                 |$expected_date !- $timer -!|
+|$thisday=                  |dateCalculation;               |dd                   |0    |
+|$nMinus3day=               |getNPreviousDateInCurrentMonth;|$thisday             |-3 |1|
+|$nMinus1day=               |getNPreviousDateInCurrentMonth;|$thisday             |-1 |0|
+|$today=                    |getNPreviousDateInCurrentMonth;|$thisday             |0  |1|
+|$nMinus5day=               |getNPreviousDateInCurrentMonth;|$thisday             |-5 |1|
+|$nMinus4day=               |getNPreviousDateInCurrentMonth;|$thisday             |-4 |1|
+|$expected_date_in_postgres=|dateCalculation;               |yyyy-MM-dd HH:mm:00Z |-1   |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Updating the client config for Frieght bill
+!|Script                              |MongoDB                                      |
+|initialize;                          |${connection}|${database}                    |
+|wait;                                |2                                            |
+|updateFreightBillClientConfiguration;|${surl}      |category1|start_day|$nMinus3day|
+|updateFreightBillClientConfiguration;|${surl}      |category1|end_day  |$today     |
+|updateFreightBillClientConfiguration;|${surl}      |category2|start_day|$nMinus5day|
+|updateFreightBillClientConfiguration;|${surl}      |category2|end_day  |$nMinus4day|
+|updateFreightBillClientConfiguration;|${surl}      |category3|start_day|$nMinus3day|
+|updateFreightBillClientConfiguration;|${surl}      |category3|end_day  |$today     |
+*!
+
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {dc$unique}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RG$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script  |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Consignee Creation 1
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Egmore}
+!define city {cc$unique}
+!define state {Madya Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+**!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Uploading Materials with Pallet details
+!define row {Code,Name,BU,Piece per Box,Box L (cm),Box W (cm),Box H (cm),Box Wt (kg),Box Volume (CFT),Category,GST Exempt (Yes/No),Division,Pallets,Brand,Sub Brand,Thickness,Load Sequence,Can Telescope,Associated,Parent,Child}
+!define column {56_42,H&S_SHAMPOO_180_ML_X_56_LF_IN_MKPC,3.92070,56,51.4,26,19.5,12.347,0.92,Hair Care,no,DEFAULT,42,Head & Shoulders,Base,,,no,-,-,-|48_140,H&S_SHM_72ML_X_48_CM_2IN1_IN_MKPC,1.34420,48,41.8,17.6,14.7,4.493,0.382,Hair Care,no,DEFAULT,140,Head & Shoulders,Base,,,no,-,-,-|3_48,TIDE_PWD_(2+1)KGX3_ULTRA_MAT_AG_PRCP_PC,0.75000,3,44,23.5,27.5,10.302,1.004,Fabric Care,no,DEFAULT,48,Tide,,,,no,-,-,-|6_112,TE_UV_DA_+_TE_UV_NIGHT_1499INR,4.00000,6,26.8,23,16.1,2.332,0.35,,no,DEFAULT,112,,,,,no,-,-,-|4_1,ARIEL_LAU_LIQ_2.5LX4_MAT_TL_BT_EGY_PC,0.66600,4,37.6,18.8,37.5,13.061,0.936,Fabric Care,no,DEFAULT,1,Ariel,,,,no,-,-,-|3_40,TIDE_PWD_(6KG+2KG)X3_LM_MTPT_PCP_PC,2.00000,3,60,45,10,24.189,0.953,Fabric Care,no,DEFAULT,40,Tide,,,,no,-,-,-|5_36,TIDE_PWD_(4KG+1KG)X5_JR_MTPT_PCP_PC,2.08330,5,60,45,10,25.172,0.953,Fabric Care,no,DEFAULT,36,Tide,,,,no,-,-,-}
+}
+
+!define file_name {m$unique.xlsx}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonMaterialBulkUpload
+*!
+
+!**> Purchase order creation for transporter 1
+!define ponumber {po$unique}
+!define netvalue {10000}
+!define balvalue {5000}
+!define legalentity {le$unique}
+!define validfrom {2021-01-01}
+!define validto {2025-12-31}
+
+!define row {Purchase Order Number,Purchase Order Net Value,Purchase Order Balance value,Transporter Ref ID,Legal Entity,Valid From(YYYY-MM-DD),Valid To(YYYY-MM-DD)}
+!define column {${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity},${validfrom},${validto}}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonPOupload
+**!
+
+!**> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,${gate_ref_id},${consignee_ref_id},PGTRACK,500,$transporter_ref_id,$transporter_name,1,51000,Per Trip,01-Jan-2019,31-Dec-30,500,,High detention,prodcat_a,1000,3,per kg,550,450,,,,,2,,,}
+
+!include -c  .FrontPage.Pando.Common.RateMatrix
+*!
+
+!**> Direct Dispatch Indent creation
+!define delivery_number {d1$unique}
+!define mrp_price {1000}
+!define material_code {mc$unique}
+!define depot_ref_id {${depot_reference_id}}
+!define division {${legalentity}}
+!define quantity {100}
+!define quantity_unit {NOS}
+!define weight {10000}
+!define weight_unit {KG}
+!define volume {1024}
+!define volume_unit {CFT}
+!define ship_to {${consignee_ref_id}}
+!define sold_to {${consignee_ref_id}}
+!define type {Secondary}
+!define shipment_number {s1$unique}
+!define invoice_number {INV1$unique}
+!define invoice_amount {10000}
+!define category {20a}
+!define lr_number {lr1$unique}
+!define invoice_date {$invoicedate}
+!define transporter {tr$unique}
+!define vehicle_type {PGTRACK}
+!define vehicle_number {TN $vno_1 $vno_2 $vno_3}
+!define lr_number {lr1$unique}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"d1$unique","mrp_price":"${mrp_price}","material_code":"48_140","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"1550","quantity_unit":"pce","weight":"6964.15","weight_unit":"KG","volume":"592.1","volume_unit":"CFT","ship_to":"${ship_to}","sold_to":"${ship_to}","type":"Secondary","shipment_number":"s1$unique","invoice_number":"INV1$unique","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":"$truckoutdate"},{"delivery_number":"d2$unique","mrp_price":"${mrp_price}","material_code":"4_1","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"535","quantity_unit":"no","weight":"6987.635","weight_unit":"KG","volume":"500.76","volume_unit":"CFT","ship_to":"${ship_to}","sold_to":"${ship_to}","type":"Secondary","shipment_number":"s2$unique","invoice_number":"INV2$unique","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":"$truckoutdate"},{"delivery_number":"d3$unique","mrp_price":"${mrp_price}","material_code":"6_112","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"500","quantity_unit":"box","weight":"6996","weight_unit":"KG","volume":"1050","volume_unit":"CFT","ship_to":"${ship_to}","sold_to":"${ship_to}","type":"Secondary","shipment_number":"s3$unique","invoice_number":"INV3$unique","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":"$truckoutdate"},{"delivery_number":"d4$unique","mrp_price":"${mrp_price}","material_code":"3_48","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"195","quantity_unit":"pcs","weight":"2008.89","weight_unit":"KG","volume":"195.78","volume_unit":"CFT","ship_to":"${ship_to}","sold_to":"${ship_to}","type":"Secondary","shipment_number":"s4$unique","invoice_number":"INV4$unique","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":"$truckoutdate"},{"delivery_number":"d5$unique","mrp_price":"${mrp_price}","material_code":"56_42","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"3","quantity_unit":"cs","weight":"1975.52","weight_unit":"KG","volume":"147.2","volume_unit":"CFT","ship_to":"${ship_to}","sold_to":"${ship_to}","type":"Secondary","shipment_number":"s4$unique","invoice_number":"INV5$unique","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":"$truckoutdate"},{"delivery_number":"d6$unique","mrp_price":"${mrp_price}","material_code":"3_40","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"27","quantity_unit":"c/s","weight":"1935.12","weight_unit":"KG","volume":"76.24","volume_unit":"CFT","ship_to":"${ship_to}","sold_to":"${ship_to}","type":"Secondary","shipment_number":"s4$unique","invoice_number":"INV6$unique","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":"$truckoutdate"},{"delivery_number":"d7$unique","mrp_price":"${mrp_price}","material_code":"5_36","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"8","quantity_unit":"s/o","weight":"1006.88","weight_unit":"KG","volume":"38.12","volume_unit":"CFT","ship_to":"${ship_to}","sold_to":"${ship_to}","type":"Secondary","shipment_number":"s4$unique","invoice_number":"INV7$unique","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":"$truckoutdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+*!
+
+!**> Check for the indent created with Dispatched status using direct_dispatch
+!|script       |ui             |
+|wait;         |15             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!define filter_by {Enter LR Number}
+!define search_text {${lr_number}}
+!include .FrontPage.Pando.Common.CommonSearchTrigger
+
+!|script                   |ui                                                                                                                                                                                                                                                         |
+|$tresult1=                |isElementPresent;                                                                                                        |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]//div[contains(text(),'Dispatched')]|xpath|
+|mouseHover;               |(//div[@class='order-row']/div[1]//descendant::span[last() and contains(@class,'tooltip') and contains(text(),'...')])[4]|xpath                                                                                                                            |
+|wait;                     |2                                                                                                                                                                                                                                                          |
+|$order_id_1=              |getText;                                                                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]                                                     |xpath|
+|mouseHover;               |(//div[@class='order-row']/div[1]//descendant::span[last() and contains(@class,'tooltip') and contains(text(),'...')])[3]|xpath                                                                                                                            |
+|wait;                     |2                                                                                                                                                                                                                                                          |
+|$order_id_2=              |getText;                                                                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]                                                     |xpath|
+|mouseHover;               |(//div[@class='order-row']/div[1]//descendant::span[last() and contains(@class,'tooltip') and contains(text(),'...')])[2]|xpath                                                                                                                            |
+|wait;                     |2                                                                                                                                                                                                                                                          |
+|$order_id_3=              |getText;                                                                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]                                                     |xpath|
+|mouseHover;               |(//div[@class='order-row']/div[1]//descendant::span[last() and contains(@class,'tooltip') and contains(text(),'...')])[1]|xpath                                                                                                                            |
+|wait;                     |2                                                                                                                                                                                                                                                          |
+|$order_id_4=              |getText;                                                                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]                                                     |xpath|
+|$total_indents_dispatched=|getCountOfElements;                                                                                                      |//div[@class='order-status-button' and contains(text(),'Dispatched')]                                                      |xpath|
+|click;                    |//div[contains(@class,'searchterm ')]//i[contains(@class,'close')]                                                       |xpath                                                                                                                            |
+
+!|script|common                                                 |
+|check  |checkIfStringAreEqual;|$total_indents_dispatched|4|true|
+*!
+
+!**> Validating the Freight provision payload sent to ERP (On Dispatched)
+!|Script              |MongoDBQuery                                                                                                         |
+|getMongoConnection;  |${connection}                                |db_pando_testing                                                       |
+|$Freight_provision_1=|getFreightProvisionPayload;                  |$order_id_1                                                            |
+|check                |getValuesFromFreightProvisionPayload;        |movement_type          |1                                              |
+|check                |getValuesFromFreightProvisionPayload;        |transporter_code       |tr$unique                                      |
+|check                |getValuesFromFreightProvisionPayload;        |indent_number          |$order_id_1                                    |
+|check                |getValuesFromFreightProvisionPayload;        |total_indent_value     |72892.45                                       |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV1$unique|material_invoice_number|INV1$unique|
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV1$unique|material_code          |48_140     |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV1$unique|consignee_code         |cr1$unique |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV1$unique|total_freight_provision|72892.45   |
+|$Freight_provision_2=|getFreightProvisionPayload;                  |$order_id_2                                                            |
+|check                |getValuesFromFreightProvisionPayload;        |total_indent_value     |72962.9                                        |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV2$unique|material_code          |4_1        |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV2$unique|total_freight_provision|72962.9    |
+|$Freight_provision_3=|getFreightProvisionPayload;                  |$order_id_3                                                            |
+|check                |getValuesFromFreightProvisionPayload;        |total_indent_value     |72988                                          |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV3$unique|material_code          |6_112      |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV3$unique|total_freight_provision|72988      |
+|$Freight_provision_4=|getFreightProvisionPayload;                  |$order_id_4                                                            |
+|check                |getValuesFromFreightProvisionPayload;        |total_indent_value     |72779.23                                       |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV4$unique|material_code          |3_48       |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV4$unique|total_freight_provision|42429.17   |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV5$unique|material_code          |56_42      |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV5$unique|total_freight_provision|2238.02    |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV6$unique|material_code          |3_40       |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV6$unique|total_freight_provision|21149.31   |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV7$unique|material_code          |5_36       |
+|check                |getMaterialValuesFromFreightProvisionPayload;|material_invoice_number|INV7$unique|total_freight_provision|6962.73    |
+*!
+
+!**> ERP Upload for Consignee 1
+!|Script|DateUtil                      |
+|$rdate=|dateCalculation;|yyyy/MM/dd|0 |
+|$timer=|dateCalculation;|hh:mm:a   |-1|
+
+!|Script|Common                                 |
+|$rdate=|stringConcatenation;|$rdate|!- $timer-!|
+
+!|Script|DateUtil             |
+|$rdate=|utcConversion;|$rdate|
+
+!|script|ui|
+|wait;  |10|
+
+!define indent_prefix {pg-R$unique-D}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|$data= |getTrim;|{"data":[{"indent_number":"${indent_prefix}-1","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"INV1$unique","material_code":"48_140","no_of_shortage":"1","no_of_leakage":"0","mrp":"1000","no_of_excess":"0","no_of_damage":"2","no_of_carton_damage":"0","release_date":"$rdate"},{"indent_number":"${indent_prefix}-2","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"INV2$unique","material_code":"4_1","no_of_shortage":"2","no_of_leakage":"0","mrp":"1000","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate"},{"indent_number":"${indent_prefix}-3","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"INV3$unique","material_code":"6_112","no_of_shortage":"0","no_of_leakage":"0","mrp":"1000","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"1","release_date":"$rdate"},{"indent_number":"${indent_prefix}-4","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"INV4$unique","material_code":"3_48","no_of_shortage":"2","no_of_leakage":"0","mrp":"1000","no_of_excess":"0","no_of_damage":"1","no_of_carton_damage":"3","release_date":"$rdate"},{"indent_number":"${indent_prefix}-4","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"INV5$unique","material_code":"56_42","no_of_shortage":"0","no_of_leakage":"0","mrp":"1000","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate"},{"indent_number":"${indent_prefix}-4","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"INV6$unique","material_code":"3_40","no_of_shortage":"0","no_of_leakage":"0","mrp":"1000","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate"},{"indent_number":"${indent_prefix}-4","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"INV7$unique","material_code":"5_36","no_of_shortage":"0","no_of_leakage":"0","mrp":"1000","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+
+!**> checking if indent is delivered
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!define filter_by {Enter LR Number}
+!define search_text {${lr_number}}
+!include .FrontPage.Pando.Common.CommonSearchTrigger
+
+!|script|ui                                                                                                                                                                                                      |
+|check  |isElementPresent;                                                 |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]//div[contains(text(),'Delivered')]|xpath|true|
+|click; |//div[contains(@class,'searchterm ')]//i[contains(@class,'close')]|xpath                                                                                                                                |
+*!
+**!
+
+!**> Login to Transporter
+!define transporter_email {pandotransporter+$unique@outlook.com}
+!define transporter_password {$password}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!**> Checking the Freight bill posted
+!|script                     |ui                                                                                                                                                |
+|click;                      |//li[@class='app-side-menu']                      |xpath                                                                                          |
+|click;                      |//li/a[contains(text(),'Pay')]                    |xpath                                                                                          |
+|click;                      |//li[@class='app-side-menu']/following-sibling::li|xpath                                                                                          |
+|click;                      |//li/span[text()='Freight Bill']                  |xpath                                                                                          |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row')]           |xpath                                                                                    |20   |
+|$freight_bill_no=           |getText;                                          |(//span[text()='CATEGORY1']/ancestor::div[contains(@class,'grid-list-row')]/div)[1]//span|xpath|
+|$other_charges_bill_no=     |getText;                                          |(//span[text()='CATEGORY3']/ancestor::div[contains(@class,'grid-list-row')]/div)[1]//span|xpath|
+*!
+
+!**> Changing the Freight end day for the category 1 and category 3
+!|Script                              |MongoDB                              |
+|updateFreightBillClientConfiguration;|${surl}|category1|end_day|$nMinus1day|
+|updateFreightBillClientConfiguration;|${surl}|category3|end_day|$nMinus1day|
+*!
+
+!**> Changing the Freight bill end day for the category 1 and category 3 in Postgres DB
+!define updatequery_1 {update public."FreightBills" set expected_erp_post_date='$expected_date_in_postgres' where bill_no='$freight_bill_no';}
+!define updatequery_2 {update public."FreightBills" set expected_erp_post_date='$expected_date_in_postgres' where bill_no='$other_charges_bill_no';}
+
+!|script|PostgresDB                                               |
+|$db1=  |updateDataInPostgresDb;|${pg_connection}|${updatequery_1}|
+|$db2=  |updateDataInPostgresDb;|${pg_connection}|${updatequery_2}|
+**!
+
+!**> Generating Invoice from the created Freight Bill
+!define freight_charges {2,04,000}
+!define other_delivery_charges {87,622.58}
+
+!|script                     |ui                                                                                                                                                                   |
+|navigateToUrl;              |${turl}/v2/freight                                                                                                                                                   |
+|click;                      |//span[text()='CATEGORY1']                                                           |xpath                                                                          |
+|waitForElementToBeDisplayed;|//div[@class='el-table__fixed']//span[normalize-space(text())='$order_id_1!--cat1-!']|xpath                                                                    |20   |
+|$total_freight_bill_amount= |getText;                                                                             |//div[contains(@class,'el-table__fixed-right')]//div[@class='totalvalue']|xpath|
+|click;                      |//button[normalize-space(text())='Summary']                                          |xpath                                                                          |
+|$total_invoice_value=       |getText;                                                                             |//div[text()='TOTAL INVOICE VALUE']/../following-sibling::div            |xpath|
+|click;                      |//button[normalize-space(text())='Generate Invoice']                                 |xpath                                                                          |
+|click;                      |//button/span[normalize-space(text())='YES']                                         |xpath                                                                          |
+|waitUntilElementDisplayed;  |//span[text()='Invoice created successfully.']                                       |xpath                                                                    |10   |
+
+!|script   |common                                                        |
+|$tresult2=|checkIfStringAreEqual;|$total_invoice_value|${freight_charges}|
+*!
+
+!**> Generating Invoice from the created Other Bill charges
+!|script                     |ui                                                                                                                                                                   |
+|navigateToUrl;              |${turl}/v2/freight                                                                                                                                                   |
+|click;                      |//span[text()='CATEGORY3']                                                           |xpath                                                                          |
+|waitForElementToBeDisplayed;|//div[@class='el-table__fixed']//span[normalize-space(text())='$order_id_1!--cat3-!']|xpath                                                                    |20   |
+|$total_freight_bill_amount= |getText;                                                                             |//div[contains(@class,'el-table__fixed-right')]//div[@class='totalvalue']|xpath|
+|click;                      |//button[normalize-space(text())='Summary']                                          |xpath                                                                          |
+|$total_invoice_value=       |getText;                                                                             |//div[text()='TOTAL INVOICE VALUE']/../following-sibling::div            |xpath|
+|click;                      |//button[normalize-space(text())='Generate Invoice']                                 |xpath                                                                          |
+|click;                      |//button/span[normalize-space(text())='YES']                                         |xpath                                                                          |
+|waitUntilElementDisplayed;  |//span[text()='Invoice created successfully.']                                       |xpath                                                                    |10   |
+
+!|script   |common                                                               |
+|$tresult3=|checkIfStringAreEqual;|$total_invoice_value|${other_delivery_charges}|
+*!
+
+!**> Checking the Generated Freight bill in shipper login
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!define filter_by {Enter lr number}
+!define search_text {${lr_number}}
+!include .FrontPage.Pando.Common.CommonSearchTrigger
+
+!|script                 |ui                                                                                                                                            |
+|$amount_header_no=      |getHeaderColumnNumber;|//div[@class='card-header row']/div/span                                                  |xpath|AMOUNT                |
+|$fb_inv_column_no=      |getHeaderColumnNumber;|//div[@class='card-row row']//child::div[2]//descendant::span[last()]                     |xpath|$freight_bill_no      |
+|$freight_bill_amt=      |getText;              |(((//div[@class='card-row row'])[$fb_inv_column_no]/div)[$amount_header_no]//span)[last()]|xpath                       |
+|$oc_inv_column_no=      |getHeaderColumnNumber;|//div[@class='card-row row']//child::div[2]//descendant::span[last()]                     |xpath|$other_charges_bill_no|
+|$other_charges_bill_amt=|getText;              |(((//div[@class='card-row row'])[$oc_inv_column_no]/div)[$amount_header_no]//span)[last()]|xpath                       |
+
+!|script                     |ui                                                                                                                                                                                                                                                                                   |
+|check                       |isElementPresent;                                                                    |//div[contains(@class,'card-row row')]//*[normalize-space(text())='$freight_bill_no']//ancestor::div[contains(@class,'card-row row')]//span[contains(text(),'Generated')]      |xpath|true     |
+|check                       |isElementPresent;                                                                    |//div[contains(@class,'card-row row')]//*[normalize-space(text())='$other_charges_bill_no']//ancestor::div[contains(@class,'card-row row')]//span[contains(text(),'Generated')]|xpath|true     |
+|click;                      |//div[contains(@class,'card-row row')]//*[normalize-space(text())='$freight_bill_no']|xpath                                                                                                                                                                                          |
+|waitForElementToBeDisplayed;|//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody           |xpath                                                                                                                                                                          |20             |
+|click;                      |//button[contains(text(),'Summary')]                                                 |xpath                                                                                                                                                                                          |
+|click;                      |//span[contains(text(),'Approve')] /../self::button                                  |xpath                                                                                                                                                                                          |
+|click;                      |//div[@class='el-message-box']//span[contains(text(),'YES')]                         |xpath                                                                                                                                                                                          |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span                                       |xpath                                                                                                                                                                          |30             |
+|$successMessage=            |getElementAttribute;                                                                 |//h3[text()='Success']/following-sibling::span                                                                                                                                 |xpath|innerText|
+
+
+!5 Waiting for Freight bill posting to happen
+
+!|script|ui|
+|wait;  |90|
+*!
+
+!** Validating the Freight bill payload sent to ERP (On Approving Freight Bill)
+!**> Getting the Freight bill posted
+!|Script                  |MongoDBQuery                                                              |
+|getMongoConnection;      |${connection}                             |db_pando_testing               |
+|$Freight_pbill_posting_1=|getFreightBillPostingPayload;             |invoice_number|$freight_bill_no|
+|$totalNoOfpayloadSent1=  |getTotalNoOfFreightBillPostingPayloadSent;|invoice_number|$freight_bill_no|
+*!
+
+!** Validating Pallet conversion
+!|comment                                                                 |
+|deliveryNo|MaterialEquivalence|quantity|quantityUnit|conversionEquivalent|
+|d1        |48_140             |1550    |pce(pieces) |0.230654761904762   |
+|d2        |4_1                |535     |no(pieces)  |133.75              |
+|d3        |6_112              |500     |box(cases)  |4.46428571428571    |
+|d4        |3_48               |195     |pcs(pieces) |1.35416666666667    |
+|d5        |56_42              |3       |cs(cases)   |0.0714285714285714  |
+|d6        |3_40               |27      |c/s(cases)  |0.675               |
+|d7        |5_36               |8       |s/o(cases)  |0.222222222222222   |
+
+!|Script|MongoDBQuery                                                                                                                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_1|delivery_number|d1$unique|conversion_equivalent|0.230654761904762 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|conversion_equivalent|133.75            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|conversion_equivalent|4.46428571428571  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|conversion_equivalent|1.35416666666667  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|conversion_equivalent|0.0714285714285714|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|conversion_equivalent|0.675             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|conversion_equivalent|0.222222222222222 |
+*!
+
+!**> Validating other details in Freight Bill
+!**> Indent 1 validation
+!|Script|MongoDBQuery                                                                                                                                                       |
+|check  |getValuesFromFreightBillPostingPayload;         |invoice_number  |$freight_bill_no                                                                                 |
+|check  |getValuesFromFreightBillPostingPayload;         |transporter_code|tr$unique                                                                                        |
+|check  |getValuesFromFreightBillPostingPayload;         |invoice_total   |204000                                                                                           |
+|check  |getValuesFromFreightBillPostingPayload;         |currency        |INR                                                                                              |
+|check  |getIndentsValuesFromFreightBillPostingPayload;  |indent_id       |$order_id_1|movement_type    |1                                                                  |
+|check  |getIndentsValuesFromFreightBillPostingPayload;  |indent_id       |$order_id_1|indent_id        |$order_id_1                                                        |
+|check  |getLegalEntitiyFromFreightBillPostingPayload;   |indent_id       |$order_id_1|legal_entity_code|${legalentity}                                                     |
+|$id=   |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|id                                                       |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|business_unit          |1.34420                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|order_no               |$order_id_1                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|contribution           |51000                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|cost_center            |Expectation                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|detention_value        |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|defect_value           |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|invoice_value          |51000                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|name                   |H&S_SHM_72ML_X_48_CM_2IN1_IN_MKPC|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|material_code          |48_140                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|volume                 |592.1                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|volume_unit            |cft                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|weight                 |6964.15                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|bifurcation_by         |pallet                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|purchase_order         |${ponumber}                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|delivery_number        |d1$unique                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|legal_entity           |${legalentity}                   |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|source_code            |R$unique                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|destination_code       |cr1$unique                       |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|quantity               |1550                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|quantity_unit          |pce                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|weight_unit            |kg                               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|oda_freight            |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|fixed_charge           |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|additional_point_charge|0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|miscellaneous_charge   |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|loading_charge         |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|unloading_charge       |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|lr_charge              |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|sla_delay              |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|transit_delay          |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|penalty                |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|shortage               |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|damage                 |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|carton_damage          |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|leakage                |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|debit_adjustment       |0                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|source_gate_code       |RG$unique                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|base_freight_value     |51000                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|shipment_number        |s1$unique                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |d1$unique|material_invoice_number|INV1$unique                      |
+*!
+
+!**> Indent 2 validation
+!|Script|MongoDBQuery                                                                                                                                                  |
+|$id=   |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|id                                                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|business_unit          |0.66600                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|order_no               |$order_id_2                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|contribution           |51000                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|detention_value        |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|defect_value           |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|invoice_value          |51000                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|name                   |ARIEL_LAU_LIQ_2.5LX4_MAT_TL_BT_EGY_PC|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|material_code          |4_1                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|volume                 |500.76                               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|volume_unit            |cft                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|weight                 |6987.635                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|bifurcation_by         |pallet                               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|purchase_order         |${ponumber}                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|legal_entity           |${legalentity}                       |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|source_code            |R$unique                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|destination_code       |cr1$unique                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|quantity               |535                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|quantity_unit          |no                                   |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|weight_unit            |kg                                   |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|oda_freight            |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|fixed_charge           |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|additional_point_charge|0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|miscellaneous_charge   |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|loading_charge         |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|unloading_charge       |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|lr_charge              |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|sla_delay              |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|transit_delay          |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|penalty                |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|shortage               |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|damage                 |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|carton_damage          |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|leakage                |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|debit_adjustment       |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|source_gate_code       |RG$unique                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|base_freight_value     |51000                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|shipment_number        |s2$unique                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|material_invoice_number|INV2$unique                          |
+*!
+
+!**> Indent 3 validation
+!|Script|MongoDBQuery                                                                                                                                           |
+|$id=   |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|id                                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|business_unit          |4.00000                       |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|order_no               |$order_id_3                   |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|contribution           |51000                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|detention_value        |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|defect_value           |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|invoice_value          |51000                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|name                   |TE_UV_DA_+_TE_UV_NIGHT_1499INR|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|material_code          |6_112                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|volume                 |1050                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|volume_unit            |cft                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|weight                 |6996                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|bifurcation_by         |pallet                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|purchase_order         |${ponumber}                   |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|legal_entity           |${legalentity}                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|source_code            |R$unique                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|destination_code       |cr1$unique                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|quantity               |500                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|quantity_unit          |box                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|weight_unit            |kg                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|oda_freight            |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|fixed_charge           |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|additional_point_charge|0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|miscellaneous_charge   |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|loading_charge         |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|unloading_charge       |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|lr_charge              |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|sla_delay              |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|transit_delay          |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|penalty                |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|shortage               |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|damage                 |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|carton_damage          |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|leakage                |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|debit_adjustment       |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|source_gate_code       |RG$unique                     |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|base_freight_value     |51000                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|shipment_number        |s3$unique                     |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|material_invoice_number|INV3$unique                   |
+*!
+
+!**> Indent 4 validation
+!|Script|MongoDBQuery                                                                                                                                                    |
+|$id=   |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|id                                                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|business_unit          |0.75000                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|order_no               |$order_id_4                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|contribution           |1               |29732.2               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|detention_value        |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|defect_value           |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|invoice_value          |1               |29732.2               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|name                   |TIDE_PWD_(2+1)KGX3_ULTRA_MAT_AG_PRCP_PC|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|material_code          |3_48                                   |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|volume                 |195.78                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|volume_unit            |cft                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|weight                 |2008.89                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|bifurcation_by         |pallet                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|purchase_order         |${ponumber}                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|legal_entity           |${legalentity}                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|source_code            |R$unique                               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|destination_code       |cr1$unique                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|quantity               |195                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|quantity_unit          |pcs                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|weight_unit            |kg                                     |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|oda_freight            |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|fixed_charge           |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|additional_point_charge|0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|miscellaneous_charge   |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|loading_charge         |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|unloading_charge       |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|lr_charge              |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|sla_delay              |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|transit_delay          |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|penalty                |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|shortage               |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|damage                 |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|carton_damage          |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|leakage                |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|debit_adjustment       |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|source_gate_code       |RG$unique                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|base_freight_value     |1               |29732.2               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|shipment_number        |s4$unique                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|material_invoice_number|INV4$unique                            |
+*!
+
+!**> Indent 5 validation
+!|Script|MongoDBQuery                                                                                                                                               |
+|$id=   |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|id                                                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|business_unit          |3.92070                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|order_no               |$order_id_4                       |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|contribution           |1568.29                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|detention_value        |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|defect_value           |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|invoice_value          |1568.29                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|name                   |H&S_SHAMPOO_180_ML_X_56_LF_IN_MKPC|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|material_code          |56_42                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|volume                 |147.2                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|volume_unit            |cft                               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|weight                 |1975.52                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|bifurcation_by         |pallet                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|purchase_order         |${ponumber}                       |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|legal_entity           |${legalentity}                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|source_code            |R$unique                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|destination_code       |cr1$unique                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|quantity               |3                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|quantity_unit          |cs                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|weight_unit            |kg                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|oda_freight            |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|fixed_charge           |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|additional_point_charge|0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|miscellaneous_charge   |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|loading_charge         |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|unloading_charge       |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|lr_charge              |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|sla_delay              |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|transit_delay          |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|penalty                |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|shortage               |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|damage                 |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|carton_damage          |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|leakage                |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|debit_adjustment       |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|source_gate_code       |RG$unique                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|base_freight_value     |1568.29                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|shipment_number        |s4$unique                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|material_invoice_number|INV5$unique                       |
+*!
+
+!**> Indent 6 validation
+!|Script|MongoDBQuery                                                                                                                                                |
+|$id=   |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|id                                                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|business_unit          |2.00000                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|order_no               |$order_id_4                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|contribution           |14820.36                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|detention_value        |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|defect_value           |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|invoice_value          |14820.36                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|name                   |TIDE_PWD_(6KG+2KG)X3_LM_MTPT_PCP_PC|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|material_code          |3_40                               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|volume                 |76.24                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|volume_unit            |cft                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|weight                 |1935.12                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|bifurcation_by         |pallet                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|purchase_order         |${ponumber}                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|legal_entity           |${legalentity}                     |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|source_code            |R$unique                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|destination_code       |cr1$unique                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|quantity               |27                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|quantity_unit          |c/s                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|weight_unit            |kg                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|oda_freight            |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|fixed_charge           |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|additional_point_charge|0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|miscellaneous_charge   |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|loading_charge         |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|unloading_charge       |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|lr_charge              |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|sla_delay              |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|transit_delay          |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|penalty                |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|shortage               |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|damage                 |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|carton_damage          |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|leakage                |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|debit_adjustment       |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|source_gate_code       |RG$unique                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|base_freight_value     |14820.36                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|shipment_number        |s4$unique                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|material_invoice_number|INV6$unique                        |
+*!
+
+!**> Indent 7 validation
+!|Script|MongoDBQuery                                                                                                                                                |
+|$id=   |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|id                                                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|business_unit          |2.08330                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|order_no               |$order_id_4                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|contribution           |1              |4879.1             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|detention_value        |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|defect_value           |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|invoice_value          |1              |4879.1             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|name                   |TIDE_PWD_(4KG+1KG)X5_JR_MTPT_PCP_PC|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|material_code          |5_36                               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|volume                 |38.12                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|volume_unit            |cft                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|weight                 |1006.88                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|bifurcation_by         |pallet                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|purchase_order         |${ponumber}                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|legal_entity           |${legalentity}                     |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|source_code            |R$unique                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|destination_code       |cr1$unique                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|quantity               |8                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|quantity_unit          |s/o                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|weight_unit            |kg                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|oda_freight            |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|fixed_charge           |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|additional_point_charge|0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|miscellaneous_charge   |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|loading_charge         |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|unloading_charge       |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|lr_charge              |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|sla_delay              |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|transit_delay          |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|penalty                |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|shortage               |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|damage                 |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|carton_damage          |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|leakage                |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|debit_adjustment       |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|source_gate_code       |RG$unique                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|base_freight_value     |1              |4879.1             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|shipment_number        |s4$unique                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|material_invoice_number|INV7$unique                        |
+*!
+*!
+
+!|script   |common                                               |
+|check     |comparisonResult;|$totalNoOfpayloadSent1|equal|1|true|
+|$tresult4=|comparisonResult;|$totalNoOfpayloadSent1|equal|1     |
+
+!|script|ui|
+|wait;  |20|
+*!
+
+!**> Other bill Approval
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!|script                     |ui                                                                                                                                                        |
+|click;                      |//div[contains(@class,'card-row row')]//*[normalize-space(text())='$other_charges_bill_no']|xpath                                                         |
+|waitForElementToBeDisplayed;|//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody                 |xpath                                         |20             |
+|click;                      |//button[contains(text(),'Summary')]                                                       |xpath                                                         |
+|click;                      |//span[contains(text(),'Approve')] /../self::button                                        |xpath                                                         |
+|click;                      |//div[@class='el-message-box']//span[contains(text(),'YES')]                               |xpath                                                         |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span                                             |xpath                                         |30             |
+|$successMessage=            |getElementAttribute;                                                                       |//h3[text()='Success']/following-sibling::span|xpath|innerText|
+
+!5 Waiting for Freight bill posting to happen
+
+!|script|ui|
+|wait;  |90|
+*!
+
+!** Validating the Freight bill payload sent to ERP (On Approving Other charges Freight Bill)
+!**> Getting the Freight bill posted
+!|Script                  |MongoDBQuery                                                                    |
+|getMongoConnection;      |${connection}                             |db_pando_testing                     |
+|$Freight_pbill_posting_1=|getFreightBillPostingPayload;             |invoice_number|$other_charges_bill_no|
+|$totalNoOfpayloadSent2=  |getTotalNoOfFreightBillPostingPayloadSent;|invoice_number|$other_charges_bill_no|
+*!
+
+!** Validating Pallet conversion
+!** Validating Pallet conversion
+!|comment                                                                 |
+|deliveryNo|MaterialEquivalence|quantity|quantityUnit|conversionEquivalent|
+|d1        |48_140             |1550    |pce(pieces) |0.230654761904762   |
+|d2        |4_1                |535     |no(pieces)  |133.75              |
+|d3        |6_112              |500     |box(cases)  |4.46428571428571    |
+|d4        |3_48               |195     |pcs(pieces) |1.35416666666667    |
+|d5        |56_42              |3       |cs(cases)   |0.0714285714285714  |
+|d6        |3_40               |27      |c/s(cases)  |0.675               |
+|d7        |5_36               |8       |s/o(cases)  |0.222222222222222   |
+
+!|Script|MongoDBQuery                                                                                                                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_1|delivery_number|d1$unique|conversion_equivalent|0.230654761904762 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|conversion_equivalent|133.75            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|conversion_equivalent|4.46428571428571  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|conversion_equivalent|1.35416666666667  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|conversion_equivalent|0.0714285714285714|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|conversion_equivalent|0.675             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|conversion_equivalent|0.222222222222222 |
+*!
+
+!**> Validating other details in Freight Bill
+!|Script                  |MongoDBQuery                                                                                                                                                                |
+|check                    |getValuesFromFreightBillPostingPayload;         |invoice_number  |$other_charges_bill_no                                                                                    |
+|check                    |getValuesFromFreightBillPostingPayload;         |transporter_code|tr$unique                                                                                                 |
+|check                    |getValuesFromFreightBillPostingPayload;         |invoice_total   |87622.58                                                                                                  |
+|check                    |getValuesFromFreightBillPostingPayload;         |currency        |INR                                                                                                       |
+|check                    |getIndentsValuesFromFreightBillPostingPayload;  |indent_id       |$order_id_1|movement_type    |1                                                                           |
+|check                    |getIndentsValuesFromFreightBillPostingPayload;  |indent_id       |$order_id_1|indent_id        |$order_id_1                                                                 |
+|check                    |getLegalEntitiyFromFreightBillPostingPayload;   |indent_id       |$order_id_1|legal_entity_code|${legalentity}                                                              |
+|$id=                     |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|id                                                       |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|business_unit          |1.34420                          |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|order_no               |$order_id_1                      |
+|$code=                   |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|code                                                     |
+|$destination_location_id=|getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|destination_location_id                                  |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|contribution           |21892.45                         |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|cost_center            |Expectation                      |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|detention_value        |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|defect_value           |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|invoice_value          |21892.45                         |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|name                   |H&S_SHM_72ML_X_48_CM_2IN1_IN_MKPC|
+|$payment_id=             |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|payment_id                                               |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|material_code          |48_140                           |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|volume                 |592.1                            |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|volume_unit            |cft                              |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|weight                 |6964.15                          |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|bifurcation_by         |pallet                           |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|purchase_order         |${ponumber}                      |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|delivery_number        |d1$unique                        |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|legal_entity           |${legalentity}                   |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|source_code            |R$unique                         |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|destination_code       |cr1$unique                       |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|quantity               |1550                             |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|quantity_unit          |pce                              |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|weight_unit            |kg                               |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|oda_freight            |20892.45                         |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|fixed_charge           |1000                             |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|additional_point_charge|0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|miscellaneous_charge   |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|loading_charge         |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|unloading_charge       |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|lr_charge              |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|sla_delay              |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|transit_delay          |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|penalty                |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|shortage               |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|damage                 |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|carton_damage          |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|leakage                |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|debit_adjustment       |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|source_gate_code       |RG$unique                        |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|destination_gate_code  |null                             |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|base_freight_value     |0                                |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|shipment_number        |${shipment_number}               |
+|check                    |getMaterialDetailsFromFreightBillPostingPayload;|indent_id       |$order_id_1|delivery_number  |${delivery_number}|material_invoice_number|INV1$unique                      |
+
+!**> Indent 2 validation
+!|Script|MongoDBQuery                                                                                                                                                  |
+|$id=   |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|id                                                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|business_unit          |0.66600                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|order_no               |$order_id_2                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|contribution           |21962.9                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|detention_value        |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|defect_value           |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|invoice_value          |21962.9                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|name                   |ARIEL_LAU_LIQ_2.5LX4_MAT_TL_BT_EGY_PC|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|material_code          |4_1                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|volume                 |500.76                               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|volume_unit            |cft                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|weight                 |6987.635                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|bifurcation_by         |pallet                               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|purchase_order         |${ponumber}                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|legal_entity           |${legalentity}                       |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|source_code            |R$unique                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|destination_code       |cr1$unique                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|quantity               |535                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|quantity_unit          |no                                   |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|weight_unit            |kg                                   |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|oda_freight            |20962.9                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|fixed_charge           |1000                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|additional_point_charge|0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|miscellaneous_charge   |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|loading_charge         |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|unloading_charge       |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|lr_charge              |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|sla_delay              |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|transit_delay          |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|penalty                |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|shortage               |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|damage                 |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|carton_damage          |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|leakage                |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|debit_adjustment       |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|source_gate_code       |RG$unique                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|base_freight_value     |0                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|shipment_number        |s2$unique                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_2|delivery_number|d2$unique|material_invoice_number|INV2$unique                          |
+*!
+
+!**> Indent 3 validation
+!|Script|MongoDBQuery                                                                                                                                           |
+|$id=   |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|id                                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|business_unit          |4.00000                       |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|order_no               |$order_id_3                   |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|contribution           |21988                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|detention_value        |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|defect_value           |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|invoice_value          |21988                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|name                   |TE_UV_DA_+_TE_UV_NIGHT_1499INR|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|material_code          |6_112                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|volume                 |1050                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|volume_unit            |cft                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|weight                 |6996                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|bifurcation_by         |pallet                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|purchase_order         |${ponumber}                   |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|legal_entity           |${legalentity}                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|source_code            |R$unique                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|destination_code       |cr1$unique                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|quantity               |500                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|quantity_unit          |box                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|weight_unit            |kg                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|oda_freight            |20988                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|fixed_charge           |1000                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|additional_point_charge|0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|miscellaneous_charge   |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|loading_charge         |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|unloading_charge       |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|lr_charge              |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|sla_delay              |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|transit_delay          |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|penalty                |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|shortage               |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|damage                 |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|carton_damage          |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|leakage                |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|debit_adjustment       |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|source_gate_code       |RG$unique                     |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|base_freight_value     |0                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|shipment_number        |s3$unique                     |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_3|delivery_number|d3$unique|material_invoice_number|INV3$unique                   |
+*!
+
+!**> Indent 4 validation
+!|Script|MongoDBQuery                                                                                                                                                    |
+|$id=   |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|id                                                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|business_unit          |0.75000                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|order_no               |$order_id_4                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|contribution           |1               |12697.0               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|detention_value        |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|defect_value           |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|invoice_value          |1               |12697.0               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|name                   |TIDE_PWD_(2+1)KGX3_ULTRA_MAT_AG_PRCP_PC|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|material_code          |3_48                                   |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|volume                 |195.78                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|volume_unit            |cft                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|weight                 |2008.89                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|bifurcation_by         |pallet                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|purchase_order         |${ponumber}                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|legal_entity           |${legalentity}                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|source_code            |R$unique                               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|destination_code       |cr1$unique                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|quantity               |195                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|quantity_unit          |pcs                                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|weight_unit            |kg                                     |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|oda_freight            |12113.97                               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|fixed_charge           |582.98                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|additional_point_charge|0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|miscellaneous_charge   |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|loading_charge         |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|unloading_charge       |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|lr_charge              |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|sla_delay              |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|transit_delay          |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|penalty                |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|shortage               |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|damage                 |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|carton_damage          |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|leakage                |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|debit_adjustment       |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|source_gate_code       |RG$unique                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|base_freight_value     |0                                      |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|shipment_number        |s4$unique                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d4$unique|material_invoice_number|INV4$unique                            |
+*!
+
+!**> Indent 5 validation
+!|Script|MongoDBQuery                                                                                                                                               |
+|$id=   |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|id                                                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|business_unit          |3.92070                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|order_no               |$order_id_4                       |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|contribution           |669.73                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|detention_value        |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|defect_value           |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|invoice_value          |669.73                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|name                   |H&S_SHAMPOO_180_ML_X_56_LF_IN_MKPC|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|material_code          |56_42                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|volume                 |147.2                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|volume_unit            |cft                               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|weight                 |1975.52                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|bifurcation_by         |pallet                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|purchase_order         |${ponumber}                       |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|legal_entity           |${legalentity}                    |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|source_code            |R$unique                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|destination_code       |cr1$unique                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|quantity               |3                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|quantity_unit          |cs                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|weight_unit            |kg                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|oda_freight            |638.98                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|fixed_charge           |30.75                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|additional_point_charge|0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|miscellaneous_charge   |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|loading_charge         |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|unloading_charge       |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|lr_charge              |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|sla_delay              |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|transit_delay          |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|penalty                |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|shortage               |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|damage                 |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|carton_damage          |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|leakage                |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|debit_adjustment       |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|source_gate_code       |RG$unique                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|base_freight_value     |0                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|shipment_number        |s4$unique                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d5$unique|material_invoice_number|INV5$unique                       |
+*!
+
+!**> Indent 6 validation
+!|Script|MongoDBQuery                                                                                                                                                |
+|$id=   |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|id                                                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|business_unit          |2.00000                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|order_no               |$order_id_4                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|contribution           |6328.94                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|detention_value        |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|defect_value           |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|invoice_value          |6328.94                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|name                   |TIDE_PWD_(6KG+2KG)X3_LM_MTPT_PCP_PC|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|material_code          |3_40                               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|volume                 |76.24                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|volume_unit            |cft                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|weight                 |1935.12                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|bifurcation_by         |pallet                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|purchase_order         |${ponumber}                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|legal_entity           |${legalentity}                     |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|source_code            |R$unique                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|destination_code       |cr1$unique                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|quantity               |27                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|quantity_unit          |c/s                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|weight_unit            |kg                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|oda_freight            |6038.35                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|fixed_charge           |290.6                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|additional_point_charge|0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|miscellaneous_charge   |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|loading_charge         |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|unloading_charge       |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|lr_charge              |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|sla_delay              |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|transit_delay          |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|penalty                |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|shortage               |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|damage                 |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|carton_damage          |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|leakage                |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|debit_adjustment       |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|source_gate_code       |RG$unique                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|base_freight_value     |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|shipment_number        |s4$unique                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d6$unique|material_invoice_number|INV6$unique                        |
+*!
+
+!**> Indent 7 validation
+!|Script|MongoDBQuery                                                                                                                                                |
+|$id=   |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|id                                                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|business_unit          |2.08330                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|order_no               |$order_id_4                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|contribution           |1              |2083.6             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|detention_value        |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|defect_value           |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|invoice_value          |1              |2083.6             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|name                   |TIDE_PWD_(4KG+1KG)X5_JR_MTPT_PCP_PC|
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|material_code          |5_36                               |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|volume                 |38.12                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|volume_unit            |cft                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|weight                 |1006.88                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|bifurcation_by         |pallet                             |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|purchase_order         |${ponumber}                        |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|legal_entity           |${legalentity}                     |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|source_code            |R$unique                           |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|destination_code       |cr1$unique                         |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|quantity               |8                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|quantity_unit          |s/o                                |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|weight_unit            |kg                                 |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|oda_freight            |1987.93                            |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|fixed_charge           |95.67                              |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|additional_point_charge|0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|miscellaneous_charge   |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|loading_charge         |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|unloading_charge       |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|lr_charge              |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|sla_delay              |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|transit_delay          |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|penalty                |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|shortage               |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|damage                 |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|carton_damage          |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|leakage                |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|debit_adjustment       |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|source_gate_code       |RG$unique                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|base_freight_value     |0                                  |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|shipment_number        |s4$unique                          |
+|check  |getMaterialDetailsFromFreightBillPostingPayload;|indent_id|$order_id_4|delivery_number|d7$unique|material_invoice_number|INV7$unique                        |
+*!
+*!
+
+!|script   |common                                               |
+|check     |comparisonResult;|$totalNoOfpayloadSent2|equal|1|true|
+|$tresult5=|comparisonResult;|$totalNoOfpayloadSent2|equal|1     |
+*!
+*!
+
+!**> Validating result
+!|Script  |Common                                                                              |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|
+|check    |checkIfStringAreEqual;       |$tresult            |true            |true            |
+*!
+
+!**> Reverting the Freight bill configuration to default
+!|Script                              |MongoDB                       |
+|updateFreightBillClientConfiguration;|${surl}|category1|start_day|1 |
+|updateFreightBillClientConfiguration;|${surl}|category1|end_day  |15|
+|updateFreightBillClientConfiguration;|${surl}|category2|start_day|16|
+|updateFreightBillClientConfiguration;|${surl}|category2|end_day  |31|
+|updateFreightBillClientConfiguration;|${surl}|category3|start_day|1 |
+|updateFreightBillClientConfiguration;|${surl}|category3|end_day  |31|
+*!

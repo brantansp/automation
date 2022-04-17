@@ -1,0 +1,86 @@
+---
+Help: Bulk upload for bill discount
+Suites: castrol
+Test
+---
+!** Nimbus permissions
+1.view_billdiscount
+2.update_billdiscount
+3.import_billdiscount
+**!
+
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$num1=  |getRandomNumber;        |1    |30   |
+|$num2=  |getRandomNumber;        |1    |20   |
+**!
+
+!** Uploading Bill Discount using bulk upload
+!define row {Program Id,Days Early,Discount Rate}
+!define column {$unique,$num1,$num2}
+
+!define file_name {b$unique.xlsx}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonBillDiscountBulkUpload
+
+!|Script                     |Ui                                                                                    |
+|navigateToUrl;              |${surl}/mdm/billDiscount                                                              |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row')] |xpath                             |30        |
+|click;                      |//span[text()='Search']                 |xpath                                        |
+|sendKeys;                   |//input[@placeholder='Enter Program ID']|xpath                             |$unique   |
+|click;                      |//button[text()='Search']               |xpath                                        |
+|check                       |isElementPresent;                       |//span[contains(text(),'$unique')]|xpath|true|
+|$tresult1=                  |isElementPresent;                       |//span[contains(text(),'$unique')]|xpath     |
+|check                       |isElementPresent;                       |//span[contains(text(),'$num2')]  |xpath|true|
+|$tresult2=                  |isElementPresent;                       |//span[contains(text(),'$num2')]  |xpath     |
+|click;                      |//div[@class='app-search-label']        |xpath                                        |
+|click;                      |//button[text()='Clear']                |xpath                                        |
+|sendKeys;                   |//input[@placeholder='Enter Day Early'] |xpath                             |$num1     |
+|click;                      |//button[text()='Search']               |xpath                                        |
+|check                       |isElementPresent;                       |//span[contains(text(),'$unique')]|xpath|true|
+|check                       |isElementPresent;                       |//span[contains(text(),'$num1')]  |xpath|true|
+|$tresult3=                  |isElementPresent;                       |//span[contains(text(),'$unique')]|xpath     |
+**!
+
+!** verify Bill Discount edit
+!define newdiscount {54}
+
+!|Script                     |Ui                                                                                                                                                |
+|click;                      |//div[@class='app-search-label']                    |xpath                                                                                        |
+|click;                      |//button[text()='Clear']                            |xpath                                                                                        |
+|sendKeys;                   |//input[@placeholder='Enter Program ID']            |xpath                                                                        |$unique        |
+|click;                      |//button[text()='Search']                           |xpath                                                                                        |
+|click;                      |//span[normalize-space(text())='Edit']              |xpath                                                                                        |
+|waitForElementToBeDisplayed;|//div[@class='drawer-body']                         |xpath                                                                        |10             |
+|check                       |isElementPresent;                                   |//label[normalize-space(text())='Program ID']                                |xpath|true     |
+|check                       |isElementPresent;                                   |//label[normalize-space(text())='Days Early']                                |xpath|true     |
+|check                       |isElementPresent;                                   |//label[normalize-space(text())='Discount Rate (%)']                         |xpath|true     |
+|check                       |isElementPresent;                                   |//label[normalize-space(text())='Program ID']/..//input[@disabled='disabled']|xpath|true     |
+|check                       |isElementPresent;                                   |//label[normalize-space(text())='Days Early']/..//input[@disabled='disabled']|xpath|true     |
+|$pid=                       |getValue;                                           |//label[normalize-space(text())='Program ID']/..//input                      |xpath          |
+|$edays=                     |getValue;                                           |//label[normalize-space(text())='Days Early']/..//input                      |xpath          |
+|$discount=                  |getValue;                                           |//input[@placeholder='Enter Discount Rate (%) here']                         |xpath          |
+|clearAndSend;               |//input[@placeholder='Enter Discount Rate (%) here']|xpath                                                                        |${newdiscount} |
+|click;                      |//span[normalize-space(text())='Update']                             |xpath                                                                                        |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']          |xpath                                                                        |30             |
+|$successMessage=            |getElementAttribute;                                |//div[@role='alert']//h3[text()='Success']/following-sibling::span           |xpath|innerText|
+|check                       |isElementPresent;                                   |//span[contains(text(),'$unique')]                                           |xpath|true     |
+|$tresult4=                  |isElementPresent;                                   |//span[contains(text(),'$unique')]                                           |xpath          |
+|check                       |isElementPresent;                                   |//span[contains(text(),'${newdiscount}')]                                    |xpath|true     |
+|$tresult5=                  |isElementPresent;                                   |//span[contains(text(),'${newdiscount}')]                                    |xpath          |
+
+!|Script   |common                                                     |
+|check     |checkIfStringAreEqual;|$successMessage|Record Updated!|true|
+|$tresult6=|checkIfStringAreEqual;|$successMessage|Record Updated!     |
+|check     |checkIfStringAreEqual;|$pid           |$unique        |true|
+|$tresult7=|checkIfStringAreEqual;|$pid           |$unique             |
+|check     |checkIfStringAreEqual;|$edays         |$num1          |true|
+|$tresult8=|checkIfStringAreEqual;|$edays         |$num1               |
+|check     |checkIfStringAreEqual;|$discount      |$num2          |true|
+|$tresult9=|checkIfStringAreEqual;|$discount      |$num2               |
+**!
+
+!** Validating the result
+!|Script  |Common                                                                                                                      |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,true|
+*!

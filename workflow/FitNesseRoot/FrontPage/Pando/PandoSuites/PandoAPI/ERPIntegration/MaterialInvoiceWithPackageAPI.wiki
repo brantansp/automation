@@ -1,0 +1,9 @@
+---
+Help: Contains API for material invoice with package
+Test
+---
+!|Script    |Http                                         |
+|addHeader; |Authorization  |bearer $stoken               |
+|setBaseUrl;|${surl}/api/erp/material_invoice_with_package|
+|$indent=   |getResponse;   |Application/Json |post |$data|
+|check      |getStatusCode; |204                          |

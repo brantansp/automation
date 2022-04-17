@@ -1,0 +1,227 @@
+---
+Help: Ensure that Number of Child material is send as per ratio for Parent available
+Test
+---
+!5 Ensure that Number of Child material is send as per ratio for Parent available
+
+!***> Unique values assignment
+!|Script          |Common                                       |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$currDate=       |getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique  |0   |4    |
+|$detention_group=|getRandomString;        |4        |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000   |999999    |
+|$today=          |getSubString;           |$currDate|0   |10   |
+|$vno_1=          |getRandomNumber;        |20       |76        |
+|$vno_2=          |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=          |getRandomNumber;        |1000     |9999      |
+
+!|Script  |DateUtil                      |
+|$thisday=|dateCalculation;|dd MMM yyyy|0|
+*!
+
+!** Depot for Shipper
+!define depot_name {d$unique}
+!define depot_state {Uttar Pradesh}
+!define depot_city {Dc$unique}
+!define depot_region {North}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {600001}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!*** Gate Creation for shipper depot
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!*** Gate Manager Creation
+!define role_id {$retrieve_key_value}
+!define user_number {12891}
+!define user_name {u1$unique}
+!define user_email {pandoindent+1+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation one
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {North}
+!define gate_pincode {$pincode1}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+*!
+*!
+
+!** Depot Optima Setting
+!define depo {d$unique}
+!define max_split {3}
+!define split_factor {1}
+!define ftl_certify {false}
+!define algorithm {3}
+!define distance_deviation {1000}
+!define degree_of_deviation {60}
+!define optima_type {1}
+!define weight {1}
+!define volume {1}
+!define mode {0}
+!define max_pickup {5}
+!define fitment {0}
+!define max_dropoff {5}
+!define optima_for_ptl {false}
+!define ptl_club_gates {false}
+!define limited_truck_count {false}
+!define hybrid_split {false}
+!define depot_id {$depot}
+!define movement {1}
+!define movement_type {Secondary}
+!define material_category {"GT","MT"}
+!define pickup_threshold_wt {300}
+!define pickup_threshold_vl {200}
+!define floor_one_wt {900}
+!define floor_one_vl {700}
+!define floor_two_wt {90}
+!define floor_two_vl {90}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split": ${max_split},"split_factor": ${split_factor},"ftl_certify": ${ftl_certify},"algorithm": ${algorithm},"distance_deviation":"${distance_deviation}","degree_of_deviation":${degree_of_deviation},"optima_type":${optima_type},"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":${weight},"volume":${volume}},"material_categories":[${material_category}],"mode":${mode},"max_pickup_points":${max_pickup},"fitment":${fitment},"max_drop_points":${max_dropoff},"drop_off_rule":[],"optima_for_ptl":${optima_for_ptl},"ptl_club_gates":${ptl_club_gates},"pickup_threshold": {"weight": ${pickup_threshold_wt},"volume": ${pickup_threshold_vl}},"floor_one": {"weight": ${floor_one_wt},"volume": ${floor_one_vl}},"floor_two": {"weight": ${floor_two_wt},"volume": ${floor_two_vl}},"limited_truck_count":${limited_truck_count},"hybrid_split": ${hybrid_split}},"depot_ids":["${depot_id}"],"movement":${movement}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!*** Consignee Creation one (Secondary)
+!define consignee_name {dc1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {No 15,GST Street1$unique}
+!define city {C$unique}
+!define state {Tamil Nadu}
+!define pincode {600010}
+!define manager_name {Manager Automation1}
+!define manager_mobile {12891}
+!define manager_email {pandoconsignee+1+$unique@gmail.com}
+!define region {South}
+!define site {2}
+!define group {}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!*** Transporter Creation one
+!define transporter_name {t1$unique}
+!define transporter_ref_id {tr1$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600011}
+!define manager_name {Manager1 $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+1+$unique@gmail.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+*!
+
+!*** Vehicle Creation one
+!define vehicle_name {v1$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Parent Material Creation
+!define material_name {m1$unique}
+!define material_code {mc1$unique}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+*!
+
+!** Child Material Creation
+!define material_name {m2$unique}
+!define material_code {mc2$unique}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+*!
+
+!** Associated Material Bulk upload
+!define parent_material_code {mc1$unique}
+!define child_material_code {mc2$unique}
+!define parent_fraction {1}
+!define child_fraction {1}
+
+!define row {Parent Material Code,Child Material Code,Parent Fraction,Child Fraction}
+!define column {${parent_material_code},${child_material_code},${parent_fraction},${child_fraction}}
+
+!include -c .FrontPage.Pando.Common.AssociatedMaterialBulkUpload
+*!
+
+!** Uploading Rate Matrix
+!define erp_gate_id_api_1 {rq1$unique}
+!define transit_days {1}
+!define ratec {1000}
+!define rtrip {per_trip}
+!define mrate {10000}
+!define mfactor {1}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,BDR Charge,BDR Label,Exclude,Trip Count}
+!define column {City,Dc$unique,C$unique,v1$unique MRT,${transit_days},tr1$unique,t1$unique,${transit_days},900,${rtrip},01-Jan-$year,31-Dec-2030,${mrate},${mfactor},$detention_group,AT,100,10,Per KG,3,200}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!** Delivery Picklist API 
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"D1$num","material_code":"mc1$unique","depot_ref_id":"${depot_reference_id}","pickup_reference_number":"${gate_ref_id}","division":"","quantity":5,"quantity_unit":"nos","weight":500,"weight_unit":"KG","volume":"400","volume_unit":"CFT","lr_number":"","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","line_item":"122120","type":"${movement_type}","category":"GT","category_priority":"GT","stn":"0","date":"$today","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":""},{"delivery_number":"D2$num","material_code":"mc2$unique","depot_ref_id":"${depot_reference_id}","pickup_reference_number":"${gate_ref_id}","division":"","quantity":10,"quantity_unit":"nos","weight":900,"weight_unit":"KG","volume":"800","volume_unit":"CFT","lr_number":"","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","line_item":"122121","type":"${movement_type}","category":"MT","category_priority":"GT","stn":"0","date":"$today","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DeliveryPicklistAPI
+**!
+
+!*** Validating Line Item in UI
+!define depot {d$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimisingDeliveryPicklist
+
+!|Script   |Ui                                                                                                                                    |
+|check     |getCountOfElements;                           |//div[@class='card-row card-row-show']                                      |xpath|1   |
+|click;    |(//div[@class='card-row card-row-show'])[1]//a|xpath                                                                                  |
+|check     |isElementPresent;                             |(//div[@class='table-row table-rowbg'])[1]//div[normalize-space(text())='5']|xpath|true|
+|$tresult1=|isElementPresent;                             |(//div[@class='table-row table-rowbg'])[1]//div[normalize-space(text())='5']|xpath     |
+|check     |isElementPresent;                             |(//div[@class='table-row table-rowbg'])[2]//div[normalize-space(text())='5']|xpath|true|
+|$tresult2=|isElementPresent;                             |(//div[@class='table-row table-rowbg'])[2]//div[normalize-space(text())='5']|xpath     |
+|click;    |//div[@class='back-option']//a                |xpath                                                                                  |
+**!
+
+!* Validating result
+!|script  |common                                           |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2|
+*!
+
+!** Retrieving the Job ID using API
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.RetrieveOptimaJobIDAPI
+*!

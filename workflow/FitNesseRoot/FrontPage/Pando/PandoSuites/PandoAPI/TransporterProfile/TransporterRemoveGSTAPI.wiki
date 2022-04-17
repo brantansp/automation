@@ -1,0 +1,12 @@
+---
+Help: Use to remove the Added statewise GST details
+Test
+---
+!| Script    |Http                                                                            |
+|setBaseUrl; |${turl}/api/login                                                               |
+|getResponse;|Application/Json|put|{"data":{"email":"${tusername}","password":"${tpassword}"}}|
+|$token=     |getHeader;      |x-auth-token                                                   |
+|addHeader;  |Authorization   |bearer $token                                                  |
+|setBaseUrl; |${turl}/api/transporter/remove_gst                                              |
+|getResponse;|Application/Json|put|{"data":{"ids":["${gstn_id}"]}}                            |
+|$status=    |getStatusCode;                                                                  |

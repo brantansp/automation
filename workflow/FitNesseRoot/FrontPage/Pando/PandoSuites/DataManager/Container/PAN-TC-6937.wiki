@@ -1,0 +1,147 @@
+---
+Help: Edit Container
+Suites: oel1
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!**> Vehicle Creation
+!define vehicle_name {ve$unique}
+!define cft {1000}
+!define kg {2000}
+!define weightage {2500}
+!define length_factor {12}
+!define breadth_factor {13}
+!define height_factor {14}
+!define length {15}
+!define breadth {20}
+!define height {25}
+!define description {965CFT}
+!define distance {250}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                |
+|$data= |getTrim;|{"data":{"short_form":"${vehicle_name}","cft":"${cft}","kg":"${kg}","vehicle_type":"FTL","weightage":"${weightage}","length_factor":"${length_factor}","breadth_factor":"${breadth_factor}","height_factor":"${height_factor}","length":"${length}","breadth":"${breadth}","height":"${height}","description":"${description}","max_distance":"${distance}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationDynamicAPI
+**!
+
+!**> Container Creation
+!define container_name {co$unique}
+!define container_refid {cr$unique}
+!define capacity_cft {1000}
+!define tare_weight {2500}
+!define gross_weight {3000}
+!define max_payload {4000}
+!define door_opening_width {10}
+!define door_opening_height {20}
+!define exterior_length {15}
+!define exterior_width {20}
+!define exterior_height {25}
+!define interior_length {14}
+!define interior_width {18}
+!define interior_height {22}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":{"name":"${container_name}","ref_id":"${container_refid}","capacity":"${capacity_cft}","preferred_truck_type":"$vehicle_id","tare_weight":"${tare_weight}","max_gross_weight":"${gross_weight}","max_payload":"${max_payload}","container_dimension_door_opening":{"width":"${door_opening_width}","height":"${door_opening_height}"},"container_dimension_exterior":{"length":"${exterior_length}","width":"${exterior_width}","height":"${exterior_height}"},"container_dimension_interior":{"length":"${interior_length}","width":"${interior_width}","height":"${interior_height}"}}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ContainerCreationDynamicAPI
+**!
+
+!** Container Edit
+!define containers_name {cee$unique}
+!define containers_refid {cre$unique}
+!define capacity_cft {2000}
+!define tare_weight {3500}
+!define gross_weight {4000}
+!define max_payload {5000}
+!define door_opening_width {20}
+!define door_opening_height {30}
+!define exterior_length {45}
+!define exterior_width {30}
+!define exterior_height {55}
+!define interior_length {74}
+!define interior_width {88}
+!define interior_height {42}
+**!
+
+!** Container Edit Xpath
+!|Script       |Ui                                                                                  |
+|navigateToUrl;|${surl}/mdm/container                                                               |
+|click;        |//span[@class='tagblock_list']                         |xpath                       |
+|sendKeys;     |//input[@placeholder='Enter Reference Id']             |xpath|${container_refid}    |
+|wait;         |3                                                                                   |
+|click;        |//button[contains(text(),'Search')]                    |xpath                       |
+|click;        |//span[contains(text(),'Edit')]                        |xpath                       |
+|click;        |//input[@placeholder='Enter Name here']                |xpath                       |
+|clearValueJS; |//input[@placeholder='Enter Name here']                |xpath                       |
+|sendKeys;     |//input[@placeholder='Enter Name here']                |xpath|${containers_name}    |
+|click;        |//input[@placeholder='Enter Reference Id here']        |xpath                       |
+|clearValueJS; |//input[@placeholder='Enter Reference Id here']        |xpath                       |
+|sendKeys;     |//input[@placeholder='Enter Reference Id here']        |xpath|${containers_refid}   |
+|click;        |//input[@placeholder='Enter Capacity CFT here']        |xpath                       |
+|clearValueJS; |//input[@placeholder='Enter Capacity CFT here']        |xpath                       |
+|sendKeys;     |//input[@placeholder='Enter Capacity CFT here']        |xpath|${capacity_cft}       |
+|sendKeys;     |(//input[@placeholder='Select'])[2]                    |xpath|${vehicle_name}       |
+|click;        |//span[text()='ve$unique']                             |xpath                       |
+|click;        |//input[@placeholder='Enter Tare weight(KG) here']     |xpath                       |
+|clearValueJS; |//input[@placeholder='Enter Tare weight(KG) here']     |xpath                       |
+|sendKeys;     |//input[@placeholder='Enter Tare weight(KG) here']     |xpath|${tare_weight}        |
+|click;        |//input[@placeholder='Enter Max gross weight(KG) here']|xpath                       |
+|clearValueJS; |//input[@placeholder='Enter Max gross weight(KG) here']|xpath                       |
+|sendKeys;     |//input[@placeholder='Enter Max gross weight(KG) here']|xpath|${gross_weight}       |
+|click;        |//input[@placeholder='Enter MDMMAX_PAYLOAD_KG here']   |xpath                       |
+|clearValueJS; |//input[@placeholder='Enter MDMMAX_PAYLOAD_KG here']   |xpath                       |
+|sendKeys;     |//input[@placeholder='Enter MDMMAX_PAYLOAD_KG here']   |xpath|${max_payload}        |
+|click;        |(//input[@placeholder='Enter Width (FT) here'] )[1]    |xpath                       |
+|clearValueJS; |(//input[@placeholder='Enter Width (FT) here'] )[1]    |xpath                       |
+|sendKeys;     |(//input[@placeholder='Enter Width (FT) here'] )[1]    |xpath|${door_opening_width} |
+|click;        |(//input[@placeholder='Enter Height (FT) here'] )[1]   |xpath                       |
+|clearValueJS; |(//input[@placeholder='Enter Height (FT) here'] )[1]   |xpath                       |
+|sendKeys;     |(//input[@placeholder='Enter Height (FT) here'] )[1]   |xpath|${door_opening_height}|
+|click;        |(//input[@placeholder='Enter Length (FT) here'] )[1]   |xpath                       |
+|clearValueJS; |(//input[@placeholder='Enter Length (FT) here'] )[1]   |xpath                       |
+|sendKeys;     |(//input[@placeholder='Enter Length (FT) here'] )[1]   |xpath|${exterior_length}    |
+|click;        |(//input[@placeholder='Enter Width (FT) here'] )[2]    |xpath                       |
+|clearValueJS; |(//input[@placeholder='Enter Width (FT) here'] )[2]    |xpath                       |
+|sendKeys;     |(//input[@placeholder='Enter Width (FT) here'] )[2]    |xpath|${exterior_width}     |
+|click;        |(//input[@placeholder='Enter Height (FT) here'] )[2]   |xpath                       |
+|clearValueJS; |(//input[@placeholder='Enter Height (FT) here'] )[2]   |xpath                       |
+|sendKeys;     |(//input[@placeholder='Enter Height (FT) here'] )[2]   |xpath|${exterior_height}    |
+|click;        |(//input[@placeholder='Enter Length (FT) here'] )[2]   |xpath                       |
+|clearValueJS; |(//input[@placeholder='Enter Length (FT) here'] )[2]   |xpath                       |
+|sendKeys;     |(//input[@placeholder='Enter Length (FT) here'] )[2]   |xpath|${interior_length}    |
+|click;        |(//input[@placeholder='Enter Width (FT) here'] )[3]    |xpath                       |
+|clearValueJS; |(//input[@placeholder='Enter Width (FT) here'] )[3]    |xpath                       |
+|sendKeys;     |(//input[@placeholder='Enter Width (FT) here'] )[3]    |xpath|${interior_width}     |
+|click;        |(//input[@placeholder='Enter Height (FT) here'] )[3]   |xpath                       |
+|clearValueJS; |(//input[@placeholder='Enter Height (FT) here'] )[3]   |xpath                       |
+|sendKeys;     |(//input[@placeholder='Enter Height (FT) here'] )[3]   |xpath|${interior_height}    |
+|click;        |//span[contains(text(),'Update')]                      |xpath                       |
+**!
+
+!** Cross verifying values
+!|script    |Ui                                                                                                    |
+|check      |isElementPresent;                |//span[contains(text(),'cee$unique')]                    |xpath|true|
+|$tresult1= |isElementPresent;                |//span[contains(text(),'cee$unique')]                    |xpath     |
+|mouseHover;|//span[contains(text(),'cre202')]|xpath                                                               |
+|check      |isElementPresent;                |//div[@role='tooltip']//div[text()='${containers_refid}']|xpath|true|
+|$tresult2= |isElementPresent;                |//div[@role='tooltip']//div[text()='${containers_refid}']|xpath     |
+|check      |isElementPresent;                |//span[contains(text(),'${capacity_cft}')]               |xpath|true|
+|$tresult3= |isElementPresent;                |//span[contains(text(),'${capacity_cft}')]               |xpath     |
+|mouseHover;|//span[contains(text(),'ve202')] |xpath                                                               |
+|check      |isElementPresent;                |//div[@role='tooltip']//div[text()='${vehicle_name}']    |xpath|true|
+|$tresult4= |isElementPresent;                |//div[@role='tooltip']//div[text()='${vehicle_name}']    |xpath     |
+|check      |isElementPresent;                |//span[contains(text(),'${tare_weight}')]                |xpath|true|
+|$tresult5= |isElementPresent;                |//span[contains(text(),'${tare_weight}')]                |xpath     |
+|check      |isElementPresent;                |//span[contains(text(),'${gross_weight}')]               |xpath|true|
+|$tresult6= |isElementPresent;                |//span[contains(text(),'${gross_weight}')]               |xpath     |
+|check      |isElementPresent;                |//span[contains(text(),'${max_payload}')]                |xpath|true|
+|$tresult7= |isElementPresent;                |//span[contains(text(),'${max_payload}')]                |xpath     |
+
+!|Script  |Common                                                                                             |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7|
+**!
+

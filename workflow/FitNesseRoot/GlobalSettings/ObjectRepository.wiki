@@ -1,0 +1,4 @@
+!5 Login page objects
+
+!define userNameInputBox {//label[contains(text(),'User name:')]//preceding-sibling::input}
+!define passwordInputBox {//label[contains(text(),'Password:')]//preceding-sibling::input}

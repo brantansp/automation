@@ -1,0 +1,5 @@
+---
+Suite
+---
+!1 Test suite Admin Settings
+!contents -R2 -g -p -f -h

@@ -1,0 +1,14 @@
+!include -c .FrontPage.Pando.Common.Import
+
+!|Script              |Ui                                                                                                                  |
+|$testCaseDescription=|getTestCaseDescription;|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME}                                                   |
+|startTestCase;       |${RUNNING_PAGE_NAME}   |${extent_tag}|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME} : $testCaseDescription|${log_to_elk}|
+
+!|script  |common        |
+|$tresult=|getTrim;|false|
+
+!define surl {https://fm-auto.pandostaging.in}
+!define login_url {${surl}}
+!define username {pandofm@outlook.com}
+!define password {test@1234}
+!include -c .FrontPage.Pando.Common.Login

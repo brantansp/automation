@@ -1,0 +1,11 @@
+---
+Help: checking count in rejections
+---
+!|Script|Ui|
+|wait;|10|
+|navigateToUrl;|${surl}/mdm/rejection|
+|waitForElementToBeDisplayed;|//div[contains(text(),'${rejection_name}')]//following-sibling::div|xpath|20|
+|$rcontent=|getText;|//div[contains(text(),'${rejection_name}')]//following-sibling::div|xpath|
+
+!|Script|Regex|
+|$count=|extractNumber;|$rcontent|

@@ -1,0 +1,6 @@
+---
+Help: Data manager user creation
+Suite
+---
+!1 Test suite for data manager
+!contents -R2 -g -p -f -h

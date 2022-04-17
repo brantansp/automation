@@ -1,0 +1,14 @@
+---
+Help: loading and unloading changes
+---
+!|Script    |Common                                                |
+|$excelpath=|getPath;|testAttachment/l_ul_oda_$unique.xlsx|fullpath|
+
+!|Script                |Excel                      |
+|newSheetDynamicColumns;|${row}|${column}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/loading                                             |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |

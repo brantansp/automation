@@ -1,0 +1,15 @@
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|Script                        |Ui                                                                                                                |
+|refreshForElementToBeDisplayed;|(//div[@class='order-row'])[1]//span[text()='Re-indent']|xpath                                         |3    |    |
+|click;                         |//span[text()='Re-indent']                              |xpath                                                    |
+|waitForElementToBeDisplayed;   |//div[@class='el-dialog__body']                         |xpath                                         |10        |
+|click;                         |//label[contains(text(),'${transporter_name}')]         |xpath                                                    |
+|click;                         |//input[@placeholder='Pick a day']                      |xpath                                                    |
+|click;                         |//td[@class='available today']/div/span                 |xpath                                                    |
+|click;                         |//button[text()='SEND']                                 |xpath                                                    |
+|$tresult=                      |isElementPresent;                                       |//span[contains(text(),'${transporter_name}')]|xpath     |
+|check                          |isElementPresent;                                       |//span[contains(text(),'${transporter_name}')]|xpath|true|

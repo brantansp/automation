@@ -1,0 +1,13 @@
+!** Validating Freight details in material page
+!|Script                        |Ui                                                                    |
+|navigateToUrl;                 |${surl}/indents/$order_id/details/0                                   |
+|refresh;                                                                                              |
+|waitForElementToBeDisplayed;   |//div[contains(@class,'card-content')]|xpath                    |30   |
+|refreshForElementToBeDisplayed;|//div[text()='Freight Bifurcation']   |xpath                    |5  | |
+|click;                         |//div[text()='Freight Bifurcation']   |xpath                          |
+|$tresult=                      |getText;                              |//div[@class='total-wrp']|xpath|
+
+!|script  |common                                               |
+|$tresult=|checkIfStringAreEqual;|$tresult|Total : Rs. ${amount}|
+|check    |checkIfStringAreEqual;|$tresult|true      |true      |
+**!

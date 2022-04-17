@@ -1,0 +1,131 @@
+---
+Help: Ensure if record with valid transporter ID, vehicle type, Vehicle id gets updated via API
+Suites: castrol
+Test
+---
+!*> Unique value assignment
+!|Script |Common                                  |
+|$vno_1= |getRandomNumber;        |20  |76        |
+|$vno_2= |getRandomString;        |2   |ALPHALOWER|
+|$vno_3= |getRandomNumber;        |1000|9999      |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss    |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+!define truckno_nospace {TN$vno_1$vno_2$vno_3}
+*!
+
+!* Conversion of Vehicle name to uppercase 
+!|Script|common                       |
+|$vno=  |upperCase;|${truckno_nospace}|
+*!
+
+!*> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}  
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!*> Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!define credit_period {20}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","credit_period":"${credit_period}","reference_id":"${transporter_ref_id}","status":${transporter_status},"country":"India","generate_lr":true,"users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+**!
+
+!* Create Vehicle details via API
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":[{"vehicle_id": "${truck_no}","vehicle_chassis_no": "MED2261CGEP009435","vehicle_model":"TATA ACE","depot_ref_id": "$depot_ref_id","transporter_ref_id": "${transporter_ref_id}","vehicle_type": "${vehicle_name}","tare_weight": 11020,"vehicle_length": 28,"vehicle_width": 8.25,"vehicle_height": 8,"vehicle_uom": "KG","vehicle_filled_weight": 23980,"vehicle_gross_weight": 35000,"vehicle_volume": 459,"induction_date": "2014-04-01T00:00:00.000Z","induction_end_date": "2030-12-31T00:00:00.000Z","pimc_expiry_date": "2030-12-31T00:00:00.000Z"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleDetailsCreationDynamicAPI
+*!
+
+!*** Validating created vehicle details in UI
+!|Script       |Ui                                              |
+|navigateToUrl;|https://castrol-auto.pandostaging.in/               |
+|wait;         |3                                               |
+|click;        |//li[contains(@class,'app')]/span         |xpath|
+|click;        |//a[contains(text(),"DATA MANAGER")]      |xpath|
+|click;        |//input[@placeholder="Select"]            |xpath|
+|clickJS;      |//span[contains(text(),"Vehicle details")]|xpath|
+
+!define search_text {$vno}
+!define filter_by {Enter Vehicle Number}
+
+!include -c .FrontPage.Pando.Common.CommonSearchTrigger
+
+!|script            |ui                                                                                                                                             |
+|$noofrows=         |getCountOfElements;                                                                              |//div[contains(@class,'grid-list-row')]|xpath|
+|isElementDisplayed;|(//div[contains(@class,'grid-list-row')]//descendant::span[1]/span)[text()='$vno']               |xpath                                        |
+|isElementDisplayed;|(//div[contains(@class,'grid-list-row')]//descendant::span[1]/span)[text()='${vehicle_name}']    |xpath                                        |
+|isElementDisplayed;|(//div[contains(@class,'grid-list-row')]//descendant::span[1]/span)[text()='TATA ACE']           |xpath                                        |
+|isElementDisplayed;|(//div[contains(@class,'grid-list-row')]//descendant::span[1]/span)[text()='${transporter_name}']|xpath                                        |
+|isElementDisplayed;|(//div[contains(@class,'grid-list-row')]//descendant::span[1]/span)[text()='MED2261CGEP009435']  |xpath                                        |
+**!
+
+!*> Exporting Vehicle Details list
+!|Script       |Ui                                       |
+|navigateToUrl;|${surl}/mdm/vehicledetail                |
+|click;        |//button[contains(text(),'Export')]|xpath|
+|wait;         |20                                       |
+
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+*!
+
+!* Validating Vehicle details in excel
+!|Script             |ExcelQuery                         |
+|$excel_file_content=|readExcelFileAsJsonObject|$filename|
+
+!|Script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|check  |checkIfStringAreEqual;|$excel_file_content|{"Vehicle Detail":[{"Status":"Active","Availability":"TRUE","Blacklisted":"","Fitness Validity":"","Vehicle Type":"${vehicle_name}","Insurance Validity":"","Vehicle Filled Weight":"23980","Engine Number":"","Induction Date":"01/04/2014","Vehicle Model":"TATA ACE","Pimc Expiry Date":"31/12/2030","Vehicle Number":"$vno","Vehicle Gross Weight":"35000","Chasis Number":"MED2261CGEP009435","Vehicle Width":"8.25","Vehicle Volume":"459","Tare Weight":"11020","Induction End Date":"31/12/2030","Vehicle uom":"KG","Vehicle Height":"8","Vehicle Length":"28","Depot":"${depot_name}","Transporter":"${transporter_name}"}]}|true|
+*!
+
+!* Validating depot availability
+!|Script            |Ui                                                                                                                                      |
+|click;             |//span[contains(text(),"Edit")]                                             |xpath                                                      |
+|$numberofdepots=   |getCountOfElements;                                                         |//tr[contains(@class,'row')]                   |xpath      |
+|$deponame=         |getElementAttribute;                                                        |(//tr[contains(@class,'row')])[1]//td[1]//input|xpath|value|
+|isElementDisplayed;|//span[normalize-space(text())='YES' and not(contains(@aria-hidden,'true'))]|xpath                                                      |
+
+!* Validating test result
+!|Script   |common                                                          |
+|$tresult1=|checkIfStringAreEqual;       |1           |$noofrows            |
+|$tresult2=|checkIfStringAreEqual;       |1           |$numberofdepots      |
+|$tresult3=|checkIfStringAreEqual;       |$deponame   |$depot_name          |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,true|
+|check     |checkIfStringAreEqual;       |$tresult    |true      |true      |
+*!

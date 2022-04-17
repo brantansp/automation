@@ -1,0 +1,19 @@
+---
+Help: Search with indent number
+Test
+---
+!|Script   |Common                    |
+|$order_id=|splitString;|$order_id|-|3|
+
+
+!|Script                     |Ui                                                                                                                                                                                        |
+|navigateToUrl;              |${turl}/v2/payments                                                                                                                                                                       |
+|wait;                       |5                                                                                                                                                                                         |
+|click;                      |//span[text()='Search']                                                  |xpath                                                                                                           |
+|waitForElementToBeDisplayed;|//input[@placeholder='Enter Indent ID' or @placeholder='Enter indent id']|xpath                                                                                                |30        |
+|clearAndSend;               |//input[@placeholder='Enter Indent ID' or @placeholder='Enter indent id']|xpath                                                                                                |$order_id |
+|click;                      |//button[text()='Search']                                                |xpath                                                                                                           |
+|waitForElementToDisappear;  |//div[@class='paymentloader']                                            |xpath                                                                                                |10        |
+|check                       |getCountOfElements;                                                      |//div[starts-with(@class,'card-row row')]                                                    |xpath|1   |
+|check                       |isElementPresent;                                                        |//div[contains(@class,'card-row') or contains(@class,'list-row')]//span[contains(text(),'$order_id')]|xpath|true|
+|$tresult=                   |isElementPresent;                                                        |//div[contains(@class,'card-row') or contains(@class,'list-row')]//span[contains(text(),'$order_id')]|xpath     |

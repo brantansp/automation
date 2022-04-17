@@ -1,0 +1,7 @@
+!|Script                     |Ui                                                                                                                |
+|navigateToUrl;              |${surl}/mdm/depots                                                                                                |
+|waitForElementToBeDisplayed;|//div[@class="card-row card-row-show"]               |xpath                                 |10                   |
+|sendKeys;                   |//input[@placeholder='Search by Depot Name / Ref id']|xpath                                 |${search_value}      |
+|wait;                       |3                                                                                                                 |
+|check                       |getCountOfElements;                                  |//div[@class='card-row card-row-show']|xpath|${search_count}|
+|$totalCount=                |getCountOfElements;                                  |//div[@class='card-row card-row-show']|xpath                |

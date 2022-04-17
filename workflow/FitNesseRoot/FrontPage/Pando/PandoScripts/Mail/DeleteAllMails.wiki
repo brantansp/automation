@@ -1,0 +1,12 @@
+---
+Test
+---
+!** Deleting All Mails
+!|Script        |Mail                                |
+|deleteAllMails;|pandotransporter@outlook.com|Pando@123|
+|deleteAllMails;|pandodm@outlook.com        |Pando@123|
+|deleteAllMails;|pandoconsignee@outlook.com    |Pando@123|
+|deleteAllMails;|pandoauto@outlook.com	    |Pando@123|
+|deleteAllMails;|pandosignify@outlook.com	    |Pando@123|
+
+*!

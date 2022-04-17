@@ -1,0 +1,8 @@
+---
+Test
+---
+!|Script        |Http                                         |
+|addHeader;     |Authorization  |bearer $stoken               |
+|setBaseUrl;    |${surl}/api/order/${indent_id}/freight_charge|
+|$freight_value=|getResponse;   |Application/Json |put |$data |
+|check          |getStatusCode; |200                          |

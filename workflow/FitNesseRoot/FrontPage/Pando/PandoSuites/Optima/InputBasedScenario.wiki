@@ -1,0 +1,6 @@
+---
+Help: Contains test cases where it is based on the Input
+Suite
+---
+!1 Test suite Input Based Scenario
+!contents -R2 -g -p -f -h

@@ -1,0 +1,43 @@
+---
+Help: Search based on Full Consignee Name
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Egmore}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+**!
+
+!** Search by partial Consignee name
+!define search_value {c$unique}
+!define search_count {1}
+!define search_text {Enter Name}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Search.ConsigneeSearch.CommonConsigneeSearch
+**!
+
+!|script  |common                              |
+|$tresult=|checkIfStringAreEqual;|1|$totalCount|
+
+
+!define tname {TC-265}
+ 
+
+

@@ -1,0 +1,172 @@
+---
+Help: Ensure Editing Consignee details is not allowed for Primary Indent
+Suites: siemens
+Test
+---
+!***> Unique values assignment
+
+!| Script  |Common                                       |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$cGroup=  |getRandomString;        |5        |ALPHAUPPER|
+|$vno_1=   |getRandomNumber;        |20       |76        |
+|$vno_2=   |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=   |getRandomNumber;        |1000     |9999      |
+|$currDate=|getCurrentDateTimeStamp |iso                 |
+|$year=    |getSubString;           |$unique  |0   |4    |
+|$today=   |getSubString;           |$currDate|0   |10   |
+|$num=     |getRandomNumber;        |100000   |999999    |
+
+!| Script      |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |0 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |0 |
+
+!| Script      |Common                                          |
+|$truckindate= |stringConcatenation;|$truckindate |!- 10:00:00-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- 00:00:00-!|
+|$rdate=       |stringConcatenation;|$rdate       |!- 10:00:00-!|
+
+!| Script               |DateUtil                      |
+|$loadingDate=          |utcConversion;  |$loadingDate |
+|$truckindate=          |utcConversion;  |$truckindate |
+|$truckoutdate=         |utcConversion;  |$truckoutdate|
+|$invoice_filter_date=  |dateCalculation;|yyyy-MM-dd |0|
+|$voucher_filter_todate=|dateCalculation;|yyyy-MM-dd |1|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Source Depot Creation
+
+!define depot_name {src$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {s$num}
+!define depot_reference_id {s$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {600001}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {SG1$unique}
+!define g_user_email {pandoindent+1$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script         |common           |
+|$location_id=   |getTrim;|$depot  |
+|$source_gate_id=|getTrim;|$gate_id|
+
+*!
+
+!***> Destination Depot Creation
+
+!define depot_name {dest$unique}
+!define depot_state {Goa}
+!define depot_city {Goa}
+!define depot_region {West}
+!define depot_short_code {d$num}
+!define depot_reference_id {dr$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {403001}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {DG1$unique}
+!define g_user_email {pandoindent+2$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script                       |common           |
+|$destination_location_id=     |getTrim;|$depot  |
+|$destination_gate_location_id=|getTrim;|$gate_id|
+*!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","generate_lr":true,"users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {PTL}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Purchase order creation
+!define ponumber {po$unique}
+!define plnumber {pl$unique}
+!define anumber {a$unique}
+
+!define row {Purchase Order Number,Purchase Order Line Item Number,Account Assignment Number,Net Value,Balance value,Transporter Ref ID,Depot Ref ID}
+!define column {${ponumber},${plnumber},${anumber},15000,5000,${transporter_ref_id},s$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonPOupload
+**!
+
+!**> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,SG1$unique,DG1$unique,${vehicle_name},120,${transporter_ref_id},${transporter_name},1,30,per_km,01-Jan-2019,31-Dec-2030,111,1,D,AT,140,10,Per KG,3,200,no,2,1-200,101,10,20,YES,500|Point,SG1$unique,DG1$unique,${vehicle_name},220,${transporter_ref_id},${transporter_name},1,40,per_km,01-Jan-2019,31-Dec-2030,240,1,D,AT,250,10,Per KG,3,200,no,2,300-500,203,10,20,YES,500|Point,SG1$unique,DG1$unique,${vehicle_name},300,${transporter_ref_id},${transporter_name},1,50,per_km,01-Jan-2019,31-Dec-2030,320,1,D,AT,330,10,Per KG,3,350,no,2,500-800,323,10,20,YES,500}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!**> Creating Indent 
+!define type {Outbound}
+!define source_location {src$unique}
+!define destination_location {dest$unique}
+!define gate_id {rt$unique}
+!define switch_depo {Consignee} 
+!define switch_type {2}
+!define delivery_type {PTL}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonPrimaryIndentInUI
+*!
+
+!*> Filter depot
+!define depot_selection {src$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!|Script              |ui                                                                               |
+|check                |isElementPresent;                  |//div[contains(text(),'Indented')]|xpath|true|
+|click;               |//span[contains(text(),'t$unique')]|xpath                                        |
+|check                |isElementPresent;                  |//*[contains(text(),'Edit')]      |xpath|true|
+|$editbuttonvisiblity=|isElementPresent;                  |//*[contains(text(),'Edit')]      |xpath     |
+*!
+
+!** Verify Edit Consignee after Primary Indent Creation
+!define consignee_name {dest$unique}
+
+!|Script                     |Ui                                                                                                  |
+|navigateToUrl;              |${surl}/indent/$order_id/0/edit                                                                     |
+|waitForElementToBeDisplayed;|//div[@class='add-block']                   |xpath                                       |30        |
+|mouseHover;                 |//span[contains(text(),'${consignee_name}')]|xpath                                                  |
+|mouseHover;                 |(//i[@class='el-tooltip action-row'] )[1]   |xpath                                                  |
+|check                       |isElementPresent;                           |//div[@role='tooltip']//div[text()='Delete']|xpath|true|
+|check                       |isElementNotPresent;                        |(//i[@class='el-tooltip action-row'] )[2]   |xpath|true|
+|$tresult=                   |isElementNotPresent;                        |(//i[@class='el-tooltip action-row'] )[2]   |xpath     |
+**!

@@ -1,0 +1,19 @@
+---
+Test
+---
+!|Script     |Http                                                                                       |
+|setBaseUrl; |${surl}/api/login                                                                          |
+|getResponse;|Application/Json|put             |{"data":{"email":"${username}","password":"${password}"}}|
+|$token=     |getHeader;      |x-auth-token                                                              |
+|addHeader;  |Authorization   |bearer $token                                                             |
+|setBaseUrl; |${surl}/api/consignee/$consignee_id                                                        |
+|$response=  |getResponse;    |Application/Json|get                           |                          |
+|$status=    |getStatusCode;                                                                             |
+
+!|Script            |json                                    |
+|$consignee_id=     |getValueFromJSON;|$response|data.id     |
+|$consignee_address=|getValueFromJSON;|$response|data.address|
+|$consignee_city=   |getValueFromJSON;|$response|data.city   |
+|$consignee_state=  |getValueFromJSON;|$response|data.state  |
+|$consignee_region= |getValueFromJSON;|$response|data.region |
+|$consignee_pincode=|getValueFromJSON;|$response|data.pincode|

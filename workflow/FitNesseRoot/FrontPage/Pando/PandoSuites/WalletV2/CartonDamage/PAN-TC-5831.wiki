@@ -1,0 +1,558 @@
+---
+Help: Carton Damage entry for FTL indents
+Suites: britannia
+Test
+---
+!** Unique values assignment
+!|Script       |DateUtil                               |
+|$unique=      |getCurrentDateTimeStamp;|yMMddHHmmss   |
+|$truckoutdate=|dateCalculation;        |yyyy/MM/dd |-1|
+|$rdate=       |dateCalculation;        |yyyy/MM/dd |0 |
+|$indate=      |getCurrentDateTimeStamp;|yyyy/MM/dd    |
+|$loadingDate= |getCurrentDateTimeStamp |iso           |
+|$loadingDate1=|getCurrentDateTimeStamp |iso           |
+|$loadingDate2=|getCurrentDateTimeStamp |iso           |
+|$loadingDate3=|getCurrentDateTimeStamp |iso           |
+|$contractDate=|dateCalculation;        |dd-MMM-yyyy|2 |
+
+!|Script       |Common                                         |
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer -!|
+|$rdate=       |stringConcatenation;|$rdate       |!- $timer -!|
+|$num=         |getRandomNumber;    |100000       |999999      |
+
+!|Script       |DateUtil                    |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=       |utcConversion;|$rdate       |
+**!
+
+!*** Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!| Script      |json                                          |
+|$depot_id=    |getValueFromJSON;|$depotResp|data.id          |
+|$depot_ref_id=|getValueFromJSON;|$depotResp|data.reference_id|
+
+!*** Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!*** Gate Creation one
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script       |json                                          |
+|$gate_id_1=    |getValueFromJSON;|$depotResp|data.id          |
+|$gate_ref_id_1=|getValueFromJSON;|$depotResp|data.reference_id|
+*!
+
+!*** Gate Creation two
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {RQ2$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script       |json                                          |
+|$gate_id_2=    |getValueFromJSON;|$depotResp|data.id          |
+|$gate_ref_id_2=|getValueFromJSON;|$depotResp|data.reference_id|
+*!
+
+!*** Gate Creation three
+!define depot_id {$depot}
+!define gate_name {Gate 3}
+!define gate_ref_id {RQ3$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G3$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script       |json                                          |
+|$gate_id_3=    |getValueFromJSON;|$depotResp|data.id          |
+|$gate_ref_id_3=|getValueFromJSON;|$depotResp|data.reference_id|
+*!
+*!
+
+!** Consignee Creation one
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Krishnan nager}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+**!
+
+!** Consignee Creation two
+!define consignee_name {c2$unique}
+!define consignee_ref_id {cr2$unique}
+!define address {Krishnan nager}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_2=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_2=|getTrim;|${consignee_ref_id}|
+**!
+
+!** Consignee Creation three
+!define consignee_name {c3$unique}
+!define consignee_ref_id {cr3$unique}
+!define address {Krishnan nager}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_3=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_3=|getTrim;|${consignee_ref_id}|
+**!
+
+!*** Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!*** Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Uploading Rate Matrix
+!define transit_days {2}
+!define ratec {1000}
+!define rtrip {per_trip}
+!define mrate {100}
+!define mfactor {1}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column1 {Point,$gate_ref_id_1,$consignee_id_ref_1,${vehicle_name},${transit_days},${transporter_ref_id},${transporter_name},${transit_days},1000,${rtrip},01-Jan-2019,$contractDate,1000,${mfactor},D}
+!define column2 {Point,$gate_ref_id_1,$consignee_id_ref_2,${vehicle_name},${transit_days},${transporter_ref_id},${transporter_name},${transit_days},2000,${rtrip},01-Jan-2019,$contractDate,2000,${mfactor},D}
+!define column3 {Point,$gate_ref_id_1,$consignee_id_ref_3,${vehicle_name},${transit_days},${transporter_ref_id},${transporter_name},${transit_days},3000,${rtrip},01-Jan-2019,$contractDate,3000,${mfactor},D}
+!define column4 {Point,$gate_ref_id_2,$consignee_id_ref_1,${vehicle_name},${transit_days},${transporter_ref_id},${transporter_name},${transit_days},4000,${rtrip},01-Jan-2019,$contractDate,4000,${mfactor},D}
+!define column5 {Point,$gate_ref_id_2,$consignee_id_ref_2,${vehicle_name},${transit_days},${transporter_ref_id},${transporter_name},${transit_days},5000,${rtrip},01-Jan-2019,$contractDate,5000,${mfactor},D}
+!define column6 {Point,$gate_ref_id_2,$consignee_id_ref_3,${vehicle_name},${transit_days},${transporter_ref_id},${transporter_name},${transit_days},6000,${rtrip},01-Jan-2019,$contractDate,6000,${mfactor},D}
+!define column7 {Point,$gate_ref_id_3,$consignee_id_ref_1,${vehicle_name},${transit_days},${transporter_ref_id},${transporter_name},${transit_days},7000,${rtrip},01-Jan-2019,$contractDate,7000,${mfactor},D}
+!define column8 {Point,$gate_ref_id_3,$consignee_id_ref_2,${vehicle_name},${transit_days},${transporter_ref_id},${transporter_name},${transit_days},8000,${rtrip},01-Jan-2019,$contractDate,8000,${mfactor},D}
+!define column9 {Point,$gate_ref_id_3,$consignee_id_ref_3,${vehicle_name},${transit_days},${transporter_ref_id},${transporter_name},${transit_days},9000,${rtrip},01-Jan-2019,$contractDate,9000,${mfactor},D}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.MultipleRateMatrix
+**!
+
+!** Material Creation 1
+!define material_name {m1$unique}
+!define material_code {mc1$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!** Material Creation 2
+!define material_name {m2$unique}
+!define material_code {mc2$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!** Material Creation 3
+!define material_name {m3$unique}
+!define material_code {mc3$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!** Material Creation 4
+!define material_name {m4$unique}
+!define material_code {mc4$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!** Material Creation 5
+!define material_name {m5$unique}
+!define material_code {mc5$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!** Material Creation 6
+!define material_name {m6$unique}
+!define material_code {mc6$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!** Material Creation 7
+!define material_name {m7$unique}
+!define material_code {mc7$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!** Material Creation 8
+!define material_name {m8$unique}
+!define material_code {mc8$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!** Material Creation 9
+!define material_name {m9$unique}
+!define material_code {mc9$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define gate_id_1 {$gate_id_1}
+!define gate_id_2 {$gate_id_2}
+!define gate_id_3 {$gate_id_3}
+!define vehicle_requirement_date_1 {$loadingDate}
+!define vehicle_requirement_date_2 {$loadingDate}
+!define vehicle_requirement_date_3 {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define unloader_available {false}
+!define destination_location_id_1 {$consignee_id_1}
+!define sold_to_id_1 {$consignee_id_1}
+!define expected_delivery_at_1 {$expected_date}
+!define destination_location_id_2 {$consignee_id_2}
+!define sold_to_id_2 {$consignee_id_2}
+!define expected_delivery_at_2 {$expected_date}
+!define destination_location_id_3 {$consignee_id_3}
+!define sold_to_id_3 {$consignee_id_3}
+!define expected_delivery_at_3 {$expected_date}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationMultiConsigneeMutliGateAPI
+**!
+
+!** validating and Assinging The Truck
+!define vechicle_number {tn 09 AT 9013}
+!define driver_name  {pay driver}
+!define phone_number  {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+**!
+
+!** Material upload for all consingee
+!define erp_depo_id_api {$depot_ref_id}
+!define erp_gate_id_api_1 {$gate_ref_id_1}
+!define erp_gate_id_api_2 {$gate_ref_id_2}
+!define erp_gate_id_api_3 {$gate_ref_id_3}
+!define material_code_1 {mc1$unique}
+!define material_code_2 {mc2$unique}
+!define material_code_3 {mc3$unique}
+!define material_code_4 {mc4$unique}
+!define material_code_5 {mc5$unique}
+!define material_code_6 {mc6$unique}
+!define material_code_7 {mc7$unique}
+!define material_code_8 {mc8$unique}
+!define material_code_9 {mc9$unique}
+!define mrp_price_1 {1000}
+!define mrp_price_2 {2000}
+!define mrp_price_3 {3000}
+!define mrp_price_4 {4000}
+!define mrp_price_5 {5000}
+!define mrp_price_6 {6000}
+!define mrp_price_7 {7000}
+!define mrp_price_8 {8000}
+!define mrp_price_9 {9000}
+!define quantity1 {10} 
+!define quantity2 {20} 
+!define quantity3 {30}
+!define quantity4 {40} 
+!define quantity5 {50} 
+!define quantity6 {60}
+!define quantity7 {70} 
+!define quantity8 {80} 
+!define quantity9 {90}
+!define quantity_unit_1 {BOX}
+!define quantity_unit_2 {BOX}
+!define quantity_unit_3 {BOX}
+!define quantity_unit_4 {BOX}
+!define quantity_unit_5 {BOX}
+!define quantity_unit_6 {BOX}
+!define quantity_unit_7 {BOX}
+!define quantity_unit_8 {BOX}
+!define quantity_unit_9 {BOX}
+!define weight_1 {100}
+!define weight_2 {200}
+!define weight_3 {300}
+!define weight_4 {400}
+!define weight_5 {500}
+!define weight_6 {600}
+!define weight_7 {700}
+!define weight_8 {800}
+!define weight_9 {900}
+!define weight_unit_1 {KG}
+!define weight_unit_2 {KG}
+!define weight_unit_3 {KG}
+!define weight_unit_4 {KG}
+!define weight_unit_5 {KG}
+!define weight_unit_6 {KG}
+!define weight_unit_7 {KG}
+!define weight_unit_8 {KG}
+!define weight_unit_9 {KG}
+!define volume_1 {10}
+!define volume_2 {20}
+!define volume_3 {30}
+!define volume_4 {40}
+!define volume_5 {50}
+!define volume_6 {60}
+!define volume_7 {70}
+!define volume_8 {80}
+!define volume_9 {90}
+!define volume_unit_1 {CFT}
+!define volume_unit_2 {CFT}
+!define volume_unit_3 {CFT}
+!define volume_unit_4 {CFT}
+!define volume_unit_5 {CFT}
+!define volume_unit_6 {CFT}
+!define volume_unit_7 {CFT}
+!define volume_unit_8 {CFT}
+!define volume_unit_9 {CFT}
+!define invoice_amount_1 {10000}
+!define invoice_amount_2 {15000}
+!define invoice_amount_3 {20000}
+!define invoice_amount_4 {25000}
+!define invoice_amount_5 {30000}
+!define invoice_amount_6 {35000}
+!define invoice_amount_7 {40000}
+!define invoice_amount_8 {45000}
+!define invoice_amount_9 {50000}
+!define invoice_number_1 {INV1-$unique}
+!define invoice_number_2 {INV4-$unique}
+!define invoice_number_3 {INV7-$unique}
+!define invoice_number_4 {INV2-$unique}
+!define invoice_number_5 {INV5-$unique}
+!define invoice_number_6 {INV8-$unique}
+!define invoice_number_7 {INV3-$unique}
+!define invoice_number_8 {INV6-$unique}
+!define invoice_number_9 {INV9-$unique}
+!define quantity_unit {cases}
+!define weight {10}
+!define weight_unit {KG}
+!define volume {1}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price_1}","material_code":"${material_code_1}","depot_ref_id":"${erp_depo_id_api}","gate_ref_id":"${erp_gate_id_api_1}","division":"DIV1$unique","quantity":"${quantity1}","quantity_unit":"${quantity_unit_1}","weight":"${weight_1}","weight_unit":"${weight_unit_1}","volume":"${volume_1}","volume_unit":"${volume_unit_1}","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","type":"${type}","invoice_number":"${invoice_number_1}","invoice_amount":"${invoice_amount_1}","invoice_date":"${invoice_date}","category":"","truck_out":"${truck_out}","shipment_number":"ship$unique"},{"indent_no":"$order_id","delivery_number":"D4$unique","mrp_price":"${mrp_price_4}","material_code":"${material_code_4}","depot_ref_id":"${erp_depo_id_api}","gate_ref_id":"${erp_gate_id_api_1}","division":"DIV4$unique","quantity":"${quantity4}","quantity_unit":"${quantity_unit_4}","weight":"${weight_4}","weight_unit":"${weight_unit_4}","volume":"${volume_4}","volume_unit":"${volume_unit_4}","ship_to":"$consignee_id_ref_2","sold_to":"$consignee_id_ref_2","type":"${type}","invoice_number":"${invoice_number_4}","invoice_amount":"${invoice_amount_4}","invoice_date":"${invoice_date}","category":"","truck_out":"${truck_out}","shipment_number":"ship$unique"},{"indent_no":"$order_id","delivery_number":"D7$unique","mrp_price":"${mrp_price_7}","material_code":"${material_code_7}","depot_ref_id":"${erp_depo_id_api}","gate_ref_id":"${erp_gate_id_api_1}","division":"DIV7$unique","quantity":"${quantity7}","quantity_unit":"${quantity_unit_7}","weight":"${weight_7}","weight_unit":"${weight_unit_7}","volume":"${volume_7}","volume_unit":"${volume_unit_7}","ship_to":"$consignee_id_ref_3","sold_to":"$consignee_id_ref_3","type":"${type}","invoice_number":"${invoice_number_7}","invoice_amount":"${invoice_amount_7}","invoice_date":"${invoice_date}","category":"","truck_out":"${truck_out}","shipment_number":"ship$unique"},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"${mrp_price_2}","material_code":"${material_code_2}","depot_ref_id":"${erp_depo_id_api}","gate_ref_id":"${erp_gate_id_api_2}","division":"DIV2$unique","quantity":"${quantity2}","quantity_unit":"${quantity_unit_2}","weight":"${weight_2}","weight_unit":"${weight_unit_2}","volume":"${volume_2}","volume_unit":"${volume_unit_2}","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","type":"${type}","invoice_number":"${invoice_number_2}","invoice_amount":"${invoice_amount_2}","invoice_date":"${invoice_date}","category":"","truck_out":"${truck_out}","shipment_number":"ship$unique"},{"indent_no":"$order_id","delivery_number":"D5$unique","mrp_price":"${mrp_price_5}","material_code":"${material_code_5}","depot_ref_id":"${erp_depo_id_api}","gate_ref_id":"${erp_gate_id_api_2}","division":"DIV5$unique","quantity":"${quantity5}","quantity_unit":"${quantity_unit_5}","weight":"${weight_5}","weight_unit":"${weight_unit_5}","volume":"${volume_5}","volume_unit":"${volume_unit_5}","ship_to":"$consignee_id_ref_2","sold_to":"$consignee_id_ref_2","type":"${type}","invoice_number":"${invoice_number_5}","invoice_amount":"${invoice_amount_5}","invoice_date":"${invoice_date}","category":"","truck_out":"${truck_out}","shipment_number":"ship$unique"},{"indent_no":"$order_id","delivery_number":"D8$unique","mrp_price":"${mrp_price_8}","material_code":"${material_code_8}","depot_ref_id":"${erp_depo_id_api}","gate_ref_id":"${erp_gate_id_api_2}","division":"DIV8$unique","quantity":"${quantity8}","quantity_unit":"${quantity_unit_8}","weight":"${weight_8}","weight_unit":"${weight_unit_8}","volume":"${volume_8}","volume_unit":"${volume_unit_8}","ship_to":"$consignee_id_ref_3","sold_to":"$consignee_id_ref_3","type":"${type}","invoice_number":"${invoice_number_8}","invoice_amount":"${invoice_amount_8}","invoice_date":"${invoice_date}","category":"","truck_out":"${truck_out}","shipment_number":"ship$unique"},{"indent_no":"$order_id","delivery_number":"D3$unique","mrp_price":"${mrp_price_3}","material_code":"${material_code_3}","depot_ref_id":"${erp_depo_id_api}","gate_ref_id":"${erp_gate_id_api_3}","division":"DIV3$unique","quantity":"${quantity3}","quantity_unit":"${quantity_unit_3}","weight":"${weight_3}","weight_unit":"${weight_unit_3}","volume":"${volume_3}","volume_unit":"${volume_unit_3}","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","type":"${type}","invoice_number":"${invoice_number_3}","invoice_amount":"${invoice_amount_3}","invoice_date":"${invoice_date}","category":"","truck_out":"${truck_out}","shipment_number":"ship$unique"},{"indent_no":"$order_id","delivery_number":"D6$unique","mrp_price":"${mrp_price_6}","material_code":"${material_code_6}","depot_ref_id":"${erp_depo_id_api}","gate_ref_id":"${erp_gate_id_api_3}","division":"DIV6$unique","quantity":"${quantity6}","quantity_unit":"${quantity_unit_6}","weight":"${weight_6}","weight_unit":"${weight_unit_6}","volume":"${volume_6}","volume_unit":"${volume_unit_6}","ship_to":"$consignee_id_ref_2","sold_to":"$consignee_id_ref_2","type":"${type}","invoice_number":"${invoice_number_6}","invoice_amount":"${invoice_amount_6}","invoice_date":"${invoice_date}","category":"","truck_out":"${truck_out}","shipment_number":"ship$unique"},{"indent_no":"$order_id","delivery_number":"D9$unique","mrp_price":"${mrp_price_9}","material_code":"${material_code_9}","depot_ref_id":"${erp_depo_id_api}","gate_ref_id":"${erp_gate_id_api_3}","division":"DIV9$unique","quantity":"${quantity9}","quantity_unit":"${quantity_unit_9}","weight":"${weight_9}","weight_unit":"${weight_unit_9}","volume":"${volume_9}","volume_unit":"${volume_unit_9}","ship_to":"$consignee_id_ref_3","sold_to":"$consignee_id_ref_3","type":"${type}","invoice_number":"${invoice_number_9}","invoice_amount":"${invoice_amount_9}","invoice_date":"${invoice_date}","category":"","truck_out":"${truck_out}","shipment_number":"ship$unique"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** EPOD Calculation
+!define material_code_1 {mc1$unique}
+!define material_code_2 {mc2$unique}
+!define material_code_3 {mc3$unique}
+!define material_code_4 {mc4$unique}
+!define material_code_5 {mc5$unique}
+!define material_code_6 {mc6$unique}
+!define material_code_7 {mc7$unique}
+!define material_code_8 {mc8$unique}
+!define material_code_9 {mc9$unique}
+!define no_of_shortage_1 {0}
+!define no_of_shortage_2 {0}
+!define no_of_shortage_3 {0}
+!define no_of_shortage_4 {0}
+!define no_of_shortage_5 {0}
+!define no_of_shortage_6 {0}
+!define no_of_shortage_7 {0}
+!define no_of_shortage_8 {0}
+!define no_of_shortage_9 {0}
+!define no_of_leakage_1 {0}
+!define no_of_leakage_2 {0}
+!define no_of_leakage_3 {0}
+!define no_of_leakage_4 {0}
+!define no_of_leakage_5 {0}
+!define no_of_leakage_6 {0}
+!define no_of_leakage_7 {0}
+!define no_of_leakage_8 {0}
+!define no_of_leakage_9 {0}
+!define no_of_excess_1 {0}
+!define no_of_excess_2 {0}
+!define no_of_excess_3 {0} 
+!define no_of_excess_4 {0}
+!define no_of_excess_5 {0}
+!define no_of_excess_6 {0} 
+!define no_of_excess_7 {0}
+!define no_of_excess_8 {0}
+!define no_of_excess_9 {0} 
+!define no_of_damage_1 {0}
+!define no_of_damage_2 {0}
+!define no_of_damage_3 {0}
+!define no_of_damage_4 {0}
+!define no_of_damage_5 {0}
+!define no_of_damage_6 {0}
+!define no_of_damage_7 {0}
+!define no_of_damage_8 {0}
+!define no_of_damage_9 {0}
+!define no_of_carton_damage_1 {1}
+!define no_of_carton_damage_2 {2}
+!define no_of_carton_damage_3 {3}
+!define no_of_carton_damage_4 {4}
+!define no_of_carton_damage_5 {5}
+!define no_of_carton_damage_6 {6}
+!define no_of_carton_damage_7 {7}
+!define no_of_carton_damage_8 {8}
+!define no_of_carton_damage_9 {9}
+!define mrp_price_1 {1000}
+!define mrp_price_2 {2000}
+!define mrp_price_3 {3000}
+!define mrp_price_4 {4000}
+!define mrp_price_5 {5000}
+!define mrp_price_6 {6000}
+!define mrp_price_7 {7000}
+!define mrp_price_8 {8000}
+!define mrp_price_9 {9000}
+!define invoice_number_1 {INV1-$unique}
+!define invoice_number_2 {INV4-$unique}
+!define invoice_number_3 {INV7-$unique}
+!define invoice_number_4 {INV2-$unique}
+!define invoice_number_5 {INV5-$unique}
+!define invoice_number_6 {INV8-$unique}
+!define invoice_number_7 {INV3-$unique}
+!define invoice_number_8 {INV6-$unique}
+!define invoice_number_9 {INV9-$unique}
+!define release_date_1 {$rdate}
+!define release_date_2 {$rdate}
+!define release_date_3 {$rdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"${invoice_number_1}","material_code":"${material_code_1}","no_of_shortage":"${no_of_shortage_1}","no_of_leakage":"${no_of_leakage_1}","mrp":"${mrp_price_1}","no_of_excess":"${no_of_excess_1}","no_of_damage":"${no_of_damage_1}","no_of_carton_damage":"${no_of_carton_damage_1}","release_date":"${release_date_1}","shipment_number":"ship$unique"},{"indent_number":"$order_id","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"${invoice_number_2}","material_code":"${material_code_2}","no_of_shortage":"${no_of_shortage_2}","no_of_leakage":"${no_of_leakage_2}","mrp":"${mrp_price_2}","no_of_excess":"${no_of_excess_2}","no_of_damage":"${no_of_damage_2}","no_of_carton_damage":"${no_of_carton_damage_2}","release_date":"${release_date_1}","shipment_number":"ship$unique"},{"indent_number":"$order_id","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"${invoice_number_3}","material_code":"${material_code_3}","no_of_shortage":"${no_of_shortage_3}","no_of_leakage":"${no_of_leakage_3}","mrp":"${mrp_price_3}","no_of_excess":"${no_of_excess_3}","no_of_damage":"${no_of_damage_3}","no_of_carton_damage":"${no_of_carton_damage_3}","release_date":"${release_date_1}","shipment_number":"ship$unique"},{"indent_number":"$order_id","ship_to":"$consignee_id_ref_2","sold_to":"$consignee_id_ref_2","material_invoice_number":"${invoice_number_4}","material_code":"${material_code_4}","no_of_shortage":"${no_of_shortage_4}","no_of_leakage":"${no_of_leakage_4}","mrp":"${mrp_price_4}","no_of_excess":"${no_of_excess_4}","no_of_damage":"${no_of_damage_4}","no_of_carton_damage":"${no_of_carton_damage_4}","release_date":"${release_date_2}","shipment_number":"ship$unique"},{"indent_number":"$order_id","ship_to":"$consignee_id_ref_2","sold_to":"$consignee_id_ref_2","material_invoice_number":"${invoice_number_5}","material_code":"${material_code_5}","no_of_shortage":"${no_of_shortage_5}","no_of_leakage":"${no_of_leakage_5}","mrp":"${mrp_price_5}","no_of_excess":"${no_of_excess_5}","no_of_damage":"${no_of_damage_5}","no_of_carton_damage":"${no_of_carton_damage_5}","release_date":"${release_date_2}","shipment_number":"ship$unique"},{"indent_number":"$order_id","ship_to":"$consignee_id_ref_2","sold_to":"$consignee_id_ref_2","material_invoice_number":"${invoice_number_6}","material_code":"${material_code_6}","no_of_shortage":"${no_of_shortage_6}","no_of_leakage":"${no_of_leakage_6}","mrp":"${mrp_price_6}","no_of_excess":"${no_of_excess_6}","no_of_damage":"${no_of_damage_6}","no_of_carton_damage":"${no_of_carton_damage_6}","release_date":"${release_date_2}","shipment_number":"ship$unique"},{"indent_number":"$order_id","ship_to":"$consignee_id_ref_3","sold_to":"$consignee_id_ref_3","material_invoice_number":"${invoice_number_7}","material_code":"${material_code_7}","no_of_shortage":"${no_of_shortage_7}","no_of_leakage":"${no_of_leakage_7}","mrp":"${mrp_price_7}","no_of_excess":"${no_of_excess_7}","no_of_damage":"${no_of_damage_7}","no_of_carton_damage":"${no_of_carton_damage_7}","release_date":"${release_date_3}","shipment_number":"ship$unique"},{"indent_number":"$order_id","ship_to":"$consignee_id_ref_3","sold_to":"$consignee_id_ref_3","material_invoice_number":"${invoice_number_8}","material_code":"${material_code_8}","no_of_shortage":"${no_of_shortage_8}","no_of_leakage":"${no_of_leakage_8}","mrp":"${mrp_price_8}","no_of_excess":"${no_of_excess_8}","no_of_damage":"${no_of_damage_8}","no_of_carton_damage":"${no_of_carton_damage_8}","release_date":"${release_date_3}","shipment_number":"ship$unique"},{"indent_number":"$order_id","ship_to":"$consignee_id_ref_3","sold_to":"$consignee_id_ref_3","material_invoice_number":"${invoice_number_9}","material_code":"${material_code_9}","no_of_shortage":"${no_of_shortage_9}","no_of_leakage":"${no_of_leakage_9}","mrp":"${mrp_price_9}","no_of_excess":"${no_of_excess_9}","no_of_damage":"${no_of_damage_9}","no_of_carton_damage":"${no_of_carton_damage_9}","release_date":"${release_date_3}","shipment_number":"ship$unique"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!** Validating Wallet entries in Shipper
+!define wallet_reason {Carton Damage}
+!define wallet_amount {1350.00}
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.WalletValidationShipper
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row') or contains(@class,'card-row row') or @class='emptytext']|xpath                                                                                                                                                                                                                 |15        |
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]                                                                                                                                                                                     |xpath|true|
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']                                                                                           |xpath|true|
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']//parent::span//parent::div//following-sibling::div//*[contains(text(),'${wallet_amount}')]|xpath|true|
+|$tresult=                   |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']//parent::span//parent::div//following-sibling::div//*[contains(text(),'${wallet_amount}')]|xpath     |
+**!
+
+!** Transporter login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+
+!include -c  .FrontPage.Pando.Common.TransporterLogin
+**!
+
+!** Validating Wallet entries in Transporter
+!define wallet_reason {Carton Damage}
+!define wallet_amount {1350.00}
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.WalletValidationTransporter
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row') or contains(@class,'card-row row') or @class='emptytext']|xpath                                                                                                                                                                                                                 |15        |
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]                                                                                                                                                                                     |xpath|true|
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']                                                                                           |xpath|true|
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']//parent::span//parent::div//following-sibling::div//*[contains(text(),'${wallet_amount}')]|xpath|true|
+|$tresult=                   |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']//parent::span//parent::div//following-sibling::div//*[contains(text(),'${wallet_amount}')]|xpath     |
+**!
+
+!** Logout Transporter
+!include -c .FrontPage.Pando.Common.TransporterLogout
+**!

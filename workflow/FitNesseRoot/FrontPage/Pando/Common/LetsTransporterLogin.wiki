@@ -1,0 +1,13 @@
+---
+Help: Use to login to LetsTransporter
+---
+!** Transporter login Page
+!|Script       |Ui                                                                                                                  |
+|initialize;   |${browser}                                                      |en-us                                              |
+|launchBrowser;|${turl}/login                                                                                                       |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                             |xpath|20         |
+|sendKeys;     |//label[contains(text(),'User name:')]//preceding-sibling::input|xpath                      |${transporter_username}|
+|sendKeys;     |//label[contains(text(),'Password:')]//preceding-sibling::input |xpath                      |${transporter_password}|
+|click;        |//button[@type='button']                                        |xpath                                              |
+|check         |isElementPresent;                                               |//h1[@class='account-name']|xpath       |true      |
+**!

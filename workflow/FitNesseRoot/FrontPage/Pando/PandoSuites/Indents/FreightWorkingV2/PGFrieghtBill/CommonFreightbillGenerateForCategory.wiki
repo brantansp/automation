@@ -1,0 +1,10 @@
+!|script                     |ui                                                                                                                                                      |
+|navigateToUrl;              |${turl}/v2/freight                                                                                                                                      |
+|click;                      |//span[text()='${fb_category}']                                         |xpath                                                                          |
+|waitForElementToBeDisplayed;|//div[@class='el-table__fixed']//span[contains(text(),'${fb_order_id}')]|xpath                                                                    |20   |
+|$total_freight_bill_amount= |getText;                                                                |//div[contains(@class,'el-table__fixed-right')]//div[@class='totalvalue']|xpath|
+|click;                      |//*[contains(text(),'Summary')]                                         |xpath                                                                          |
+|$total_invoice_value=       |getText;                                                                |//div[text()='TOTAL INVOICE VALUE']/../following-sibling::div            |xpath|
+|click;                      |//*[contains(text(),'Generate Invoice')]                                |xpath                                                                          |
+|click;                      |//button/span[normalize-space(text())='YES'] |xpath                                                                               |
+|waitUntilElementDisplayed;|//span[text()='Invoice created successfully.']                          |xpath                                                                    |30   |

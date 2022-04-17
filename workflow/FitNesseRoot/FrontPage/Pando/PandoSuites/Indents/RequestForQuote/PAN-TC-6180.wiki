@@ -1,0 +1,160 @@
+---
+Help: Ensure if all transporter withdraw bid - indent moved to cancelled status.
+Suites: oel2
+Test
+---
+!** Unique values assignment
+!|Script |Common                                |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss  |
+|$num=   |getRandomNumber;        |100000|999999|
+**!
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-4|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-3|
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0 |
+|$cdate=       |dateCalculation;|yyyy/MM/dd |1 |
+
+
+
+!|Script       |Common                                         |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer -!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer -!|
+|$rdate=       |stringConcatenation;|$rdate       |!- $timer -!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=       |utcConversion;|$rdate       |
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Thanesar Road}
+!define city {Thanesar}
+!define state {Haryana}
+!define pincode {120100}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@outlook.com}
+!define region {North}
+!define site {2}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Transporter Creation
+!define transporter_name {t1$unique}
+!define transporter_ref_id {tr1$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+1$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationSignifyAPI
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+
+!|Script           |Common                  |
+|$transporter_id_1=|getTrim;|$transporter_id|
+
+!|script     |common            |
+|$tpassword1=|getTrim;|$password|
+**!
+
+
+
+!** Transporter Creation 2
+!define transporter_name {t2$unique}
+!define transporter_ref_id {tr2$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager2 $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+2$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationSignifyAPI
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+
+!|Script           |Common                  |
+|$transporter_id_2=|getTrim;|$transporter_id|
+
+
+!|script     |common            |
+|$tpassword2=|getTrim;|$password|
+**!
+
+
+!** Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Indent Creation
+
+!** Static Depo => DEPO BID TEST , Static Gate => Gate BID Test
+!|Script  |Common                           |
+|$depot=  |getTrim;|5fd9b3aeedd9130051fd95aa|
+|$gate_id=|getTrim;|5fd9b3ffa463b800510588f1|
+**!
+
+!|Script|Common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|$data= |getTrim;|{"data":{"order_type":1,"transporter_id":"","vehicle_type_id":"$vehicle_id","sources":[{"type":1,"location_id":"$depot","gate_id":"$gate_id","vehicle_requirement_date":"$loadingDate","loader_available":false,"add_to_invoice":false}],"destinations":[{"type":2,"location_id":"$consignee_id","source_location_id":"$depot","source_gate_id":"$gate_id","sold_to_id":"$consignee_id","unloader_available":true,"add_to_invoice":true,"expected_delivery_at":"$expected_date"}],"no_of_vehicles":1,"freight_rate":0,"freight_unit":1,"rfq":true,"transporter_ids":["$transporter_id_1","$transporter_id_2"]}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+**!
+
+!** Bids quotes from rejected transporter 1 and 2
+!|Script     |DateUtil                                    |
+|$arrival_at=|getCurrentDateTimeStamp;|yyyy/MM/dd HH:mm:ss|
+|$arrival_at=|utcConversion;          |$arrival_at        |
+
+!define vehicle_type_id {$vehicle_id}
+
+!define tusername {pandotransporter+1$unique@outlook.com}
+!define tpassword {$tpassword1}
+
+!|Script|Common                                                                                |
+|$data= |getTrim;|{"data":{"status":5,"arrival_at":"$arrival_at","vehicle_type":"$vehicle_id"}}|
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqStatusDynamic
+
+!define tusername {pandotransporter+2$unique@outlook.com}
+!define tpassword {$tpassword2}
+
+!|Script|Common                                                                                |
+|$data= |getTrim;|{"data":{"status":5,"arrival_at":"$arrival_at","vehicle_type":"$vehicle_id"}}|
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqStatusDynamic
+**!
+
+!** DEPO Filter
+!define depot_selection {DEPO BID Test}
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!define search_text {$order_id}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+*!
+
+!** Validate Cancelled Status
+!|Script |Ui                                                                                              |
+|$result=|getText;|//span[contains(text(),'$order_id')]/following::div[@class='order-status-button']|xpath|
+
+!|Script  |Common                                       |
+|check    |checkIfStringAreEqual;|$result|CANCELLED|true|
+|$tresult=|checkIfStringAreEqual;|$result|CANCELLED     |
+*!
+
+ 

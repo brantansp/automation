@@ -1,0 +1,27 @@
+---
+Help: SCN5_Do Not Combine Fix - combining materials
+Test
+---
+!|script       |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!|script       |CsvQuery                                                                                                                            |
+|getConnection;|$fileLocation|,                                                                                                                     |
+|$tresult1=    |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE File LIKE 'scn5_%' AND Consignee = '0000001220:'|noOfOccurrences|
+|$tresult2=    |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE File LIKE 'scn5_%' AND Consignee = '0000011187:'|noOfOccurrences|
+|$tresult3=    |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE File LIKE 'scn5_%' AND Consignee = '0000016172:'|noOfOccurrences|
+|$tresult4=    |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE File LIKE 'scn5_%' AND Consignee = '0000024957:'|noOfOccurrences|
+|closeConnection;                                                                                                                                   |
+
+!|script   |common                                                               |
+|check     |checkIfStringAreEqual;       |$tresult1       |1       |true       |
+|check     |checkIfStringAreEqual;       |$tresult2       |1       |true       |
+|check     |checkIfStringAreEqual;       |$tresult3       |1       |true       |
+|check     |checkIfStringAreEqual;       |$tresult4       |1       |true       |
+|$tresult1=|checkIfStringAreEqual;       |$tresult1       |1                  |
+|$tresult2=|checkIfStringAreEqual;       |$tresult2       |1                   |
+|$tresult3=|checkIfStringAreEqual;       |$tresult3       |1                   |
+|$tresult4=|checkIfStringAreEqual;       |$tresult4       |1                   |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4|
+
+ 

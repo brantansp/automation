@@ -1,0 +1,79 @@
+---
+Help: Adding transporter logo in transporter profile
+Suites: oel4
+Test
+---
+!*** Unique values assignment
+
+!| Script  |Common                                       |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$cGroup=  |getRandomString;        |5        |ALPHAUPPER|
+|$vno_1=   |getRandomNumber;        |20       |76        |
+|$vno_2=   |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=   |getRandomNumber;        |1000     |9999      |
+|$currDate=|getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique|0   |4    |
+|$today=   |getSubString;           |$currDate|0   |10   |
+|$num=     |getRandomNumber;        |100000   |999999    |
+
+!| Script      |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |0 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |0 |
+
+!| Script      |Common                                          |
+|$truckindate= |stringConcatenation;|$truckindate |!- 10:00:00-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- 00:00:00-!|
+|$rdate=       |stringConcatenation;|$rdate       |!- 10:00:00-!|
+
+!| Script               |DateUtil                      |
+|$loadingDate=          |utcConversion;  |$loadingDate |
+|$truckindate=          |utcConversion;  |$truckindate |
+|$truckoutdate=         |utcConversion;  |$truckoutdate|
+|$invoice_filter_date=  |dateCalculation;|yyyy-MM-dd |0|
+|$voucher_filter_todate=|dateCalculation;|yyyy-MM-dd |1|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!*** Transporter Creation for Indent
+
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationSignifyAPI
+*!
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!|Script   |Common                                        |
+|$logopath=|getPath;|FitNesseRoot/files/testAttachment/pandologo.jpg|fullpath|
+
+
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+!** Upload logo in profile Page
+!include -c .FrontPage.Pando.Common.TransporterLogin
+
+!|script                     |ui                                                                                                                                          |
+|navigateToUrl;              |${turl}/profile                                                                                                                             |
+|waitForElementToBeDisplayed;|//div[contains(@class,'profile-name')]                          |xpath                                                           |20        |
+|click;                      |//div[contains(@class,'profile-name')]                          |xpath                                                                      |
+|waitForElementToBeDisplayed;|//span[contains(text(),'Click or drag the file here to upload')]|xpath                                                           |20        |
+|check                       |isElementPresent;                                               |//span[contains(text(),'Click or drag the file here to upload')]|xpath|true|
+|sendKeys;                   |//input[@type='file']                                           |xpath                                                           |$logopath |
+|wait;                       |3                                                                                                                                           |
+|click;                      |//div//a[contains(text(), 'Save')]                              |xpath                                                                      |
+|waitForElementToBeDisplayed;|//div//img                                                      |xpath                                                           |20        |
+|$tresult=                   |isElementPresent;                                               |//div//img                                                      |xpath     |
+**!

@@ -1,0 +1,6 @@
+---
+Help: Folder to keep the retired cases
+Suite
+---
+!1 Test suite Trash
+!contents -R2 -g -p -f -h

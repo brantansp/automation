@@ -1,0 +1,9 @@
+---
+Help: To set vehicle utilisation for PG
+Test
+---
+!|Script                       |Http                                                                      |
+|addHeader;                    |Authorization          |bearer $stoken                                    |
+|setBaseUrl;                   |${surl}/api/vehicle_utilization_threshold/$vehicle_id?movement=${movement}|
+|$utilisation_setting_response=|getResponse;           |Application/Json        |put        |$data        |
+|check                         |getStatusCode;         |200                                               |

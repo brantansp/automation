@@ -1,0 +1,12 @@
+---
+Help: Use to delete transporter user
+Test
+---
+!| Script    |Http                                                                            |
+|setBaseUrl; |${turl}/api/login                                                               |
+|getResponse;|Application/Json|put|{"data":{"email":"${tusername}","password":"${tpassword}"}}|
+|$token=     |getHeader;      |x-auth-token                                                   |
+|addHeader;  |Authorization   |bearer $token                                                  |
+|setBaseUrl; |${turl}/api/transporter/remove_users                                            |
+|getResponse;|Application/Json|put|{"data":{"user_ids":["${transporter_user_id}"]}}           |
+|$status=    |getStatusCode;                                                                  |

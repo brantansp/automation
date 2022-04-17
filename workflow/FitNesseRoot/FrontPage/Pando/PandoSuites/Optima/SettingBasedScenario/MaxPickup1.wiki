@@ -1,0 +1,7 @@
+---
+Help: Maximum pickup 1
+Suite
+Suites: optscn2
+---
+!1 Test suite for Maxpickup 1
+!contents -R2 -g -p -f -h

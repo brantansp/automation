@@ -1,0 +1,6 @@
+---
+Help: Contains test cases for delivery picklist reatin
+Suite
+---
+!1 Test suite Delivery picklist validation
+!contents -R2 -g -p -f -h

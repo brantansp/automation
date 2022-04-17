@@ -1,0 +1,9 @@
+!|Script                     |Ui                                                                                       |
+|navigateToUrl;              |${turl}/v2/payments                                                                      |
+|wait;                       |3                                                                                        |
+|click;                      |//span[text()='Search']                                                  |xpath          |
+|waitForElementToBeDisplayed;|//input[@placeholder='Enter Indent ID' or @placeholder='Enter indent id']|xpath|30       |
+|clearAndSend;               |//input[@placeholder='Enter Indent ID' or @placeholder='Enter indent id']|xpath|$order_id|
+|wait;                       |2                                                                                        |
+|mouseClick;                 |//button[text()='Search']                                                |xpath          |
+

@@ -1,0 +1,6 @@
+---
+Suite
+Suites: allreg
+---
+!1 Test suite DM Client
+!contents -R2 -g -p -f -h

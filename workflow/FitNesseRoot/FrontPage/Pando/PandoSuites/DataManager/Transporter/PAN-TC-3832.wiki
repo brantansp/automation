@@ -1,0 +1,50 @@
+---
+Help: Transporter Bulk Upload
+Suites: sanity3, dm2
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Uploading Consignee Bulk Upload
+!define row {Transporter Name*,Reference ID*,Manager,Representative Mobile,Representative Email*,Address,City,State,Postal Code,Gst type(FCM/RCM)*,Percentage*,GST State,GSTIN,GST Reference ID,Credit Period,MSME,PAN Number,Status}
+!define column1 {tbulk1$unique,t1$unique refrence,t1 $unique,123,pandotransporter+1$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,FCM,20,Tamil Nadu,10,123456789012,,,,Active}
+!define column2 {tbulk2$unique,t2$unique refrence,t2 $unique,12891,pandotransporter+2$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,FCM,20,Tamil Nadu,10,123456789012,,,,Active}
+!define column3 {tbulk3$unique,t3$unique refrence,t3 $unique,12892,pandotransporter+3$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,RCM,20,Tamil Nadu,10,123456789012,,,,Active}
+!define column4 {tbulk4$unique,t4$unique refrence,t4 $unique,12893,pandotransporter+4$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,RCM,20,Tamil Nadu,10,123456789012,,,,Active}
+!define column5 {tbulk5$unique,t5$unique refrence,t5 $unique,12894,pandotransporter+5$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,RCM,20,Tamil Nadu,10,123456789012,,,,Active}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+!|Script       |Excel                                                                   |
+|multiNewSheet;|${row}|${column1}|${column2}|${column3}|${column4}|${column5}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/transporter                                         |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |300       |
+
+!define search_field {Enter Transporter Name}
+!define search_text {$unique}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonTransporterSearchInDataManager
+
+!|Script   |Ui                                                                   |
+|check     |isElementPresent;|//span[contains(text(),'tbulk1$unique')]|xpath|true|
+|$tresult1=|isElementPresent;|//span[contains(text(),'tbulk1$unique')]|xpath     |
+|check     |isElementPresent;|//span[contains(text(),'tbulk2$unique')]|xpath|true|
+|$tresult2=|isElementPresent;|//span[contains(text(),'tbulk2$unique')]|xpath     |
+|check     |isElementPresent;|//span[contains(text(),'tbulk3$unique')]|xpath|true|
+|$tresult3=|isElementPresent;|//span[contains(text(),'tbulk3$unique')]|xpath     |
+|check     |isElementPresent;|//span[contains(text(),'tbulk4$unique')]|xpath|true|
+|$tresult4=|isElementPresent;|//span[contains(text(),'tbulk4$unique')]|xpath     |
+|check     |isElementPresent;|//span[contains(text(),'tbulk5$unique')]|xpath|true|
+|$tresult5=|isElementPresent;|//span[contains(text(),'tbulk5$unique')]|xpath     |
+
+!|Script  |Common                                                                         |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5|
+**!

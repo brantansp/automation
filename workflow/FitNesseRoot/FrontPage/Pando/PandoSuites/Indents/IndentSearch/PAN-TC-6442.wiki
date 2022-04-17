@@ -1,0 +1,200 @@
+---
+Help: Search based on Open-Depot-Indent_Id and ACCEPTED Status Combination
+Suites: indent2
+Test
+---
+!*** Unique value assignment
+!| script|common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$num=   |getRandomNumber;        |100  |999  |
+*!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Rajahmundry Road}
+!define city {ci$unique}
+!define state {st$unique}
+!define pincode {321001}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!** Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!** Gate Manager Creation
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+**!
+
+
+!** Indent Creation 1
+!define order_type  {1}
+!define freight_open_schmea {,"freight_rate":0,"freight_unit":1}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|Script      |DateUtil                   |
+|$loadingDate=|getCurrentDateTimeStamp|iso|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+**!
+
+!** Indent Creation 2
+!define order_type  {1}
+!define freight_open_schmea {,"freight_rate":0,"freight_unit":1}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|Script      |DateUtil                   |
+|$loadingDate=|getCurrentDateTimeStamp|iso|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+**!
+
+!** Indent Creation 3
+!define order_type  {1}
+!define freight_open_schmea {,"freight_rate":0,"freight_unit":1}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|Script      |DateUtil                   |
+|$loadingDate=|getCurrentDateTimeStamp|iso|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+**!
+
+
+!** Indent Accept for Indent 3
+!define username {${manager_email}}
+!define password {$password}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.TransporterAPI.IndentAcceptAPI
+**!
+
+!define depot_name {$depot_name}
+!define indent_type {Open}
+!define movement {All Movement Types}
+!define status {Accepted}
+!define delivery {All Delivery Types}
+!define utilization {All Checks}
+
+!|Script       |DateUtil                     |
+|$filter_start=|dateCalculation;|yyyy-MM-dd|0|
+|$filter_end=  |dateCalculation;|yyyy-MM-dd|1|
+
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentFilterMenu
+
+!define filter_by {Enter Indent ID}
+!define search_text {$order_id}
+!*** Search for Indent ID
+!include .FrontPage.Pando.Common.CommonSearchTrigger
+*!
+
+!define verify_text {$order_id}
+!*** Verify the Indent search result
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearchValidation
+*!

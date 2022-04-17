@@ -1,0 +1,15 @@
+!** Postgres DB Connection
+!define pg_database {db_pando_pay_dev_auto}
+!define pg_db_username {pandoadmin}
+!define pg_db_password {pando123}
+!define pg_db_port {5432}
+!define pg_connection {jdbc:postgresql://payments-staging.cbx4npnfva4o.ap-south-1.rds.amazonaws.com:${pg_db_port}/${pg_database}?user=${pg_db_username}&password=${pg_db_password}}
+**!
+
+!** Postgres DB connection Staging
+!define pg_database_staging {db_pando_pay_dev}
+!define pg_db_username_staging {pandoadmin}
+!define pg_db_password_staging {pando123}
+!define pg_db_port_staging {5432}
+!define pg_connection_staging {jdbc:postgresql://payments-staging.cbx4npnfva4o.ap-south-1.rds.amazonaws.com:${pg_db_port_staging}/${pg_database_staging}?user=${pg_db_username_staging}&password=${pg_db_password_staging}}
+**!

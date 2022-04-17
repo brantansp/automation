@@ -1,0 +1,185 @@
+---
+Help: Validate Detention Calculation if [truckout minus 3days 10AM ]=> [Report  minus 1 days 2PM] => [POD current day 11PM]  FTL
+Test
+---
+!** Prequest Values are assigned here
+
+!|Script       |DateUtil                                |
+|$unique=      |getCurrentDateTimeStamp;|yMMddHHmmss    |
+|$indate=      |getCurrentDateTimeStamp;|yyyy/MM/dd     |
+|$rdate=       |dateCalculation;        |yyyy/MM/dd |0  |
+|$contractDate=|dateCalculation;        |dd-MMM-yyyy|2  |
+|$loadingDate= |dateCalculation;        |yyyy/MM/dd |-2 |
+|$truckindate= |dateCalculation;        |yyyy/MM/dd |-10|
+
+
+!|Script      |Common                                         |
+|$truckindate=|stringConcatenation;|$truckindate|!- 10:00:00-!|
+|$rdate=      |stringConcatenation;|$rdate      |!- 10:00:00-!|
+
+!|Script      |DateUtil                   |
+|$loadingDate=|utcConversion;|$loadingDate|
+|$truckindate=|utcConversion;|$truckindate|
+
+**!
+
+!** Calculation values are inserted here
+
+!|Script       |DateUtil                      |
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd|-4|
+|$reported_at= |dateCalculation;|yyyy/MM/dd|-2|
+|$pod_at=      |dateCalculation;|yyyy/MM/dd|-1|
+
+
+!|Script       |Common                                          |
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- 10:00:00-!|
+|$reported_at= |stringConcatenation;|$reported_at |!- 14:00:00-!|
+|$pod_at=      |stringConcatenation;|$pod_at      |!- 23:00:00-!|
+
+
+!|Script       |DateUtil                    |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+
+!|Script        |DateUtil                                     |
+|$expected_date=|dateCalculation;|yyyy/MM/dd        |0        |
+|$expected_date=|utcConversion;  |$expected_date !- 10:00:00-!|
+|$reported_at=  |utcConversion;  |$reported_at                |
+|$pod_at=       |utcConversion;  |$pod_at                     |
+
+**!
+
+!** Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Krishnan nager}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+
+!** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,CHN01,${consignee_ref_id},965 CFT,100,$transporter_ref_id,$transporter_name,2,5000,per_trip,01-Jan-2019,$contractDate,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+
+**!
+
+!** Indent Creation
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {5c750bce6e2ae92e2d5bc5f8}
+!define location_id {5c74edf0c8d634115eaf23bd}
+!define gate_id {5c74edf083f399115e3eaa55}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define unloader_available {false}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define expected_delivery_at {$expected_date}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+**!
+
+!** validating and Assinging The Truck
+!define vechicle_number {tn 09 AT 9013}
+!define driver_name  {pay driver}
+!define phone_number  {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+**!
+
+!** Truck in 
+!|Script        |Common               |
+|$truck_in_date=|getTrim;|$truckindate|
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+**!
+
+
+!** Create Material invoice 
+!define mrp_price {1000}
+!define quantity1 {10} 
+!define quantity2 {10} 
+!define quantity3 {10} 
+!define quantity_unit {cases}
+!define weight {400}
+!define weight_unit {KG}
+!define volume {1000}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {20000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialsInvoiceERPAPI
+**!
+
+!** Report and Dispatch
+
+!|Script   |Common            |
+|$order_id=|getTrim;|$order_id|
+
+!define consignee_id {$consignee_id}
+!define arrived_at {$reported_at}
+!define dispatched_at {$pod_at}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+**!
+
+!** EPOD Calculation
+!define no_of_shortage {10}
+!define no_of_shortage1 {0}
+!define no_of_shortage2 {0}
+!define no_of_shortage3 {0} 
+!define no_of_leakage {10}
+!define no_of_leakage1 {0}
+!define no_of_leakage2 {0}
+!define no_of_leakage3 {0} 
+!define mrp {${mrp_price}}
+!define no_of_excess {10}
+!define no_of_excess1 {0}
+!define no_of_excess2 {0}
+!define no_of_excess3 {0} 
+!define no_of_damage {10}
+!define no_of_damage1 {10}
+!define no_of_damage2 {10}
+!define no_of_damage3 {10}
+!define no_of_carton_damage {10}
+!define no_of_carton_damage1 {10}
+!define no_of_carton_damage2 {20}
+!define no_of_carton_damage3 {30} 
+!define release_date {$rdate}
+!define release_date1 {$rdate}
+!define release_date2 {$rdate}
+!define release_date3 {$rdate}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodSingleIndentErpAPI
+**!
+
+!** Validating test result
+!|Script   |Common            |
+|$order_id=|getTrim;|$order_id|
+
+!define validate_text {$order_id}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.Search.CommonIndentSearch
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.UnLoadingDetentionCalculation.CommonUnLoadingDetetentionFTL
+
+!|Script  |Common                                    |
+|check    |checkIfStringAreEqual;|$calResult|600|true|
+|$tresult=|checkIfStringAreEqual;|$calResult|600     |
+**!

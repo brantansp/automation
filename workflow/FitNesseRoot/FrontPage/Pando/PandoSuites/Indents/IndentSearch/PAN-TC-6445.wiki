@@ -1,0 +1,293 @@
+---
+Help: Indents are sorted in ascending order for “Reported” Status with VRD filter
+Suites: indent2
+Test
+---
+!*** Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$loadingDate1=|dateCalculation;|yyyy/MM/dd |-5|
+|$loadingDate2=|dateCalculation;|yyyy/MM/dd |-3|
+|$loadingDate3=|dateCalculation;|yyyy/MM/dd |-4|
+|$truckindate1=|dateCalculation;|yyyy/MM/dd |-2|
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-2|
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-2|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-3|
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0 |
+|$cdate=       |dateCalculation;|yyyy/MM/dd |1 |
+
+!|Script|Common                                  |
+|$rdate=|stringConcatenation;|$rdate|!- $timer -!|
+
+!|Script       |DateUtil                    |
+|$loadingDate1=|utcConversion;|$loadingDate1|
+|$loadingDate2=|utcConversion;|$loadingDate2|
+|$loadingDate3=|utcConversion;|$loadingDate3|
+|$rdate=       |utcConversion;|$rdate       |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!*** Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!*** Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!*** Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {PTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!*** Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!*** Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!*** Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!** Material Creation 1
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!*** Uploading Rate Matrix
+!|Script|Common                                                                                                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":[{"contract_type":"City","source":"${depot_city}","destination":"city$unique","vehicle_type":"${vehicle_name}","distance":"100","transporter_reference_number":"${transporter_ref_id}","transporter_name":"${transporter_name}","transit_days":"1","freight_rate":"1000","freight_unit":"trip","valid_from":"2019/01/01","valid_to":"$cdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.RateMatrixDynamicAPI
+*!
+
+!*** Indent Creation  1
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|Script |Common           |
+|$order1=|getTrim|$order_id|
+*!
+
+!*** Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!** Reported 
+!define loading_date {$loadingDate1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.ReportAtAPI
+*!
+**!
+
+!*** Indent Creation  2
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|Script |Common           |
+|$order2=|getTrim|$order_id|
+*!
+
+!*** Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!** Reported 
+!define loading_date {$loadingDate2}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.ReportAtAPI
+*!
+**!
+
+!*** Indent Creation  3
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|Script |Common           |
+|$order3=|getTrim|$order_id|
+*!
+
+!*** Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!** Reported 
+!define loading_date {$loadingDate3}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.ReportAtAPI
+*!
+**!
+
+!** Depo Filter
+!define depot_name {$depot_name}
+!define indent_type {Contract}
+!define movement {All Movement Types}
+!define status {Reported}
+!define delivery {All Delivery Types}
+!define utilization {All Checks}
+
+!|Script       |DateUtil                     |
+|$filter_start=|dateCalculation;|yyyy-MM-dd|0|
+|$filter_end=  |dateCalculation;|yyyy-MM-dd|1|
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentFilterMenu
+*!
+
+!* Validating result
+!|Script|Ui                                                                                                                              |
+|click; |((//div[@class='order-row'])[3]/div)[1]//span[contains(@class,'tooltip')]|xpath                                                 |
+|$asc3= |getText;                                                                 |//section//div[contains(@class,'drawer-header')]|xpath|
+|click; |//a[contains(@class,'close')]                                            |xpath                                                 |
+|click; |((//div[@class='order-row'])[2]/div)[1]//span[contains(@class,'tooltip')]|xpath                                                 |
+|$asc2= |getText;                                                                 |//section//div[contains(@class,'drawer-header')]|xpath|
+|click; |//a[contains(@class,'close')]                                            |xpath                                                 |
+|click; |((//div[@class='order-row'])[1]/div)[1]//span[contains(@class,'tooltip')]|xpath                                                 |
+|$asc1= |getText;                                                                 |//section//div[contains(@class,'drawer-header')]|xpath|
+|click; |//a[contains(@class,'close')]                                            |xpath                                                 |
+
+!|Script   |Common                                                     |
+|$tresult1=|checkIfStringExistsIn;       |$order1     |$asc1           |
+|$tresult2=|checkIfStringExistsIn;       |$order3     |$asc2           |
+|$tresult3=|checkIfStringExistsIn;       |$order2     |$asc3           |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3|
+|check     |checkIfStringAreEqual;       |$tresult    |true    |true   |
+*!

@@ -1,0 +1,13 @@
+---
+Help: To search items in shipper invoice Paid page with search by
+---
+!|script       |ui                                                                                                    |
+|navigateToUrl;|${surl}/invoices                                                                                      |
+|click;        |//ul[@class='inlinelist']//input[@class='el-input__inner']                       |xpath               |
+|click;        |//li/span[text()='Paid']                                                         |xpath               |
+|click;        |//span[@class='search-trigger']                                                  |xpath               |
+|click;        |//div[text()='Filter By Status']/..//li[normalize-space(text())='${filter_text}']|xpath               |
+|click;        |//span[@class='search-trigger']                                                  |xpath               |
+|click;        |//div[text()='Search By']/..//li[normalize-space(text())='${search_by}']         |xpath               |
+|sendKeys;     |//input[@placeholder='Enter search term']                                        |xpath|${search_text}|
+|wait;         |3                                                                                                     |

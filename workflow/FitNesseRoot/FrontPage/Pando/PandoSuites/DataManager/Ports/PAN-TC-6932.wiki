@@ -1,0 +1,53 @@
+---
+Help: Ports Bulk Upload
+Suites: oel1
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$num=   |getRandomNumber;        |10000|99999|
+**!
+
+!** port bulk upload
+!define port_name {p$unique BU}
+!define port_refid {pr$unique}
+!define port_shortcode {ps$unique}
+!define pincode {3$num}
+
+!define row {Name,Short Code,Ref Id,City,State,Address,Country,Pincode,Geo Code,Type}
+!define column {${port_name},${port_shortcode},${port_refid},Chennai,TAMILNADU,Rajiv Gandhi road,INDIA,${pincode},12.23\\,45.67,BORDER_PORT}
+
+!include -c .FrontPage.Pando.Common.PortBulkUpload
+**!
+
+!** Cross verifying values
+!|script    |Ui                                                                                                              |
+|click;     |//span[@class='tagblock_list']            |xpath                                                                |
+|sendKeys;  |//input[@placeholder='Enter Reference Id']|xpath                                                  |${port_refid}|
+|click;     |//button[@class='btn section_pbtn']       |xpath                                                                |
+|check      |isElementPresent;                         |//span[contains(text(),'${port_name}')]                |xpath  |true |
+|$tresult1= |isElementPresent;                         |//span[contains(text(),'${port_name}')]                |xpath        |
+|check      |isElementPresent;                         |//span[contains(text(),'${port_refid}')]               |xpath  |true |
+|$tresult2= |isElementPresent;                         |//span[contains(text(),'${port_refid}')]               |xpath        |
+|check      |isElementPresent;                         |//span[contains(text(),'${port_shortcode}')]           |xpath  |true |
+|$tresult3= |isElementPresent;                         |//span[contains(text(),'${port_shortcode}')]           |xpath        |
+|check      |isElementPresent;                         |//span[contains(text(),'Border')]                      |xpath  |true |
+|$tresult4= |isElementPresent;                         |//span[contains(text(),'Border')]                      |xpath        |
+|check      |isElementPresent;                         |//span[contains(text(),'Chennai')]                     |xpath  |true |
+|$tresult5= |isElementPresent;                         |//span[contains(text(),'Chennai')]                     |xpath        |
+|check      |isElementPresent;                         |//span[contains(text(),'TAMILNADU')]                   |xpath  |true |
+|$tresult6= |isElementPresent;                         |//span[contains(text(),'TAMILNADU')]                   |xpath        |
+|mouseHover;|//span[contains(text(),'Raji')]           |xpath                                                                |
+|check      |isElementPresent;                         |//div[@role='tooltip']//div[text()='Rajiv Gandhi road']|xpath  |true |
+|$tresult7= |isElementPresent;                         |//div[@role='tooltip']//div[text()='Rajiv Gandhi road']|xpath        |
+|check      |isElementPresent;                         |//span[contains(text(),'INDIA')]                       |xpath  |true |
+|$tresult8= |isElementPresent;                         |//span[contains(text(),'INDIA')]                       |xpath        |
+|check      |isElementPresent;                         |//span[contains(text(),'12.23,45.67')]                 |xpath  |true |
+|$tresult9= |isElementPresent;                         |//span[contains(text(),'12.23,45.67')]                 |xpath        |
+|check      |isElementPresent;                         |//span[contains(text(),'${pincode}')]                  |xpath  |true |
+|$tresult10=|isElementPresent;                         |//span[contains(text(),'${pincode}')]                  |xpath        |
+
+!|Script  |Common                                                                                                                            |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10|
+**!

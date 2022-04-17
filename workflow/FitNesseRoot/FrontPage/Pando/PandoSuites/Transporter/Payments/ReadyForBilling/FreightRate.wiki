@@ -1,0 +1,6 @@
+---
+Help: Freight rate calculation
+Suite
+---
+!1 Test suite for all freight working charges
+!contents -R2 -g -p -f -h

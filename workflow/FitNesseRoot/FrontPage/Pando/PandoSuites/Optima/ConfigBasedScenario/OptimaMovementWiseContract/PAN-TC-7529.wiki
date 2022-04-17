@@ -1,0 +1,127 @@
+---
+Help: Ensure if movement based contracts are only considered by optima - Secondary
+Suites: optcummins1
+Test
+---
+!***> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$delno= |getRandomNumber;        |1000 |9999 |
+
+!|Script  |DateUtil                      |
+|$thisday=|dateCalculation;|dd MMM yyyy|0|
+*!
+
+!***> Depot Optima Setting
+!define depo {Mumbai Depot}
+!define movement {1}
+!define movement_type {Secondary}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+|$data= |getJsonTrim;|{"optima_configuration":{"split_factor":0,"ftl_certify":false,"distance_deviation":5000,"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":1,"volume":1},"material_categories":["MT","GT"],"max_pickup_points":2,"max_drop_points":2,"drop_off_rule":[],"optima_for_ptl":false,"ptl_club_gates":false,"pickup_threshold":{"weight":5000,"volume":400},"floor_one":{"weight":3000,"volume":363},"floor_two":{"weight":90,"volume":90},"limited_truck_count":false,"hybrid_split":false,"material_fractional_quantity":false,"ptl_contracts":0,"telescopic_threshold":{"weight":0,"volume":0},"drop_threshold":{},"fair_share_percentage":0,"sku_add_percentage":0,"is_group_by_cluster":false,"max_split":"5","algorithm":4,"degree_of_deviation":"60","optima_type":1,"mode":"0"},"depot_ids":["620e5e57405ed8004907cde4"],"movement":1}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+
+!|Script               |DateUtil                     |
+|waitForRoundoffMinute;|30                           |
+|$autoruntime=         |dateCalculation;|hour|HH:mm|0|
+
+!|Script|Http                                                                                                                                         |
+|$data= |getJsonTrim;|{"optima_auto_run":{"enabled":true,"pull_picklist_time":["$autoruntime"]},"depot_ids":["620e5e57405ed8004907cde4"],"movement":1}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaAutoRunSettingsAPI
+*!
+
+!**> Delete the Line item from Depot via API
+!|script|common                           |
+|$depot=|getTrim;|620e5e57405ed8004907cde4|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DiscardLineItemOptimaAPI
+**!
+
+!**> Delivery Picklist API 
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"Del$delno","material_code":"3635519","pickup_reference_number":"mumgate1","division":"","quantity":100,"quantity_unit":"case","weight":500,"weight_unit":"KG","volume":"10","volume_unit":"CFT","lr_number":"","ship_to":"960139","sold_to":"960139","line_item":"","type":"Secondary","category":"","stn":"","date":"2022-01-30","category_priority":"","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DeliveryPicklistAPI
+**!
+
+!** Triggering Auto Run
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.TriggerAutoRunAPI
+*!
+
+!**> Validating Line Item
+!define depot {Mumbai Depot}
+!define consignee_name {960139}
+!define vehicle {LTL}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.FilterForDepotAndMovement
+
+!|Script   |Ui                                                                                             |
+|$tresult1=|isElementPresent;                    |//span[normalize-space(text())='${consignee_name}']|xpath|
+|$tresult2=|isElementPresent;                    |//span[normalize-space(text())='${vehicle}']       |xpath|
+|click;    |//div[contains(@class,'row-show')]//a|xpath                                                    |
+|$tresult3=|isElementPresent;                    |//span[normalize-space(text())='Del$delno']        |xpath|
+|click;    |//div[@class='back-option']          |xpath                                                    |
+*!
+
+!**> Downloading the session Export file and check for cost (7.4 per kg for secondary : 500 * 7.4 = 3700)
+!|Script|Ui                                         |
+|click; |//button[contains(text(),'SESSION')] |xpath|
+|click; |//a[normalize-space(text())='EXPORT']|xpath|
+|wait;  |8                                          |
+
+!**> Get last modified Filename
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+**!
+
+!|script|ExcelQuery                                                                           |
+|$cost= |selectQuery;|$filename|select cost from "Vehicle" where "vehicle" = '${vehicle}'|cost|
+
+!|Script|Common                                  |
+|check  |checkIfStringAreEqual;|$cost|[3700]|true|
+*!
+
+!** Validate Indent
+!|Script|Ui                                                                   |
+|click; |//input[@type='checkbox']/../span                              |xpath|
+|click; |//button[contains(text(),'Indent')]                            |xpath|
+|click; |//div[@class='el-message-box']//span[contains(text(),'Create')]|xpath|
+|wait;  |10                                                                   |
+
+!define depot_selection  {Mumbai Depot}
+
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {Mumbai Depot}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|Script   |Ui                                               |
+|$order_id=|getText;|(//div[@class='order-row']/div)[1]|xpath|
+
+!|script   |common                            |
+|$order_id=|replaceString;|$order_id|$thisday||
+|$order_id=|replaceString;|$order_id|\n      ||
+*!
+
+!** Checking the base Freight rate in Indent slider
+!|script                     |ui                                                                                            |
+|click;                      |//span[normalize-space(text())='${vehicle}']|xpath                                            |
+|waitForElementToBeDisplayed;|//div[starts-with(@class,'content-scroll')] |xpath                                      |15   |
+|$baseFreightRate=           |getText;                                    |//p[contains(text(),'Base Freight')]/strong|xpath|
+*!
+
+!** Validating test result
+!|script   |common                                                                    |
+|$tresult4=|checkIfStringExistsIn;       |₹ 7.40 / Per Kg      |$baseFreightRate      |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+*!
+
+!** Retrieving the Job ID
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.RetrieveOptimaJobIDAPI
+*!

@@ -1,0 +1,13 @@
+---
+Help: Used to redirect to the Source depot of the Exim indent
+---
+!|Script                     |Ui                                                                                                                           |
+|navigateToUrl;              |${surl}/exim-master-indent-list                                                                                              |
+|wait;                       |2                                                                                                                            |
+|click;                      |//div[@class='flex-item']//button[@class='el-button el-button--default']//span[contains(text(),'Filter')]|xpath              |
+|click;                      |//div//label[normalize-space(text())='Depot']/..//following-sibling::div//input                          |xpath              |
+|sendKeys;                   |//div//label[normalize-space(text())='Depot']/..//following-sibling::div//input                          |xpath|${depot_name}|
+|wait;                       |2                                                                                                                            |
+|click;                      |//li[@class='el-select-dropdown__item']//span[contains(text(),'${depot_name}')]                          |xpath              |
+|click;                      |//button[contains(text(),'APPLY')]                                                                       |xpath              |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row')]                                                                  |xpath|30           |

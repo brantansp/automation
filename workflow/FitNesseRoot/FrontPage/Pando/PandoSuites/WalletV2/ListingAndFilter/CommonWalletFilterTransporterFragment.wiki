@@ -1,0 +1,11 @@
+#Selecting Transporter from multiselect list
+!|Script      |Ui                                                                                                                   |
+|click;       |//label[text()='Transporter']/../following-sibling::div/div[contains(@class,'multiselect')]|xpath                    |
+|click;       |//div[contains(@class,'multiselect--active')]//span[normalize-space(text())='Select All']  |xpath                    |
+|sendKeys;    |//label[text()='Transporter']/../following-sibling::div//input                             |xpath|${transporter_name}|
+|click;       |//div[contains(@class,'multiselect--active')]//li//span[text()='${transporter_name}']      |xpath                    |
+|wait;        |1                                                                                                                    |
+|clearValueWA;|//label[text()='Transporter']/../following-sibling::div//input                             |xpath                    |
+|wait;        |1                                                                                                                    |
+|click;       |(//div[contains(@class,'multiselect--active')]//li/span[contains(@class,'--selected')])[1] |xpath                    |
+|click;       |(//div[contains(@class,'page-filter')]//div)[last()]                                       |xpath                    |

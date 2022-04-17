@@ -1,0 +1,7 @@
+!|Script|Ui|
+|navigateToUrl;| ${surl}/indent/$order_id/0/edit|
+|waitForElementToBeDisplayed; |//label[text()='Transporter']/following-sibling::div//input|xpath| 30 |
+|click;|//label[text()='Transporter']/following-sibling::div//input|xpath|
+|click;|//span[contains(text(),'${transporter_name}')]|xpath|
+|click;|//span[normalize-space(text())='Update']|xpath|
+|wait;|4|

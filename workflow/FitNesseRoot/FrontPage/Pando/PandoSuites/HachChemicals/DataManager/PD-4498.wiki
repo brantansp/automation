@@ -1,0 +1,16 @@
+---
+Help: Contains carton test case
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+
+**!
+
+!** Carrier Creation
+!|script|common                                                                                                                                                                 |
+|$data= |getTrim;|{"code":"27","packaging":"FiberboardBox","description":"FIBREBOARD BOX(ES)","weight_kg":"2","volume_ltr":"2","length_cm":"27","width_cm":"11","height_cm":"12"}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Hach.DataManager.Create_Carton_API
+**!

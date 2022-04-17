@@ -1,0 +1,38 @@
+---
+Help: Validate Filter text listed in header view page
+Test
+---
+!** Filter setting 
+!define client {Automation}
+!define depo {Chennai Depot} 
+!define invoice_type {Non Clean Indents}
+!define delivery_type {PTL}
+
+!|Script              |DateUtil                     |
+|$filter_start=       |dateCalculation;|yyyy-MM-dd|1|
+|$filter_format_start=|dateCalculation;|d MMM yyyy|1|
+|$filter_end=         |dateCalculation;|yyyy-MM-dd|2|
+|$filter_format_end=  |dateCalculation;|d MMM yyyy|2|
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.Filter.CommonFilterPage
+
+!|Script   |Ui                                                                                                                           |
+|check     |isElementPresent;|//span[@class='tag-default el-tag el-tag--small el-tag--plain']//span[text()='${depo}']         |xpath|true|
+|check     |isElementPresent;|//span[@class='tag-default el-tag el-tag--small el-tag--plain']//span[text()='${delivery_type}']|xpath|true|
+|check     |isElementPresent;|//span[@class='tag-default el-tag el-tag--small el-tag--plain']//span[text()='${client}']       |xpath|true|
+|check     |isElementPresent;|//span[@class='tag-default el-tag el-tag--small el-tag--plain']//span[text()='${invoice_type}'] |xpath|true|
+|check     |isElementPresent;|//span[text()='$filter_format_start - $filter_format_end']                                      |xpath|true|
+|$tresult1=|isElementPresent;|//span[@class='tag-default el-tag el-tag--small el-tag--plain']//span[text()='${depo}']         |xpath     |
+|$tresult2=|isElementPresent;|//span[@class='tag-default el-tag el-tag--small el-tag--plain']//span[text()='${delivery_type}']|xpath     |
+|$tresult3=|isElementPresent;|//span[@class='tag-default el-tag el-tag--small el-tag--plain']//span[text()='${client}']       |xpath     |
+|$tresult4=|isElementPresent;|//span[@class='tag-default el-tag el-tag--small el-tag--plain']//span[text()='${invoice_type}'] |xpath     |
+|$tresult5=|isElementPresent;|//span[text()='$filter_format_start - $filter_format_end']                                      |xpath     |
+
+!|Script  |Common                                                                         |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5|
+
+
+!define tname {TC-1391}
+ 
+
+**!

@@ -1,0 +1,30 @@
+---
+Help: SCN15_Ensure minimum number of orders formed utilizing maximum capacity of large vehicles
+Test
+---
+!5 SCN15_Ensure minimum number of orders formed utilizing maximum capacity of large vehicles
+
+!5 TCL https://tm.gopando.co/linkto.php?tprojectPrefix=PD&item=testcase&id=PD-3319
+
+!5 https://gopando.atlassian.net/browse/PAN-2307
+
+!5 https://github.com/pandocorp/optima-v2/pull/36
+
+!| script      |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!| script      |CsvQuery                                                                                                         |
+|getConnection;|$fileLocation|,                                                                                                  |
+|$trucktypes=  |executeQuery;|SELECT DISTINCT "Truck Type" FROM summary WHERE File LIKE 'scn15_%'                     |Truck Type|
+|$nooforders=  |executeQuery;|SELECT COUNT(*) as nooforders FROM summary WHERE File LIKE 'scn15_%'                    |nooforders|
+|$nooftrucks=  |executeQuery;|SELECT COUNT(DISTINCT "Truck Type") as nooftrucks FROM summary WHERE File LIKE 'scn15_%'|nooftrucks|
+|closeConnection;                                                                                                                |
+
+!| script  |common                                              |
+|check     |comparisonResult;            |$nooforders|<=|15|true|
+|$tresult1=|comparisonResult;            |$nooforders|<=|15     |
+|check     |comparisonResult;            |$nooftrucks|<=|6 |true|
+|$tresult2=|comparisonResult;            |$nooftrucks|<=|6      |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2   |
+
+ 

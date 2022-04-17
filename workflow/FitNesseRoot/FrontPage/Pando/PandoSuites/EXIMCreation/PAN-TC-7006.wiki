@@ -1,0 +1,346 @@
+---
+Help: Export LCL Movement type Indent creation
+Suites: oel5
+Test
+---
+!***> Unique values assignment
+!|Script  |Common                                |
+|$unique= |getCurrentDateTimeStamp;|yMMddHHmmss  |
+|$pincode=|getRandomNumber;        |000000|999999|
+|$weight= |getRandomNumber;        |10    |99    |
+|$volume= |getRandomNumber;        |100   |999   |
+|$num=    |getRandomNumber;        |20    |76    |
+
+!|Script     |DateUtil                            |
+|$reporttime=|dateCalculation;|hour      |hh:mma|1|
+|$reportdate=|dateCalculation;|dd-MM-yyyy|2       |
+|$expectdate=|dateCalculation;|YYYY-MM-dd|5       |
+**!
+
+!***> Source Depot Creation
+!*> Depot creation
+!define srcdepot_name {src$unique}
+!define depot_state {Tamil Nadu}
+!define srcdepot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {C$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {605009}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                 |
+|$data= |getTrim;|{"data":{"name":"${srcdepot_name}","state":"${depot_state}","city":"${srcdepot_city}","region":"${depot_region}","display_reference_name": "","short_code":"${depot_short_code}","reference_id":"${depot_reference_id}","address":"${depot_address}","pincode":"${depot_pincode}","gstn_no":"${depot_gstn_no}","delivery_type":${depot_delivery_type},"plant_type":${plant_type},"phone":"${depot_phone}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationDynamicAPI
+*!
+
+!*> Gate Manager Creation
+!* User Role ID Retrival
+!define key {name}
+!define key_value {Gate Manager}
+!define retrieve_key {id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {src$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+
+!|script|common                                                                                                                                 |
+|$data= |getTrim;|{"data":{"name":"${user_name}","role_id":"${role_id}","mobile":"${user_number}","email":"${user_email}","status":"${status}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationDynamicAPI
+*!
+
+!*> Gate Creation 1
+!define depot_id {$depot}
+!define gate_name1 {Source Gate 1}
+!define gate_ref_id {SRG1$unique}
+!define gate_city {${srcdepot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {605009}
+!define gate_short_code {SG1$num}
+!define gate_user_id {$user_id}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${gate_name1}","reference_id":"${gate_ref_id}","address":"No 15 GST Road","city":"${gate_city}","state":"${gate_state}","region":"${gate_region}","pincode":"${gate_pincode}","display_reference_name": "","short_code":"${gate_short_code}","special_tax_rebate":"${special_tax_rebate}","user_ids":["${gate_user_id}"],"combine":true,"exclude_trucks":[],"category":"b","is_virtual_gate":false}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationDynamicAPI
+*!
+
+!*> Gate Creation 2
+!define depot_id {$depot}
+!define gate_name2 {Source Gate 2}
+!define gate_ref_id {SRG2$unique}
+!define gate_city {${srcdepot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {605009}
+!define gate_short_code {SG2$num}
+!define gate_user_id {$user_id}
+!define special_tax_rebate {true}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${gate_name2}","reference_id":"${gate_ref_id}","address":"No 15 GST Road","city":"${gate_city}","state":"${gate_state}","region":"${gate_region}","pincode":"${gate_pincode}","display_reference_name": "","short_code":"${gate_short_code}","special_tax_rebate":"${special_tax_rebate}","user_ids":["${gate_user_id}"],"combine":true,"exclude_trucks":[],"category":"b","is_virtual_gate":false}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationDynamicAPI
+*!
+***!
+
+!***> Destination Depot Creation
+!*> Depot creation
+!define destdepot_name {dest$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {DC$num}
+!define depot_reference_id {DR$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {605009}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":{"name":"${destdepot_name}","state":"${depot_state}","city":"${depot_city}","region":"${depot_region}","display_reference_name": "","short_code":"${depot_short_code}","reference_id":"${depot_reference_id}","address":"${depot_address}","pincode":"${depot_pincode}","gstn_no":"${depot_gstn_no}","delivery_type":${depot_delivery_type},"plant_type":${plant_type},"phone":"${depot_phone}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationDynamicAPI
+*!
+
+!*> Gate Manager Creation
+!* User Role ID Retrival
+!define key {name}
+!define key_value {Gate Manager}
+!define retrieve_key {id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {dest$unique}
+!define user_email {pandoindent+1$unique@gmail.com}
+!define status {1}
+
+!|script|common                                                                                                                                 |
+|$data= |getTrim;|{"data":{"name":"${user_name}","role_id":"${role_id}","mobile":"${user_number}","email":"${user_email}","status":"${status}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationDynamicAPI
+*!
+
+!*> Gate Creation 1
+!define depot_id {$depot}
+!define gate_name {Source Gate 1}
+!define gate_ref_id {DRG1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {605009}
+!define gate_short_code {DG1$num}
+!define gate_user_id {$user_id}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":{"name":"${gate_name}","reference_id":"${gate_ref_id}","address":"No 15 GST Road","city":"${gate_city}","state":"${gate_state}","region":"${gate_region}","pincode":"${gate_pincode}","display_reference_name": "","short_code":"${gate_short_code}","special_tax_rebate":"${special_tax_rebate}","user_ids":["${gate_user_id}"],"combine":true,"exclude_trucks":[],"category":"b","is_virtual_gate":false}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationDynamicAPI
+*!
+***!
+
+!**>  Source Ports Creation
+!define srcport_name {src$unique}
+!define ports_refid {sr$unique}
+!define ports_shortcode {ss$unique}
+!define ports_type {SEA_PORT}
+!define city {Nellore}
+!define state {Andhra Pradesh}
+!define address {12B,Ram mohan street}
+!define geocode {12.23,45.56}
+!define country {Dubai}
+!define pincode {789065}
+
+!|script|common                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${srcport_name}","ref_id":"${ports_refid}","display_reference_name": "","short_code":"${ports_shortcode}","type":"${ports_type}","city":"${city}","state":"${state}","address":"${address}","geo_code":"${geocode}","country":"${country}","pin_code":"${pincode}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.PortsCreationDynamicAPI
+**!
+
+!**> Destination Ports Creation
+!define destport_name {dest$unique}
+!define ports_refid {dr$unique}
+!define ports_shortcode {ds$unique}
+!define ports_type {SEA_PORT}
+!define city {Nellore}
+!define state {Andhra Pradesh}
+!define address {12B,Ram mohan street}
+!define geocode {12.23,45.56}
+!define country {Dubai}
+!define pincode {789065}
+
+!|script|common                                                                                                                                                                                                                                                            |
+|$data= |getTrim;|{"data":{"name":"${destport_name}","ref_id":"${ports_refid}","display_reference_name": "","short_code":"${ports_shortcode}","type":"${ports_type}","city":"${city}","state":"${state}","address":"${address}","geo_code":"${geocode}","country":"${country}","pin_code":"${pincode}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.PortsCreationDynamicAPI
+**!
+
+!**> Vehicle Creation
+!define vehicle_name {ve$unique}
+!define cft {1000}
+!define kg {2000}
+!define weightage {2500}
+!define length_factor {12}
+!define breadth_factor {13}
+!define height_factor {14}
+!define length {15}
+!define breadth {20}
+!define height {25}
+!define description {965CFT}
+!define distance {250}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                |
+|$data= |getTrim;|{"data":{"short_form":"${vehicle_name}","cft":"${cft}","kg":"${kg}","vehicle_type":"FTL","weightage":"${weightage}","length_factor":"${length_factor}","breadth_factor":"${breadth_factor}","height_factor":"${height_factor}","length":"${length}","breadth":"${breadth}","height":"${height}","description":"${description}","max_distance":"${distance}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationDynamicAPI
+**!
+
+!**> Container Creation
+!define container_name {co$unique}
+!define container_refid {cr$unique}
+!define capacity_cft {1000}
+!define tare_weight {2500}
+!define gross_weight {3000}
+!define max_payload {4000}
+!define door_opening_width {10}
+!define door_opening_height {20}
+!define exterior_length {15}
+!define exterior_width {20}
+!define exterior_height {25}
+!define interior_length {14}
+!define interior_width {18}
+!define interior_height {22}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":{"name":"${container_name}","ref_id":"${container_refid}","capacity":"${capacity_cft}","preferred_truck_type":"$vehicle_id","tare_weight":"${tare_weight}","max_gross_weight":"${gross_weight}","max_payload":"${max_payload}","container_dimension_door_opening":{"width":"${door_opening_width}","height":"${door_opening_height}"},"container_dimension_exterior":{"length":"${exterior_length}","width":"${exterior_width}","height":"${exterior_height}"},"container_dimension_interior":{"length":"${interior_length}","width":"${interior_width}","height":"${interior_height}"}}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ContainerCreationDynamicAPI
+**!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                         |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","status":${transporter_status},"country":"India","generate_lr":true,"users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+
+!|script           |common                  |
+|$transporter_id_1=|getTrim;|$transporter_id|
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+
+!|script    |common            |
+|$password1=|getTrim;|$password|
+*!
+**!
+
+!** EXIM Creation
+!define destination {Depot}
+!define dest_value {1}
+!define mode {2}
+!define delivery_type {LCL}
+!define weight_kg {$weight}
+!define volume_kg {$volume}
+!define reportedtime {$reporttime}
+!define reporteddate {$reportdate}
+!define expecteddate {$expectdate}
+!define ff {OTM TRANS LOGISTICS}
+!define cha {EXIM CHA}
+!define incoterm {CIF}
+!define bol_type {RFS}
+
+!|Script       |Ui                                    |
+|navigateToUrl;|${surl}/exim-master-indent-list       |
+|click;        |//button[contains(text(),'Add')]|xpath|
+
+!include -c .FrontPage.Pando.PandoSuites.EXIMCreation.EXIMSourceSelection
+
+!include -c .FrontPage.Pando.PandoSuites.EXIMCreation.EXIMDestinationSelection
+
+!include -c .FrontPage.Pando.PandoSuites.EXIMCreation.TransportationModeSelection
+
+!include -c .FrontPage.Pando.PandoSuites.EXIMCreation.DeliveryType
+
+!include -c .FrontPage.Pando.PandoSuites.EXIMCreation.EXIMRoadLeg
+
+!include -c .FrontPage.Pando.PandoSuites.EXIMCreation.ExportTransportationDetails
+
+!|script    |ui                                                         |
+|mouseClick;|(//label[normalize-space(text())='Add Leg']/..//i)[2]|xpath|
+
+!include -c .FrontPage.Pando.PandoSuites.EXIMCreation.EXIMOceanLeg
+
+!|script  |ui                                                                                  |
+|sendKeys;|//label[contains(text(),'BOL Type')]/following-sibling::div//input|xpath|${bol_type}|
+|click;   |//li//span[contains(text(),'${bol_type}')]                        |xpath            |
+
+!include -c .FrontPage.Pando.PandoSuites.EXIMCreation.IFCDetails
+
+!include -c .FrontPage.Pando.PandoSuites.EXIMCreation.LCLContainerDetails
+
+!include -c .FrontPage.Pando.PandoSuites.EXIMCreation.AttachmentsUpload
+
+!include -c .FrontPage.Pando.PandoSuites.EXIMCreation.EXIMIndentCreationCheck
+**!
+
+!** Validating the Result
+!define depot_name {${srcdepot_name}}
+!include -c .FrontPage.Pando.PandoSuites.EXIMCreation.FilterDepotSelection
+
+!define search_field {indent id}
+!define search_value {$indent_id}
+!include -c .FrontPage.Pando.PandoSuites.EXIMCreation.EXIMSearch
+
+!|script                     |ui                                                                                                                                                                                                       |
+|mouseClick;                 |//div[contains(@class,'order-actions')]//div//p[normalize-space(text())='$indent_id']|xpath                                                                                                              |
+|click;                      |//div[@role='tablist']//div[text()='Details']                                        |xpath                                                                                                              |
+|waitForElementToBeDisplayed;|(//div[starts-with(@class,'content-scroll')])[1]                                     |xpath                                                                                                   |15        |
+|check                       |isElementPresent;                                                                    |//div//p[normalize-space(text())='Source :']//strong[normalize-space(text())='${srcdepot_name}']        |xpath|true|
+|$tresult1=                  |isElementPresent;                                                                    |//div//p[normalize-space(text())='Source :']//strong[normalize-space(text())='${srcdepot_name}']        |xpath     |
+|check                       |isElementPresent;                                                                    |//div//p[normalize-space(text())='Destination :']//strong[normalize-space(text())='${destdepot_name}']  |xpath|true|
+|$tresult2=                  |isElementPresent;                                                                    |//div//p[normalize-space(text())='Destination :']//strong[normalize-space(text())='${destdepot_name}']  |xpath     |
+|check                       |isElementPresent;                                                                    |//div//p[normalize-space(text())='CHA :']//strong[normalize-space(text())='${cha}']                     |xpath|true|
+|$tresult3=                  |isElementPresent;                                                                    |//div//p[normalize-space(text())='CHA :']//strong[normalize-space(text())='${cha}']                     |xpath     |
+|check                       |isElementPresent;                                                                    |//div//p[normalize-space(text())='Incoterms :']//strong[normalize-space(text())='${incoterm}']          |xpath|true|
+|$tresult4=                  |isElementPresent;                                                                    |//div//p[normalize-space(text())='Incoterms :']//strong[normalize-space(text())='${incoterm}']          |xpath     |
+|check                       |isElementPresent;                                                                    |//div//p[normalize-space(text())='FF :']//strong[normalize-space(text())='${ff}']                       |xpath|true|
+|$tresult5=                  |isElementPresent;                                                                    |//div//p[normalize-space(text())='FF :']//strong[normalize-space(text())='${ff}']                       |xpath     |
+|click;                      |//div[contains(@class,'collapse-item')]//div[normalize-space(text())='Road leg']     |xpath                                                                                                              |
+|check                       |isElementPresent;                                                                    |//div//p[normalize-space(text())='Source :']//span[normalize-space(text())='${srcdepot_city}']          |xpath|true|
+|$tresult6=                  |isElementPresent;                                                                    |//div/p[normalize-space(text())='Source :']//span[normalize-space(text())='${srcdepot_city}']           |xpath     |
+|check                       |isElementPresent;                                                                    |//div//span[normalize-space(text())='${transporter_name}']                                              |xpath|true|
+|$tresult7=                  |isElementPresent;                                                                    |//div//span[normalize-space(text())='${transporter_name}']                                              |xpath     |
+|click;                      |//div[contains(@class,'collapse-item')]//div[normalize-space(text())='Ocean leg']    |xpath                                                                                                              |
+|check                       |isElementPresent;                                                                    |//div//p[normalize-space(text())='Port of loading:']//span[normalize-space(text())='${srcport_name}']   |xpath|true|
+|$tresult8=                  |isElementPresent;                                                                    |//div//p[normalize-space(text())='Port of loading:']//span[normalize-space(text())='${srcport_name}']   |xpath     |
+|check                       |isElementPresent;                                                                    |//div//p[normalize-space(text())='Port of discharge:']//span[normalize-space(text())='${destport_name}']|xpath|true|
+|$tresult9=                  |isElementPresent;                                                                    |//div//p[normalize-space(text())='Port of discharge:']//span[normalize-space(text())='${destport_name}']|xpath     |
+|click;                      |//div//section//a//span[contains(@class,'link--inner')]                              |xpath                                                                                                              |
+
+!|Script  |Common                                                                                                                 |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9|
+**!

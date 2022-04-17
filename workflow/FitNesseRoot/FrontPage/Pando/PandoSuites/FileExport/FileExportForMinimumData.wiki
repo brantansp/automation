@@ -1,0 +1,5 @@
+---
+Suite
+---
+!1 Test suite for file uploads where data less than 500 
+!contents -R2 -g -p -f -h

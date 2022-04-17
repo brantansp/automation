@@ -1,0 +1,6 @@
+---
+Help: Used to select the delivery mode
+---
+!|Script|Ui                                                     |
+|click; |//span//span[contains(text(),'${delivery_type}')]|xpath|
+|click; |//span[contains(text(),'Add')]                   |xpath|

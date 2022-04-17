@@ -1,0 +1,21 @@
+---
+Help: SCN7_Consignee 'P9053' should be assigned with 2 orders via FTL & PTL
+Test
+---
+!|script       |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!|script       |CsvQuery                                                                                                                                                              |
+|getConnection;|$fileLocation|,                                                                                                                                                       |
+|$tresult1=    |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE "Truck Type" LIKE '99999%' AND File LIKE 'scn7_%' AND Consignee LIKE '%p9053%'    |noOfOccurrences|
+|$tresult2=    |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE "Truck Type" NOT LIKE '99999%' AND File LIKE 'scn7_%' AND Consignee LIKE '%p9053%'|noOfOccurrences|
+|closeConnection;                                                                                                                                                                     |
+
+!|script  |common                                    |
+|check    |checkIfStringAreEqual;|$tresult1|1  |true |
+|check    |checkIfStringAreEqual;|$tresult2|1  |true |
+|$tresult=|checkIfStringAreEqual;|$tresult1|$tresult2|
+
+!5 99999.0 CFT - 99999.0 KG -	26736.44336
+!5 2048.0 CFT - 7000.0 KG -	62000
+!5 Total of 88736

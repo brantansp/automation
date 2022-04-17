@@ -1,0 +1,20 @@
+---
+Help: Create secondary indent in UI
+---
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentDepotSelection
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentConsigneeSelection
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentCreationSelectTypesInUI
+
+!** Getting Order id
+
+!|Script|Ui                                                      |
+|$data= |getText;|//span[contains(text(),'Indent created')]|xpath|
+|wait;  |3                                                       |
+
+!|Script   |Common                                                      |
+|$data1=   |stringConcatenation; |$data |last                           |
+|$order_id=|getSubStringByString;|$data1|Indent created with number|last|
+|$order_id=|getTrim;             |$order_id                             |
+**!

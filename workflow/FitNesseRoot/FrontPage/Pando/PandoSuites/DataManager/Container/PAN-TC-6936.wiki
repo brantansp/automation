@@ -1,0 +1,59 @@
+---
+Help: Adding Container to MDM
+Suites: oel1
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!**> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {1000}
+!define kg {2000}
+!define weightage {2500}
+!define length_factor {12}
+!define breadth_factor {13}
+!define height_factor {14}
+!define length {15}
+!define breadth {20}
+!define height {25}
+!define description {965CFT}
+!define distance {250}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                |
+|$data= |getTrim;|{"data":{"short_form":"${vehicle_name}","cft":"${cft}","kg":"${kg}","vehicle_type":"FTL","weightage":"${weightage}","length_factor":"${length_factor}","breadth_factor":"${breadth_factor}","height_factor":"${height_factor}","length":"${length}","breadth":"${breadth}","height":"${height}","description":"${description}","max_distance":"${distance}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationDynamicAPI
+**!
+
+!** Container Creation
+!define container_name {co$unique}
+!define container_refid {cr$unique}
+!define capacity_cft {1000}
+!define tare_weight {2500}
+!define gross_weight {3000}
+!define max_payload {4000}
+!define door_opening_width {10}
+!define door_opening_height {20}
+!define exterior_length {15}
+!define exterior_width {20}
+!define exterior_height {25}
+!define interior_length {14}
+!define interior_width {18}
+!define interior_height {22}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Container.CommonContainerAdd
+**!
+
+!** Cross verifying values
+!|script                     |Ui                                                                                  |
+|waitForElementToBeDisplayed;|//span[contains(text(),'co$unique')]|xpath                               |20        |
+|check                       |isElementPresent;                   |//span[contains(text(),'co$unique')]|xpath|true|
+|$tresult1=                  |isElementPresent;                   |//span[contains(text(),'co$unique')]|xpath     |
+
+!|Script  |Common                                 |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1|
+**!
+

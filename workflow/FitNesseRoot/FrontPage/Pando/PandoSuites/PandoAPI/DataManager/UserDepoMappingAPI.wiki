@@ -1,0 +1,8 @@
+---
+Test
+---
+!|Script    |Http                                                                                                                      |
+|addHeader; |Authorization |bearer $stoken                                                                                             |
+|setBaseUrl;|${surl}/api/depot/$depot                                                                                                  |
+|$data=     |getResponse;  |Application/Json|put|{"data":{"reference_id":"$depot_ref_id","user_ids":${users},"section":"update_users"}}|
+|check      |getStatusCode;|200                                                                                                        |

@@ -1,0 +1,11 @@
+---
+Help: Used to select the source depot
+---
+!|Script                     |Ui                                                                                                                                                      |
+|click;                      |//h6[contains(text(),'Source & Destination')]                                                                                    |xpath                 |
+|waitForElementToBeDisplayed;|//section//div[contains(@class,'table-striped')]                                                                                 |xpath|20              |
+|sendKeys;                   |//span[normalize-space(text())='Select source']/../following-sibling::div//input                                                 |xpath|${srcdepot_name}|
+|waitForElementToDisappear;  |//div[@class='status-msg']//img                                                                                                  |xpath|20              |
+|waitForElementToBeClickable;|(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${srcdepot_name}']/ancestor::td/preceding-sibling::td//span|xpath|20              |
+|click;                      |(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${srcdepot_name}']/ancestor::td/preceding-sibling::td//span|xpath                 |
+|wait;                       |2                                                                                                                                                       |

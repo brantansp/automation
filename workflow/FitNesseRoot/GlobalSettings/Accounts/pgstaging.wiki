@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://pg.pandostaging.in}
+!define username {pandgpando@gmail.com}
+!define password {test@1234}
+!define shipper_client_id {5fd89a8abdadf630f4e5f413}

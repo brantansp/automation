@@ -1,0 +1,3 @@
+!|Script                     |Ui                                                                                        |
+|click;                      |//div[contains(@class,'card-row-col')]//span[contains(text(),'${click_invoice}')]|xpath   |
+|waitForElementToBeDisplayed;|//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody       |xpath|10|

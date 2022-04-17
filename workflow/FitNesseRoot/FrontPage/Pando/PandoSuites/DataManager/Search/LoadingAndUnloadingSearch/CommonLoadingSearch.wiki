@@ -1,0 +1,7 @@
+---
+Help: Use to Search Loading and Unloading details
+---
+!|script        |ui                                                                  |
+|navigateToUrl; |${surl}/mdm/loading                                                 |
+|sendKeys;      |//input[@placeholder='Search by Depot Name']|xpath|${search_value}|
+|wait;          |3                                                                   |

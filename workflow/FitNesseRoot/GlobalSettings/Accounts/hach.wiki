@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://hach-auto.pandostaging.in}
+!define username {pandohachauto@gmail.com}
+!define password {test@1234}
+!define shipper_client_id {5ffea29f1686173ca8e35367}

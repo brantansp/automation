@@ -1,0 +1,12 @@
+---
+Help: Used to select the Incoterm, Freight forwarder and CHA
+---
+!|Script  |Ui                                                                         |
+|click;   |//label[normalize-space(text())='Incoterm']/..//i             |xpath       |
+|click;   |//li/span[contains(text(),'${incoterm}')]                     |xpath       |
+|click;   |//label[normalize-space(text())='Freight Forwarder']/..//i    |xpath       |
+|sendKeys;|//label[normalize-space(text())='Freight Forwarder']/..//input|xpath|${ff} |
+|click;   |//li//span[contains(text(),'${ff}')]                          |xpath       |
+|click;   |//label[normalize-space(text())='CHA']/..//i                  |xpath       |
+|sendKeys;|//label[normalize-space(text())='CHA']/..//input              |xpath|${cha}|
+|click;   |//li//span[contains(text(),'${cha}')]                         |xpath       |

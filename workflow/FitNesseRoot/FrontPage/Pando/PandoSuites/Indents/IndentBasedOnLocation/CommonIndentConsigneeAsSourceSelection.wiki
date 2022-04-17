@@ -1,0 +1,10 @@
+!|Script                     |Ui                                                                                                                                                     |
+|click;                      |//div[@class='card-list list-plain']                                                                                          |xpath                   |
+|click;                      |//div[text()='${switch_depo}']                                                                                                |xpath                   |
+|waitForElementToBeDisplayed;|(//section//div[contains(@class,'table-striped')])[${switch_type}]                                                            |xpath|10                |
+|sendKeys;                   |(//section[@class='el-drawer__body']//input[@type='text'])[${switch_type}]                                                    |xpath|${source_location}|
+|waitForElementToDisappear;  |//div[@class='status-msg']//img                                                                                                    |xpath|20                |
+|waitForElementToBeDisplayed;|(//section//div[contains(@class,'table-striped')])[${switch_type}]                                                            |xpath|10                |
+|click;                      |(//tr[contains(@class,'row')])[1]//span[normalize-space(text())='${source_location}']/ancestor::td/preceding-sibling::td//span|xpath                   |
+|wait;                       |3                                                                                                                                                      |
+|click;                      |//span[text()='Add']                                                                                                          |xpath                   |

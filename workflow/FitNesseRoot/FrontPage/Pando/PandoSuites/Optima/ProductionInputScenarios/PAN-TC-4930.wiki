@@ -1,0 +1,47 @@
+---
+Help: SCN23_Ensure that conv_fact is correctly multiplied for per_cft case
+Test
+---
+!5 SCN23_Ensure that conv_fact is correctly multiplied for per_cft case
+
+-!|Comment|
+|Test case description|
+!5 For the below input
+-!|Comment|
+|Input              |
+|Material_CFT|9cft  |
+|Material_KG |45kg  |
+|conv_method |kg-cft|
+|conv_factor |1     |
+|cft_rate    |10    |
+!5 Cost should be calculated as '''Max(9*10, 45*1*10) -> 450 Rs''' (kg*conv_fact*cft_rate for kg-cft method)
+!5 But it is calculated as '''Max(9*10, 9*1*10) -> 90 Rs''' (cft*conv_fact*cft_rate for kg-cft method)
+
+-!|Comment|
+|External links|
+https://gopando.atlassian.net/browse/PAN-2845
+https://github.com/pandocorp/optima-v2/pull/64
+https://tm.gopando.co/linkto.php?tprojectPrefix=PD&item=testcase&id=PD-3492
+
+-!|Comment|
+|Test Script|
+!** Reading the Output file
+!|Script   |Common                                                             |
+|$jsonpath=|getPath;|download/scn23_PAN-2845_cftKgCalIssue_output.json|fullpath|
+*!
+
+!** Querying the json
+!|script       |QueryOptimaOutput            |
+|getParsedJson;|$jsonpath                    |
+|$total_cost=  |getTotalCostOfAnOrder;|431073|
+*!
+
+!** Validating the Test result
+!|script  |common                                     |
+|$tresult=|checkIfStringAreEqual;|450|$total_cost     |
+|check    |checkIfStringAreEqual;|450|$total_cost|true|
+*!
+
+!** Test Result Update
+ 
+*!

@@ -1,0 +1,11 @@
+---
+Help: Transporter can able to reject the indent by this API
+Test
+---
+!|Script     |Http                                                                                                                           |
+|setBaseUrl; |${turl}/api/login                                                                                                              |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}                                  |
+|$token=     |getHeader;      |x-auth-token                                                                                                  |
+|addHeader;  |Authorization   |bearer $token                                                                                                 |
+|setBaseUrl; |${turl}/api/order/$order_id/reject                                                                                                    |
+|$response=  |getResponse;    |Application/Json|put|{"data":{"comments":"Reject $unique"}}|

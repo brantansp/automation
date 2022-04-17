@@ -1,0 +1,13 @@
+---
+Files: no
+RecentChanges: no
+Search: no
+Test
+---
+!|Script    |Http                                     |
+|wait;      |5                                        |
+|addHeader; |Authorization |bearer $stoken            |
+|setBaseUrl;|${surl}/api/erp/invoice_otp_verification |
+|$response= |getResponse;  |Application/Json|put|$data|
+|check      |getStatusCode;|200                       |
+|wait;      |2                                        |

@@ -1,0 +1,6 @@
+---
+Help: Use to verify the result from Global search
+---
+!|script  |ui                                                                                                                                               |
+|check    |isElementPresent;|//div[contains(@class,'grid-list-row') or contains(@class,'card-row-show')]//span[contains(text(),'${search_text}')]|xpath|true|
+|$tresult=|isElementPresent;|//div[contains(@class,'grid-list-row') or contains(@class,'card-row-show')]//span[contains(text(),'${search_text}')]|xpath     |

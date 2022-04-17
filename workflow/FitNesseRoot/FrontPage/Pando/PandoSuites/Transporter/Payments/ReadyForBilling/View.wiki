@@ -1,0 +1,7 @@
+---
+Help: View Page validation for Ready for billing
+Suite
+Suites: pay4
+---
+!1 Test suite for view page
+!contents -R2 -g -p -f -h

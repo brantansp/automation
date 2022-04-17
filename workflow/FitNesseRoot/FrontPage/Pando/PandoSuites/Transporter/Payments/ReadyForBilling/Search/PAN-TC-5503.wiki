@@ -1,0 +1,20 @@
+---
+Help: Ensure Search count should be 1 for single indent id
+Test
+---
+!|Script   |Common            |
+|$order_id=|getTrim;|$order_id|
+
+!|Script                     |Ui                                                                                                                                                                                       |
+|wait;                       |5                                                                                                                                                                                        |
+|navigateToUrl;              |${turl}/v2/payments                                                                                                                                                                      |
+|click;                      |//span[text()='Search']                                                  |xpath                                                                                                          |
+|waitForElementToBeDisplayed;|//input[@placeholder='Enter Indent ID' or @placeholder='Enter indent id']|xpath                                                                                                |30       |
+|clearAndSend;               |//input[@placeholder='Enter Indent ID' or @placeholder='Enter indent id']|xpath                                                                                                |$order_id|
+|click;                      |//button[text()='Search']                                                |xpath                                                                                                          |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-row')]                                       |xpath                                                                                                |15       |
+|check                       |getCountOfElements;                                                      |//div[contains(@class,'card-row') or contains(@class,'list-row')]//span[contains(text(),'$order_id')]|xpath |1 |
+|$tresult1=                  |getCountOfElements;                                                      |//div[contains(@class,'card-row') or contains(@class,'list-row')]//span[contains(text(),'$order_id')]|xpath    |
+
+!|Script  |Common                            |
+|$tresult=|checkIfStringAreEqual;|$tresult1|1|

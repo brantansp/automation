@@ -1,0 +1,13 @@
+---
+Help: Request for quote API
+Test
+---
+!|Script     |Http                                                                                                                           |
+|wait;|2|
+|setBaseUrl; |${turl}/api/login                                                                                                              |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}                                  |
+|$token=     |getHeader;      |x-auth-token                                                                                                  |
+|addHeader;  |Authorization   |bearer $token                                                                                                 |
+|setBaseUrl; |${turl}/api/order/$order_id/rfq                                                                                                     |
+|$response=  |getResponse;    |Application/Json|put|{"data":{"status":${rfq_status},"freight_charge":"${freight_charge}","arrival_at":"$arrival_at","vehicle_type":"${vehicle_type_id}"}}|
+

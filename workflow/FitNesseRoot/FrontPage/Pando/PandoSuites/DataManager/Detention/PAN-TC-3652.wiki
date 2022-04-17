@@ -1,0 +1,68 @@
+---
+Help: Ensure Update Values working on existing data
+Suites: dm1
+Test
+---
+!** Unique values assignment
+!|Script        |Common                              |
+|$unique=       |getCurrentDateTimeStamp;|yMMddHHmmss|
+|$detention_day=|getRandomNumber;        |100  |1000 |
+**!
+
+!*** Vehicle Creation
+
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Uploading Detention Bulk Upload for First time
+!define row {Vehicle Name,Group Code,Movement,LOADING_DETENTION_DAY1,LOADING_DETENTION_DAY2,LOADING_DETENTION_DAY3,LOADING_DETENTION_DAY4,LOADING_DETENTION_DAY5,LOADING_DETENTION_MORETHAN_DAY5,UnLOADING_DETENTION_DAY1,UnLOADING_DETENTION_DAY2,UnLOADING_DETENTION_DAY3,UnLOADING_DETENTION_DAY4,UnLOADING_DETENTION_DAY5,UnLOADING_DETENTION_MORETHAN_DAY5,TRANSIT_DAY1,TRANSIT_DAY2,TRANSIT_DAY3,TRANSIT_DAY4,TRANSIT_DAY5,TRANSIT_MORETHAN_DAY5,TRANSIT_DELAY_PERCENTAGE}
+!define column1 {${vehicle_name},D,Primary,400,200,300,300,500,600,$detention_day,100,200,300,500,600,100,200,300,400,500,600,}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+
+!|Script  |Excel                       |
+|newSheet;|${row}|${column1}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/detentions                                          |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|wait;                     |5                                                               |
+**!
+
+
+!** Uploading Detention Bulk Upload for Second time
+!define row {Vehicle Name,Group Code,Movement,LOADING_DETENTION_DAY1,LOADING_DETENTION_DAY2,LOADING_DETENTION_DAY3,LOADING_DETENTION_DAY4,LOADING_DETENTION_DAY5,LOADING_DETENTION_MORETHAN_DAY5,UnLOADING_DETENTION_DAY1,UnLOADING_DETENTION_DAY2,UnLOADING_DETENTION_DAY3,UnLOADING_DETENTION_DAY4,UnLOADING_DETENTION_DAY5,UnLOADING_DETENTION_MORETHAN_DAY5,TRANSIT_DAY1,TRANSIT_DAY2,TRANSIT_DAY3,TRANSIT_DAY4,TRANSIT_DAY5,TRANSIT_MORETHAN_DAY5,TRANSIT_DELAY_PERCENTAGE}
+!define column1 {${vehicle_name},D,Primary,$detention_day,200,300,300,500,600,$detention_day,100,200,300,500,600,100,200,300,400,500,600,}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+
+!|Script  |Excel                       |
+|newSheet;|${row}|${column1}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/detentions                                          |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|wait;                     |5                                                               |
+
+!|Script       |Ui                                                                                                                                              |
+|navigateToUrl;|${surl}/mdm/detentions                                                                                                                          |
+|sendKeys;     |//input[@placeholder='Search by Truck type']|xpath                                                                                   |v$unique  |
+|check         |isElementPresent;                           |(//div[contains(@class,'dowble-row')])[1]//div[normalize-space(text())='$detention_day']|xpath|true|
+|$tresult=     |isElementPresent;                           |(//div[contains(@class,'dowble-row')])[1]//div[normalize-space(text())='$detention_day']|xpath     |
+
+**!
+
+!define tname {TC-200}
+ 

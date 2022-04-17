@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://srf-auto.pandostaging.in}
+!define username {pandosrfauto@outlook.com}
+!define password {test@1234}
+!define shipper_client_id {5ef32d19e88d131d754dd84c}

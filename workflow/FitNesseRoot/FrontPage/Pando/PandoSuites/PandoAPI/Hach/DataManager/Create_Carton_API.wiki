@@ -1,0 +1,22 @@
+---
+Help: Contains Carton API
+Suites: hach
+Test
+---
+!|Script    |Http                                      |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|https://pack.stockone.in/api/v1/carton/   |
+|$carton=   |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|200                        |
+
+!|Script             |json                                             |
+|$carton_code=       |getValueFromJSON;      |$carton|code      |int   |
+|$carton_description=|getValueFromJSON;      |$carton|description      |
+|$carton_weight_kg=  |getValueFromJSONByType;|$carton|weight_kg |double|
+|$carton_length_cm=  |getValueFromJSONByType;|$carton|length_cm |double|
+|$carton_width_cm=   |getValueFromJSONByType;|$carton|width_cm  |double|
+|$carton_height_cm=  |getValueFromJSONByType;|$carton|height_cm |double|
+|$carton_volume_ltr= |getValueFromJSONByType;|$carton|volume_ltr|double|
+|$carton_packaging=  |getValueFromJSONByType;|$carton|packaging        |
+
+

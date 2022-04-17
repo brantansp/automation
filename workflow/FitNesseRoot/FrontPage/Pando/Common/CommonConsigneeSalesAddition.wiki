@@ -1,0 +1,8 @@
+!|Script       |Ui                                                                               |
+|navigateToUrl;|${surl}/mdm/consignees                                                           |
+|click;        |//span[contains(text(),'${consignee_name}')]      |xpath                         |
+|wait;         |2                                                                                |
+|clearAndSend; |//input[@placeholder='Enter Sales Contact Mobile']|xpath|9047637908              |
+|clearAndSend; |//input[@placeholder='Enter Sales Contact Email'] |xpath|${consignee_sales_email}|
+|clearAndSend; |//input[@placeholder='Enter Sales Contact Name']  |xpath|Consignee Sales         |
+|click;        |//span[text()='Save']                             |xpath                         |

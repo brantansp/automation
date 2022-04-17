@@ -1,0 +1,42 @@
+---
+Help: To get invoice details in transporter using API
+Test
+---
+!**> status
+id: 1,
+        name: 'Generated',
+        id: 2,
+        name: 'Checked',
+        id: 4,
+        name: 'Returned',
+        id: 13,
+        name: 'Re Submitted',
+        id: 8,
+        name: 'On Hold',
+        id: 3,
+        name: 'Approved',
+        id: 7,
+        name: 'Verified',
+        id: 9,
+        name: 'Posted',
+        id: 10,
+        name: 'Payment Hold',
+**!
+
+!|Script     |Http                                                                                                                                                              |
+|wait;       |5                                                                                                                                                                 |
+|setBaseUrl; |${turl}/api/login                                                                                                                                                 |
+|getResponse;|Application/Json             |put                          |{"data":{"email":"${transporter_email}","password":"${transporter_password}"}}                        |
+|$token=     |getHeader;                   |x-auth-token                                                                                                                        |
+|addHeader;  |Authorization                |bearer $token                                                                                                                       |
+|setBaseUrl; |${turl}/api/v2/transporter/invoice?client_id=${shipper_client_id}&depot_id=${depot_id}&status_group=1001,1002,1003,1004,1005,1007,1006&page_number=1&page_limit=20|
+|$data=      |getResponse;                 |Application/Json             |get                                                 |                                                 |
+|$status=    |getStatusCode;                                                                                                                                                    |
+
+!|Script     |json                                                                         |
+|$data=      |getValueFromJSON;                    |$data |data                            |
+|$array=     |getArrayValueFromJSON;               |$data |invoiceListData                 |
+|$position=  |getKeyIndexFromJSONByKeyAndValueType;|$array|invoice_number|${invoice_number}|
+|$array=     |getJSONObjectFromJsonArray;          |$array|$position                       |
+|$status=    |getValueFromJSON;                    |$array|status                          |
+|$invoice_id=|getValueFromJSON;                    |$array|id                              |

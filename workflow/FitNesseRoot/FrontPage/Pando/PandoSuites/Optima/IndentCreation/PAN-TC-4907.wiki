@@ -1,0 +1,195 @@
+---
+Help: Ensure that optima settings are persistence
+Suites: optima
+Test
+---
+!5 Ensure that optima settings are persistence
+
+!** Unique values assignment - Chennai Depot
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+
+!define movement {2}
+!define movement_type {Primary}
+**!
+
+!** Validating Depot settings
+!define depot {Chennai Depot}
+!** Validating Route setting
+!|Script         |Ui                                                                                                                                                                        |
+|navigateToUrl;  |${surl}/optima/settings                                                                                                                                                   |
+|click;          |//a[contains(.,'Route')]                                 |xpath                                                                                                           |
+|click;          |//input[@placeholder='Select Depot']                     |xpath                                                                                                           |
+|sendKeys;       |//div[normalize-space(text())='Depot']/..//input         |xpath                                                                                                  |${depot}|
+|click;          |//span[contains(text(),'${depot}')]                      |xpath                                                                                                           |
+|click;          |//div[contains(text(),'Movement')]/following-sibling::div|xpath                                                                                                           |
+|click;          |//li[contains(.,'Secondary')]                            |xpath                                                                                                           |
+|wait;           |2                                                                                                                                                                         |
+|$maxpickups2=   |getValue;                                                |//div[normalize-space(text())='Max Pick ups']/..//input                                                |xpath   |
+|$maxdropoffs2=  |getValue;                                                |//div[normalize-space(text())='Max Drop offs']/..//input                                               |xpath   |
+|$distancelimit2=|getValue;                                                |//div[normalize-space(text())='Distance Limit']/..//input                                              |xpath   |
+|$city2=         |getValue;                                                |//div[normalize-space(text())='CITY-WISE DROP OFFS']/following-sibling::div//input[@placeholder='City']|xpath   |
+|$citydrop2=     |getValue;                                                |//div[normalize-space(text())='CITY-WISE DROP OFFS']/following-sibling::div//input[@type='number']     |xpath   |
+|click;          |//div[contains(text(),'Movement')]/following-sibling::div|xpath                                                                                                           |
+|click;          |//li[contains(.,'Primary')]                              |xpath                                                                                                           |
+|wait;           |2                                                                                                                                                                         |
+|$maxpickups1=   |getValue;                                                |//div[normalize-space(text())='Max Pick ups']/..//input                                                |xpath   |
+|$maxdropoffs1=  |getValue;                                                |//div[normalize-space(text())='Max Drop offs']/..//input                                               |xpath   |
+|$distancelimit1=|getValue;                                                |//div[normalize-space(text())='Distance Limit']/..//input                                              |xpath   |
+|$city1=         |getValue;                                                |//div[normalize-space(text())='CITY-WISE DROP OFFS']/following-sibling::div//input[@placeholder='City']|xpath   |
+|$citydrop1=     |getValue;                                                |//div[normalize-space(text())='CITY-WISE DROP OFFS']/following-sibling::div//input[@type='number']     |xpath   |
+
+!|script|common                                                 |
+|check  |checkIfStringAreEqual;|$maxpickups1   |5          |true|
+|check  |checkIfStringAreEqual;|$maxdropoffs1  |5          |true|
+|check  |checkIfStringAreEqual;|$distancelimit1|200        |true|
+|check  |checkIfStringAreEqual;|$city1         |Vellore    |true|
+|check  |checkIfStringAreEqual;|$citydrop1     |1          |true|
+|check  |checkIfStringAreEqual;|$maxpickups2   |4          |true|
+|check  |checkIfStringAreEqual;|$maxdropoffs2  |4          |true|
+|check  |checkIfStringAreEqual;|$distancelimit2|150        |true|
+|check  |checkIfStringAreEqual;|$city2         |Kanchipuram|true|
+|check  |checkIfStringAreEqual;|$citydrop2     |4          |true|
+*!
+
+!** Validating Vehicle setting
+!|Script       |Ui                                                                                                                                                                                    |
+|navigateToUrl;|${surl}/optima/settings                                                                                                                                                               |
+|click;        |//a[contains(.,'Vehicles')]                              |xpath                                                                                                                       |
+|click;        |//input[@placeholder='Select Depot']                     |xpath                                                                                                                       |
+|sendKeys;     |//div[normalize-space(text())='Depot']/..//input         |xpath                                                                                                            |${depot}  |
+|click;        |//span[contains(text(),'${depot}')]                      |xpath                                                                                                                       |
+|click;        |//div[contains(text(),'Movement')]/following-sibling::div|xpath                                                                                                                       |
+|click;        |//li[contains(.,'Secondary')]                            |xpath                                                                                                                       |
+|wait;         |2                                                                                                                                                                                     |
+|$truck2=      |getValue;                                                |//div[normalize-space(text())='TRUCK-WISE CONSTRANING FACTOR']/following-sibling::div//input[@type='text']       |xpath     |
+|$truckwt2=    |getValue;                                                |(//div[normalize-space(text())='TRUCK-WISE CONSTRANING FACTOR']/following-sibling::div//input[@type='number'])[1]|xpath     |
+|$truckvl2=    |getValue;                                                |(//div[normalize-space(text())='TRUCK-WISE CONSTRANING FACTOR']/following-sibling::div//input[@type='number'])[2]|xpath     |
+|check         |isElementPresent;                                        |//div[normalize-space(text())='FTL CERTIFICATION']/following-sibling::div//div[@class='el-switch is-checked']    |xpath|true|
+|click;        |//div[contains(text(),'Movement')]/following-sibling::div|xpath                                                                                                                       |
+|click;        |//li[contains(.,'Primary')]                              |xpath                                                                                                                       |
+|wait;         |2                                                                                                                                                                                     |
+|$truck1=      |getValue;                                                |//div[normalize-space(text())='TRUCK-WISE CONSTRANING FACTOR']/following-sibling::div//input[@type='text']       |xpath     |
+|$truckwt1=    |getValue;                                                |(//div[normalize-space(text())='TRUCK-WISE CONSTRANING FACTOR']/following-sibling::div//input[@type='number'])[1]|xpath     |
+|$truckvl1=    |getValue;                                                |(//div[normalize-space(text())='TRUCK-WISE CONSTRANING FACTOR']/following-sibling::div//input[@type='number'])[2]|xpath     |
+|check         |isElementPresent;                                        |//div[normalize-space(text())='FTL CERTIFICATION']/following-sibling::div//div[@class='el-switch']               |xpath|true|
+
+#|check         |isElementPresent;                                        |//span[text()='Weight']/../span[contains(@class,'checked')]                                                      |xpath|true|
+#|$weight2=     |getValue;                                                |//div[normalize-space(text())='Weight']/..//input                                                                |xpath     |
+#|$volume2=     |getValue;                                                |//div[normalize-space(text())='Volume']/..//input                                                                |xpath     |
+#|check         |isElementPresent;                                        |//span[text()='Weight and Volume']/../span[contains(@class,'checked')]                                           |xpath|true|
+#|$weight1=     |getValue;                                                |//div[normalize-space(text())='Weight']/..//input                                                                |xpath     |
+#|$volume1=     |getValue;                                                |//div[normalize-space(text())='Volume']/..//input                                                                |xpath     |
+
+!|script|common                                       |
+|check  |checkIfStringAreEqual;|$truck1  |701 MRT|true|
+|check  |checkIfStringAreEqual;|$truckwt1|1      |true|
+|check  |checkIfStringAreEqual;|$truckvl1|1      |true|
+|check  |checkIfStringAreEqual;|$truck2  |965 CFT|true|
+|check  |checkIfStringAreEqual;|$truckwt2|1      |true|
+|check  |checkIfStringAreEqual;|$truckvl2|1      |true|
+
+#|check  |checkIfStringAreEqual;|$weight1 |1      |true|
+#|check  |checkIfStringAreEqual;|$volume1 |1      |true|
+#|check  |checkIfStringAreEqual;|$weight2 |1      |true|
+#|check  |checkIfStringAreEqual;|$volume2 |1      |true|
+*!
+
+!** Material Priority Setting
+!|Script       |Ui                                                                                                                                                                               |
+|navigateToUrl;|${surl}/optima/settings                                                                                                                                                          |
+|click;        |//a[contains(.,'Material Priority')]                     |xpath                                                                                                                  |
+|click;        |//input[@placeholder='Select Depot']                     |xpath                                                                                                                  |
+|sendKeys;     |//div[normalize-space(text())='Depot']/..//input         |xpath                                                                                                         |${depot}|
+|click;        |//span[contains(text(),'${depot}')]                      |xpath                                                                                                                  |
+|click;        |//div[contains(text(),'Movement')]/following-sibling::div|xpath                                                                                                                  |
+|click;        |//li[contains(.,'Primary')]                              |xpath                                                                                                                  |
+|wait;         |2                                                                                                                                                                                |
+|$mat1=        |getText;                                                 |(//div[normalize-space(text())='ORDER OF CATEGORY']/following-sibling::div//span[contains(@class,'label')])[1]|xpath   |
+|$mat2=        |getText;                                                 |(//div[normalize-space(text())='ORDER OF CATEGORY']/following-sibling::div//span[contains(@class,'label')])[2]|xpath   |
+|click;        |//div[contains(text(),'Movement')]/following-sibling::div|xpath                                                                                                                  |
+|click;        |//li[contains(.,'Secondary')]                            |xpath                                                                                                                  |
+|wait;         |2                                                                                                                                                                                |
+|$mat3=        |getText;                                                 |(//div[normalize-space(text())='ORDER OF CATEGORY']/following-sibling::div//span[contains(@class,'label')])[1]|xpath   |
+|$mat4=        |getText;                                                 |(//div[normalize-space(text())='ORDER OF CATEGORY']/following-sibling::div//span[contains(@class,'label')])[2]|xpath   |
+
+!|script|common                              |
+|check  |checkIfStringAreEqual;|$mat1|AT|true|
+|check  |checkIfStringAreEqual;|$mat2|KT|true|
+|check  |checkIfStringAreEqual;|$mat3|KT|true|
+|check  |checkIfStringAreEqual;|$mat4|AT|true|
+*!
+
+!** Auto Run Setting
+!|Script       |Ui                                                                                                                                                                   |
+|navigateToUrl;|${surl}/optima/settings                                                                                                                                              |
+|click;        |//a[contains(.,'AutoRun')]                               |xpath                                                                                                      |
+|click;        |//input[@placeholder='Select Depot']                     |xpath                                                                                                      |
+|sendKeys;     |//div[normalize-space(text())='Depot']/..//input         |xpath                                                                                           |${depot}  |
+|click;        |//span[contains(text(),'${depot}')]                      |xpath                                                                                                      |
+|click;        |//div[contains(text(),'Movement')]/following-sibling::div|xpath                                                                                                      |
+|click;        |//li[contains(.,'Primary')]                              |xpath                                                                                                      |
+|wait;         |2                                                                                                                                                                    |
+|check         |isElementPresent;                                        |//div[contains(text(),'Pull Picklist Time')]/../following-sibling::div//div[contains(@class,'is-checked')]|xpath|true|
+|$autorunhour= |getValue;                                                |(//div[@class='table-bgcolor inputtable']//input[@placeholder='Select'])[1]                     |xpath     |
+|$autorunmin=  |getValue;                                                |(//div[@class='table-bgcolor inputtable']//input[@placeholder='Select'])[2]                     |xpath     |
+|click;        |//div[contains(text(),'Movement')]/following-sibling::div|xpath                                                                                                      |
+|click;        |//li[contains(.,'Secondary')]                            |xpath                                                                                                      |
+|wait;         |2                                                                                                                                                                    |
+|wait;         |3                                                                                                                                                                    |
+|check         |isElementNotPresent;                                     |//div[contains(text(),'Pull Picklist Time')]/../following-sibling::div//div[contains(@class,'is-checked')]|xpath|true|
+
+!|script|common                                     |
+|check  |checkIfStringAreEqual;|$autorunhour|23|true|
+|check  |checkIfStringAreEqual;|$autorunmin |30|true|
+*!
+
+!** Route CS setting
+!|Script         |Ui                                                                                                                                                                           |
+|navigateToUrl;  |${surl}/optima/cs                                                                                                                                                            |
+|click;          |//input[@placeholder='Select Depot']                     |xpath                                                                                                              |
+|sendKeys;       |//div[normalize-space(text())='Depot']/..//input         |xpath                                                                                                   |${depot}  |
+|click;          |//span[contains(text(),'${depot}')]                      |xpath                                                                                                              |
+|click;          |//div[contains(text(),'Movement')]/following-sibling::div|xpath                                                                                                              |
+|click;          |//li[contains(.,'Secondary')]                            |xpath                                                                                                              |
+|wait;           |2                                                                                                                                                                            |
+|$splitfactor2=  |getValue;                                                |//div[normalize-space(text())='Split Factor']/..//input                                                 |xpath     |
+|$maxsplits2=    |getValue;                                                |//div[normalize-space(text())='Max Splits']/..//input                                                   |xpath     |
+|$algomode2=     |getValue;                                                |//div[normalize-space(text())='Algorithm Mode']/..//input                                               |xpath     |
+|$angle2=        |getValue;                                                |//div[normalize-space(text())='Angle']/..//input                                                        |xpath     |
+|$optimatype2=   |getValue;                                                |//div[normalize-space(text())='Optima Type']/..//input                                                  |xpath     |
+|$mode2=         |getValue;                                                |//div[normalize-space(text())='Mode']/..//input                                                         |xpath     |
+|$truckcount2=   |getValue;                                                |//div[normalize-space(text())='Limited truck count']/..//input                                          |xpath     |
+|$ptlDeliveries2=|getValue;                                                |//div[normalize-space(text())='PTL Deliveries']/following-sibling::div//input                           |xpath     |
+|check           |isElementPresent;                                        |//div[normalize-space(text())='HYBRID SPLIT']/following-sibling::div//div[@class='el-switch is-checked']|xpath|true|
+|click;          |//div[contains(text(),'Movement')]/following-sibling::div|xpath                                                                                                              |
+|click;          |//li[contains(.,'Primary')]                              |xpath                                                                                                              |
+|wait;           |2                                                                                                                                                                            |
+|$splitfactor1=  |getValue;                                                |//div[normalize-space(text())='Split Factor']/..//input                                                 |xpath     |
+|$maxsplits1=    |getValue;                                                |//div[normalize-space(text())='Max Splits']/..//input                                                   |xpath     |
+|$algomode1=     |getValue;                                                |//div[normalize-space(text())='Algorithm Mode']/..//input                                               |xpath     |
+|$angle1=        |getValue;                                                |//div[normalize-space(text())='Angle']/..//input                                                        |xpath     |
+|$optimatype1=   |getValue;                                                |//div[normalize-space(text())='Optima Type']/..//input                                                  |xpath     |
+|$mode1=         |getValue;                                                |//div[normalize-space(text())='Mode']/..//input                                                         |xpath     |
+|$truckcount1=   |getValue;                                                |//div[normalize-space(text())='Limited truck count']/..//input                                          |xpath     |
+|$ptlDeliveries1=|getValue;                                                |//div[normalize-space(text())='PTL Deliveries']/following-sibling::div//input                           |xpath     |
+
+!|script  |common                                                      |
+|check    |checkIfStringAreEqual;|$splitfactor1  |5               |true|
+|check    |checkIfStringAreEqual;|$maxsplits1    |5               |true|
+|check    |checkIfStringAreEqual;|$algomode1     |Default         |true|
+|check    |checkIfStringAreEqual;|$angle1        |30              |true|
+|check    |checkIfStringAreEqual;|$optimatype1   |2D              |true|
+|check    |checkIfStringAreEqual;|$mode1         |0               |true|
+|check    |checkIfStringAreEqual;|$truckcount1   |No              |true|
+|check    |checkIfStringAreEqual;|$splitfactor2  |5               |true|
+|check    |checkIfStringAreEqual;|$maxsplits2    |4               |true|
+|check    |checkIfStringAreEqual;|$algomode2     |Courier         |true|
+|check    |checkIfStringAreEqual;|$angle2        |30              |true|
+|check    |checkIfStringAreEqual;|$optimatype2   |LBH             |true|
+|check    |checkIfStringAreEqual;|$mode2         |0               |true|
+|check    |checkIfStringAreEqual;|$truckcount2   |No              |true|
+|check    |checkIfStringAreEqual;|$ptlDeliveries1|Disable / Reject|true|
+|$tresult=|checkIfStringAreEqual;|$ptlDeliveries2|Auto                 |
+*!
+*!

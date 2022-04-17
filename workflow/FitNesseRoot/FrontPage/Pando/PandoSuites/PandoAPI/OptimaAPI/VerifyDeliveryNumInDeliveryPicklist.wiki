@@ -1,0 +1,18 @@
+---
+Help: Contains Script to Verify delivery Number in Deliver Pick List
+Test
+---
+!| Script   |Http                                                                          |
+|addHeader; |Authorization            |bearer $stoken                                      |
+|setBaseUrl;|${surl}/api/optima/delivery_picklist/$depot?customer_type=${movement}&status=1|
+|$response= |getResponse;             |Application/Json           |get          |          |
+|check      |getStatusCode;           |200                                                 |
+
+|Script|Common                           |
+|$len= |getStringLength;|$response       |
+|$data=|getSubString;   |$response|8|$len|
+
+!|script             |json                                                           |
+|$loc=               |getKeyIndexFromJSONByKeyAndValueType;|$data|${key}|${key_value}|
+|$data=              |getJSONObjectFromJsonArray;          |$data|$loc               |
+|$retrieve_key_value=|getValueFromJSON;                    |$data|${retrieve_key}    |

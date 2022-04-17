@@ -1,0 +1,8 @@
+---
+Test
+---
+!|Script    |Http                                                                          |
+|addHeader; |Authorization |bearer $stoken                                                 |
+|setBaseUrl;|${surl}/api/order/$order_id/report_at                                         |
+|$report_at=|getResponse;  |Application/Json|put|{"data":{"reported_at":"${loading_date}"}}|
+|check      |getStatusCode;|200                                                            |

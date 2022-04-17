@@ -1,0 +1,8 @@
+---
+Help: Use to Search for User Name in DM Users
+---
+!|script        |ui                                                               |
+|navigateToUrl; |${surl}/mdm/users                                                |
+|sendKeys;      |//input[@placeholder='Search by user name']|xpath|${search_value}|
+|sendControlKey;|//input[@placeholder='Search by user name']|xpath|ENTER          |
+|wait;          |3                                                                |

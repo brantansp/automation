@@ -1,0 +1,22 @@
+---
+Help: Use to Retrieve the Notification Mail particular to a reason
+---
+!|Script                        |Ui                                                                                                                                             |
+|wait;                          |5                                                                                                                                              |
+|navigateToUrl;                 |${mail_url}/email?page=0&size=60                                                                                                               |
+|refreshForElementToBeDisplayed;|//td[text()='${email}']/following-sibling::td[contains(text(),'${mail_subject}')]/ancestor::tr/td/a|xpath                                |3 |5 |
+|click;                         |//td[text()='${email}']/following-sibling::td[contains(text(),'${mail_subject}')]/ancestor::tr/td/a|xpath                                      |
+|waitForElementToBeDisplayed;   |//span[@class='card-title']/i[text()='email']                                                      |xpath                                |10   |
+|$url=                          |currentUrl;                                                                                                                                    |
+|waitForElementToBeDisplayed;   |//div[@class='card-content']                                                                       |xpath                                |10   |
+|$body=                         |getText;                                                                                           |//div[@class='card-content']         |xpath|
+|$subject=                      |getText;                                                                                           |//th[text()='Subject:']/following::td|xpath|
+
+
+!|Script|Common                               |
+|$url=  |stringConcatenation; |$url|xxx       |
+|$id=   |getSubStringByString;|$url|email/|xxx|
+
+!|Script    |Http                                 |
+|setBaseUrl;|${mail_url}/api/email/$id            |
+|$clear=    |getResponse;|Application/Json|delete||

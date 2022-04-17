@@ -1,0 +1,17 @@
+---
+Help: Contains script to upload the material in optima manually
+---
+!|Script                     |Ui                                                                                                                                   |
+|wait;                       |10                                                                                                                                   |
+|navigateToUrl;              |${surl}/optima                                                                                                                       |
+|waitForElementToBeDisplayed;|//div[text()='Add Materials to optimize Indents' or contains(@class,'card-header')]|xpath                              |30           |
+|click;                      |(//div[@class='cardfilter-grid']//input)[1]/../self::div                           |xpath                                            |
+|sendKeys;                   |(//div[@class='cardfilter-grid']//input)[1]                                        |xpath                              |${depot_name}|
+|click;                      |//span[contains(text(),'${depot_name}')]                                           |xpath                                            |
+|wait                        |1                                                                                                                                    |
+|click;                      |(//div[@class='cardfilter-grid']//input)[2]                                        |xpath                                            |
+|click;                      |//span[contains(text(),'${movement_type}')]                                        |xpath                                            |
+|wait;                       |1                                                                                                                                    |
+|sendKeys;                   |file                                                                               |id                                 |$excelpath   |
+|waitForElementToBeInvisible;|//p[contains(text(),'Validating your input')]                                      |xpath                              |30           |
+|$data=                      |getText;                                                                           |//div[@class='empty-stage-message']|xpath        |

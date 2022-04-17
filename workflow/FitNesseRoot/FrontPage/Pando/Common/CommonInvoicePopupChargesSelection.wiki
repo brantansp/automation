@@ -1,0 +1,6 @@
+!|Script                     |Ui                                                                                                        |
+|waitForElementToBeDisplayed;|//div[contains(@class,'table__body')]                                                            |xpath|20|
+|click;                      |//div[@class='el-table__fixed']//div[contains(@class,'location') and normalize-space(text())='${location}']|xpath   |
+|waitForElementToBeDisplayed;|//div[@id='pane-Details']//div[starts-with(normalize-space(@class),'tab-content')]               |xpath|15|
+|click;                      |//div[@id='tab-Charges']                                                                         |xpath   |
+|waitForElementToBeDisplayed;|//div[@id='pane-Charges']//div[starts-with(normalize-space(@class),'tab-content')]               |xpath|15|

@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://pg2-auto.pandostaging.in}
+!define username {pandopg2auto@gmail.com}
+!define password {test@1234}
+!define shipper_client_id {5daeffd11db6d97f0a3eaa57}

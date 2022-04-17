@@ -1,0 +1,12 @@
+!|script                   |ui                                                                                                                    |
+|navigateToUrl;            |${surl}/mdm/depots/$depot                                                                                             |
+|waitUntilElementDisplayed;|//div[@class='mdm-depot-details']                                                                  |xpath|60          |
+|click;                    |//li[contains(text(),'DEPOT USERS')]                                                               |xpath             |
+|wait;                     |5                                                                                                                     |
+|click;                    |//a[contains(text(),'USERS')]                                                                      |xpath             |
+|waitUntilElementDisplayed;|//div[@role='group']//label                                                                        |xpath|60          |
+|sendHumanKeys;            |//input[@name='address']                                                                           |xpath|${user_name}|
+|waitUntilElementDisplayed;|(//div[@class='popover-primary-body']//label//span[normalize-space(text()='${user_name}')])[last()]|xpath|15          |
+|click;                    |//span[contains(text(),'${user_name}')]                                                            |xpath             |
+|click;                    |//button[contains(text(),'Save')]                                                                  |xpath             |
+|wait;                     |3                                                                                                                     |

@@ -1,0 +1,7 @@
+---
+Help: Payment Split Based On GST
+Suite
+Suites: tcl
+---
+!1 Test suite Payment Split Based On GST
+!contents -R2 -g -p -f -h

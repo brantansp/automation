@@ -1,0 +1,6 @@
+---
+Help: Contains API for HACH
+Suite
+---
+!1 Test suite Hach
+!contents -R2 -g -p -f -h

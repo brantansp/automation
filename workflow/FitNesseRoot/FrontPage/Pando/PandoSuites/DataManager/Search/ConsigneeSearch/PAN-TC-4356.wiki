@@ -1,0 +1,40 @@
+---
+Help: Contains test cases for searching Pincode filters in consignee
+Test
+---
+!** Unique values assignment
+!|Script  |Common                                 |
+|$unique= |getCurrentDateTimeStamp;|yMMddHHmmss   |
+|$srandom=|getRandomString;        |5|ALPHANUMERIC|
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {T Nagar}
+!define city {Chennai}
+!define state {$srandom}
+!define pincode {$unique}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {East}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Search by state
+!define search_value {${pincode}}
+!define search_count {1}
+!define search_text {Enter Postal Code}
+!define xpath {//span[contains(text(),'c$unique')]/ancestor::div[contains(@class,'grid-list-row')]//span[normalize-space(text())='${pincode}']}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Search.ConsigneeSearch.CommonConsigneeSearch
+
+!|script|ui                                   |
+|check  |isElementPresent;|${xpath}|xpath|true|
+
+!|script  |common                              |
+|$tresult=|checkIfStringAreEqual;|1|$totalCount|
+**!

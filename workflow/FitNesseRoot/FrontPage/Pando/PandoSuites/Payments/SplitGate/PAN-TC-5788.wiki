@@ -1,0 +1,494 @@
+---
+Help: Split gate calculation based on material weight
+Suites: marico
+Test
+---
+!5 Split gate are Gates with Special Tax rebate column as Yes. Basically when G1 is in one state and G2 is in another state, then special tax rebate will be done for the gate located in union territory.
+
+!5 In Billing section, there should be seperate indent for the Special gate has the indent id with suffix gate ref id
+
+!5 Calculation based on Weight of material for each gate : ODA RATES ARE TAKEN FROM RATE MARTIX FOR V2 NOT FROM LOADING/UNLOADING
+
+!** Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMdHm             |
+|$rand=  |getRandomString;        |1      |ALPHAUPPER|
+|$unique=|stringConcatenation;    |$unique|$rand     |
+|$num=   |getRandomNumber;        |100000 |999999    |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script        |DateUtil                                         |
+|$truckindate1= |dateCalculation;|yyyy/MM/dd                  |-7 |
+|$truckoutdate1=|dateCalculation;|yyyy/MM/dd                  |-6 |
+|$truckindate2= |dateCalculation;|yyyy/MM/dd                  |-7 |
+|$truckoutdate2=|dateCalculation;|yyyy/MM/dd                  |-6 |
+|$rdate=        |dateCalculation;|yyyy/MM/dd                  |-1 |
+|$loadingDate1= |dateCalculation;|yyyy-MM-dd'T'HH:mm:ss.SSSXXX|-11|
+|$loadingDate2= |dateCalculation;|yyyy-MM-dd'T'HH:mm:ss.SSSXXX|-10|
+
+!|Script          |Common                                           |
+|$truckindate1=   |stringConcatenation;|$truckindate1 |!- 10:00:00-!|
+|$truckoutdate1=  |stringConcatenation;|$truckoutdate1|!- 10:00:00-!|
+|$truckindate2=   |stringConcatenation;|$truckindate2 |!- 10:00:00-!|
+|$truckoutdate2=  |stringConcatenation;|$truckoutdate2|!- 10:00:00-!|
+|$rdate=          |stringConcatenation;|$rdate        |!- 10:00:00-!|
+|$detention_group=|getRandomString;    |4             |ALPHAUPPER   |
+
+!|Script        |DateUtil                     |
+|$truckindate1= |utcConversion;|$truckindate1 |
+|$truckoutdate1=|utcConversion;|$truckoutdate1|
+|$truckindate2= |utcConversion;|$truckindate2 |
+|$truckoutdate2=|utcConversion;|$truckoutdate2|
+
+!|Script        |DateUtil                                     |
+|$expected_date=|dateCalculation;|yyyy/MM/dd        |0        |
+|$expected_date=|utcConversion;  |$expected_date !- 10:00:00-!|
+**!
+
+!** Consignee Creation 1
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Egmore}
+!define city {Pune}
+!define state {Madya Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1+$unique@outlook.com}
+!define region {South}
+!define site {2}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+**!
+
+!*** Vehicle Creation
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@outlook.com}
+!define status {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!*** Shipper Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {605009}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!*** Gate Manager Creation
+!*** Gate Creation 1
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RG1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {605009}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script    |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!*** Gate Creation 2 (Special gate - Special tax rebate true)
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {RG2$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {605009}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+!define special_tax_rebate {true}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script    |json                                |
+|$gate_id_2=|getValueFromJSON;|$depotResp|data.id|
+*!
+*!
+
+!** Material Creation
+!define material_name {m1$unique}
+!define material_code {mc1$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!**> Enable Admin setting to default
+!|script|common                                                                                                                                                          |
+|$data= |getTrim;|{"insurance_threshold":3000,"shortage":{"value":1,"factor":1.5},"damage":{"value":1,"factor":0.5},"carton_damage":{"value":1,"factor":10},"movement":1}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.AdminSettings.ShortageDamageSettingAPI
+**!
+
+!** Upload Loading and Unloading charges
+!define Vehicle_Type {${vehicle_name}}
+!define Movement {Secondary}
+!define Depot_Ref_Id {R$unique}
+!define Loading_Cost {100}
+!define Unloading_Cost {120}
+!define ODA_Cost {100}
+!define unit {per_trip}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.LoadingAndUnloadingSearch.CommonLUUpload
+*!
+
+!** Uploading Detention for the Vehicle Group - $detention_group (Secondary)
+!define row {Vehicle Name,Group Code,Movement,LOADING_DETENTION_DAY1,LOADING_DETENTION_DAY2,LOADING_DETENTION_DAY3,LOADING_DETENTION_DAY4,LOADING_DETENTION_DAY5,LOADING_DETENTION_MORETHAN_DAY5,UnLOADING_DETENTION_DAY1,UnLOADING_DETENTION_DAY2,UnLOADING_DETENTION_DAY3,UnLOADING_DETENTION_DAY4,UnLOADING_DETENTION_DAY5,UnLOADING_DETENTION_MORETHAN_DAY5,TRANSIT_DAY1,TRANSIT_DAY2,TRANSIT_DAY3,TRANSIT_DAY4,TRANSIT_DAY5,TRANSIT_MORETHAN_DAY5,TRANSIT_DELAY_PERCENTAGE}
+!define column1 {${vehicle_name},$detention_group,Secondary,100,200,300,400,500,600,100,200,300,400,500,600,100,200,300,400,500,600,5}
+
+!|Script    |Common                                          |
+|$excelpath=|getPath;|testAttachment/d2_$unique.xlsx|fullpath|
+
+
+!|Script  |Excel                       |
+|newSheet;|${row}|${column1}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/detentions                                          |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|wait;                     |5                                                               |
+**!
+
+!** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,BDR Charge,BDR Label,Exclude,Trip Count}
+!define column {Point,RG1$unique,$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,10000,per_trip,01-Jan-$year,31-Dec-2030,100,1,$detention_group,,100,50,Per Trip,30,200,,,,,,,,|Point,RG2$unique,$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,10000,per_trip,01-Jan-$year,31-Dec-2030,100,1,$detention_group,,100,50,Per Trip,30,200,,,,,,,,}
+
+!include -c  .FrontPage.Pando.Common.RateMatrix
+*!
+
+!** Indent Creation
+!|Script                 |DateUtil                                        |
+|$vehicleRequirementDate=|dateCalculation;|yyyy-MM-dd'T'HH:mm:ss.SSSXXX|-9|
+
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id_1 {$gate_id_1}
+!define gate_id_2 {$gate_id_2}
+!define vehicle_requirement_date {$vehicleRequirementDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id_1}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice}},{"type":1,"location_id":"${location_id}","gate_id":"${gate_id_2}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice}}],"destinations":[{"type":2,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id_1}","sold_to_id":"${sold_to_id}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"expected_delivery_at":"${expected_delivery_at}"},{"type":2,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id_2}","sold_to_id":"${sold_to_id}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"expected_delivery_at":"${expected_delivery_at}"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+*!
+
+!*** Adding Truck details
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {1234567890}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!** Get indent details
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.GetIndentDetails
+
+!|Script                |json                                                                      |
+|$sources=              |getValueFromJSON;                    |$response    |data.sources          |
+|$gate1_source_position=|getKeyIndexFromJSONByKeyAndValueType;|$sources     |gate_id  |$gate_id_1  |
+|$gate2_source_position=|getKeyIndexFromJSONByKeyAndValueType;|$sources     |gate_id  |$gate_id_2  |
+|$gate1_source=         |getJSONObjectFromJsonArray;          |$sources     |$gate1_source_position|
+|$gate2_source=         |getJSONObjectFromJsonArray;          |$sources     |$gate2_source_position|
+|$gate1_unique_id=      |getValueFromJSON;                    |$gate1_source|unique_id             |
+|$gate2_unique_id=      |getValueFromJSON;                    |$gate2_source|unique_id             |
+*!
+
+!*** Truck in details
+!| Script                |Common                   |
+|$unique_truck_assign_id=|getTrim;|$gate1_unique_id|
+|$truck_in_date=         |getTrim;|$truckindate1   |
+
+!define gate_id_api {${gate_id_api_1}}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+
+!| Script                |Common                   |
+|$unique_truck_assign_id=|getTrim;|$gate2_unique_id|
+|$truck_in_date=         |getTrim;|$truckindate2   |
+
+!define gate_id_api {${gate_id_api_2}}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!*** Reached Load point
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LoadingPointAPI
+*!
+
+!** Update LR for Consignee 1
+!define consignee_id {$consignee_id_1}
+!define lr_number {l1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!** Material upload for all consignee
+!define mrp_price {1000}
+!define quantity1 {100} 
+!define quantity2 {150} 
+!define quantity_unit {cases}
+!define weight1 {600}
+!define weight2 {400}
+!define weight_unit {KG}
+!define volume1 {560}
+!define volume2 {400}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {2000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+!define erp_depo_id_api {${depot_reference_id}}
+!define erp_gate_id_api {${gate_ref_id}}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc1$unique","depot_ref_id":"R$unique","gate_ref_id":"RG1$unique","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight1}","weight_unit":"${weight_unit}","volume":"${volume1}","volume_unit":"${volume_unit}","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","type":"${type}","invoice_number":"INV1-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate1"},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"${mrp_price}","material_code":"mc1$unique","depot_ref_id":"R$unique","gate_ref_id":"RG2$unique","division":"BK","quantity":"${quantity2}","quantity_unit":"${quantity_unit}","weight":"${weight2}","weight_unit":"${weight_unit}","volume":"${volume2}","volume_unit":"${volume_unit}","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","type":"${type}","invoice_number":"INV2-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate2"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** EPOD Calculation
+!define no_of_shortage1 {0}
+!define no_of_shortage2 {0}
+!define no_of_leakage1 {0}
+!define no_of_leakage2 {0}
+!define mrp {${mrp_price}}
+!define no_of_excess1 {0}
+!define no_of_excess2 {0}
+!define no_of_damage1 {0}
+!define no_of_damage2 {0}
+!define no_of_carton_damage1 {0}
+!define no_of_carton_damage2 {0}
+!define release_date1 {$rdate}
+!define release_date2 {$rdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"INV1-$unique","material_code":"mc1$unique","no_of_shortage":"${no_of_shortage1}","no_of_leakage":"${no_of_leakage1}","mrp":"${mrp}","no_of_excess":"${no_of_excess1}","no_of_damage":"${no_of_damage1}","no_of_carton_damage":"${no_of_carton_damage1}","release_date":"${release_date1}"},{"indent_number":"$order_id","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"INV2-$unique","material_code":"mc1$unique","no_of_shortage":"${no_of_shortage2}","no_of_leakage":"${no_of_leakage2}","mrp":"${mrp}","no_of_excess":"${no_of_excess2}","no_of_damage":"${no_of_damage2}","no_of_carton_damage":"${no_of_carton_damage2}","release_date":"${release_date2}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!** Transporter Login
+!define transporter_email {pandotransporter+$unique@outlook.com}
+!define transporter_password {$password}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!** Assigning order number
+!|script         |common                       |
+|$order_id_main= |getTrim;|$order_id           |
+|$order_id_split=|getTrim;|$order_id-RG2$unique|
+*!
+
+!*> Ready for billing page
+!|script                     |Ui                                                |
+|navigateToUrl;              |${turl}/v2/payments?depot=${depot_name}           |
+|refreshForElementToBeDisplayed;|(//div[contains(@class,'list-row') or contains(@class,'card-row row')])[1]|xpath|5|2|
+|waitForElementToBeDisplayed;|//div[starts-with(@class,'card-row row')]|xpath|30|
+|click;                      |//span[normalize-space(text())='Filter'] |xpath   |
+|click;                      |//button[text()='APPLY']                 |xpath   |
+
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!define filter_by {Enter indent id}
+!define search_text {$order_id}
+!define order_id {$order_id}
+
+!|script                     |Ui                                                                                             |
+|click;                      |//div[contains(@class,'card-row row')]//span[normalize-space(text())='Update']|xpath           |
+|sendKeys;                   |(//input[@class='el-upload__input'])[1]                                       |xpath|${lr_copy}|
+|click;                      |//div[@class='formfooter']//button//span[normalize-space(text())='Update']                     |xpath           |
+|wait;                       |5                                                                                              |
+|click;                      |//div[@class='close-sidebar']                                                 |xpath           |
+|click;                      |//span[normalize-space(text())='Filter']                                      |xpath           |
+|click;                      |//button[text()='APPLY']                                                      |xpath           |
+|waitForElementToBeDisplayed;|//div[starts-with(@class,'card-row row')]                                     |xpath|30        |
+*!
+
+!** Check if two indents are created with gate ref id as suffix and two indent cannot be combined
+!|script    |ui                                                                                                                                                                                                                                          |
+|mouseHover;|//div[contains(@class,'card-row row')]//span[contains(text(),'...')]                                                                 |xpath                                                                                                 |
+|$tresult1= |isElementPresent;                                                                                                                    |//div[contains(@style,'absolute')]/div[text()='$order_id_split']                      |xpath          |
+|$tresult2= |isElementPresent;                                                                                                                    |//div[contains(@class,'card-row row')]//span[normalize-space(text())='$order_id_main']|xpath          |
+|click;     |//span[normalize-space(text())='$order_id_main']/ancestor::div[contains(@class,'card-row')]//span[contains(@class,'checkbox__input')]|xpath                                                                                                 |
+|wait;      |3                                                                                                                                                                                                                                           |
+|mouseHover;|//div[contains(@class,'card-row row')]//span[contains(text(),'...')]                                                                 |xpath                                                                                                 |
+|wait;      |3                                                                                                                                                                                                                                           |
+|$text=     |getElementAttribute;                                                                                                                 |//p[contains(@class,'alert')]//span                                                |xpath|innerText|
+|click;     |//button[text()='Create Invoice']                                                                                                    |xpath                                                                                                 |
+
+!|Script   |Common                                                                          |
+|$tresult3=|checkIfStringAreEqual;|CAN'T COMBINE SPECIAL REBATE AND NON-REBATE INDENTS|$text|
+*!
+
+!** Detention Validation for main indent and split indent
+!|Script                           |Ui                                                                                                                                                                                                                                                                                                                                            |
+|waitForElementToBeDisplayed;      |//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody|xpath                                                                                                                                                                                                                                    |10                       |
+|$FreightHeaderNo=                 |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|Freight            |
+|$TransitDelayHeaderNo=            |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|Transit Delay      |
+|$LoadingHeaderNo=                 |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|Loading            |
+|$LoadingDetentionHeaderNo=        |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|Loading Detention  |
+|$UnLoadingDetentionHeaderNo=      |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|UnLoading Detention|
+|$OdaHeaderNo=                     |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|ODA                |
+|$fixedChargeHeaderNo=             |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|Fixed Charge       |
+|$totalHeaderNo=                   |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|Total              |
+|$consignee1_row_number=           |getHeaderColumnNumber;                                                    |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//div[@class='tabletitle']/span)[1]                                                                                           |xpath|$order_id_main     |
+|$freight_shipper_main=            |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$FreightHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']           |xpath                    |
+|$transit_delay_shipper_main=      |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$TransitDelayHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']      |xpath                    |
+|$loading_shipper_main=            |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$LoadingHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']           |xpath                    |
+|$loading_detention_shipper_main=  |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$LoadingDetentionHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']  |xpath                    |
+|$unloading_detention_shipper_main=|getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$UnLoadingDetentionHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']|xpath                    |
+|$oda_shipper_main=                |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$OdaHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']               |xpath                    |
+|$fixed_charge_shipper_main=       |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$fixedChargeHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']       |xpath                    |
+|$total_shipper_main=              |getText;                                                                  |(//div[@class='el-table__header-wrapper']//following-sibling::div[contains(@class,'el-table__fixed-right')]//div[contains(@class,'body-wrapper')]//tr)[$consignee1_row_number]//td[$totalHeaderNo]//div[@class='totalvalue']             |xpath                    |
+|navigateBack;                                                                                                                                                                                                                                                                                                                                                                    |
+
+!|Script                            |Ui                                                                                                                                                                                                                                                                                                                                            |
+|click;                             |//div[contains(@class,'card-row row')]//span[contains(text(),'...')]      |xpath                                                                                                                                                                                                                                                              |
+|wait;                              |3                                                                                                                                                                                                                                                                                                                                             |
+|click;                             |//button[text()='Create Invoice']                                         |xpath                                                                                                                                                                                                                                                              |
+|waitForElementToBeDisplayed;       |//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody|xpath                                                                                                                                                                                                                                    |10                       |
+|$FreightHeaderNo=                  |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|Freight            |
+|$TransitDelayHeaderNo=             |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|Transit Delay      |
+|$LoadingHeaderNo=                  |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|Loading            |
+|$LoadingDetentionHeaderNo=         |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|Loading Detention  |
+|$UnLoadingDetentionHeaderNo=       |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|UnLoading Detention|
+|$OdaHeaderNo=                      |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|ODA                |
+|$fixedChargeHeaderNo=              |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|Fixed Charge       |
+|$totalHeaderNo=                    |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                          |xpath|Total              |
+|$consignee1_row_number=            |getHeaderColumnNumber;                                                    |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//div[@class='tabletitle']/span)[1]                                                                                           |xpath|$order_id_split    |
+|$freight_shipper_split=            |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$FreightHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']           |xpath                    |
+|$transit_delay_shipper_split=      |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$TransitDelayHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']      |xpath                    |
+|$loading_shipper_split=            |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$LoadingHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']           |xpath                    |
+|$loading_detention_shipper_split=  |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$LoadingDetentionHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']  |xpath                    |
+|$unloading_detention_shipper_split=|getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$UnLoadingDetentionHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']|xpath                    |
+|$oda_shipper_split=                |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$OdaHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']               |xpath                    |
+|$fixed_charge_shipper_split=       |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$fixedChargeHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']       |xpath                    |
+|$total_shipper_split=              |getText;                                                                  |(//div[@class='el-table__header-wrapper']//following-sibling::div[contains(@class,'el-table__fixed-right')]//div[contains(@class,'body-wrapper')]//tr)[$consignee1_row_number]//td[$totalHeaderNo]//div[@class='totalvalue']             |xpath                    |
+**!
+
+!** Validating the Result
+!|Script    |Common                                                           |
+|$tresult4= |checkIfStringAreEqual;|$freight_shipper_main           |6000     |
+|check      |checkIfStringAreEqual;|$freight_shipper_main           |6000|true|
+|$tresult5= |checkIfStringAreEqual;|$transit_delay_shipper_main     |600      |
+|check      |checkIfStringAreEqual;|$transit_delay_shipper_main     |600 |true|
+|$tresult6= |checkIfStringAreEqual;|$loading_shipper_main           |60       |
+|check      |checkIfStringAreEqual;|$loading_shipper_main           |60  |true|
+|$tresult7= |checkIfStringAreEqual;|$loading_detention_shipper_main |60       |
+|check      |checkIfStringAreEqual;|$loading_detention_shipper_main |60  |true|
+|$tresult8= |checkIfStringAreEqual;|$oda_shipper_main               |60       |
+|check      |checkIfStringAreEqual;|$oda_shipper_main               |60  |true|
+|$tresult16=|checkIfStringAreEqual;|$fixed_charge_shipper_main      |120      |
+|check      |checkIfStringAreEqual;|$fixed_charge_shipper_main      |120 |true|
+|$tresult9= |checkIfStringAreEqual;|$total_shipper_main             |5700     |
+|check      |checkIfStringAreEqual;|$total_shipper_main             |5700|true|
+|$tresult10=|checkIfStringAreEqual;|$freight_shipper_split          |4000     |
+|check      |checkIfStringAreEqual;|$freight_shipper_split          |4000|true|
+|$tresult11=|checkIfStringAreEqual;|$transit_delay_shipper_split    |400      |
+|check      |checkIfStringAreEqual;|$transit_delay_shipper_split    |400 |true|
+|$tresult12=|checkIfStringAreEqual;|$loading_shipper_split          |40       |
+|check      |checkIfStringAreEqual;|$loading_shipper_split          |40  |true|
+|$tresult13=|checkIfStringAreEqual;|$loading_detention_shipper_split|40       |
+|check      |checkIfStringAreEqual;|$loading_detention_shipper_split|40  |true|
+|$tresult14=|checkIfStringAreEqual;|$oda_shipper_split              |40       |
+|check      |checkIfStringAreEqual;|$oda_shipper_split              |40  |true|
+|$tresult17=|checkIfStringAreEqual;|$fixed_charge_shipper_split     |80       |
+|check      |checkIfStringAreEqual;|$fixed_charge_shipper_split     |80  |true|
+|$tresult15=|checkIfStringAreEqual;|$total_shipper_split            |3800     |
+|check      |checkIfStringAreEqual;|$total_shipper_split            |3800|true|
+
+!|Script  |Common                                                                                                                                                                                                              |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,$tresult11,$tresult12,$tresult13,$tresult14,$tresult15,$tresult16,$tresult17,true|
+*!
+
+!**> Enable Admin setting to default
+!|script|common                                                                                                                                                      |
+|$data= |getTrim;|{"insurance_threshold":0,"shortage":{"value":1,"factor":0.85},"damage":{"value":1,"factor":1},"carton_damage":{"value":1,"factor":10},"movement":1}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.AdminSettings.ShortageDamageSettingAPI
+**!

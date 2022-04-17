@@ -1,0 +1,15 @@
+---
+Help: Use to retrieve the details of the Transporter
+Test
+---
+!| Script    |Http                                                                                         |
+|setBaseUrl; |${turl}/api/login                                                                            |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}|
+|$token=     |getHeader;      |x-auth-token                                                                |
+|addHeader;  |Authorization   |bearer $token                                                               |
+|setBaseUrl; |${turl}/api/bootstrap                                                                        |
+|$response=  |getResponse;    |Application/Json|get                            |                           |
+|$status=    |getStatusCode;                                                                               |
+
+!| script |json                                                      |
+|$gstn_id=|getValueFromJSON;|$response|data.transporter.gst_number.id|

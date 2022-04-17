@@ -1,0 +1,8 @@
+---
+Static
+---
+!|script       |ui                                                            |
+|navigateToUrl;|${turl}/payments                                              |
+|click;        |//input[@placeholder='Select Depot']      |xpath              |
+|sendKeys;     |//input[@class='el-input__inner']         |xpath|${depot_name}|
+|click;        |//span[text()='${depot_name}']/../self::li|xpath              |

@@ -1,0 +1,11 @@
+---
+Help: Use to Filter Indent based on Type
+---
+#indent_type - OPEN 
+#indent_type - CONTRACT
+#indent_type - NO FREIGHT
+!|script|ui                                                                  |
+|click; |//button[@class='el-button el-button--default']               |xpath|
+|click; |//label[text()='Indent Type']/../following-sibling::div//input|xpath|
+|click; |//span[text()='${indent_type}']                               |xpath|
+|click; |//button[text()='APPLY']                                      |xpath|

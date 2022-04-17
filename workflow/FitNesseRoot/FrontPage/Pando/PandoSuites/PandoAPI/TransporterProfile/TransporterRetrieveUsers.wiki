@@ -1,0 +1,15 @@
+---
+Help: Use to Retrieve the list of users available for the Transporters
+Test
+---
+!| Script    |Http                                                                                         |
+|setBaseUrl; |${turl}/api/login                                                                            |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}|
+|$token=     |getHeader;      |x-auth-token                                                                |
+|addHeader;  |Authorization   |bearer $token                                                               |
+|setBaseUrl; |${turl}/api/transporter/users                                                                |
+|$response=  |getResponse;    |Application/Json|get                            |                           |
+|$status=    |getStatusCode;                                                                               |
+
+!| script |json                               |
+|$user_id=|getValueFromJSON;|$response|data.id|

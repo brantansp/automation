@@ -1,0 +1,375 @@
+---
+Help: Validate otp when shortage and damage are sent and validate delivered without otp when SDCD is zero with otp config enabled for FTL
+Suites: perfetti
+Test
+---
+!** Configuration
+"disable_otp_for_zero_epod" : true,
+**!
+
+!**> Unique values assignment
+!|Script            |DateUtil                               |
+|$unique=           |getCurrentDateTimeStamp;|yMMddHHmmss   |
+|$truckindate=      |dateCalculation;        |yyyy/MM/dd |-4|
+|$truckoutdate=     |dateCalculation;        |yyyy/MM/dd |-1|
+|$rdate=            |dateCalculation;        |yyyy/MM/dd |0 |
+|$contractDate=     |dateCalculation;        |dd-MMM-yyyy|2 |
+|$indate=           |getCurrentDateTimeStamp;|yyyy/MM/dd    |
+|$indate2=          |dateCalculation;        |yyyy-MM-dd |0 |
+|$vechicle_req_date=|dateCalculation;        |yyyy/MM/dd |-6|
+
+!|Script            |Common                                               |
+|$truckindate=      |stringConcatenation;|$truckindate      |!- 10:00:00-!|
+|$truckoutdate=     |stringConcatenation;|$truckoutdate     |!- 10:00:00-!|
+|$vechicle_req_date=|stringConcatenation;|$vechicle_req_date|!- 10:00:00-!|
+|$rdate=            |stringConcatenation;|$rdate            |!- $timer -! |
+|$num=              |getRandomNumber;    |100000            |999999       |
+
+!|Script            |DateUtil                                  |
+|$truckindate=      |utcConversion;         |$truckindate      |
+|$truckoutdate=     |utcConversion;         |$truckoutdate     |
+|$rdate=            |utcConversion;         |$rdate            |
+|$vechicle_req_date=|utcConversion;         |$vechicle_req_date|
+|$loadingDate=      |getCurrentDateTimeStamp|iso               |
+**!
+
+!**> Source Depot Creation
+!define depot_name {src$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {s$unique}
+!define depot_region {South}
+!define depot_short_code {s$num}
+!define depot_reference_id {s$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {SG1$unique}
+!define g_user_email {pandoindent+1$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script         |common           |
+|$location_id=   |getTrim;|$depot  |
+|$source_gate_id=|getTrim;|$gate_id|
+*!
+
+!**> Destination Depot Creation
+!define depot_name {dest$unique}
+!define depot_state {Hariyana}
+!define depot_city {d$unique}
+!define depot_region {South}
+!define depot_short_code {d$num}
+!define depot_reference_id {dr$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {DG1$unique}
+!define g_user_email {pandoindent+2$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script                       |common           |
+|$destination_location_id=     |getTrim;|$depot  |
+|$destination_gate_location_id=|getTrim;|$gate_id|
+*!
+
+!**> Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!**> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Transporter without discount
+!define transporter_name {PerfettiTransporter}
+!define transporter_ref_id {PFTITRANS}
+!define manager_email {pandotransporter+pvmi@outlook.com}
+!define transporter_id {6232f7a7768f260048e6b5d2}
+
+!| Script        |Common                    |
+|$transporter_id=|getTrim;|${transporter_id}|
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Rate Matrix upload
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,s$unique,d$unique,${vehicle_name},100,${transporter_ref_id},${transporter_name},1,5000,per_trip,01-Jan-2019,31-Dec-2030,100,1,P}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!**> Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$location_id}
+!define gate_id {$source_gate_id}
+!define vehicle_requirement_date {$vechicle_req_date}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$destination_location_id}
+!define sold_to_id {$destination_gate_location_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice}}],"destinations":[{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id}"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+*!
+
+!**> validating and Assinging The Truck
+!define vechicle_number {tn 09 AT 9013}
+!define driver_name {$unique}
+!define phone_number {9894720558}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+
+!|Script      |json                            |
+|$assigned_id=|getValueFromJSON;|$truck|data.id|
+
+**!
+
+!**> Create Material invoice 
+!define mrp_price {1000}
+!define quantity1 {10} 
+!define quantity_unit {cases}
+!define weight {400}
+!define weight_unit {KG}
+!define volume {1000}
+!define volume_unit {CFT}
+!define type {PRIMARY}
+!define invoice_amount {20000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"s$unique","gate_ref_id":"SG1$unique","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"DG1$unique","sold_to":"DG1$unique","type":"${type}","invoice_number":"INV$unique","invoice_amount":"9000","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":"000001"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** Submit EPOD in shipper inbound
+!** Fetching material id
+!|script       |common                           |
+|$consignee_id=|getTrim;|$destination_location_id|
+
+!|Script      |MongoDB                                                      |
+|initialize;  |${connection}           |${database}                         |
+|$material_id=|getValuesFromCollection;|indents|order_no|$order_id|materials|
+
+!|Script      |Common                                               |
+|$material_id=|getSubStringByString;|$material_id|"_id":{"$oid":"|"}|
+**!
+
+!|script|common                                                                                                                                                                                                                                                                                 |
+|$data= |getTrim;|{"data":{"mat":{"materials":[{"shortage_count":3,"comment":"","damage_count":1,"hold_count":0,"excess_count":0,"carton_damage_count":3,"leakage_count":0,"shortage_charge":0,"damage_charge":0,"carton_damage_charge":0,"id":"$material_id"}]},"inbound":false,"packages":[]}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GRNSubmissionInShipperInboundDynamicAPI
+**!
+
+!**> Mark as Delivered
+!define consignee_id {$destination_location_id}
+!define arrived_at {$rdate}
+!define dispatched_at {$rdate}
+
+!|script|common                                                                                                                                                          |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","gate_id":"$destination_gate_location_id","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+**!
+
+!** Fetching otp
+!|Script         |Common                                                    |
+|$association_id=|stringConcatenation;|$assigned_id|$destination_location_id|
+
+!|Script    |MongoDB                                                        |
+|initialize;|${connection}           |${database}                           |
+|$otp=      |getValuesFromCollection;|otp|association_id|$association_id|otp|
+**!
+
+!** Verify OTP verification
+!|Script       |Ui                                                     |
+|navigateToUrl;|${surl}/indents                                        |
+|click;        |//div[@id='filter']//input[@placeholder='Select']|xpath|
+|click;        |//li/span[text()='Inbound']                      |xpath|
+
+!define search_text {dest$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!define search_text {$order_id}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|script                     |ui                                                                                                                                                                                        |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='v$unique']//ancestor::div[contains(@class,'order-row')]|xpath                                                                                  |30        |
+|check                       |isElementPresent;                                                                      |//span[normalize-space(text())='v$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|refresh;                                                                                                                                                                                                               |
+|check                       |isElementDisplayed;                                                                    |//div[normalize-space(text())='Del Pending']                                           |xpath|true|
+|mouseHover;                 |//div[normalize-space(text())='Del Pending']                                           |xpath                                                                                             |
+|check                       |isElementDisplayed;                                                                    |//span[text()='OTP Verification']                                                      |xpath|true|
+|click;                      |//span[normalize-space(text())='Document']                                             |xpath                                                                                             |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]                                                 |xpath                                                                                  |30        |
+|check                       |isElementDisplayed;                                                                    |//span[normalize-space(text())='ENTER OTP']                                            |xpath|true|
+|$tresult1=                  |isElementDisplayed;                                                                    |//span[normalize-space(text())='ENTER OTP']                                            |xpath     |
+**!
+
+!** Enter OTP
+!|script                     |ui                                                                                               |
+|wait;                       |5                                                                                                |
+|click;                      |//span[normalize-space(text())='ENTER OTP']|xpath                                                |
+|wait;                       |2                                                                                                |
+|sendKeys;                   |//input[@placeholder='ENTER OTP']          |xpath                                     |$otp      |
+|wait;                       |2                                                                                                |
+|click;                      |//span[text()='Submit']                    |xpath                                                |
+|waitForElementToBeDisplayed;|//h3[text()='Success']                     |xpath                                     |20        |
+|$successmessage=            |getText;                                   |//h3[text()='Success']/../span            |xpath     |
+|check                       |isElementDisplayed;                        |//div[normalize-space(text())='Delivered']|xpath|true|
+|$tresult2=                  |isElementDisplayed;                        |//div[normalize-space(text())='Delivered']|xpath     |
+
+!|Script   |Common                                                                |
+|check     |checkIfStringAreEqual;|$successmessage|OTP SUBMITTED SUCCESSFULLY|true|
+|$tresult3=|checkIfStringAreEqual;|$successmessage|OTP SUBMITTED SUCCESSFULLY     |
+**!
+
+!**> Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$location_id}
+!define gate_id {$source_gate_id}
+!define vehicle_requirement_date {$vechicle_req_date}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$destination_location_id}
+!define sold_to_id {$destination_gate_location_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice}}],"destinations":[{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id}"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+*!
+
+!**> validating and Assinging The Truck
+!define vechicle_number {tn 09 AT 9013}
+!define driver_name {$unique}
+!define phone_number {9894720558}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+
+!|Script      |json                            |
+|$assigned_id=|getValueFromJSON;|$truck|data.id|
+
+**!
+
+!**> Create Material invoice 
+!define mrp_price {1000}
+!define quantity1 {10} 
+!define quantity_unit {cases}
+!define weight {400}
+!define weight_unit {KG}
+!define volume {1000}
+!define volume_unit {CFT}
+!define type {PRIMARY}
+!define invoice_amount {20000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"s$unique","gate_ref_id":"SG1$unique","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"DG1$unique","sold_to":"DG1$unique","type":"${type}","invoice_number":"INV$unique","invoice_amount":"9000","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":"000001"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** Submit EPOD with S/D/CD zero in shipper inbound
+!** Fetching material id
+!|script       |common                           |
+|$consignee_id=|getTrim;|$destination_location_id|
+
+!|Script      |MongoDB                                                      |
+|initialize;  |${connection}           |${database}                         |
+|$material_id=|getValuesFromCollection;|indents|order_no|$order_id|materials|
+
+!|Script      |Common                                               |
+|$material_id=|getSubStringByString;|$material_id|"_id":{"$oid":"|"}|
+**!
+
+!|script|common                                                                                                                                                                                                                                                                                 |
+|$data= |getTrim;|{"data":{"mat":{"materials":[{"shortage_count":0,"comment":"","damage_count":0,"hold_count":0,"excess_count":0,"carton_damage_count":0,"leakage_count":0,"shortage_charge":0,"damage_charge":0,"carton_damage_charge":0,"id":"$material_id"}]},"inbound":false,"packages":[]}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GRNSubmissionInShipperInboundDynamicAPI
+**!
+
+!**> Mark as Delivered
+!define consignee_id {$destination_location_id}
+!define arrived_at {$rdate}
+!define dispatched_at {$rdate}
+
+!|script|common                                                                                                                                                          |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","gate_id":"$destination_gate_location_id","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+**!
+
+!** Verify OTP verification
+!|Script       |Ui                                                     |
+|navigateToUrl;|${surl}/indents                                        |
+|click;        |//div[@id='filter']//input[@placeholder='Select']|xpath|
+|click;        |//li/span[text()='Inbound']                      |xpath|
+
+!define search_text {dest$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|Script|Ui                                    |
+|click; |//div[@class='app-search-label']|xpath|
+|click; |//button[text()='Clear']        |xpath|
+|wait;  |3                                     |
+|click; |//button[text()='Search']       |xpath|
+
+!define search_text {$order_id}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|script                     |ui                                                                                                                                                                                        |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='v$unique']//ancestor::div[contains(@class,'order-row')]|xpath                                                                                  |30        |
+|check                       |isElementPresent;                                                                      |//span[normalize-space(text())='v$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|click;                      |//span[normalize-space(text())='Document']                                             |xpath                                                                                             |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]                                                 |xpath                                                                                  |30        |
+|check                       |isElementNotDisplayed;                                                                 |//span[normalize-space(text())='ENTER OTP']                                            |xpath|true|
+|$tresult4=                  |isElementNotDisplayed;                                                                 |//span[normalize-space(text())='ENTER OTP']                                            |xpath     |
+|click;                      |//span[text()='APPROVE']                                                               |xpath                                                                                             |
+|check                       |isElementDisplayed;                                                                    |//span[text()='Confirmation']                                                          |xpath|true|
+|click;                      |//span[normalize-space(text())='Approve']                                              |xpath                                                                                             |
+|wait;                       |2                                                                                                                                                                                         |
+|check                       |isElementDisplayed;                                                                    |//div[normalize-space(text())='Delivered']                                             |xpath|true|
+|$tresult5=                  |isElementDisplayed;                                                                    |//div[normalize-space(text())='Delivered']                                             |xpath     |
+|check                       |isElementNotDisplayed;                                                                 |//div[normalize-space(text())='Del Pending']                                           |xpath|true|
+**!
+
+!**> Validating test result
+!|script  |common                                                                                   |
+|check    |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|true|
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true     |
+*!

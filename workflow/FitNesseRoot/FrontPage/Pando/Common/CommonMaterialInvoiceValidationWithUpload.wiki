@@ -1,0 +1,13 @@
+!|Script       |Ui                                                                      |
+|navigateToUrl;|${surl}/indents/$order_id/details/0                                               |
+|waitForElementToBeDisplayed; |//div[contains(@class,'card-content')]|xpath| 30 |
+|check         |isElementPresent;|//strong[contains(text(),'${consignee_name}')]|xpath|true|
+|$tresult1=    |isElementPresent;|//strong[contains(text(),'${consignee_name}')]|xpath     |
+|sendKeys;     |.upload-material |cssselector                                |$excelpath|
+|check         |isElementPresent;|//div/span[contains(text(),'$unique')]                     |xpath|true|
+|$tresult2=    |isElementPresent;|//div/span[contains(text(),'$unique')]                     |xpath     |
+|check         |isElementPresent;|//span[normalize-space(text())='INV-100']|xpath|true|
+|$tresult3=    |isElementPresent;|//span[normalize-space(text())='INV-100']|xpath     |
+
+!|Script  |Common                                                     |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3|

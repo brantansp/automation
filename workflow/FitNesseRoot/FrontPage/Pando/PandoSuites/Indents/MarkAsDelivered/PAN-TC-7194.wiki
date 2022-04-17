@@ -1,0 +1,301 @@
+---
+Help: To verify mark as delivered in gate level in Shipper side and Transporter side
+Suites: itc
+Test
+---
+!** Configuration
+multi_drop_at_gate_level: true
+**!
+
+!***> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script          |DateUtil                       |
+|$contractDate=   |dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate=    |dateCalculation;|yyyy/MM/dd |-8|
+|$loadingDate=    |dateCalculation;|yyyy/MM/dd |-7|
+|$truckoutdate=   |dateCalculation;|yyyy/MM/dd |-6|
+|$rdate=          |dateCalculation;|yyyy/MM/dd |-1|
+|$reported_date_1=|dateCalculation;|yyyy/MM/dd |-5|
+|$released_date_1=|dateCalculation;|yyyy/MM/dd |-3|
+|$reported_date_2=|dateCalculation;|yyyy/MM/dd |-2|
+|$released_date_2=|dateCalculation;|yyyy/MM/dd |-1|
+
+!|Script          |Common                                              |
+|$truckindate=    |stringConcatenation;|$truckindate    |!- 10:00:00-! |
+|$truckoutdate=   |stringConcatenation;|$truckoutdate   |!- 10:00:00-! |
+|$rdate=          |stringConcatenation;|$rdate          |!- 10:00:00-! |
+|$reported_date_1=|stringConcatenation;|$reported_date_1|!- 10:00:00 -!|
+|$released_date_1=|stringConcatenation;|$released_date_1|!- 10:00:00 -!|
+|$reported_date_2=|stringConcatenation;|$reported_date_2|!- 10:00:00 -!|
+|$released_date_2=|stringConcatenation;|$released_date_2|!- 10:00:00 -!|
+
+!|Script              |DateUtil                       |
+|$loadingDate=        |utcConversion;|$loadingDate    |
+|$truckindate=        |utcConversion;|$truckindate    |
+|$truckoutdate=       |utcConversion;|$truckoutdate   |
+|$reported_date_utc_1=|utcConversion;|$reported_date_1|
+|$released_date_utc_1=|utcConversion;|$released_date_1|
+|$reported_date_utc_2=|utcConversion;|$reported_date_2|
+|$released_date_utc_2=|utcConversion;|$released_date_2|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Data creation for Primary movement
+!**> Source Depot Creation
+!define depot_name {s$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {sc$unique}
+!define depot_region {South}
+!define depot_short_code {S$num}
+!define depot_reference_id {S$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!|script          |common         |
+|$src_location_id=|getTrim;|$depot|
+*!
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u1$unique}
+!define user_email {pandoindent+1$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation 1
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {SG1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {SG1$num}
+!define gate_user_id {$user_id}
+!define legal_entity {CIL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script           |json                                |
+|$source_gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Gate Creation 2
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {SG2$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {SG2$num}
+!define gate_user_id {$user_id}
+!define legal_entity {CTIPL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script           |json                                |
+|$source_gate_id_2=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Gate Creation 3
+!define depot_id {$depot}
+!define gate_name {Gate 3}
+!define gate_ref_id {SG3$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {SG3$num}
+!define gate_user_id {$user_id}
+!define legal_entity {CTIPL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script           |json                                |
+|$source_gate_id_3=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager1 $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Material Creation 1
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!**> Material Creation 2
+!define material_name {m2$unique}
+!define material_code {mc2$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!***> Uploading Rate Matrix
+!define row {Type,Source,Destination,Vehicle Type,Distance,Transporter Reference ID,Transporter Name,Transit Days,Freight Rate,Freight Unit,Valid From,Valid To,Minimum Rate,Multiplying Factor,Detention Group,Exclude,Trip Count}
+!define column {City,sc$unique,sc$unique,${vehicle_name},100,${transporter_ref_id},${transporter_name},1,8500,per_trip,01-Jan-$year,31-Dec-$year,100,1,}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+**!
+
+!**> Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$src_location_id}
+!define gate_id_1 {$source_gate_id_1}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$src_location_id}
+!define sold_to_id_1 {$source_gate_id_2}
+!define sold_to_id_2 {$source_gate_id_3}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"$transporter_id","vehicle_type_id":"$vehicle_id","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id_1}","vehicle_requirement_date":"$loadingDate","loader_available":false,"add_to_invoice":false}],"destinations":[{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id_1}","gate_id":"${sold_to_id_1}","sold_to_id":"${sold_to_id_1}","unloader_available":false,"add_to_invoice":false,"expected_delivery_at":"$expected_date"},{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id_1}","gate_id":"${sold_to_id_2}","sold_to_id":"${sold_to_id_2}","unloader_available":false,"add_to_invoice":false,"expected_delivery_at":"$expected_date"}],"no_of_vehicles":1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+*!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!**> Material upload for all consignee
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {case}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {10000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"S$unique","gate_ref_id":"SG1$unique","division":"CIL","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"SG2$unique","sold_to":"SG2$unique","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","ext_ref_id":"","material_taxable_amount":"0"},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"${mrp_price}","material_code":"mc2$unique","depot_ref_id":"S$unique","gate_ref_id":"SG1$unique","division":"CIL","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"SG3$unique","sold_to":"SG3$unique","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","ext_ref_id":"","material_taxable_amount":"0"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** Verify multiple gates in mark as delivered
+!define depot_selection {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|Script                     |Ui                                                                                                                                                     |
+|waitForElementToBeDisplayed;|//span[contains(text(),'Mark as delivered')]                         |xpath                                                                 |10        |
+|click;                      |//span[contains(text(),'Mark as delivered')]                         |xpath                                                                            |
+|check                       |isElementPresent;                                                    |(//label[@class='el-checkbox']//span[contains(text(),'s$unique')])[1] |xpath|true|
+|$tresult1=                  |isElementPresent;                                                    |(//label[@class='el-checkbox']//span[contains(text(),'s$unique')])[1] |xpath     |
+|check                       |isElementPresent;                                                    |(//label[@class='el-checkbox']//span[contains(text(),'s$unique')])[2] |xpath|true|
+|$tresult2=                  |isElementPresent;                                                    |(//label[@class='el-checkbox']//span[contains(text(),'s$unique')])[2] |xpath     |
+|mouseHover;                 |(//label[@class='el-checkbox']//span[contains(text(),'s$unique')])[2]|xpath                                                                            |
+|check                       |isElementPresent;                                                    |//div[@role='tooltip']//div[text()='s$unique - SG3$unique - s$unique']|xpath|true|
+|$tresult3=                  |isElementPresent;                                                    |//div[@role='tooltip']//div[text()='s$unique - SG3$unique - s$unique']|xpath     |
+|mouseHover;                 |(//label[@class='el-checkbox']//span[contains(text(),'s$unique')])[1]|xpath                                                                            |
+|check                       |isElementPresent;                                                    |//div[@role='tooltip']//div[text()='s$unique - SG2$unique - s$unique']|xpath|true|
+|$tresult4=                  |isElementPresent;                                                    |//div[@role='tooltip']//div[text()='s$unique - SG2$unique - s$unique']|xpath     |
+*!
+
+!** Verify in Transporter side
+!**> Transporter Login
+!define transporter_email {pandotransporter+$unique@outlook.com}
+!define transporter_password {$password}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!**> Indent Delivery Filter
+!define search_text {s$unique}
+!include -c .FrontPage.Pando.Common.CommonTransporterDepoFilter
+*!
+
+!** Verify multiple gates
+!|Script                     |Ui                                                                                                                                                                     |
+|waitForElementToBeDisplayed;|//span[contains(text(),'Mark as delivered')]                      |xpath                                                                                    |10        |
+|click;                      |//span[contains(text(),'Mark as delivered')]                      |xpath                                                                                               |
+|check                       |isElementPresent;                                                 |//label[@class='el-checkbox']//span[contains(text(),'SG2$unique')]                       |xpath|true|
+|$tresult5=                  |isElementPresent;                                                 |//label[@class='el-checkbox']//span[contains(text(),'SG2$unique')]                       |xpath     |
+|check                       |isElementPresent;                                                 |//label[@class='el-checkbox']//span[contains(text(),'SG3$unique')]                       |xpath|true|
+|$tresult6=                  |isElementPresent;                                                 |//label[@class='el-checkbox']//span[contains(text(),'SG3$unique')]                       |xpath     |
+|mouseHover;                 |//label[@class='el-checkbox']//span[contains(text(),'SG3$unique')]|xpath                                                                                               |
+|check                       |isElementPresent;                                                 |//div[@role='tooltip']//div[normalize-space(text())='SG3$unique - s$unique - SG3$unique']|xpath|true|
+|$tresult7=                  |isElementPresent;                                                 |//div[@role='tooltip']//div[normalize-space(text())='SG3$unique - s$unique - SG3$unique']|xpath     |
+|mouseHover;                 |//label[@class='el-checkbox']//span[contains(text(),'SG2$unique')]|xpath                                                                                               |
+|check                       |isElementPresent;                                                 |//div[@role='tooltip']//div[normalize-space(text())='SG2$unique - s$unique - SG2$unique']|xpath|true|
+|$tresult8=                  |isElementPresent;                                                 |//div[@role='tooltip']//div[normalize-space(text())='SG2$unique - s$unique - SG2$unique']|xpath     |
+**!
+**!
+
+!**> Validating test result
+!|Script  |Common                                                                                                            |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,true|
+**!

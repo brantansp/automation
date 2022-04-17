@@ -1,0 +1,7 @@
+---
+Suite
+secure-read
+secure-test
+secure-write
+---
+!contents -R2 -g -p -f -h

@@ -1,0 +1,18 @@
+---
+Help: Use to create Depot via API
+Test
+---
+#delivery_type 1 - Shipper site
+#delivery_type 1 - Customer site
+#delivery_type 1 - Co-Maker site
+
+!|Script    |Http                                                                                                                                                                                                                                                                                                                                                                                                         |
+|addHeader; |Authorization |bearer $stoken                                                                                                                                                                                                                                                                                                                                                                                |
+|setBaseUrl;|${surl}/api/depot/                                                                                                                                                                                                                                                                                                                                                                                           |
+|$depotResp=|getResponse;  |Application/Json|post|{"data":{"name":"${depot_name}","state":"${depot_state}","city":"${depot_city}","region":"${depot_region}","display_reference_name": "","short_code":"${depot_short_code}","reference_id":"${depot_reference_id}","address":"${depot_address}","pincode":"${depot_pincode}","gstn_no":"${depot_gstn_no}","delivery_type":${depot_delivery_type},"plant_type":${plant_type},"phone":"${depot_phone}"}}|
+|check      |getStatusCode;|200                                                                                                                                                                                                                                                                                                                                                                                           |
+
+!|Script       |json                                          |
+|$depot=       |getValueFromJSON;|$depotResp|data.id          |
+|$depot_name=  |getValueFromJSON;|$depotResp|data.name        |
+|$depot_ref_id=|getValueFromJSON;|$depotResp|data.reference_id|

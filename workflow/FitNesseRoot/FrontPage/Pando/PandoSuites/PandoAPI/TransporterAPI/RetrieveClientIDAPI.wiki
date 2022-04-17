@@ -1,0 +1,22 @@
+---
+Help: Contains API call to bootstrap in transporter to retrieve client_id
+Test
+---
+!|Script     |Http                                                                                         |
+|setBaseUrl; |${turl}/api/login                                                                            |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}|
+|$token=     |getHeader;      |x-auth-token                                                                |
+|addHeader;  |Authorization   |bearer $token                                                               |
+|setBaseUrl; |${turl}/api/bootstrap/                                                                       |
+|$data=      |getResponse;    |Application/Json|get                            |                           |
+|$status=    |getStatusCode;                                                                               |
+
+!|Script        |json                                           |
+|$client_config=|getArrayValueFromJSON;|$data|data.client_config|
+
+!|script        |common                                |
+|$len=          |getStringLength;|$client_config       |
+|$client_config=|getSubString;   |$client_config|1|$len|
+
+!|Script    |json                                      |
+|$client_id=|getValueFromJSON;|$client_config|client_id|

@@ -1,0 +1,54 @@
+---
+Help: DM Detention Ensure that you cannot  able to view the column which is disabled
+Test
+---
+!** Unique values assignment
+!|Script |Common                         |
+|$unique=|getRandomString;|6|ALPHANUMERIC|
+**!
+
+!** Detention Column disable and Visibility check
+!|script       |ui                    |
+|navigateToUrl;|${surl}/mdm/detentions|
+
+!define column_name {Truck Type}
+!define visiblity {false}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|script   |ui                                                                                                                                |
+|$tresult1=|isElementPresentNoReporting;|//div[@class='card-header double-header']//child::div[normalize-space(text())='${column_name}']|xpath|
+
+!define column_name {Group}
+!define visiblity {false}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|script   |ui                                                                                                                                |
+|$tresult2=|isElementPresentNoReporting;|//div[@class='card-header double-header']//child::div[normalize-space(text())='${column_name}']|xpath|
+
+!define column_name {Movement}
+!define visiblity {false}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|script   |ui                                                                                                                                |
+|$tresult3=|isElementPresentNoReporting;|//div[@class='card-header double-header']//child::div[normalize-space(text())='${column_name}']|xpath|
+
+!define column_name {Loading Detention}
+!define visiblity {false}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|script   |ui                                                                                                                                |
+|$tresult4=|isElementPresentNoReporting;|//div[@class='card-header double-header']//child::div[normalize-space(text())='${column_name}']|xpath|
+
+!define column_name {UnLoading Detention}
+!define visiblity {false}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|script   |ui                                                                                                                                |
+|$tresult5=|isElementPresentNoReporting;|//div[@class='card-header double-header']//child::div[normalize-space(text())='${column_name}']|xpath|
+*!
+
+!** Test Result
+!|Script  |Common                                                                               |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,false|
+|check    |checkIfStringAreEqual;       |true             |$tresult            |true            |
+*!

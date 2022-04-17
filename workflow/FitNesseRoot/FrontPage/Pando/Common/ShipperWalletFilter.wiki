@@ -1,0 +1,10 @@
+!|Script                     |Ui                                                                                               |
+|navigateToUrl;              |${surl}/v2/wallet                                                                                |
+|waitForElementToBeDisplayed;|//div[starts-with(@class,'grid-list-row') or @class='emptytext']             |xpath|15           |
+|click;                      |//span[normalize-space(text())='Filter']                                     |xpath              |
+|click;                      |//label[text()='Depot']/../following-sibling::div[@class='cardlist-dropdown']|xpath              |
+|sendKeys;                   |//label[text()='Depot']/../following-sibling::div//input                     |xpath|${depot_name}|
+|click;                      |//span[text()='${depot_name}']                                               |xpath              |
+|wait;                       |2                                                                                                |
+|click;                      |//button[text()='APPLY']                                                     |xpath              |
+|waitForElementToBeDisplayed;|//div[starts-with(@class,'grid-list-row') or @class='paymentempty']          |xpath|30           |

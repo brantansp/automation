@@ -1,0 +1,1 @@
+nohup mvn -Pfitnesse test > nohup.out &

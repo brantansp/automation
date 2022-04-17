@@ -1,0 +1,81 @@
+---
+Help: Bulk upload-Duplicate email ID for Users Module
+Suites: dm2
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Uploading New Users in bulk with Duplicate mail id
+!define row {Name*,Email*,Role*,Phone,User Permission(Default - BOTH)}
+!define column1 {One1$unique,pandoautomation+1+$unique@gmail.com,Accountant}
+!define column2 {Two2$unique,pandoautomation+2+$unique@gmail.com,Accountant}
+!define column3 {Three3$unique,pandoautomation+3+$unique@gmail.com,Accountant}
+!define column4 {Four4$unique,pandoautomation+3+$unique@gmail.com,Accountant}
+!define column5 {Five5$unique,pandoautomation+3+$unique@gmail.com,Accountant}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+
+!|Script       |Excel                                                                   |
+|multiNewSheet;|${row}|${column1}|${column2}|${column3}|${column4}|${column5}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/users                                               |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |60        |
+*!
+
+!** Validating whether the Users with same mail id have been updated
+
+!define search_value {One1$unique}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonUserNameSearch
+
+!|script   |ui                                                                                                |
+|check     |isElementPresent;|//div[@class='card-row card-row-show']//span[contains(text(),'One1')]|xpath|true|
+|$tresult1=|isElementPresent;|//div[@class='card-row card-row-show']//span[contains(text(),'One1')]|xpath     |
+
+!define search_value {Two2$unique}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonUserNameSearch
+
+!|script   |ui                                                                                                |
+|check     |isElementPresent;|//div[@class='card-row card-row-show']//span[contains(text(),'Two2')]|xpath|true|
+|$tresult2=|isElementPresent;|//div[@class='card-row card-row-show']//span[contains(text(),'Two2')]|xpath     |
+
+!define search_value {Five5$unique}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonUserNameSearch
+
+!|script   |ui                                                                                                 |
+|check     |isElementPresent;|//div[@class='card-row card-row-show']//span[contains(text(),'Five5')]|xpath|true|
+|$tresult3=|isElementPresent;|//div[@class='card-row card-row-show']//span[contains(text(),'Five5')]|xpath     |
+
+!define search_value {Three3$unique}
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonUserNameSearch
+
+!|script   |ui                                                                                                   |
+|check     |isElementNotPresent;|//div[@class='card-row card-row-show']//span[contains(text(),'Three3')]|xpath|true|
+|$tresult4=|isElementNotPresent;|//div[@class='card-row card-row-show']//span[contains(text(),'Three3')]|xpath      |
+
+!define search_value {Four4$unique}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonUserNameSearch
+
+!|script   |ui                                                                                                  |
+|check     |isElementNotPresent;|//div[@class='card-row card-row-show']//span[contains(text(),'Four4')]|xpath|true|
+|$tresult5=|isElementNotPresent;|//div[@class='card-row card-row-show']//span[contains(text(),'Four4')]|xpath      |
+
+*!
+
+!** Validating the Results
+!|script  |common                                           |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5|
+*!
+
+ 

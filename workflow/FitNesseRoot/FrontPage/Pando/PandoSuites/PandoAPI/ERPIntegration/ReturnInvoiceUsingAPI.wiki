@@ -1,0 +1,9 @@
+---
+Help: To return invoice using api
+Test
+---
+!|Script    |Http                                              |
+|addHeader; |Authorization   |bearer $stoken                   |
+|setBaseUrl;|${surl}/api/v2/shipper/invoice/$invoice_id/comment|
+|$status=   |getResponse;    |Application/Json  |post  |$data  |
+|check      |getStatusCode;  |201                              |

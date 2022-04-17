@@ -1,0 +1,627 @@
+---
+Help: Ensure that user can able to optimize multi vendor to multi destination depot del via delivery picklist
+Suites: optscn7
+Test
+---
+!5 Description : ${RUNNING_PAGE_NAME}: Ensure that user can able to optimize multi vendor to multi destination depot del via delivery picklist
+
+!5 Expected : Vendor deliveries should be optimized
+
+!***> Unique values assignment
+!|Script          |Common                                       |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$currDate=       |getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique  |0   |4    |
+|$detention_group=|getRandomString;        |4        |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000   |999999    |
+|$today=          |getSubString;           |$currDate|0   |10   |
+|$pincode1=       |getRandomNumber;        |111001   |999999    |
+|$pincode2=       |getRandomNumber;        |111001   |999999    |
+|$vno_1=          |getRandomNumber;        |20       |76        |
+|$vno_2=          |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=          |getRandomNumber;        |1000     |9999      |
+|$indate=         |getCurrentDateTimeStamp;|yyyy/MM/dd          |
+|$vno_1=          |getRandomNumber;        |20       |76        |
+|$vno_2=          |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=          |getRandomNumber;        |1000     |9999      |
+
+!|Script       |DateUtil                       |
+|$today=       |dateCalculation;|yyyy-MM-dd |0 |
+|$invoicedate= |dateCalculation;|yyyy-MM-dd |5 |
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0 |
+|$thisday=     |dateCalculation;|dd MMM yyyy|0 |
+|$invoice_date=|dateCalculation;|dd-MMM-yyyy|5 |
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-1|
+
+!| Script      |Common                                            |
+|$rdate=       |stringConcatenation;   |$rdate       |!- $timer -!|
+|$loadingDate= |getCurrentDateTimeStamp|iso                       |
+|$truckoutdate=|stringConcatenation;   |$truckoutdate|!- $timer -!|
+
+!|Script       |DateUtil                    |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=       |utcConversion;|$rdate       |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!***> Depot for Shipper (Destination)
+!define depot_name {d$unique}
+!define depot_state {Uttar Pradesh}
+!define depot_city {B$unique}
+!define depot_region {North}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {$pincode1}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!|Script                     |common                |
+|$destination_depot_id_1=    |getTrim;|$depot       |
+|$destination_depot_name_1=  |getTrim;|$depot_name  |
+|$destination_depot_ref_id_1=|getTrim;|$depot_ref_id|
+
+!***> Gate Creation for shipper depot
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!**> Gate Manager Creation
+!define role_id {$retrieve_key_value}
+!define user_number {12891}
+!define user_name {u1$unique}
+!define user_email {pandoindent+1+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation one (Destination gate 1)
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {North}
+!define gate_pincode {$pincode1}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script                   |common               |
+|$destination_gate_name_1=  |getTrim;|$gate_name  |
+|$destination_gate_ref_id_1=|getTrim;|$gate_ref_id|
+|$destination_gate_id_1=    |getTrim;|$gate_id    |
+*!
+
+!**> Gate Creation two (Destination gate 2)
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {rq2$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {North}
+!define gate_pincode {$pincode1}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script                   |common               |
+|$destination_gate_name_2=  |getTrim;|$gate_name  |
+|$destination_gate_ref_id_2=|getTrim;|$gate_ref_id|
+|$destination_gate_id_2=    |getTrim;|$gate_id    |
+*!
+*!
+*!
+
+!***> Depot Optima Setting
+!define depo {d$unique}
+!define max_split {3}
+!define split_factor {1}
+!define ftl_certify {false}
+!define algorithm {4}
+!define distance_deviation {500}
+!define degree_of_deviation {45}
+!define optima_type {1}
+!define weight {1}
+!define volume {1}
+!define mode {0}
+!define max_pickup {2}
+!define fitment {0}
+!define max_dropoff {2}
+!define optima_for_ptl {false}
+!define ptl_club_gates {false}
+!define limited_truck_count {false}
+!define hybrid_split {false}
+!define depot_id {$depot}
+!define movement {3}
+!define movement_type {Vendor}
+!define material_category {"GT","MT"}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split": ${max_split},"split_factor": ${split_factor},"ftl_certify": ${ftl_certify},"algorithm": ${algorithm},"distance_deviation":"${distance_deviation}","degree_of_deviation":${degree_of_deviation},"optima_type":${optima_type},"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":${weight},"volume":${volume}},"material_categories":[${material_category}],"mode":${mode},"max_pickup_points":${max_pickup},"fitment":${fitment},"max_drop_points":${max_dropoff},"drop_off_rule":[],"optima_for_ptl":${optima_for_ptl},"ptl_club_gates":${ptl_club_gates},"limited_truck_count":${limited_truck_count},"hybrid_split": ${hybrid_split}},"depot_ids":["${depot_id}"],"movement":${movement}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!**> Vendor Depot Creation one (Source)
+!define depot_name {vd1$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {V1$unique}
+!define depot_region {South}
+!define depot_short_code {VD1$num}
+!define depot_reference_id {vr1$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {$pincode2}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define type {2} 
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|$data= |getTrim;|{"data":{"name":"${depot_name}","state":"${depot_state}","city":"${depot_city}","region":"${depot_region}","display_reference_name": "","short_code":"${depot_short_code}","reference_id":"${depot_reference_id}","address":"${depot_address}","pincode":"${depot_pincode}","gstn_no":"${depot_gstn_no}","ports_associated": [],"timezone": "", "fax_number": "", "type":${type},"plant_type":1,"delivery_type":${depot_delivery_type},"unloading_capacity":0}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationDynamicAPI
+
+!|Script                |common                |
+|$Vendor_depot_id_1=    |getTrim;|$depot       |
+|$Vendor_depot_name_1=  |getTrim;|$depot_name  |
+|$Vendor_depot_ref_id_1=|getTrim;|$depot_ref_id|
+*!
+
+!**> Vendor Depot Creation two (Source)
+!define depot_name {vd2$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {V2$unique}
+!define depot_region {South}
+!define depot_short_code {VD2$num}
+!define depot_reference_id {vr2$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {$pincode2}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define type {2} 
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|$data= |getTrim;|{"data":{"name":"${depot_name}","state":"${depot_state}","city":"${depot_city}","region":"${depot_region}","display_reference_name": "","short_code":"${depot_short_code}","reference_id":"${depot_reference_id}","address":"${depot_address}","pincode":"${depot_pincode}","gstn_no":"${depot_gstn_no}","ports_associated": [],"timezone": "", "fax_number": "", "type":${type},"plant_type":1,"delivery_type":${depot_delivery_type},"unloading_capacity":0}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationDynamicAPI
+
+!|Script                |common                |
+|$Vendor_depot_id_2=    |getTrim;|$depot       |
+|$Vendor_depot_name_2=  |getTrim;|$depot_name  |
+|$Vendor_depot_ref_id_2=|getTrim;|$depot_ref_id|
+*!
+
+!***> Transporter Creation one
+!define transporter_name {t1$unique}
+!define transporter_ref_id {tr1$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {$pincode1}
+!define manager_name {Manager1 $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@gmail.com}
+!define pancard {AUYPD33324L}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationSignifyAPI
+*!
+
+!***> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation one
+!define vehicle_name {v1$unique MRT}
+!define cft {500}
+!define kg {2500}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Material Creation one
+!define material_name {m1$unique}
+!define material_code {mc1$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+*!
+
+!***> Material Creation one
+!define material_name {m2$unique}
+!define material_code {mc2$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+*!
+
+!***> Uploading Rate Matrix
+!define erp_gate_id_api_1 {rq1$unique}
+!define transit_days {1}
+!define ratec {1000}
+!define rtrip {per_trip}
+!define mrate {10000}
+!define mfactor {1}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {point,vr1$unique,rq1$unique,v1$unique MRT,${transit_days},tr1$unique,t1$unique,${transit_days},${mrate},${rtrip},01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|point,vr2$unique,rq2$unique,v1$unique MRT,${transit_days},tr1$unique,t1$unique,${transit_days},${mrate},${rtrip},01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!***> Delivery Picklist API 
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"D1$num","material_code":"mc1$unique","pickup_reference_number":"vr1$unique","division":"","quantity":1,"quantity_unit":"case","weight":14.3,"weight_unit":"KG","volume":"7.102","volume_unit":"CFT","lr_number":"","ship_to":"rq1$unique","sold_to":"rq1$unique","line_item":"122120","type":"${movement_type}","category":"20a","stn":"","date":"$today"},{"delivery_number":"D2$num","material_code":"mc2$unique","pickup_reference_number":"vr2$unique","division":"","quantity":1,"quantity_unit":"case","weight":20.9,"weight_unit":"KG","volume":"14.8","volume_unit":"CFT","lr_number":"","ship_to":"rq2$unique","sold_to":"rq2$unique","line_item":"122121","type":"${movement_type}","category":"","stn":"","date":"$today"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DeliveryPicklistAPI
+**!
+
+!**> Optima Auto Run via API
+!|script|common                                                                            |
+|$data= |getTrim;|{"data":{"depot_id":"$destination_depot_id_1","movement": "${movement}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.AutoRunViaAPI
+*!
+
+!**> Validating the Order in the Optima listing page
+!define depot {${depo}}
+!define movement {${movement_type}}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.FilterForDepotAndMovement
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                             |
+|check                       |getCountOfElements;                                                            |//div[@class='card-row card-row-show']                                                                                                                                                              |xpath|1   |
+|check                       |isElementPresent;                                                              |//div[contains(@class,'order-item row')]//wrappercontainer//span[contains(text(),'vr1$unique')]/ancestor::div[contains(@class,'card-row-col')]//following-sibling::div//span[contains(text(),'rq1')]|xpath|true|
+|$tresult1=                  |isElementPresent;                                                              |//div[contains(@class,'order-item row')]//wrappercontainer//span[contains(text(),'vr1$unique')]/ancestor::div[contains(@class,'card-row-col')]//following-sibling::div//span[contains(text(),'rq1')]|xpath     |
+|check                       |isElementPresent;                                                              |//div[contains(@class,'order-item row')]//wrappercontainer//span[contains(text(),'vr2$unique')]/ancestor::div[contains(@class,'card-row-col')]//following-sibling::div//span[contains(text(),'rq2')]|xpath|true|
+|$tresult2=                  |isElementPresent;                                                              |//div[contains(@class,'order-item row')]//wrappercontainer//span[contains(text(),'vr2$unique')]/ancestor::div[contains(@class,'card-row-col')]//following-sibling::div//span[contains(text(),'rq2')]|xpath     |
+|click;                      |(//div[contains(@class,'row-show')])[1]//a                                     |xpath                                                                                                                                                                                                          |
+|waitForElementToBeDisplayed;|(//div[contains(@class,'table-rowbg')])[1]                                     |xpath                                                                                                                                                                                               |10        |
+|click;                      |//div[contains(text(),'CONSIGNEES') or contains(text(),'Consignees')]/..//input|xpath                                                                                                                                                                                                          |
+|sendKeys;                   |//div[contains(text(),'CONSIGNEES') or contains(text(),'Consignees')]/..//input|xpath                                                                                                                                                                                               |Gate 1    |
+|click;                      |//div[contains(text(),'Gate 1')]                                               |xpath                                                                                                                                                                                                          |
+|mouseHover;                 |(//div[contains(@class,'table-rowbg')])[1]//div[last()-1]                      |xpath                                                                                                                                                                                                          |
+|$tresult3=                  |isElementPresent;                                                              |//div[@role='tooltip']/*[text()='rq1$unique']                                                                                                                                                       |xpath     |
+|wait;                       |3                                                                                                                                                                                                                                                                                              |
+|mouseClick;                 |//div[contains(text(),'CONSIGNEES') or contains(text(),'Consignees')]/..//input|xpath                                                                                                                                                                                                          |
+|sendHumanKeys;              |//div[contains(text(),'CONSIGNEES') or contains(text(),'Consignees')]/..//input|xpath                                                                                                                                                                                               |Gate 2    |
+|click;                      |//div[contains(text(),'Gate 2')]                                               |xpath                                                                                                                                                                                                          |
+|mouseHover;                 |(//div[contains(@class,'table-rowbg')])[1]//div[last()-1]                      |xpath                                                                                                                                                                                                          |
+|$tresult4=                  |isElementPresent;                                                              |//div[@role='tooltip']/*[text()='rq2$unique']                                                                                                                                                       |xpath     |
+|click;                      |//div[@class='back-option']/a                                                  |xpath                                                                                                                                                                                                          |
+|wait;                       |3                                                                                                                                                                                                                                                                                              |
+**!
+
+!**> Retrieving the Job ID using API
+!define movement {3}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.RetrieveOptimaJobIDAPI
+*!
+
+!** Validate Indent
+!|Script|Ui                                                                            |
+|click; |(//div[contains(@class,'row-show')])[1]//input[@type='checkbox']/../span|xpath|
+|click; |//button[contains(text(),'Indent')]                                     |xpath|
+|click; |//div[@class='el-message-box']//span[contains(text(),'Create')]         |xpath|
+|wait;  |10                                                                            |
+
+!define depot_selection  {d$unique}
+!define type {Inbound}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                              |
+|click;                      |//div[@id='filter']//input[@placeholder='Select']                                                                                    |xpath                                                                                                                                     |
+|click;                      |//li/span[text()='${type}']                                                                                                          |xpath                                                                                                                                     |
+|waitForElementToBeDisplayed;|//div[contains(@class,'order-item row') or contains(@class,'grid-list-row') or contains(@class,'card-row') or @class='no-order-data']|xpath                                                                                                                               |15   |
+|mouseHover;                 |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]                                                                 |xpath                                                                                                                                     |
+|$order_id=                  |getText;                                                                                                                             |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]                                                              |xpath|
+|click;                      |//div[contains(@class,'order-row')]//*[contains(text(),'t1$unique')]                                                                 |xpath                                                                                                                                     |
+|$tresult5=                  |isElementPresent;                                                                                                                    |//*[normalize-space(text())='Shipped From :']/child::*[normalize-space(text())='vd1$unique' or normalize-space(text())='vd2$unique']|xpath|
+|$tresult6=                  |isElementPresent;                                                                                                                    |//*[normalize-space(text())='Shipped To :']/child::*[normalize-space(text())='d$unique']                                            |xpath|
+|click;                      |//a[contains(@class,'close')]                                                                                                        |xpath                                                                                                                                     |
+*!
+
+!** Validating that pickup and drop in indent
+!|script                     |ui                                                                                                                                    |
+|navigateToUrl;              |${surl}/indents/$order_id/details/0                                                                                                   |
+|waitForElementToBeDisplayed;|//div[@class='card-right']|xpath                                                                                                |20   |
+|$tresult7=                  |isElementPresent;         |(//tr[contains(@class,'table__row')]//span[contains(@class,'tooltip') and contains(text(),'vr2')])[1]|xpath|
+|$tresult8=                  |isElementPresent;         |(//tr[contains(@class,'table__row')]//span[contains(@class,'tooltip') and contains(text(),'vr1')])[1]|xpath|
+*!
+
+!**> Validating the modified picklist
+!|Script                         |MongoDBQuery                                                                 |
+|getMongoConnection;             |${connection}                    |db_pando_testing                           |
+|$modified_picklist_1=           |getModifiedPicklist;             |$order_id       |delivery_number  |D1$num  |
+|$totalNoOfModifiedPickListSent1=|getTotalNoOfModifiedPicklistSent;|D1$num                                     |
+|check                           |getValueFromModifiedPicklist;    |indent_id       |$order_id                 |
+|check                           |getValueFromModifiedPicklist;    |type            |INWARD                    |
+|check                           |getValueFromModifiedPicklist;    |vehicle_number  |                          |
+|check                           |getValueFromModifiedPicklist;    |vehicle_type    |${vehicle_name}           |
+|check                           |getValueFromModifiedPicklist;    |indication      |CREATE                    |
+|check                           |getValueFromModifiedPicklist;    |transporter_code|$transporter_ref_id       |
+|check                           |getValueFromModifiedPicklist;    |depot_code      |$Vendor_depot_ref_id_1    |
+|check                           |getValueFromModifiedPicklist;    |pickup_code     |$Vendor_depot_ref_id_1    |
+|check                           |getValueFromModifiedPicklist;    |delivery_number |D1$num                    |
+|check                           |getValueFromModifiedPicklist;    |line_item_no    |122120                    |
+|check                           |getValueFromModifiedPicklist;    |sku             |mc1$unique                |
+|check                           |getValueFromModifiedPicklist;    |division        |                          |
+|check                           |getValueFromModifiedPicklist;    |quantity        |1.00                      |
+|check                           |getValueFromModifiedPicklist;    |quantity_unit   |case                      |
+|check                           |getValueFromModifiedPicklist;    |N               |                          |
+|check                           |getValueFromModifiedPicklist;    |weight          |14.30                     |
+|check                           |getValueFromModifiedPicklist;    |weight_unit     |KG                        |
+|check                           |getValueFromModifiedPicklist;    |volume          |7.10                      |
+|check                           |getValueFromModifiedPicklist;    |volume_unit     |CFT                       |
+|check                           |getValueFromModifiedPicklist;    |category        |20a                       |
+|check                           |getValueFromModifiedPicklist;    |lr_number       |                          |
+|check                           |getValueFromModifiedPicklist;    |ship_to         |$destination_gate_ref_id_1|
+|check                           |getValueFromModifiedPicklist;    |sold_to         |$destination_gate_ref_id_1|
+|$modified_picklist_1=           |getModifiedPicklist;             |$order_id       |delivery_number  |D2$num  |
+|$totalNoOfModifiedPickListSent1=|getTotalNoOfModifiedPicklistSent;|D2$num                                     |
+|check                           |getValueFromModifiedPicklist;    |indent_id       |$order_id                 |
+|check                           |getValueFromModifiedPicklist;    |type            |INWARD                    |
+|check                           |getValueFromModifiedPicklist;    |vehicle_number  |                          |
+|check                           |getValueFromModifiedPicklist;    |vehicle_type    |${vehicle_name}           |
+|check                           |getValueFromModifiedPicklist;    |indication      |CREATE                    |
+|check                           |getValueFromModifiedPicklist;    |transporter_code|$transporter_ref_id       |
+|check                           |getValueFromModifiedPicklist;    |depot_code      |$Vendor_depot_ref_id_2    |
+|check                           |getValueFromModifiedPicklist;    |pickup_code     |$Vendor_depot_ref_id_2    |
+|check                           |getValueFromModifiedPicklist;    |delivery_number |D2$num                    |
+|check                           |getValueFromModifiedPicklist;    |line_item_no    |122121                    |
+|check                           |getValueFromModifiedPicklist;    |sku             |mc2$unique                |
+|check                           |getValueFromModifiedPicklist;    |division        |                          |
+|check                           |getValueFromModifiedPicklist;    |quantity        |1.00                      |
+|check                           |getValueFromModifiedPicklist;    |quantity_unit   |case                      |
+|check                           |getValueFromModifiedPicklist;    |N               |                          |
+|check                           |getValueFromModifiedPicklist;    |weight          |20.90                     |
+|check                           |getValueFromModifiedPicklist;    |weight_unit     |KG                        |
+|check                           |getValueFromModifiedPicklist;    |volume          |14.80                     |
+|check                           |getValueFromModifiedPicklist;    |volume_unit     |CFT                       |
+|check                           |getValueFromModifiedPicklist;    |category        |X                         |
+|check                           |getValueFromModifiedPicklist;    |lr_number       |                          |
+|check                           |getValueFromModifiedPicklist;    |ship_to         |$destination_gate_ref_id_2|
+|check                           |getValueFromModifiedPicklist;    |sold_to         |$destination_gate_ref_id_2|
+
+!|script   |common                                                        |
+|check     |comparisonResult;|$totalNoOfModifiedPickListSent1|equal|1|true|
+|$tresult9=|comparisonResult;|$totalNoOfModifiedPickListSent1|equal|1     |
+*!
+
+!**> Validating and Assinging The Truck
+!define vechicle_number {${truck_no}}
+!define driver_name  {pay driver}
+!define phone_number  {1234567890}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+**!
+
+!***> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {S/0}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {10000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$num","mrp_price":"${mrp_price}","material_code":"mc1$unique","depot_ref_id":"$Vendor_depot_ref_id_1","gate_ref_id":"$Vendor_depot_ref_id_1","division":"","quantity":"1","quantity_unit":"case","weight":"14.3","weight_unit":"KG","volume":"7.102","volume_unit":"CFT","ship_to":"$destination_gate_ref_id_1","sold_to":"$destination_gate_ref_id_1","type":"${movement_type}","invoice_number":"INV1$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":"000001"},{"indent_no":"$order_id","delivery_number":"D2$num","mrp_price":"${mrp_price}","material_code":"mc2$unique","depot_ref_id":"$Vendor_depot_ref_id_2","gate_ref_id":"$Vendor_depot_ref_id_2","division":"","quantity":"1","quantity_unit":"case","weight":"20.9","weight_unit":"KG","volume":"14.8","volume_unit":"CFT","ship_to":"$destination_gate_ref_id_2","sold_to":"$destination_gate_ref_id_2","type":"${movement_type}","invoice_number":"INV2$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":"000002"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** Validating the Freight provision payload sent to ERP (On Dispatched)
+!|Script                         |MongoDBQuery                                                                                               |
+|getMongoConnection;             |${connection}                                |db_pando_testing                                             |
+|$Freight_provision_1=           |getFreightProvisionPayload;                  |$order_id                                                    |
+|$totalNoOfModifiedPickListSent1=|getTotalNoOfFreightProvisionPayloadSent;     |$order_id                                                    |
+|check                           |getValuesFromFreightProvisionPayload;        |movement_type     |3                                         |
+|check                           |getValuesFromFreightProvisionPayload;        |transporter_code  |tr1$unique                                |
+|check                           |getValuesFromFreightProvisionPayload;        |transporter_name  |t1$unique                                 |
+|check                           |getValuesFromFreightProvisionPayload;        |indent_number     |$order_id                                 |
+|check                           |getValuesFromFreightProvisionPayload;        |total_indent_value|10100                                     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|material_invoice_number|INV1$unique|
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|material_code          |mc1$unique |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|consignee_code         |rq1$unique |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|total_freight_provision|3275.05    |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|line_item_number       |000001     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|oda_freight_charge     |0.00       |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|fixed_charge           |32.43      |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|additional_point_charge|0.00       |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|miscellaneous_charge   |0          |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|loading_charge         |0.00       |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|unloading_charge       |0.00       |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|lr_charge              |0.00       |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|freight_charge         |3242.63    |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|material_invoice_number|INV2$unique|
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|material_code          |mc2$unique |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|consignee_code         |rq2$unique |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|total_freight_provision|6824.95    |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|line_item_number       |000002     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|oda_freight_charge     |0          |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|fixed_charge           |67.57      |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|additional_point_charge|0          |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|miscellaneous_charge   |0          |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|loading_charge         |0          |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|unloading_charge       |0          |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|lr_charge              |0          |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|freight_charge         |6757.37    |
+
+!|script   |common                                                        |
+|check     |comparisonResult;|$totalNoOfModifiedPickListSent1|equal|1|true|
+|$tresult1=|comparisonResult;|$totalNoOfModifiedPickListSent1|equal|1     |
+*!
+
+!***> ERP Upload for Consignee 
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"$destination_gate_ref_id_1","sold_to":"$destination_gate_ref_id_1","material_invoice_number":"INV1$unique","material_code":"mc1$unique","no_of_shortage":"0","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate"},{"indent_number":"$order_id","ship_to":"$destination_gate_ref_id_2","sold_to":"$destination_gate_ref_id_2","material_invoice_number":"INV2$unique","material_code":"mc2$unique","no_of_shortage":"0","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!**> Transporter Login
+!define transporter_email {pandotransporter+$unique@gmail.com}
+!define transporter_password {$password}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!**> Enabling Lorry Receipt
+!define indent_id {$order_id}
+!define tusername {${transporter_email}}
+!define tpassword {${transporter_password}}
+!define lr_number {l1$unique}
+!define depot_name {$destination_depot_name_1}
+
+!|script|common                                                                                                                                                                                                                                                                                                   |
+|$data= |getTrim;|{"data":[{"destination_id":"$destination_gate_id_1","source_location_id":"$Vendor_depot_id_1","lr_number":"${lr_number}","document_available":true},{"destination_id":"$destination_gate_id_2","source_location_id":"$Vendor_depot_id_2","lr_number":"${lr_number}","document_available":true}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.TransporterAPI.LorryReceiptAPI
+*!
+
+!**> Validating in Ready for billing page without Tax Invoice
+!* Ready for billing page
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!include -c .FrontPage.Pando.Common.CommonPDFUploadInReadyForBilling
+*!
+
+!***> Invoice Page
+!define invoice_number {s$num}
+!define gstin_number {$unique}
+!define provider_state {Assam}
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceGeneration
+*!
+*!
+
+!***> Approving Invoice in Shipper
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceCheck
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceApprove
+*!
+
+!**> Validating the Invoice sent
+!|Script              |MongoDBQuery                                                                                                                                |
+|getMongoConnection;  |${connection}                           |db_pando_testing                                                                                   |
+|$total_invoice_sent1=|getTotalNoOfStrategy1InvoicePostingSent;|${invoice_number}                                                                                  |
+|$erp_invoice_details=|getStrategy1InvoicePostingPayload;      |${invoice_number}                                                                                  |
+|check                |getValuesFromInvoicePayload;            |transporter_code|$transporter_ref_id                                                               |
+|check                |getValuesFromInvoicePayload;            |invoice_number  |${invoice_number}                                                                 |
+|check                |getValuesFromInvoicePayload;            |invoice_total   |10100                                                                             |
+|check                |getValuesFromInvoicePayload;            |tax_code        |1                                                                                 |
+|check                |getValuesFromInvoicePayload;            |tax_type        |1                                                                                 |
+|check                |getValuesFromInvoicePayload;            |tax_percentage  |10                                                                                |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|indent_id              |$order_id             |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|order_reference        |$order_id             |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|movement               |3                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|sku                    |mc1$unique            |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|source                 |V1$unique             |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|source_ref_id          |$Vendor_depot_ref_id_1|
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|gate_ref_id            |$Vendor_depot_ref_id_1|
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|destination            |B$unique              |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|destination_ref_id     |R$unique              |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|quantity               |1                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|weight                 |14.3                  |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|volume                 |7.102                 |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|invoice_value_freight  |3275.05               |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|invoice_value_detention|0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|invoice_value_defect   |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|base_freight_charge    |3242.63               |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|consignee_category     |                      |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|line_item_number       |000001                |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|oda_freight_charge     |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|fixed_charge           |32.43                 |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|additional_point_charge|0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|miscellaneous_charge   |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|loading_charge         |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|unloading_charge       |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|lr_charge              |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|sla_delay              |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|transit_delay          |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|penalty                |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|shortage               |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|damage                 |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|carton_damage          |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|debit_adjustment       |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|extra_km_charge        |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|weight_unit            |kg                    |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|quantity_unit          |case                  |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV1$unique|volume_unit            |cft                   |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|indent_id              |$order_id             |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|order_reference        |$order_id             |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|movement               |3                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|sku                    |mc2$unique            |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|source                 |V2$unique             |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|source_ref_id          |$Vendor_depot_ref_id_2|
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|gate_ref_id            |$Vendor_depot_ref_id_2|
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|destination            |B$unique              |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|destination_ref_id     |R$unique              |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|quantity               |1                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|weight                 |20.9                  |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|volume                 |14.8                  |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|invoice_value_freight  |6824.95               |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|invoice_value_detention|0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|invoice_value_defect   |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|base_freight_charge    |6757.37               |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|consignee_category     |                      |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|line_item_number       |000002                |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|oda_freight_charge     |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|fixed_charge           |67.57                 |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|additional_point_charge|0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|miscellaneous_charge   |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|loading_charge         |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|unloading_charge       |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|lr_charge              |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|sla_delay              |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|transit_delay          |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|penalty                |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|shortage               |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|damage                 |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|carton_damage          |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|debit_adjustment       |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|extra_km_charge        |0                     |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|weight_unit            |kg                    |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|quantity_unit          |case                  |
+|check                |getIndentsValuesFromInvoicePayload;     |$order_id       |material_invoice_number|INV2$unique|volume_unit            |cft                   |
+
+!|Script         |Common                                                                  |
+|$schemaFilePath=|getPath;|data/schemafiles/strategy1_invoice_posting_schema.json|fullpath|
+
+!|script|json                                                           |
+|check  |validateJsonDocument;|$schemaFilePath|$erp_invoice_details|true|
+
+!|script    |common                                             |
+|check      |comparisonResult;|$total_invoice_sent1|equal|1|true|
+|$tresult10=|comparisonResult;|$total_invoice_sent1|equal|1     |
+*!
+
+!**> Validating test result
+!|Script  |Common                                                                                                                                 |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,true|
+*!

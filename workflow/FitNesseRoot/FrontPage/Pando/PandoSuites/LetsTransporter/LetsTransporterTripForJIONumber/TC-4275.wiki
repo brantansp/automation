@@ -1,0 +1,26 @@
+---
+Help: Filter by Trips - Let's Transport-Filter depends on status to be selected by user
+Test
+---
+!** Filter for the Status Started
+
+!define truck_num {TN $vno_1 $vno_2 $vno_3}
+
+!define filter_type {Trips}
+!define filter_value {ALL TRIPS}
+
+!include -c .FrontPage.Pando.PandoSuites.LetsTransporter.CommonTripFilter
+
+*!
+
+!** Verifying the Search result
+
+!|script  |ui                                                    |
+|check    |isElementPresent;|//span[text()='$trip_id']|xpath|true|
+|$tresult=|isElementPresent;|//span[text()='$trip_id']|xpath     |
+
+*!
+
+!**> Update result
+!include .FrontPage.Pando.Common.CommonResultImage
+*!

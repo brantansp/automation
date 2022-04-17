@@ -1,0 +1,6 @@
+---
+Help: Contains test case for the Shipper
+Suite
+---
+!1 Test suite Shipper invoice
+!contents -R2 -g -p -f -h

@@ -1,0 +1,22 @@
+---
+Help: Use to Retrieve the Notification Mail
+---
+!|Script                        |Ui                                                                                                                                       |
+|wait;                          |5                                                                                                                                        |
+|navigateToUrl;                 |${mail_url}/email?page=0&size=60                                                                                                         |
+|refreshForElementToBeDisplayed;|//td[text()='${email}']//following::td[contains(text(),'${subject}')]/following-sibling::td/a|xpath                                |5  | |
+|click;                         |//td[text()='${email}']//following::td[contains(text(),'${subject}')]/following-sibling::td/a|xpath                                      |
+|waitForElementToBeDisplayed;   |//span[@class='card-title']/i[text()='email']                                                |xpath                                |10   |
+|$url=                          |currentUrl;                                                                                                                              |
+|waitForElementToBeDisplayed;   |//div[@class='card-content']                                                                 |xpath                                |30   |
+|$body=                         |getText;                                                                                     |//div[@class='card-content']         |xpath|
+|$subject=                      |getText;                                                                                     |//th[text()='Subject:']/following::td|xpath|
+
+
+!|Script|Common                               |
+|$url=  |stringConcatenation; |$url|xxx       |
+|$id=   |getSubStringByString;|$url|email/|xxx|
+
+!|Script    |Http                                 |
+|setBaseUrl;|${mail_url}/api/email/$id            |
+|$clear=    |getResponse;|Application/Json|delete||

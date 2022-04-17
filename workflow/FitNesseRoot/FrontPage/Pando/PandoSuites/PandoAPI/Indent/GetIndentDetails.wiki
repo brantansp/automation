@@ -1,0 +1,9 @@
+---
+Help: API to get the indent details
+Test
+---
+!|Script    |Http                                |
+|addHeader; |Authorization |bearer $stoken       |
+|setBaseUrl;|${surl}/api/order/$order_id         |
+|$response= |getResponse;  |Application/Json|get||
+|check      |getStatusCode;|200                  |

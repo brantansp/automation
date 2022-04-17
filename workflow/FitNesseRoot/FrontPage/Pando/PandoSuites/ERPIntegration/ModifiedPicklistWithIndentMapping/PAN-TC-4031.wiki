@@ -1,0 +1,223 @@
+---
+Help: Email should have trigger for Primary indents created via optima
+Suites: jnj
+Test
+---
+!5 Description : ${RUNNING_PAGE_NAME} : Ensure that material filled details are sent to Optima via material upload
+
+!5 Expected : Modified picklist should be sent to Email with excel containing details of the orders
+
+!5 Config : email_modified_picklist : { enabled :true, role : [ super_admin, depot_manager ], movement : [ 2] }
+
+!***> Unique values assignment
+!|Script   |Common                                 |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss   |
+|$currDate=|getCurrentDateTimeStamp |iso           |
+|$year=    |getSubString;           |$unique  |0|4 |
+|$today=   |getSubString;           |$currDate|0|10|
+
+!|script     |DateUtil                     |
+|$date_today=|dateCalculation;|dd/MM/yyyy|0|
+*!
+
+!***> Depot Optima Setting
+!define depo {ACME Guwahati - CFA}
+!define max_split {3}
+!define split_factor {1}
+!define ftl_certify {false}
+!define algorithm {4}
+!define distance_deviation {500}
+!define degree_of_deviation {45}
+!define optima_type {1}
+!define weight {1}
+!define volume {1}
+!define mode {0}
+!define max_pickup {2}
+!define fitment {0}
+!define max_dropoff {2}
+!define optima_for_ptl {false}
+!define ptl_club_gates {false}
+!define limited_truck_count {false}
+!define hybrid_split {false}
+!define depot_id {6080767f0d2a54005132314c}
+!define movement {2}
+!define movement_type {Primary}
+!define material_category {"GT","MT"}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split": ${max_split},"split_factor": ${split_factor},"ftl_certify": ${ftl_certify},"algorithm": ${algorithm},"distance_deviation":"${distance_deviation}","degree_of_deviation":${degree_of_deviation},"optima_type":${optima_type},"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":${weight},"volume":${volume}},"material_categories":[${material_category}],"mode":${mode},"max_pickup_points":${max_pickup},"fitment":${fitment},"max_drop_points":${max_dropoff},"drop_off_rule":[],"optima_for_ptl":${optima_for_ptl},"ptl_club_gates":${ptl_club_gates},"limited_truck_count":${limited_truck_count},"hybrid_split": ${hybrid_split}},"depot_ids":["${depot_id}"],"movement":${movement}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!***> Uploading Rate Matrix
+!define erp_gate_id_api_1 {rq1$unique}
+!define transit_days {1}
+!define ratec {10000}
+!define rtrip {per_trip}
+!define mrate {10000}
+!define mfactor {1}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {point,5321,5340,32FT 15MT,${transit_days},773248,Loadshare Networks Private Limited,${transit_days},${mrate},${rtrip},01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|point,5322,5340,32FT 15MT,${transit_days},773248,Loadshare Networks Private Limited,${transit_days},${mrate},${rtrip},01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|point,5321,5341,32FT 15MT,${transit_days},773248,Loadshare Networks Private Limited,${transit_days},${mrate},${rtrip},01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|point,5322,5341,32FT 15MT,${transit_days},773248,Loadshare Networks Private Limited,${transit_days},${mrate},${rtrip},01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!***> Optima uploading Material and Optimizing
+!define invoice_value {25000}
+!define mrp {20000}
+!define depot_name {ACME Guwahati - CFA}
+!define movement_type {Primary}
+
+!define row {Sales Doc./Delivery Number/Material Invoice Number,Material Code,Order Quantity,Quantity Unit,Weight,Weight Unit,Volume,Volume Unit,Pickup Ref Id,Customer/Ship To Ref Id,Sold To Ref Id,Category,Sub Category	,Date(YYYY-MM-DD),STN,Material Category,Category Priority,Invoice Date(YYYY-MM-DD),Invoice Value,Transporter Reference Id,MRP}
+!define column {D1$num,79618532,1000,NOS,7000,kg,1000,cft,5321,5340,5340,,,$today,,,,$today,${invoice_value},,${mrp}|D2$num,79618532,1000,NOS,7000,kg,1000,cft,5322,5341,5341,,,$today,,,,$today,${invoice_value},,${mrp}}
+
+!|Script    |Common                                         |
+|$excelpath=|getPath;|testAttachment/d_$unique.xlsx|fullpath|
+
+!|Script                |Excel                      |
+|newSheetDynamicColumns;|${row}|${column}|$excelpath|
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimaMaterialUpload
+
+!|Script|Common                                                                              |
+|check  |checkIfStringExistsIn;|2 Valid materials and 0 Invalid materials out of 2|$data|true|
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimizeAndFilter
+*!
+
+!** Indenting the suggested order
+!|Script|Ui                                                                                                            |
+|check  |getCountOfElements;                                            |//div[@class='card-row card-row-show']|xpath|1|
+|click; |//input[@type='checkbox']/../span                              |xpath                                         |
+|click; |//button[contains(text(),'Indent')]                            |xpath                                         |
+|click; |//div[@class='el-message-box']//span[contains(text(),'Create')]|xpath                                         |
+|wait;  |10                                                                                                            |
+
+!define depot_selection  {ACME Guwahati - CFA}
+
+!|Script       |Ui                                                                                                                                 |
+|navigateToUrl;|${surl}/indents                                                                                                                    |
+|click;        |//button[@class='el-button el-button--default']|xpath                                                                              |
+|click;        |(//div[@class='slideleft_menu']//input)[1]     |xpath                                                                              |
+|sendKeys;     |(//div[@class='slideleft_menu']//input)[1]     |xpath                                                           |${depot_selection}|
+|click;        |//span[text()='${depot_selection}']            |xpath                                                                              |
+|click;        |//button[text()='APPLY']                       |xpath                                                                              |
+|$order_id=    |getText;                                       |(//div[@class='order-row']/div)[1]//span[contains(text(),'JNJ')]|xpath             |
+*!
+
+!** Cleaning the download locarion
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+*!
+
+!** Validate Email
+!define depot_manager_mail {dmjnj@outlook.com}
+!define super_admin_mail {sajnj@outlook.com}
+!define indent_movement {PRIMARY}
+
+!|Script                        |Ui                                                                                                                                                                                                                                                                                                       |
+|wait;                          |25                                                                                                                                                                                                                                                                                                       |
+|navigateToUrl;                 |http://35.154.192.224:5080/email?page=0&size=60                                                                                                                                                                                                                                                          |
+|waitForElementToBeDisplayed;   |//table[@class='striped responsive-table']                                                                                         |xpath                                                                                                                                                     |30        |
+|refreshForElementToBeDisplayed;|//td[text()='${depot_manager_mail}']                                                                                               |xpath                                                                                                                                                     |2    |    |
+|$tresult1=                     |isElementPresent;                                                                                                                  |//td[text()='${depot_manager_mail}']//following-sibling::td[contains(text(),'Modified Picklist generated for ${depo} - ${indent_movement} - $date_today')]|xpath     |
+|$tresult2=                     |isElementPresent;                                                                                                                  |//td[text()='${super_admin_mail}']//following-sibling::td[contains(text(),'Modified Picklist generated for ${depo} - ${indent_movement} - $date_today')]  |xpath     |
+|$total_mail_count=             |getCountOfElements;                                                                                                                |//td[contains(text(),'jnj')]//following-sibling::td[contains(text(),'Modified Picklist generated for ${depo} - ${indent_movement} - $date_today')]        |xpath     |
+|click;                         |//td[text()='${depot_manager_mail}']/following-sibling::td[contains(text(),'Modified Picklist generated')]/following-sibling::td//a|xpath                                                                                                                                                                |
+|wait;                          |5                                                                                                                                                                                                                                                                                                        |
+|$link_url=                     |getElementAttribute;                                                                                                               |//p/a                                                                                                                                                     |xpath|href|
+|navigateToUrl;                 |http://35.154.192.224:5080/email?page=0&size=60                                                                                                                                                                                                                                                          |
+**!
+
+!** Validating Excel sheet Report
+!|Script       |Ui       |
+|navigateToUrl;|$link_url|
+|wait;         |60       |
+
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!** Verifying the invalid data rejection list
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!define source_ref_id_1 {5321}
+!define source_ref_id_2 {5322}
+
+!|script                 |ExcelQuery                                                                                                                                             |
+|$con_1_indentid=        |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|Indent ID        |
+|$con_1_salesdoc=        |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|Sales Doc.       |
+|$con_1_material=        |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|Material         |
+|$con_1_materialcategory=|selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|Material Category|
+|$con_1_orderquantity=   |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|Order Quantity   |
+|$con_1_su=              |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|SU               |
+|$con_1_grossweight=     |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|Gross Weight     |
+|$con_1_weightunit=      |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|WUn              |
+|$con_1_grossvolume=     |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|Volume           |
+|$con_1_volumeunit=      |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|VUn              |
+|$con_1_shpt=            |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|ShPt             |
+|$con_1_soldpt=          |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|Sold-To Pt       |
+|$con_1_category=        |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|Category         |
+|$con_1_subcategory=     |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|Sub Category     |
+|$con_1_stn=             |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|STN              |
+|$con_1_date=            |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|Date             |
+|$con_1_customer=        |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_1}'|Customer         |
+|$con_2_indentid=        |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|Indent ID        |
+|$con_2_salesdoc=        |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|Sales Doc.       |
+|$con_2_material=        |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|Material         |
+|$con_2_materialcategory=|selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|Material Category|
+|$con_2_orderquantity=   |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|Order Quantity   |
+|$con_2_su=              |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|SU               |
+|$con_2_grossweight=     |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|Gross Weight     |
+|$con_2_weightunit=      |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|WUn              |
+|$con_2_grossvolume=     |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|Volume           |
+|$con_2_volumeunit=      |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|VUn              |
+|$con_2_shpt=            |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|ShPt             |
+|$con_2_soldpt=          |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|Sold-To Pt       |
+|$con_2_category=        |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|Category         |
+|$con_2_subcategory=     |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|Sub Category     |
+|$con_2_stn=             |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|STN              |
+|$con_2_date=            |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|Date             |
+|$con_2_customer=        |selectQuery;  |$filename|select * from "Modified Picklist Notification" where "Indent ID" = '$order_id' and ShPt='${source_ref_id_2}'|Customer         |
+|$total_indent_count=    |getCountQuery;|$filename|select count(*) from "Modified Picklist Notification" where "Indent ID" = '$order_id'                                         |
+**!
+*!
+
+!** Validating result
+!|Script   |Common                                                                                        |
+|$tresult3=|comparisonResult;            |$total_mail_count             |>=                    |2         |
+|$tresult4=|checkIfStringAreEqual;       |$total_indent_count           |2                                |
+|$tresult5=|checkIfStringAreEqual;       |$con_1_customer               |[5340]                           |
+|$tresult6=|checkIfStringAreEqual;       |$con_2_customer               |[5341]                           |
+|check     |checkIfStringAreEqual;       |$con_1_indentid               |[!-$order_id-!]       |true      |
+|check     |checkIfStringAreEqual;       |$con_1_salesdoc               |[!-D1$num-!]          |true      |
+|check     |checkIfStringAreEqual;       |$con_1_material               |[79618532]            |true      |
+|check     |checkIfStringAreEqual;       |$con_1_materialcategory       |[Johnson's]           |true      |
+|check     |checkIfStringAreEqual;       |$con_1_orderquantity          |[1000]                |true      |
+|check     |checkIfStringAreEqual;       |$con_1_su                     |[nos]                 |true      |
+|check     |checkIfStringAreEqual;       |$con_1_grossweight            |[7000]                |true      |
+|check     |checkIfStringAreEqual;       |$con_1_weightunit             |[KG]                  |true      |
+|check     |checkIfStringAreEqual;       |$con_1_grossvolume            |[1000]                |true      |
+|check     |checkIfStringAreEqual;       |$con_2_volumeunit             |[CFT]                 |true      |
+|check     |checkIfStringAreEqual;       |$con_1_shpt                   |[5321]                |true      |
+|check     |checkIfStringAreEqual;       |$con_1_soldpt                 |[5340]                |true      |
+|check     |checkIfStringAreEqual;       |$con_1_stn                    |[1]                   |true      |
+|check     |checkIfStringAreEqual;       |$con_2_indentid               |[!-$order_id-!]       |true      |
+|check     |checkIfStringAreEqual;       |$con_2_salesdoc               |[!-D2$num-!]          |true      |
+|check     |checkIfStringAreEqual;       |$con_2_material               |[79618532]            |true      |
+|check     |checkIfStringAreEqual;       |$con_2_materialcategory       |[Johnson's]           |true      |
+|check     |checkIfStringAreEqual;       |$con_2_orderquantity          |[1000]                |true      |
+|check     |checkIfStringAreEqual;       |$con_2_su                     |[nos]                 |true      |
+|check     |checkIfStringAreEqual;       |$con_2_grossweight            |[7000]                |true      |
+|check     |checkIfStringAreEqual;       |$con_2_weightunit             |[KG]                  |true      |
+|check     |checkIfStringAreEqual;       |$con_2_grossvolume            |[1000]                |true      |
+|check     |checkIfStringAreEqual;       |$con_2_volumeunit             |[CFT]                 |true      |
+|check     |checkIfStringAreEqual;       |$con_2_shpt                   |[5322]                |true      |
+|check     |checkIfStringAreEqual;       |$con_2_soldpt                 |[5341]                |true      |
+|check     |checkIfStringAreEqual;       |$con_2_stn                    |[1]                   |true      |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,true|
+|check     |checkIfStringAreEqual;       |$tresult                      |true                  |true      |
+*!

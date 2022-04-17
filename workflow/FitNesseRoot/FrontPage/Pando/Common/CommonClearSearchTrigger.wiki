@@ -1,0 +1,7 @@
+!|Script                     |Ui                                                                                                                                                 |
+|click;                      |//div[contains(@class,'searchterm')]                                                                                                      |xpath   |
+|wait;                       |1                                                                                                                                                  |
+|waitForElementToBeDisplayed;|//button[text()='Clear']                                                                                                                  |xpath|30|
+|click;                      |//button[text()='Clear']                                                                                                                  |xpath   |
+|click;                      |//button[text()='Search']                                                                                                                 |xpath   |
+|waitForElementToBeDisplayed;|//div[contains(@class,'order-item') or contains(@class,'card-row') or contains(@class,'grid-list-row') or contains(@class,'paymentempty')]|xpath|30|

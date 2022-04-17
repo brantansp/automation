@@ -1,0 +1,6 @@
+---
+Help: Contains Hach Chemicals Test cases
+Suite
+---
+!1 Test suite Hach Chemicals
+!contents -R2 -g -p -f -h

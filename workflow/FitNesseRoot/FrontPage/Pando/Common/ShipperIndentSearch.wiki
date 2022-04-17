@@ -1,0 +1,6 @@
+!|Script                        |Ui                                                                                                    |
+|click;                         |//span[text()='Search']                                                          |xpath               |
+|sendKeys;                      |//input[@placeholder='Enter indent id']                                          |xpath|${search_text}|
+|click;                         |//button[text()='Search']                                                        |xpath               |
+|wait;                          |2                                                                                                     |
+|refreshForElementToBeDisplayed;|(//div[contains(@class,'card-row row')])[1]//*[contains(text(),'${search_text}')]|xpath|2             | |

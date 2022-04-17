@@ -1,0 +1,41 @@
+---
+Help: Search by Partial Username
+Test
+---
+!*** Unique value assignment
+!| script|common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$num=   |getRandomNumber;        |100  |999  |
+*!
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_name {A$unique}
+!define user_number {123}
+!define user_email {pandoautomation+$unique@gmail.com}
+!define status {1}
+
+!** User creation 
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!define search_value {$unique}
+!** User search
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonUserNameSearch
+*!
+
+!define search_text {${search_value}}
+!** Verify search
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonVerifySearch
+*!
+
+!define tname {TC-182}
+!*** Update result
+ 
+*!

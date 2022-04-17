@@ -1,0 +1,7 @@
+---
+Help: Contains Product category wise pricing rate matrix
+Suite
+Suites: optscn7
+---
+!1 Test suite SKU Rate matrix Optima
+!contents -R2 -g -p -f -h

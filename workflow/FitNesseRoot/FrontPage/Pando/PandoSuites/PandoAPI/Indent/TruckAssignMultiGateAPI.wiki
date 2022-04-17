@@ -1,0 +1,22 @@
+---
+Test
+---
+!|Script    |Http                                                                                                                                                        |
+|wait;      |5                                                                                                                                                           |
+|addHeader; |Authorization |bearer $stoken                                                                                                                               |
+|setBaseUrl;|${surl}/api/order/$order_id/assign_truck                                                                                                                    |
+|$truck=    |getResponse;  |Application/Json|put|{"data":{"vehicle":{"number":"${vechicle_number}"},"driver":{"name":"${driver_name}","phone_number":"${phone_number}"}}}|
+|check      |getStatusCode;|200                                                                                                                                          |
+
+!|Script                         |json                                                                         |
+|$vehicle_number=                |getValueFromJSON;          |$truck                       |data.vehicle.number|
+|$unique_truck_assign_id_array=  |getArrayValueFromJSON;     |$truck                       |data.sources       |
+|$unique_truck_assign_id_array_1=|getJSONObjectFromJsonArray;|$unique_truck_assign_id_array|0                  |
+|$unique_truck_assign_id_array_2=|getJSONObjectFromJsonArray;|$unique_truck_assign_id_array|1                  |
+|$unique_truck_assign_id_array_3=|getJSONObjectFromJsonArray;|$unique_truck_assign_id_array|2                  |
+
+
+!|script                   |common                                                                |
+|$unique_truck_assign_id_1=|getSubStringByString;|$unique_truck_assign_id_array_1|"unique_id":"|",|
+|$unique_truck_assign_id_2=|getSubStringByString;|$unique_truck_assign_id_array_2|"unique_id":"|",|
+|$unique_truck_assign_id_3=|getSubStringByString;|$unique_truck_assign_id_array_3|"unique_id":"|",|

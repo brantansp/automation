@@ -1,0 +1,10 @@
+---
+Help: Validate indent count and its element
+Static
+---
+!| script                    |ui                                                                                                                                                                               |
+|waitForElementToBeDisplayed;|//div[@class='order-row']                                           |xpath                                                                                               |15     |
+|check                       |getCountOfElements;                                                 |//div[@class='order-row']                                                                           |xpath|1|
+|$no_of_orders=              |getCountOfElements;                                                 |//div[@class='order-row']                                                                           |xpath  |
+|mouseHover;                 |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                                                       |
+|$tresult=                   |isElementPresent;                                                   |//div[@role='tooltip' and contains(@style,'absolute')]/child::div[contains(text(),'${verify_text}')]|xpath  |

@@ -1,0 +1,23 @@
+---
+Help: SCN19_Ensure that maximum truck utilization does not exceeds
+Test
+---
+!5 SCN19_Ensure that maximum truck utilization does not exceeds
+
+!5 https://gopando.atlassian.net/browse/PAN-2547
+!5 https://github.com/pandocorp/optima-v2/pull/51
+
+!5 When Source and destination have same lat/long, then the truck is overloaded over its capacity. Fix will change the lat/long if ever same for source and destination.
+
+!|Script   |Common                                                            |
+|$jsonpath=|getPath;|download/scn19_PAN_2547_maxTruckUtil_output.json|fullpath|
+
+!|script           |QueryOptimaOutput                 |
+|getParsedJson;    |$jsonpath                         |
+|$isMaxUtilExceeds=|checkIfMaxTruckUtilizationExceeds;|
+
+!|script  |common                                              |
+|check    |checkIfStringAreEqual;|$isMaxUtilExceeds|false|true|
+|$tresult=|checkIfStringAreEqual;|$isMaxUtilExceeds|false      |
+
+ 

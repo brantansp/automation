@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://tataconsumer-auto.pandostaging.in}
+!define username {pandotclauto@outlook.com}
+!define password {test@1234}
+!define shipper_client_id {5ec4d8ac56e1b523e6c16283}

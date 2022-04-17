@@ -1,0 +1,22 @@
+---
+Help: Use to retrieve Transporter role id from the Transporter
+Test
+---
+!| Script    |Http                                                                                         |
+|setBaseUrl; |${turl}/api/login                                                                            |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}|
+|$token=     |getHeader;      |x-auth-token                                                                |
+|addHeader;  |Authorization   |bearer $token                                                               |
+|setBaseUrl; |${turl}/api/transporter/roles                                                                |
+|$response=  |getResponse;    |Application/Json|get                            |                           |
+|$status=    |getStatusCode;                                                                               |
+
+|Script    |Common                           |
+|$len=     |getStringLength;|$response       |
+|$response=|getSubString;   |$response|8|$len|
+
+
+!| script        |json                                                                         |
+|$position=      |getKeyIndexFromJSONByKeyAndValueType;|$response|${search_key}|${search_value}|
+|$response=      |getJSONObjectFromJsonArray;          |$response|$position                    |
+|$retrieve_value=|getValueFromJSON;                    |$response|${retrieve_key}              |

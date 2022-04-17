@@ -1,0 +1,6 @@
+---
+Suite
+Suites: pay3
+---
+!1 Test suite for open debit
+!contents -R2 -g -p -f -h

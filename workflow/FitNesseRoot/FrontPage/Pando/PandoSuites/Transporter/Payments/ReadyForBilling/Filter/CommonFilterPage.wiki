@@ -1,0 +1,23 @@
+---
+Help: Common Setting Filter Page
+---
+!|Script       |Ui                                                                                              |
+|navigateToUrl;|${turl}/v2/payments                                                                             |
+|click;        |//button[@class='el-button el-button--default']                                   |xpath        |
+|click;        |(//input[@placeholder='Select'])[2]                                               |xpath        |
+|click;        |//span[text()='${client}']                                                        |xpath        |
+|click;        |(//input[@placeholder='Select'])[3]                                               |xpath        |
+|sendKeys;     |(//input[@placeholder='Select'])[3]                                               |xpath|${depo}|
+|click;        |//span[text()='${depo}']                                                          |xpath        |
+|click;        |(//input[@placeholder='Select'])[5]                                               |xpath        |
+|click;        |//span[text()='${invoice_type}']                                                  |xpath        |
+|click;        |(//input[@placeholder='Select'])[6]                                               |xpath        |
+|click;        |//span[text()='${delivery_type}']                                                 |xpath        |
+|click;        |//div[@class='datepickerrange-cancel']                                            |xpath        |
+|click;        |//div[@id='datepicker-trigger']                                                   |xpath        |
+|clickJS;      |//button[@date='$filter_start']                                                   |xpath        |
+|clickJS;      |//button[@date='$filter_end']                                                     |xpath        |
+|click;        |//div[@class='asd__wrapper asd__wrapper--datepicker-open']//button[text()='Apply']|xpath        |
+|wait;         |1                                                                                               |
+|click;        |//button[text()='APPLY']                                                          |xpath        |
+|wait;         |2                                                                                               |

@@ -1,0 +1,401 @@
+---
+Help: To verify ePOD in submitted status only after release time is available
+Suites: marico2
+Test
+---
+!***> Unique values assignment
+!|Script      |Common                                     |
+|$unique=     |getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num=        |getRandomNumber;        |100    |999       |
+|$num1=       |getRandomNumber;        |20     |76        |
+|$num2=       |getRandomNumber;        |1000   |9999      |
+|$rand1=      |getRandomString;        |2      |ALPHAUPPER|
+|$year=       |getSubString;           |$unique|0    |4   |
+|$indate=     |getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1=      |getRandomNumber;        |20     |76        |
+|$vno_2=      |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3=      |getRandomNumber;        |1000   |9999      |
+|$invoicedate=|getCurrentDateTimeStamp;|yyyy-MM-dd        |
+
+!|Script            |DateUtil                            |
+|$truckindate=      |dateCalculation;     |yyyy/MM/dd|-17|
+|$loadingDate=      |dateCalculation;     |yyyy/MM/dd|-12|
+|$truckoutdate=     |dateCalculation;     |yyyy/MM/dd|-13|
+|$reported_date_1=  |dateCalculation;     |yyyy/MM/dd|-10|
+|$released_date_1=  |dateCalculation;     |yyyy/MM/dd|-6 |
+|$reported_date_2=  |dateCalculation;     |yyyy/MM/dd|-4 |
+|$released_date_2=  |dateCalculation;     |yyyy/MM/dd|-1 |
+|$monthAndYear=     |dateCalculation;     |MMMM yyyy |0  |
+|$todayDate=        |dateCalculation;     |d         |0  |
+|$ordinalDateSuffix=|getOrdinalDateSuffix;|$todayDate    |
+
+!|Script          |Common                                              |
+|$truckindate=    |stringConcatenation;|$truckindate    |!- 10:00:00 -!|
+|$truckoutdate=   |stringConcatenation;|$truckoutdate   |!- 10:00:00 -!|
+|$reported_date_1=|stringConcatenation;|$reported_date_1|!- 10:00:00 -!|
+|$released_date_1=|stringConcatenation;|$released_date_1|!- 10:00:00 -!|
+|$reported_date_2=|stringConcatenation;|$reported_date_2|!- 10:00:00 -!|
+|$released_date_2=|stringConcatenation;|$released_date_2|!- 10:00:00 -!|
+
+!|Script          |DateUtil                       |
+|$loadingDate=    |utcConversion;|$loadingDate    |
+|$truckindate=    |utcConversion;|$truckindate    |
+|$truckoutdate=   |utcConversion;|$truckoutdate   |
+|$reported_date_1=|utcConversion;|$reported_date_1|
+|$released_date_1=|utcConversion;|$released_date_1|
+|$reported_date_2=|utcConversion;|$reported_date_2|
+|$released_date_2=|utcConversion;|$released_date_2|
+
+!|Script        |DateUtil                                      |
+|$expected_date=|dateCalculation;|yyyy/MM/dd        |-18       |
+|$expected_date=|utcConversion;  |$expected_date !- 10:00:00 -!|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!***> Destination Depot Creation
+!define destination_depot_name_1 {MUMBAI DEPOT}
+!define destination_depot_id_1 {61cee3d22a0e79004aaa5294}
+!define destination_depot_refid_1 {MUMDEPOT}
+!define destination_depot_gateid_1 {MUMGATE}
+!define destination_depot_gate_1 {61cee4d71ca9650049e019e0}
+!define destination_depot_gateid_2 {MUMGATE2}
+!define destination_depot_gate_2 {61d84c5c2194350049de4553}
+
+!define destination_depot_name_2 {DELHI DEPOT}
+!define destination_depot_id_2 {61d85339ba9122004910a448}
+!define destination_depot_refid_2 {DELHIDEPOT}
+!define destination_depot_gateid_3 {DELHIGATE1}
+!define destination_depot_gate_3 {61d8535fba9122004910a449}
+
+!|script                         |common                              |
+|$destination_location_id_1=     |getTrim;|${destination_depot_id_1}  |
+|$destination_location_id_2=     |getTrim;|${destination_depot_id_2}  |
+|$destination_gate_location_id_1=|getTrim;|${destination_depot_gate_1}|
+|$destination_gate_location_id_2=|getTrim;|${destination_depot_gate_2}|
+|$destination_gate_location_id_3=|getTrim;|${destination_depot_gate_3}|
+*!
+
+!***> Transporter with discount
+!define transporter_name {TRANSPORTER MARICO D}
+!define transporter_ref_id {TRANSMARICOD}
+!define discount {10}
+!define gst_percentage {5}
+!define manager_email {pandotransporter+m1@outlook.com}
+!define transporter_id {61cbf78f7270d2004935257d}
+
+!| Script        |Common                    |
+|$transporter_id=|getTrim;|${transporter_id}|
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation
+!define vehicle_name {VEHICLE 900 CFT}
+!define cft {900}
+!define kg {1000}
+!define vehicle_type {FTL}
+!define vehicle_id {61cbfaa97270d200493525b7}
+
+!| Script    |Common                |
+|$vehicle_id=|getTrim;|${vehicle_id}|
+*!
+
+!***> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$unique}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!***> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$unique}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+
+!|Script         |Common           |
+|$location_id=   |getTrim;|$depot  |
+|$source_gate_id=|getTrim;|$gate_id|
+*!
+
+!**> Material Creation 1
+!define material_name_1 {PARACHUTE OIL}
+!define material_code_1 {PARACHUTE}
+**!
+
+!**> Material Creation 2
+!define material_name_2 {SAFFOLA MASALA OATS}
+!define material_code_2 {SAFFOLAOATS}
+**!
+
+!**> Material Creation 3
+!define material_name_3 {Livon Hair serum}
+!define material_code_3 {LIVON}
+**!
+
+!**> Material Creation 4
+!define material_name_4 {Revive fabric care}
+!define material_code_4 {REVIVE}
+**!
+
+!** Upload Loading and Unloading charges
+!define src_depot_Ref_Id {R$unique}
+!define Loading_Cost1 {400}
+!define Unloading_Cost1 {520}
+!define ODA_Cost1 {100}
+!define Loading_Cost1 {400}
+!define Unloading_Cost1 {520}
+!define ODA_Cost1 {100}
+!define Loading_Cost2 {680}
+!define Unloading_Cost2 {740}
+!define ODA_Cost2 {100}
+!define unit {per_trip}
+
+!define row {Vehicle Type,Movement,Depot REF ID,Loading cost,Unloading cost,ODA cost,Unit}
+!define column {${vehicle_name},Primary,${src_depot_Ref_Id},${Loading_Cost1},${Unloading_Cost1},${ODA_Cost1},${unit}|${vehicle_name},Primary,${destination_depot_refid_1},${Loading_Cost2},${Unloading_Cost2},${ODA_Cost2},${unit}|${vehicle_name},Primary,${destination_depot_refid_2},${Loading_Cost2},${Unloading_Cost2},${ODA_Cost2},${unit}}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.LoadingAndUnloadingSearch.CommonLUDynamicUpload
+*!
+
+!**> Enable Admin setting
+!define movement {Primary}
+!define amount_type {INR}
+!define threshold_amount {0}
+!define type1 {Shortage}
+!define s_value {Fixed Price}
+!define s_factor {0.85}
+!define type2 {Damage}
+!define d_value {Fixed Price}
+!define d_factor {1}
+!define type3 {Carton Damage}
+!define cd_value {Fixed Price}
+!define cd_factor {30}
+
+!|script|common                                                                                                                                                                        |
+|$data= |getTrim;|{"insurance_threshold":${threshold_amount},"shortage":{"value":1,"factor":0.85},"damage":{"value":1,"factor":1},"carton_damage":{"value":1,"factor":30},"movement":2}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.AdminSettings.ShortageDamageSettingAPI
+**!
+
+!** Detention Upload
+!define row {Vehicle Name,Group Code,Movement,LOADING_DETENTION_DAY1,LOADING_DETENTION_DAY2,LOADING_DETENTION_DAY3,LOADING_DETENTION_DAY4,LOADING_DETENTION_DAY5,LOADING_DETENTION_MORETHAN_DAY5,UnLOADING_DETENTION_DAY1,UnLOADING_DETENTION_DAY2,UnLOADING_DETENTION_DAY3,UnLOADING_DETENTION_DAY4,UnLOADING_DETENTION_DAY5,UnLOADING_DETENTION_MORETHAN_DAY5,TRANSIT_DAY1,TRANSIT_DAY2,TRANSIT_DAY3,TRANSIT_DAY4,TRANSIT_DAY5,TRANSIT_MORETHAN_DAY5,TRANSIT_DELAY_PERCENTAGE}
+!define column {${vehicle_name},U,Primary,100,200,300,400,500,600,110,210,310,410,510,610,120,220,320,420,520,620,10}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonDetentionBulkUpload
+**!
+
+!***> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Drop Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,Chennai,Mumbai,${vehicle_name},100,${transporter_ref_id},${transporter_name},1,12000,per_trip,01-Jan-$year,31-Dec-2030,100,1,U,PC,550,770,Per trip,500,300,no,0|City,Chennai,Delhi,${vehicle_name},100,${transporter_ref_id},${transporter_name},1,15000,per_trip,01-Jan-2021,31-Dec-2030,100,1,U,PC,405,560,Per trip,500,300,no,0}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!**> Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$location_id}
+!define gate_id {$source_gate_id}
+!define vehicle_requirement_date {$expected_date}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id_1 {$destination_location_id_1}
+!define sold_to_id_1 {$destination_gate_location_id_1}
+!define destination_location_id_2 {$destination_location_id_1}
+!define sold_to_id_2 {$destination_gate_location_id_2}
+!define destination_location_id_3 {$destination_location_id_2}
+!define sold_to_id_3 {$destination_gate_location_id_3}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice}}],"destinations":[{"type":1,"location_id":"${destination_location_id_1}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id_1}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id_1}"},{"type":1,"location_id":"${destination_location_id_2}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id_2}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id_2}"},{"type":1,"location_id":"${destination_location_id_3}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id_3}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id_3}"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+*!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!*** Truck In
+!| Script       |Common               |
+|$truck_in_date=|getTrim;|$truckindate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!**> Update LR for destination 1
+!define consignee_id {$destination_location_id_1}
+!define lr_number {l1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!**> Update LR for destination 2
+!define consignee_id {$destination_location_id_2}
+!define lr_number {l2}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!**> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {1000} 
+!define quantity_unit {cases}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {1000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"${material_code_1}","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${destination_depot_gateid_1}","sold_to":"${destination_depot_gateid_1}","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"200","material_code":"${material_code_2}","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"200","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${destination_depot_gateid_2}","sold_to":"${destination_depot_gateid_2}","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D3$unique","mrp_price":"300","material_code":"${material_code_3}","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"400","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${destination_depot_gateid_2}","sold_to":"${destination_depot_gateid_2}","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""},{"indent_no":"$order_id","delivery_number":"D4$unique","mrp_price":"400","material_code":"${material_code_4}","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"500","quantity_unit":"cases","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${destination_depot_gateid_3}","sold_to":"${destination_depot_gateid_3}","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!***> Reached Load point
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LoadingPointAPI
+*!
+
+!**> Start Loading
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.StartLoadAPI
+*!
+
+!***> End Loading
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.EndPointAPI
+*!
+
+!**> Truck Out
+!| Script        |Common                |
+|$truck_out_date=|getTrim;|$truckoutdate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckOutAPI
+*!
+
+!** ERP Upload
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"${destination_depot_gateid_1}","sold_to":"${destination_depot_gateid_1}","material_invoice_number":"INV-$unique","material_code":"PARACHUTE","no_of_shortage":"100","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"400","no_of_carton_damage":"10","release_date":"$released_date_1"},{"indent_number":"$order_id","ship_to":"${destination_depot_gateid_2}","sold_to":"${destination_depot_gateid_2}","material_invoice_number":"INV-$unique","material_code":"SAFFOLAOATS","no_of_shortage":"50","no_of_leakage":"0","mrp":"200","no_of_excess":"0","no_of_damage":"100","no_of_carton_damage":"10","release_date":"$released_date_1"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!**> Verify EPOD submission
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|Script                     |Ui                                                                                                                                                                                 |
+|click;                      |//span[text()='Document']                                    |xpath                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]                       |xpath                                                                                              |30               |
+|$epodstatus_column=         |getHeaderColumnNumber;                                       |//div[@class='el-table__header-wrapper']//div[@class='cell']                                       |xpath|EPOD status|
+|$material_row_number=       |getHeaderColumnNumber;                                       |//div[contains(@class,'scrolling')]//span[contains(text(),'cases')]                                |xpath|1000 cases |
+|$epodstatus1=               |getText;                                                     |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+|$material_row_number=       |getHeaderColumnNumber;                                       |//div[contains(@class,'scrolling')]//span[contains(text(),'cases')]                                |xpath|200 cases  |
+|$epodstatus2=               |getText;                                                     |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+|$material_row_number=       |getHeaderColumnNumber;                                       |//div[contains(@class,'scrolling')]//span[contains(text(),'cases')]                                |xpath|400 cases  |
+|$epodstatus3=               |getText;                                                     |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+|click;                      |//span[normalize-space(text())='${destination_depot_name_2}']|xpath                                                                                                                |
+|$material_row_number=       |getHeaderColumnNumber;                                       |//div[contains(@class,'scrolling')]//span[contains(text(),'cases')]                                |xpath|500 cases  |
+|$epodstatus4=               |getText;                                                     |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+
+!|Script   |Common                                                |
+|check     |checkIfStringAreEqual;|$epodstatus1|Submitted    |true|
+|$tresult1=|checkIfStringAreEqual;|$epodstatus1|Submitted         |
+|check     |checkIfStringAreEqual;|$epodstatus2|Submitted    |true|
+|$tresult2=|checkIfStringAreEqual;|$epodstatus2|Submitted         |
+|check     |checkIfStringAreEqual;|$epodstatus3|Not Submitted|true|
+|$tresult3=|checkIfStringAreEqual;|$epodstatus3|Not Submitted     |
+|check     |checkIfStringAreEqual;|$epodstatus4|Not Submitted|true|
+|$tresult4=|checkIfStringAreEqual;|$epodstatus4|Not Submitted     |
+**!
+
+!** Mark as delivered
+!|script|common                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":[{"destination_id":"$destination_location_id_1","reported_at":"$reported_date_1","release_at":"$released_date_1"},{"destination_id":"$destination_location_id_2","reported_at":"$reported_date_2","release_at":"$released_date_2"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+**!
+
+!** Verify status after mark as delivered
+!|Script                     |Ui                                                                                                                                                                                 |
+|click;                      |//span[text()='Document']                                    |xpath                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]                       |xpath                                                                                              |30               |
+|refresh;                                                                                                                                                                                                        |
+|click;                      |//span[normalize-space(text())='${destination_depot_name_1}']|xpath                                                                                                                |
+|$epodstatus_column=         |getHeaderColumnNumber;                                       |//div[@class='el-table__header-wrapper']//div[@class='cell']                                       |xpath|EPOD status|
+|$material_row_number=       |getHeaderColumnNumber;                                       |//div[contains(@class,'scrolling')]//span[contains(text(),'cases')]                                |xpath|1000 cases |
+|$epodstatus1=               |getText;                                                     |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+|$material_row_number=       |getHeaderColumnNumber;                                       |//div[contains(@class,'scrolling')]//span[contains(text(),'cases')]                                |xpath|200 cases  |
+|$epodstatus2=               |getText;                                                     |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+|$material_row_number=       |getHeaderColumnNumber;                                       |//div[contains(@class,'scrolling')]//span[contains(text(),'cases')]                                |xpath|400 cases  |
+|$epodstatus3=               |getText;                                                     |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+|click;                      |//span[normalize-space(text())='${destination_depot_name_2}']|xpath                                                                                                                |
+|$material_row_number=       |getHeaderColumnNumber;                                       |//div[contains(@class,'scrolling')]//span[contains(text(),'cases')]                                |xpath|500 cases  |
+|$epodstatus4=               |getText;                                                     |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+
+!|Script   |Common                                            |
+|check     |checkIfStringAreEqual;|$epodstatus1|Submitted|true|
+|$tresult5=|checkIfStringAreEqual;|$epodstatus1|Submitted     |
+|check     |checkIfStringAreEqual;|$epodstatus2|Submitted|true|
+|$tresult6=|checkIfStringAreEqual;|$epodstatus2|Submitted     |
+|check     |checkIfStringAreEqual;|$epodstatus3|Submitted|true|
+|$tresult7=|checkIfStringAreEqual;|$epodstatus3|Submitted     |
+|check     |checkIfStringAreEqual;|$epodstatus4|Submitted|true|
+|$tresult8=|checkIfStringAreEqual;|$epodstatus4|Submitted     |
+**!
+
+!**> Validating test result
+!|script  |common                                                                                                                 |
+|check    |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,true|true|
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,true     |
+*!

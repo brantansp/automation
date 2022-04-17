@@ -1,0 +1,164 @@
+---
+Help: Verify Password expiry, password retry attempts user inactive and user blocked after 90 days of expiry
+Suites: marico
+Test
+---
+!** Client Configuration
+	"password_config" : {
+		"inactive_login_expiry" : 90,
+		"password_expiry" : 90,
+		"password_tries" : 5,
+		"password_history_size" : 3
+	}
+**!
+
+!***> Unique value assignment
+!| script|common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$num=   |getRandomNumber;        |100  |999  |
+
+!|Script             |DateUtil                       |
+|$lastlogindate=     |dateCalculation;|YYYY/MM/dd|-92|
+|$pwdlastupdateddate=|dateCalculation;|YYYY/MM/dd|-91|
+
+!|Script             |Common                                               |
+|$lastlogindate=     |stringConcatenation;|$lastlogindate     |!- $timer -!|
+|$pwdlastupdateddate=|stringConcatenation;|$pwdlastupdateddate|!- $timer -!|
+
+!|Script             |DateUtil                          |
+|$lastlogindate=     |utcConversion;|$lastlogindate     |
+|$pwdlastupdateddate=|utcConversion;|$pwdlastupdateddate|
+**!
+
+!**> User creation 
+!**> User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_name {A$unique}
+!define user_number {123}
+!define user_email {pandomaricoauto+$unique@gmail.com}
+!define status {1}
+
+!**> User creation 
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!include -c .FrontPage.Pando.Common.ShipperLogout
+**!
+
+!**> Reset Login
+!|Script     |Common                |
+|$user_email=|getTrim;|${user_email}|
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Users.CommonResetLogin
+
+!include -c .FrontPage.Pando.Common.ShipperLogout
+**!
+
+!**> Update password updated date in db for password Expired
+!|script                    |MongoDB                                                                   |
+|initialize;                |${connection}|${database}                                                 |
+|UpdateValuesIntoCollection;|users        |email_id|$user_email|password_updated_at|$pwdlastupdateddate|
+**!
+ 
+!**> Verify password expired
+!|Script                     |Ui                                                                                                                        |
+|navigateToUrl;              |${surl}/login                                                                                                             |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                                   |xpath                             |20              |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                             |$user_email     |
+|sendSecuredKeys;            |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                             |Newpassword@123 |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                              |
+|wait;                       |3                                                                                                                         |
+|check                       |isElementPresent;                                                     |//h3[text()='RESET YOUR PASSWORD']|xpath   |true   |
+|$tresult1=                  |isElementPresent;                                                     |//h3[text()='RESET YOUR PASSWORD']|xpath           |
+|check                       |isElementPresent;                                                     |//label[text()='Password Expired']|xpath   |true   |
+|$tresult2=                  |isElementPresent;                                                     |//label[text()='Password Expired']|xpath           |
+|sendSecuredKeys;            |//label[contains(text(),'New Password')]//preceding-sibling::input    |xpath                             |Newpassword@1234|
+|sendSecuredKeys;            |//label[contains(text(),'CONFIRM PASSWORD')]//preceding-sibling::input|xpath                             |Newpassword@1234|
+|click;                      |//button[@class='primary-btn']                                        |xpath                                              |
+|waitForElementToBeDisplayed;|//div[@class='login-form reset']                                      |xpath                             |10              |
+**!
+
+!**> Verify User blocked after failed attempts
+!|Script                     |Ui                                                                                                                                   |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                         |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                                   |xpath                                       |20               |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                       |$user_email      |
+|sendSecuredKeys;            |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                       |Newpassword@12   |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                         |
+|check                       |isElementPresent;                                                     |//*[text()='Email or password is incorrect']|xpath    |true   |
+|refresh;                                                                                                                                                          |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                                   |xpath                                       |20               |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                       |$user_email      |
+|sendSecuredKeys;            |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                       |Newpassword@12   |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                         |
+|check                       |isElementPresent;                                                     |//*[text()='Email or password is incorrect']|xpath    |true   |
+|refresh;                                                                                                                                                          |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                                   |xpath                                       |20               |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                       |$user_email      |
+|sendSecuredKeys;            |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                       |Newpassword@12   |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                         |
+|check                       |isElementPresent;                                                     |//*[text()='Email or password is incorrect']|xpath    |true   |
+|refresh;                                                                                                                                                          |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                                   |xpath                                       |20               |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                       |$user_email      |
+|sendSecuredKeys;            |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                       |Newpassword@12   |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                         |
+|check                       |isElementPresent;                                                     |//*[text()='Email or password is incorrect']|xpath    |true   |
+|refresh;                                                                                                                                                          |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                                   |xpath                                       |20               |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                       |$user_email      |
+|sendSecuredKeys;            |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                       |Newpassword@12   |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                         |
+|check                       |isElementPresent;                                                     |//*[text()='Email or password is incorrect']|xpath    |true   |
+|refresh;                                                                                                                                                          |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                                   |xpath                                       |20               |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                       |$user_email      |
+|sendSecuredKeys;            |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                       |Newpassword@12   |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                         |
+|refresh;                                                                                                                                                          |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                                   |xpath                                       |20               |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                       |$user_email      |
+|sendSecuredKeys;            |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                       |Newpassword@1234 |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                         |
+|waitForElementToBeDisplayed;|//div[@class='login-form']                                            |xpath                                       |10               |
+|wait;                       |3                                                                                                                                    |
+|check                       |isElementPresent;                                                     |//h3[text()='RESET YOUR PASSWORD']          |xpath    |true   |
+|$tresult3=                  |isElementPresent;                                                     |//h3[text()='RESET YOUR PASSWORD']          |xpath            |
+|check                       |isElementPresent;                                                     |//label[text()='Login Attempts Exceeded']   |xpath    |true   |
+|$tresult4=                  |isElementPresent;                                                     |//label[text()='Login Attempts Exceeded']   |xpath            |
+|sendSecuredKeys;            |//label[contains(text(),'New Password')]//preceding-sibling::input    |xpath                                       |Newpassword@12345|
+|sendSecuredKeys;            |//label[contains(text(),'CONFIRM PASSWORD')]//preceding-sibling::input|xpath                                       |Newpassword@12345|
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                         |
+|waitForElementToBeDisplayed;|//div[@class='login-form reset']                                      |xpath                                       |10               |
+**!
+
+!** Update last login in db for inactive
+!|script                    |MongoDB                                                        |
+|initialize;                |${connection}|${database}                                      |
+|UpdateValuesIntoCollection;|users        |email_id|$user_email|last_login_at|$lastlogindate|
+**!
+ 
+!**> Verify inactive status
+!|Script                     |Ui                                                                                                           |
+|navigateToUrl;              |${surl}/login                                                                                                |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                             |xpath                     |20               |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input|xpath                     |$user_email      |
+|sendSecuredKeys;            |//label[contains(text(),'Password:')]//preceding-sibling::input |xpath                     |Newpassword@12345|
+|click;                      |//button[@class='primary-btn']                                  |xpath                                       |
+|waitForElementToBeDisplayed;|//div[@role='alert']                                            |xpath                     |20               |
+|$errortext=                 |getText;                                                        |//div[@role='alert']//span|xpath            |
+
+!|Script   |Common                                                                           |
+|$tresult5=|checkIfStringAreEqual;|$errortext|Account is inactive. Please contact your admin.|
+**!
+
+!**> Validating results
+!|Script  |Common                                                                              |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|
+**!

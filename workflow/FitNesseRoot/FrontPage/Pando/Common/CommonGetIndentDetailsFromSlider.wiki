@@ -1,0 +1,5 @@
+!|Script                     |Ui                                                                                             |
+|click;                      |//span[contains(text(),'${click_indent}')]   |xpath                                            |
+|waitForElementToBeDisplayed;|//p[contains(text(),'${header_name}')]/Strong|xpath                                      |20   |
+|$base_freight=              |getText;                                     |//p[contains(text(),'Base Freight')]/Strong|xpath|
+|click;                      |//a[contains(@class,'close')]                |xpath                                            |

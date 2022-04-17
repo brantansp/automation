@@ -1,0 +1,12 @@
+---
+Help: common loading charges PTL readyfrbilling
+---
+!|Script|Common|
+|$order_id=|getTrim;|$order_id|
+
+!define validate_text {$order_id}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.Search.CommonIndentSearch
+
+!define validation {Loading}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonSliderValidation

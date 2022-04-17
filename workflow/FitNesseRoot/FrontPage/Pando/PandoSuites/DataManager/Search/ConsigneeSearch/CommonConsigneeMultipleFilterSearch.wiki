@@ -1,0 +1,13 @@
+---
+Help: multiple filter common
+---
+!|Script|Ui|
+|navigateToUrl;|${surl}/mdm/consignees|
+|click;|//span[@class='search-trigger']|xpath|
+|click;|//li[contains(text(),'${filter_value1}')]|xpath|
+|click;|//span[@class='search-trigger']|xpath|
+|click;|//li[contains(text(),'${filter_value2}')]|xpath|
+|sendKeys;|//input[@placeholder='Enter search term']|xpath|${search_value}|
+|wait;|3|
+|check|isElementPresent;|//span[contains(text(),'${consignee_name}')]/ancestor::div[@class='card-row card-row-show']/div/div/span/span[contains(text(),'${search_value}')]|xpath|true|
+|$tresult=|isElementPresent;|//span[contains(text(),'${consignee_name}')]/ancestor::div[@class='card-row card-row-show']/div/div/span/span[contains(text(),'${search_value}')]|xpath|

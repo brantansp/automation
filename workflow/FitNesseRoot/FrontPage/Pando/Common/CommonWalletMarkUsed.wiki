@@ -1,0 +1,4 @@
+!|Script|Ui                                                                   |
+|click; |//span[@class='el-checkbox__inner']                            |xpath|
+|click; |//button[text()='Mark used']                                   |xpath|
+|click; |//button/span[contains(text(),'Yes') or contains(text(),'YES')]|xpath|

@@ -1,0 +1,15 @@
+---
+Help: SCN2_Check if Consignee '0000028051' has been assigned with only 2 vehicle
+Test
+---
+!|script       |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!|script       |CsvQuery                                                                                                                             |
+|getConnection;|$fileLocation|,                                                                                                                      |
+|$tresult=     |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE File = 'scn2_28051' AND Consignee = '0000028051:'|noOfOccurrences|
+|closeConnection;                                                                                                                                    |
+
+!|script  |common                                |
+|check    |checkIfStringAreEqual;|$tresult|2|true|
+|$tresult=|checkIfStringAreEqual;|$tresult|2     |

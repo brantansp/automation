@@ -1,0 +1,14 @@
+---
+Help: Common material bulk upload
+---
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/${file_name}|fullpath|
+
+!|Script                |Excel                      |
+|newSheetDynamicColumns;|${row}|${column}|$excelpath|
+
+!|Script       |Ui                                                              |
+|navigateToUrl;|${surl}/mdm/materials                                           |
+|click;        |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;     |.upload-material                         |cssselector|$excelpath|
+|wait;         |20                                                              |

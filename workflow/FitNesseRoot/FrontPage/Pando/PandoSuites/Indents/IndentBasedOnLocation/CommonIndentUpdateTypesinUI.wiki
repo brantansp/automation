@@ -1,0 +1,15 @@
+---
+Help: To update delivery type,vehicle type,transporter in Indent creation in UI
+---
+!|Script  |Ui                                                                                       |
+|click;   |//label[text()='Delivery Type']/following-sibling::div//input|xpath                      |
+|click;   |//span[text()='${delivery_type}']                            |xpath                      |
+|click;   |//label[text()='Vehicle Type']/following-sibling::div//input |xpath                      |
+|sendKeys;|//label[text()='Vehicle Type']/following-sibling::div//input |xpath|${vehicle_name}      |
+|click;   |//span[text()='${vehicle_name}']                             |xpath                      |
+|click;   |//label[text()='Transporter']/following-sibling::div//input  |xpath                      |
+|sendKeys;|//label[text()='Transporter']/following-sibling::div//input  |xpath|${transporter_ref_id}|
+|click;   |//span[contains(text(),'${transporter_ref_id}')]             |xpath                      |
+|wait;    |2                                                                                        |
+|click;   |//span[normalize-space(text())='Update']                                      |xpath                      |
+|wait;    |2                                                                                        |

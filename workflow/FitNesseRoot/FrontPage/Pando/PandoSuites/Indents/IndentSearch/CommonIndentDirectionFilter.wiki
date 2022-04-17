@@ -1,0 +1,9 @@
+---
+Help: Use to Filter the Indent based on Direction
+---
+#indent_direction - Inbound
+#indent_direction - Outbound 
+!|script                   |ui                                                                |
+|click;                    |//ul[@class='inlinelist']//span[@class='el-input__suffix']|xpath  |
+|click;                    |//li/span[text()='${indent_direction}']                   |xpath  |
+|waitForElementToDisappear;|//div[contains(text(),'Loading...')]                      |xpath|5|

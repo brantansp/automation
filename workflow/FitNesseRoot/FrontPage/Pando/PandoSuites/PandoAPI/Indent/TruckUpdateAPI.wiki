@@ -1,0 +1,17 @@
+---
+Help: Used to update the truck details such as Truck Number, Driver Name and Driver Number
+Test
+---
+!|Script    |Http                                                                                                                                                        |
+|wait;      |5                                                                                                                                                           |
+|addHeader; |Authorization |bearer $stoken                                                                                                                               |
+|setBaseUrl;|${surl}/api/order/$order_id/truck                                                                                                                           |
+|$truck=    |getResponse;  |Application/Json|put|{"data":{"vehicle":{"number":"${vechicle_number}"},"driver":{"name":"${driver_name}","phone_number":"${phone_number}"}}}|
+|check      |getStatusCode;|200                                                                                                                                          |
+
+!|Script                       |json                                             |
+|$vehicle_number=              |getValueFromJSON;     |$truck|data.vehicle.number|
+|$unique_truck_assign_id_array=|getArrayValueFromJSON;|$truck|data.sources       |
+
+!|script                 |common                                                              |
+|$unique_truck_assign_id=|getSubStringByString;|$unique_truck_assign_id_array|"unique_id":"|",|

@@ -1,0 +1,6 @@
+---
+Suite
+Suites: indent1
+---
+!1 Test suite for Resend Consent
+!contents -R2 -g -p -f -h

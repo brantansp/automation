@@ -1,0 +1,18 @@
+|import         |
+|common         |
+|Database       |
+|environment    |
+|tools          |
+|web            |
+|optima         |
+|stepdefinitions|
+
+
+!|Script              |Ui                                                                                                                  |
+|$testCaseDescription=|getTestCaseDescription;|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME}                                                   |
+|startTestCase;       |${RUNNING_PAGE_NAME}   |${extent_tag}|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME} : $testCaseDescription|${log_to_elk}|
+
+!|script  |common        |
+|$tresult=|getTrim;|false|
+
+!define login_url {${surl}}

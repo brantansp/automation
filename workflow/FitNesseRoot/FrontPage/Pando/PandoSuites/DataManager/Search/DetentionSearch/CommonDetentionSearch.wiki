@@ -1,0 +1,10 @@
+---
+Help: detention common
+---
+!|Script|Ui|
+|navigateToUrl;|${surl}/mdm/detentions|
+|sendKeys;|//input[@placeholder='Search by Truck type']|xpath|${search_value}|
+|wait;|3|
+|check|getCountOfElements;|//div[@class='card-row card-row-show dowble-row']|xpath|${search_count}|
+|check|isElementPresent;|//span[contains(text(),'${search_value}')]|xpath|true|
+|$tresult=|isElementPresent;|//span[contains(text(),'${search_value}')]|xpath|

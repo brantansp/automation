@@ -1,0 +1,16 @@
+---
+Help: To select source depot for open indent
+---
+!|Script                     |Ui                                                                                                                                                          |
+|navigateToUrl;              |${surl}/indents                                                                                                                                             |
+|click;                      |//div[@id='filter']//input[@placeholder='Select']                                                                                  |xpath                   |
+|click;                      |//li/span[text()='${type}']                                                                                                        |xpath                   |
+|click;                      |//a[contains(@href,'/indent/create')]                                                                                              |xpath                   |
+|click;                      |//div[contains(@class,'select-indent')]//input[@placeholder='Select']                                                              |xpath                   |
+|click;                      |//li/span[text()='Open']                                                                                                           |xpath                   |
+|click;                      |//div[@class='card-list list-plain']                                                                                               |xpath                   |
+|waitForElementToBeDisplayed;|(//section//div[contains(@class,'table-striped')])[1]                                                                              |xpath|20                |
+|sendKeys;                   |(//section[@class='el-drawer__body']//input[@type='text'])[1]                                                                      |xpath|${source_location}|
+|click;                      |(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${source_location}']/ancestor::td/preceding-sibling::td//span|xpath                   |
+|wait;                       |2                                                                                                                                                           |
+|click;                      |//span[text()='Add']                                                                                                               |xpath                   |

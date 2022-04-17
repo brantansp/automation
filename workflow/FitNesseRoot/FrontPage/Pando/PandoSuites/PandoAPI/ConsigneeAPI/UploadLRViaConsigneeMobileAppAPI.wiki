@@ -1,0 +1,19 @@
+---
+Help: To simulate the LR upload via mobile app
+Test
+---
+!|Script         |Http                                                                                  |
+|wait;           |5                                                                                     |
+|setBaseUrl;     |${curl}/api/login                                                                     |
+|getResponse;    |Application/Json|put      |{"data":{"email":"${cusername}","password":"${cpassword}"}}|
+|$token=         |getHeader;      |x-auth-token                                                         |
+|setBaseUrl;     |${curl}/api/attachment                                                                |
+|addHeader;      |Authorization   |bearer $token                                                        |
+|$uploadresponse=|uploadFile;     |$filePath|${attachableId}     |${clientId}     |${attachableType}    |
+|$status=        |getStatusCode;                                                                        |
+|wait;           |2                                                                                     |
+
+!|Script         |json                                                 |
+|$attachmentId=  |getValueFromJSON;|$uploadresponse|data.id            |
+|$attachmentName=|getValueFromJSON;|$uploadresponse|data.name          |
+|$attachmentUrl= |getValueFromJSON;|$uploadresponse|data.attachment_url|

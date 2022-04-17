@@ -1,0 +1,9 @@
+---
+Help: Use to edit the Vehicle type
+---
+!|script                     |ui                                                                               |
+|click;                      |//div[@class='card-row card-row-show']//a[normalize-space(text())='Edit']|xpath  |
+|click;                      |//label[normalize-space(text())='${field}']/following-sibling::div//input|xpath  |
+|click;                      |//li/span[normalize-space(text())='${vehicle_type}']                     |xpath  |
+|click;                      |//li[normalize-space(text())='Update']                                   |xpath  |
+|wait;|5|

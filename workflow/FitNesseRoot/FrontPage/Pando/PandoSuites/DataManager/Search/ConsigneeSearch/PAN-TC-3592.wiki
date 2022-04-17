@@ -1,0 +1,35 @@
+---
+Help: Search based on invalid Consignee Name
+Test
+---
+!** Consignee creation
+!define consignee_name {cn$unique}
+!define consignee_ref_id {cr$unique}
+!define address {ca$unique}
+!define city {cc$unique}
+!define state {cs$unique}
+!define pincode {600001}
+!define site {2}
+!define region {South}
+!define manager_name {name}
+!define manager_email {pandoautomation+$unique@gmail.com}
+!define manager_mobile {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Search by invalid consignee
+!define search_value {cn1$unique}
+!define search_count {0}
+!define search_text {Enter Name}
+
+!|Script       |Ui                                                                                             |
+|navigateToUrl;|${surl}/mdm/consignees                                                                         |
+|click;        |//div[@class='app-search-label']      |xpath                                                   |
+|click;        |//button[text()='Clear']              |xpath                                                   |
+|sendKeys;     |//input[@placeholder='${search_text}']|xpath                                   |${search_value}|
+|wait;         |3                                                                                              |
+|click;        |//button[text()='Search']             |xpath                                                   |
+|check         |isElementPresent;                     |//div[contains(text(),'No data found!')]|xpath   |true  |
+|$tresult=     |isElementPresent;                     |//div[contains(text(),'No data found!')]|xpath          |
+**!

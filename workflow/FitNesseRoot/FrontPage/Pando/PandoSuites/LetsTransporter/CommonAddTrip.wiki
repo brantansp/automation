@@ -1,0 +1,23 @@
+---
+Help: Use to Add trip in lets transporter
+---
+!|script                     |ui                                                                                                       |
+|navigateToUrl;              |${turl}/tracking                                                                                         |
+|click;                      |//button[text()='Add']                                                           |xpath                  |
+|click;                      |//label[text()='Reference City']/..//input                                       |xpath                  |
+|sendKeys;                   |//label[text()='Reference City']/..//input                                       |xpath|${reference_city}|
+|click;                      |//div[@class='el-select-dropdown el-popper']//li/span[text()='${reference_city}']|xpath                  |
+|sendKeys;                   |//label[text()='Reference ID']/../input                                          |xpath|r$unique         |
+|sendKeys;                   |//label[text()='Source Location']/../input                                       |xpath|s$unique         |
+|sendKeys;                   |//label[text()='Source Pincode']/../input                                        |xpath|$s_pincode       |
+|sendKeys;                   |//label[text()='Destination Location']/../input                                  |xpath|d$unique         |
+|sendKeys;                   |//label[text()='Destination Pincode']/../input                                   |xpath|$d_pincode       |
+|sendKeys;                   |//label[text()='Truck Number']/../input                                          |xpath|${truck_num}     |
+|sendKeys;                   |//label[contains(text(),'Driver Number')]/../input                               |xpath|${driver_number} |
+|click;                      |//label[text()='Ping Frequency']/..//input                                       |xpath                  |
+|click;                      |//span[text()='${ping_interval}']/../self::li                                    |xpath                  |
+|click;                      |//label[text()='Auto Complete By']/..//input                                     |xpath                  |
+|click;                      |//span[text()='${autocomplete_by}']/../self::li                                  |xpath                  |
+|click;                      |//label[text()='Telecom Partner JIO']/..//input[@value='${is_jio}']              |xpath                  |
+|click;                      |//button[text()='Start Trip']                                                    |xpath                  |
+|waitForElementToBeDisplayed;|//div[@class='el-notification success right']                                    |xpath|10               |

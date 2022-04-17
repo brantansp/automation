@@ -1,0 +1,200 @@
+---
+Help: Indent created before indent cut off time(IST), indent get auto cancelled at (Vehicle Required Date)
+Suites: indent3
+Test
+---
+!** Unique values assignment
+!|script   |common                                 |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss   |
+|$num=     |getRandomNumber;        |100000 |999999|
+|$currDate=|getCurrentDateTimeStamp |default       |
+|$year=    |getSubString;           |$unique|0  |4 |
+
+!|script      |DateUtil                    |
+|$truckindate=|dateCalculation;|yyyy/MM/dd||
+
+!| Script     |Common                                         |
+|$truckindate=|stringConcatenation;|$truckindate|!- 10:00:00-!|
+
+!|script      |DateUtil                   |
+|$truckindate=|utcConversion;|$truckindate|
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Rajahmundry Road}
+!define city {ci$unique}
+!define state {st$unique}
+!define pincode {321001}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!** Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!** Gate Manager Creation
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {rt$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+*!
+
+!** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point-City,${gate_ref_id},ci$unique,${vehicle_name},100,${transporter_ref_id},${transporter_name},1,5000,per_trip,01-Jan-$year,31-Dec-2030,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!** Admin SLA Setting
+!|script               |DateUtil                         |
+|$indentCutoffTime=    |dateCalculation;|minute|hh:mm:a|2|
+|$arrivalCutoffTime=   |dateCalculation;|minute|hh:mm:a|3|
+|$indentAutoCancelTime=|dateCalculation;|minute|hh:mm:a|5|
+
+!define depot_id {$depot_name}
+!define vehicle_movement {Secondary}
+!define indent_cutoff_time {$indentCutoffTime}
+!define indent_auto_cancel_time {$indentAutoCancelTime}
+!define arrivel_cutoff_time {$arrivalCutoffTime}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.CancelIndent.CommonIndentAutoCancelSetting
+*!
+
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|script            |DateUtil                         |
+|$indentCreatedTime=|dateCalculation;|minute|hh:mm:a|0|
+*!
+
+!** Waiting for the SLA to be Breached
+!|script|ui |
+|wait;  |200|
+*!
+
+!** Validating Order number and Reindent status
+!define depot_selection {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|script                  |DateUtil                         |
+|$actualArrivalCutoffTime=|dateCalculation;|minute|hh:mm:a|0|
+
+!|script|ui                                                                              |
+|check  |isElementPresent;|//div[@class='order-row']//span[text()='Re-indent']|xpath|true|
+*!
+
+!** Waiting for the Auto cancel
+!|script|ui|
+|wait;  |90|
+*!
+
+!** Validating Cancel Status
+!define depot_selection {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!|script               |DateUtil                         |
+|$actualAutoCancelTime=|dateCalculation;|minute|hh:mm:a|0|
+
+!|script  |Ui                                                                                                                                                  |
+|check    |isElementPresent;                                                   |//div[@class='order-status-button' and contains(text(),'Cancelled')]|xpath|true|
+|click;   |//div[@class='order-status-button' and contains(text(),'Cancelled')]|xpath                                                                          |
+|click;   |//div[text()='Timeline']                                            |xpath                                                                          |
+|check    |isElementPresent;                                                   |//p[text()='Indent auto-cancelled by System!']                      |xpath|true|
+|$tresult=|isElementPresent;                                                   |//p[text()='Indent auto-cancelled by System!']                      |xpath     |
+*!

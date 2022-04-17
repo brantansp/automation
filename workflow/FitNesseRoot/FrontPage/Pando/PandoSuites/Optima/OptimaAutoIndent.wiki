@@ -1,0 +1,7 @@
+---
+Help: Optima Auto Indent for Primary movement in Marico
+Suite
+Suites: optscn8
+---
+!1 Test suite Optima Auto Indent
+!contents -R2 -g -p -f -h

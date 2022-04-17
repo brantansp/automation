@@ -1,0 +1,11 @@
+---
+Help: Use to Edit and Save the Depot details
+---
+!|script       |ui                                                                                                                                                             |
+|navigateToUrl;|${surl}/mdm/depots                                                                                                                                             |
+|click;        |//span[normalize-space(text())='${depot_name}']/../parent::div/..//a[@class='card-edit']|xpath                                                                 |
+|clearValue;   |//input[@name='${field_to_edit}']                                                       |xpath                                                                 |
+|sendKeys;     |//input[@name='${field_to_edit}']                                                       |xpath                                                    |${new_value}|
+|click;        |//div[@class='card-row-edit']//li[normalize-space(text())='Save']                       |xpath                                                                 |
+|check         |isElementPresent;                                                                       |//span[normalize-space(text())='Depot updated successfully']|xpath |true |
+#|scrollToView; |//span[normalize-space(text())='${depot_name}']                                         |xpath                                                     #            |

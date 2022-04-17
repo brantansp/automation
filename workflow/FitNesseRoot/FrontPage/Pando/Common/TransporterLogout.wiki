@@ -1,0 +1,8 @@
+---
+Help: Use to Logout the Transporter
+---
+!|script       |ui                                          |
+|navigateToUrl;|${turl}                                     |
+|waitForElementToBeDisplayed;|//li[@class='app-side-menu']          |xpath|20|
+|click;        |//li[@class='app-side-menu']          |xpath|
+|click;        |//a[normalize-space(text())='LOG OUT']|xpath|

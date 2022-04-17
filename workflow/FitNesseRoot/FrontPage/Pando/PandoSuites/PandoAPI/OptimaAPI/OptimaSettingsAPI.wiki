@@ -1,0 +1,10 @@
+---
+Help: Contains API for Settings in Optima
+Test
+---
+!| Script   |Http                                     |
+|addHeader; |Authorization |bearer $stoken            |
+|setBaseUrl;|${surl}/api/settings/depot/optima        |
+|$response= |getResponse;  |Application/Json|put|$data|
+|check      |getStatusCode;|200                       |
+|wait;      |5                                        |

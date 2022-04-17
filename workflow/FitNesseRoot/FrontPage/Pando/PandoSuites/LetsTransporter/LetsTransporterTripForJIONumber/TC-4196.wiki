@@ -1,0 +1,52 @@
+---
+Help: Ensure Search based on combination of all
+Test
+---
+!** Search using the All search combination
+
+!define truck_num {TN $vno_1 $vno_2 $vno_3}
+
+!define search_field {Reference ID}
+!define search_value {r$unique}
+
+!|script  |ui                                                                                                                                                                                   |
+|click;   |//div[@class='app-search-label']//span                                       |xpath                                                                                                  |
+|click;   |//button[text()='Clear']                                                     |xpath                                                                                                  |
+|sendKeys;|//div[normalize-space(text())='${search_field}']/following-sibling::div/input|xpath                                                                                  |${search_value}|
+|check    |isElementPresent;                                                            |//div[normalize-space(text())='${search_field}']/label[@class='el-checkbox is-checked']|xpath   |true  |
+
+!define search_field {Source}
+!define search_value {s$unique}
+
+!|script  |ui                                                                                                                                                                                   |
+|sendKeys;|//div[normalize-space(text())='${search_field}']/following-sibling::div/input|xpath                                                                                  |${search_value}|
+|check    |isElementPresent;                                                            |//div[normalize-space(text())='${search_field}']/label[@class='el-checkbox is-checked']|xpath   |true  |
+
+!define search_field {Destination}
+!define search_value {d$unique}
+
+!|script  |ui                                                                                                                                                                                   |
+|sendKeys;|//div[normalize-space(text())='${search_field}']/following-sibling::div/input|xpath                                                                                  |${search_value}|
+|check    |isElementPresent;                                                            |//div[normalize-space(text())='${search_field}']/label[@class='el-checkbox is-checked']|xpath   |true  |
+
+!define search_field {Truck Number}
+!define search_value {TN $vno_1 $vno_2 $vno_3}
+
+!|script  |ui                                                                                                                                                                                   |
+|sendKeys;|//div[normalize-space(text())='${search_field}']/following-sibling::div/input|xpath                                                                                  |${search_value}|
+|check    |isElementPresent;                                                            |//div[normalize-space(text())='${search_field}']/label[@class='el-checkbox is-checked']|xpath   |true  |
+|click;   |//button[text()='Search']                                                    |xpath                                                                                                  |
+*!
+
+!** Validating the Search result
+
+!|script  |ui                                                                                             |
+|check    |isElementPresent;|(//div[@class='card-row row'])[1]//div/span[text()='${truck_num}']|xpath|true|
+|$tresult=|isElementPresent;|(//div[@class='card-row row'])[1]//div/span[text()='${truck_num}']|xpath     |
+|$trip_id=|getText;         |(//span[text()='${truck_num}']/../parent::div/div)[1]/span        |xpath     |
+
+*!
+
+!**> Update result
+!include .FrontPage.Pando.Common.CommonResultImage
+*!

@@ -1,0 +1,6 @@
+---
+Suite
+Suites: britannia
+---
+!1 Test suite for hiding loading charges and loading detention
+!contents -R2 -g -p -f -h

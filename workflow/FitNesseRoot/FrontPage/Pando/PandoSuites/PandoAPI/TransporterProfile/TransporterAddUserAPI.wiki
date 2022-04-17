@@ -1,0 +1,16 @@
+---
+Help: Use to Add manager user to the existing Transporter from Transporter profile
+Test
+---
+!| Script    |Http                                                                                                                                                                                      |
+|setBaseUrl; |${turl}/api/login                                                                                                                                                                         |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}                                                                                             |
+|$token=     |getHeader;      |x-auth-token                                                                                                                                                             |
+|addHeader;  |Authorization   |bearer $token                                                                                                                                                            |
+|setBaseUrl; |${turl}/api/transporter/users                                                                                                                                                             |
+|$response=  |getResponse;    |Application/Json|post|{"data":{"name":"${user_name}","email":"${user_email}","mobile":"${user_mobile}","primary_role":"${user_primary_role}","depots":["${user_depot}"]}}|
+|$status=    |getStatusCode;                                                                                                                                                                            |
+
+!| Script          |json                                 |
+|$transporter_id=  |getValueFromJSON;|$response|data.id  |
+|$transporter_name=|getValueFromJSON;|$response|data.name|

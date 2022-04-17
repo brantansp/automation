@@ -1,0 +1,10 @@
+!|Script       |Ui                                                                                      |
+|navigateToUrl;|${surl}/v2/wallet                                                                       |
+|click;        |//span[normalize-space(text())='Filter']                      |xpath                    |
+|click;        |//label[text()='Depot']/../following-sibling::div//input      |xpath                    |
+|sendKeys;     |//label[text()='Depot']/../following-sibling::div//input      |xpath|$depot_name        |
+|click;        |//span[text()='$depot_name']                                  |xpath                    |
+|click;        |//label[text()='Transporter']/../following-sibling::div//input|xpath                    |
+|sendKeys;     |//label[text()='Transporter']/../following-sibling::div//input|xpath|${transporter_name}|
+|click;        |//span[text()='${transporter_name}']                          |xpath                    |
+|click;        |//button[text()='APPLY']                                      |xpath                    |

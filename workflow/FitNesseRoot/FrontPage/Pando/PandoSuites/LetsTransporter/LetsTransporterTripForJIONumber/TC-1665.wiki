@@ -1,0 +1,24 @@
+---
+Help: Lets Transporter - Trip Search by Reference Id
+Test
+---
+!** Search using the Reference ID
+!define truck_num {TN $vno_1 $vno_2 $vno_3}
+
+!define search_field {Reference ID}
+!define search_value {r$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.LetsTransporter.CommonTripSearch
+*!
+
+!** Validating the Search result
+
+!|script  |ui                                                                                             |
+|check    |isElementPresent;|(//div[@class='card-row row'])[1]//div/span[text()='${truck_num}']|xpath|true|
+|$tresult=|isElementPresent;|(//div[@class='card-row row'])[1]//div/span[text()='${truck_num}']|xpath     |
+
+*!
+
+!**> Update result
+!include .FrontPage.Pando.Common.CommonResultImage
+*!

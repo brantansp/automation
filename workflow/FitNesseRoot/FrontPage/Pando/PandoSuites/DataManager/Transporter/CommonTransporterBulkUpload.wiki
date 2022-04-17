@@ -1,0 +1,11 @@
+!|Script    |Common                                            |
+|$excelpath=|getPath;|testAttachment/${file_name}.xlsx|fullpath|
+
+!|Script                |Excel                      |
+|newSheetDynamicColumns;|${row}|${column}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/transporter                                         |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine      |cssselector     |
+|sendKeys;                 |//span[contains(text(),'Bulk Upload')]/../input|xpath|$excelpath|
+|waitForElementToDisappear;|//div[contains(@class,'spinner--stretch')]     |xpath|20        |

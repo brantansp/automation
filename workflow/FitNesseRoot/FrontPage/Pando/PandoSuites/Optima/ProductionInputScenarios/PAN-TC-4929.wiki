@@ -1,0 +1,41 @@
+---
+Help: SCN22_Ensure that consignees do not combine when city has drop rule
+Test
+---
+!5 SCN22_Ensure that consignees do not combine when city has drop rule
+
+-!|Comment|
+|Test case description|
+!5 Consignees 131645,134321 and 123100 have city as bhiwandi and have combine = >1 (do not combine => true)                  
+!5 These consignees are combined to form a single indent in contradiction to the don not combine flag due to city's drop rule
+!5 The correct output should have all 3 consignees in separate intermediate files and form different indents                 
+
+-!|Comment|
+|External links|
+https://gopando.atlassian.net/browse/PAN-2729
+https://github.com/pandocorp/optima-v2/pull/57
+https://tm.gopando.co/linkto.php?tprojectPrefix=PD&item=testcase&id=PD-3491
+
+-!|Comment|
+|Test Script|
+
+!** Reading the Output file
+!|Script   |Common                                                           |
+|$jsonpath=|getPath;|download/scn22_PAN-2729_dropRuleDNC_output.json|fullpath|
+*!
+
+!** Querying the json
+!|script             |QueryOptimaOutput      |
+|getParsedJson;      |$jsonpath              |
+|$total_no_of_orders=|getTotalNumberOfOrders;|
+*!
+
+!** Validating the Test result
+!|script  |common                                           |
+|$tresult=|checkIfStringAreEqual;|3|$total_no_of_orders     |
+|check    |checkIfStringAreEqual;|3|$total_no_of_orders|true|
+*!
+
+!** Test Result Update
+ 
+*!

@@ -1,0 +1,43 @@
+---
+Help: DM Transporter Filter_By city and Active combination
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Transporter Creation
+!define transporter_name {tca$unique}
+!define transporter_ref_id {trca$unique}
+!define address {Ashok Nager}
+!define city {C$unique}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!** Transporter filter and search
+!define transporter_status {Active}
+!define gst_type_filter {FCM}
+!define filter_by {City}
+!define search_text {${city}}
+
+!|Script       |Ui                     |
+|navigateToUrl;|${surl}/mdm/transporter|
+
+!include .FrontPage.Pando.PandoSuites.DataManager.TransporterStatusFilter
+
+!include .FrontPage.Pando.Common.CommonTransporterSearch
+**!
+
+!** Verify the Transporter search result
+!|script  |ui                                                                                                              |
+|check    |isElementPresent;|//div[contains(@class,'grid-list-row')]//span[contains(text(),'$transporter_name')]|xpath|true|
+|$tresult=|isElementPresent;|//div[contains(@class,'grid-list-row')]//span[contains(text(),'$transporter_name')]|xpath     |
+*!

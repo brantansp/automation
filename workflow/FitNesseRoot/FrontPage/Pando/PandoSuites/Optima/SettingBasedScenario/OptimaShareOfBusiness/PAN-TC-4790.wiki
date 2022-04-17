@@ -1,0 +1,297 @@
+---
+Help: Ensure that Order suggested are based on the ratio when sob enabled and sob_based_on_Veh_type is true
+Suites: optjnj
+Test
+---
+!5 Description : PD-3894 : Ensure that Order suggested are based on the ratio when sob enabled and sob_based_on_Veh_type is true AND vehtype is not empty
+
+!5 Expected : Order suggested are based on the ratio
+
+!5 Feature : Optima_SOB | Config : {"sob_based_on_Veh_type" : true }
+
+!***> Unique values assignment
+!|Script          |Common                                       |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$currDate=       |getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique  |0   |4    |
+|$detention_group=|getRandomString;        |4        |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000   |999999    |
+|$today=          |getSubString;           |$currDate|0   |10   |
+|$pincode1=       |getRandomNumber;        |111001   |999999    |
+|$pincode2=       |getRandomNumber;        |111001   |999999    |
+|$vno_1=          |getRandomNumber;        |20       |76        |
+|$vno_2=          |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=          |getRandomNumber;        |1000     |9999      |
+
+!|Script       |DateUtil                      |
+|$today=       |dateCalculation;|yyyy-MM-dd |0|
+|$invoicedate= |dateCalculation;|yyyy-MM-dd |5|
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0|
+|$thisday=     |dateCalculation;|dd MMM yyyy|0|
+|$invoice_date=|dateCalculation;|dd-MMM-yyyy|5|
+
+!| Script     |Common                                      |
+|$rdate=      |stringConcatenation;   |$rdate|!- 10:00:00-!|
+|$loadingDate=|getCurrentDateTimeStamp|iso                 |
+
+!|script       |common                   |
+|$uniq_partial=|getSubString;|$unique|0|8|
+*!
+
+!***> Depot for Shipper
+!define depot_name {d$unique}
+!define depot_state {Uttar Pradesh}
+!define depot_city {B$unique}
+!define depot_region {North}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {$pincode1}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!***> Gate Creation for shipper depot
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!*** Gate Manager Creation
+!define role_id {$retrieve_key_value}
+!define user_number {12891}
+!define user_name {u1$unique}
+!define user_email {pandoindent+1+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation one
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {North}
+!define gate_pincode {$pincode1}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+*!
+*!
+
+!***> Depot Optima Setting
+!define depo {d$unique}
+!define max_split {3}
+!define split_factor {1}
+!define ftl_certify {false}
+!define algorithm {4}
+!define distance_deviation {500}
+!define degree_of_deviation {45}
+!define optima_type {1}
+!define weight {1}
+!define volume {1}
+!define mode {0}
+!define max_pickup {2}
+!define fitment {0}
+!define max_dropoff {2}
+!define optima_for_ptl {false}
+!define ptl_club_gates {false}
+!define limited_truck_count {false}
+!define hybrid_split {false}
+!define depot_id {$depot}
+!define movement {1}
+!define movement_type {Secondary}
+!define material_category {"GT","MT"}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split": ${max_split},"split_factor": ${split_factor},"ftl_certify": ${ftl_certify},"algorithm": ${algorithm},"distance_deviation":"${distance_deviation}","degree_of_deviation":${degree_of_deviation},"optima_type":${optima_type},"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":${weight},"volume":${volume}},"material_categories":[${material_category}],"mode":${mode},"max_pickup_points":${max_pickup},"fitment":${fitment},"max_drop_points":${max_dropoff},"drop_off_rule":[],"optima_for_ptl":${optima_for_ptl},"ptl_club_gates":${ptl_club_gates},"limited_truck_count":${limited_truck_count},"hybrid_split": ${hybrid_split}},"depot_ids":["${depot_id}"],"movement":${movement}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!***> Consignee Creation one (Secondary)
+!define consignee_name {dc1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {No 15,GST Street1$unique}
+!define city {$pincode2}
+!define state {Tamil Nadu}
+!define pincode {$pincode2}
+!define manager_name {Manager Automation1}
+!define manager_mobile {12891}
+!define manager_email {pandoconsignee+1+$unique@gmail.com}
+!define region {South}
+!define site {2}
+!define group {}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!***> Transporter Creation one
+!define transporter_name {t1$unique}
+!define transporter_ref_id {tr1$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {$pincode1}
+!define manager_name {Manager1 $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+1+$unique@gmail.com}
+!define pancard {AUYPD33324L}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!***> Transporter Creation two
+!define transporter_name {t2$unique}
+!define transporter_ref_id {tr2$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {$pincode1}
+!define manager_name {Manager2 $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+2+$unique@gmail.com}
+!define pancard {AUYPD33324L}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!***> Vehicle Creation one
+!define vehicle_name {v1$unique MRT}
+!define cft {500}
+!define kg {2500}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Material Creation two (GST Exempt false)
+!define material_name {m1$unique}
+!define material_code {mc1$unique}
+!define category {20B}
+!define box_weight {250}
+!define box_volume {50}
+
+!|script|common                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"${category}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!***> Uploading Rate Matrix
+!define erp_gate_id_api_1 {rq1$unique}
+!define transit_days {1}
+!define ratec {1000}
+!define rtrip {per_trip}
+!define mrate {10000}
+!define mfactor {1}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {point,${gate_ref_id},${consignee_ref_id},v1$unique MRT,${transit_days},tr1$unique,t1$unique,${transit_days},${mrate},${rtrip},01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|point,${gate_ref_id},${consignee_ref_id},v1$unique MRT,${transit_days},tr2$unique,t2$unique,${transit_days},9500,${rtrip},01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!** Uploading Contract TSD matrix for transporters 
+!define row {Source,Destination,Transporter Reference ID,Transporter Name,Ratio,Vehicle Type}
+!define column {${gate_ref_id},${consignee_ref_id},tr1$unique,t1$unique,7,v1$unique MRT|${gate_ref_id},${consignee_ref_id},tr2$unique,t2$unique,3,v1$unique MRT}
+
+!|Script    |Common                                          |
+|$excelpath=|getPath;|testAttachment/t1_$unique.xlsx|fullpath|
+
+!include .FrontPage.Pando.Common.CommonContractTSDMatrix
+**!
+
+!***> Optima uploading Material and Optimizing
+!define invoice_value {2500}
+!define mrp {2000}
+
+!define row {Sales Doc./Delivery Number/Material Invoice Number,Material Code,Order Quantity,Quantity Unit,Weight,Weight Unit,Volume,Volume Unit,Pickup Ref Id,Customer/Ship To Ref Id,Sold To Ref Id,Category,Sub Category	,Date(YYYY-MM-DD),STN,Material Category,Category Priority,Invoice Date(YYYY-MM-DD),Invoice Value,Transporter Reference Id,MRP}
+!define column {
+D1$num,mc1$unique,10,NOS,2500,KG,500,CFT,${gate_ref_id},${consignee_ref_id},${consignee_ref_id},,,$today,,,,$invoicedate,${invoice_value},,${mrp}|
+D2$num,mc1$unique,10,NOS,2500,KG,500,CFT,${gate_ref_id},${consignee_ref_id},${consignee_ref_id},,,$today,,,,$invoicedate,${invoice_value},,${mrp}|
+D3$num,mc1$unique,10,NOS,2500,KG,500,CFT,${gate_ref_id},${consignee_ref_id},${consignee_ref_id},,,$today,,,,$invoicedate,${invoice_value},,${mrp}|
+D4$num,mc1$unique,10,NOS,2500,KG,500,CFT,${gate_ref_id},${consignee_ref_id},${consignee_ref_id},,,$today,,,,$invoicedate,${invoice_value},,${mrp}|
+D5$num,mc1$unique,10,NOS,2500,KG,500,CFT,${gate_ref_id},${consignee_ref_id},${consignee_ref_id},,,$today,,,,$invoicedate,${invoice_value},,${mrp}|
+D6$num,mc1$unique,10,NOS,2500,KG,500,CFT,${gate_ref_id},${consignee_ref_id},${consignee_ref_id},,,$today,,,,$invoicedate,${invoice_value},,${mrp}|
+D7$num,mc1$unique,10,NOS,2500,KG,500,CFT,${gate_ref_id},${consignee_ref_id},${consignee_ref_id},,,$today,,,,$invoicedate,${invoice_value},,${mrp}|
+D8$num,mc1$unique,10,NOS,2500,KG,500,CFT,${gate_ref_id},${consignee_ref_id},${consignee_ref_id},,,$today,,,,$invoicedate,${invoice_value},,${mrp}|
+D9$num,mc1$unique,10,NOS,2500,KG,500,CFT,${gate_ref_id},${consignee_ref_id},${consignee_ref_id},,,$today,,,,$invoicedate,${invoice_value},,${mrp}|
+D10$num,mc1$unique,10,NOS,2500,KG,500,CFT,${gate_ref_id},${consignee_ref_id},${consignee_ref_id},,,$today,,,,$invoicedate,${invoice_value},,${mrp}}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+!|Script                |Excel                      |
+|newSheetDynamicColumns;|${row}|${column}|$excelpath|
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimaMaterialUpload
+
+!|Script|Common                                                                                |
+|check  |checkIfStringExistsIn;|10 Valid materials and 0 Invalid materials out of 10|$data|true|
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimizeAndFilter
+
+!|Script             |Ui                                                                                                       |
+|check               |getCountOfElements;|//div[@class='card-row card-row-show']                                      |xpath|10|
+|$transporter1_count=|getCountOfElements;|//div[contains(@class,'row-show')]//span[contains(text(),'t1$uniq_partial')]|xpath   |
+|$transporter2_count=|getCountOfElements;|//div[contains(@class,'row-show')]//span[contains(text(),'t2$uniq_partial')]|xpath   |
+**!
+
+!** Validating the test result
+!|script   |common                                                                    |
+|$tresult1=|comparisonResult;            |$transporter1_count     |>=       |5        |
+|$tresult2=|comparisonResult;            |$transporter1_count     |<        |10       |
+|$tresult3=|comparisonResult;            |$transporter2_count     |>        |0        |
+|$tresult4=|comparisonResult;            |$transporter2_count     |<=       |5        |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+|check     |checkIfStringAreEqual;       |$tresult                |true     |true     |
+*!
+
+!** Validate Indent
+!|Script                     |Ui                                                                                      |
+|click;                      |//div[starts-with(@class,'card-header')]/input[contains(@type,'checkbox')]     |xpath   |
+|click;                      |//button[contains(text(),'Indent')]                                            |xpath   |
+|click;                      |//div[@class='el-message-box']//span[contains(text(),'Create')]                |xpath   |
+|waitForElementToBeDisplayed;|//h3/following-sibling::span[text()='10 Indents created and 0 Rejected Indent']|xpath|20|
+
+!define depot_selection  {d$unique}
+
+!|Script       |Ui                                                                                                   |
+|navigateToUrl;|${surl}/indents                                                                                      |
+|click;        |//button[@class='el-button el-button--default']|xpath                                                |
+|click;        |(//div[@class='slideleft_menu']//input)[1]     |xpath                                                |
+|sendKeys;     |(//div[@class='slideleft_menu']//input)[1]     |xpath                             |${depot_selection}|
+|click;        |//span[text()='${depot_selection}']            |xpath                                                |
+|wait;         |2                                                                                                    |
+|click;        |//button[text()='APPLY']                       |xpath                                                |
+|$order_id=    |getText;                                       |(//div[@class='order-row']/div)[1]|xpath             |
+
+!|script   |common                            |
+|$order_id=|replaceString;|$order_id|$thisday||
+|$order_id=|replaceString;|$order_id|\n      ||
+
+!|Script|Ui                                                             |
+|check  |isElementPresent;|//span[contains(text(),'$unique')]|xpath|true|
+*!
+
+!**> Retrieving the Job ID using API
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.RetrieveOptimaJobIDAPI
+*!

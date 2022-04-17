@@ -1,0 +1,13 @@
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+
+!|Script            |Excel                                                                                                               |
+|multiLargeNewSheet;|${row}|${column1}|${column2}|${column3}|${column4}|${column5}|${column6}|${column7}|${column8}|${column9}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/rate-matrix                                         |
+|wait;|5|
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |

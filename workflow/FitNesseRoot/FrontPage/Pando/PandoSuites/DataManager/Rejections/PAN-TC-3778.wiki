@@ -1,0 +1,47 @@
+---
+Help: Detention Manual Upload
+Test
+---
+!** Unique values assignment
+!|Script|Common|
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!define rejection_name  {Detention}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+
+!** Uploading Materials
+!define row {Vehicle Name,Group Code,Movement,LOADING_DETENTION_DAY1,LOADING_DETENTION_DAY2,LOADING_DETENTION_DAY3,LOADING_DETENTION_DAY4,LOADING_DETENTION_DAY5,LOADING_DETENTION_MORETHAN_DAY5,UnLOADING_DETENTION_DAY1,UnLOADING_DETENTION_DAY2,UnLOADING_DETENTION_DAY3,UnLOADING_DETENTION_DAY4,UnLOADING_DETENTION_DAY5,UnLOADING_DETENTION_MORETHAN_DAY5,TRANSIT_DAY1,TRANSIT_DAY2,TRANSIT_DAY3,TRANSIT_DAY4,TRANSIT_DAY5,TRANSIT_MORETHAN_DAY5,TRANSIT_DELAY_PERCENTAGE}
+!define column {,CFT,Secondary,10,20,30,40,50,60,1000,2000,3000,4000,5000,6000,1000,2000,3000,4000,5000,6000,4}
+
+
+!|Script|Common|
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+
+!|Script|Excel|
+|newSheet;|${row}|${column}|$excelpath|
+
+!|Script|Ui|
+|navigateToUrl;|${surl}/mdm/detentions|
+|click;|.btn.btn-secondary.el-dropdown-selfdefine|cssselector|
+|sendKeys;|.upload-material|cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch']|xpath|60|
+
+
+!|Script|Common|
+|$result=|getResultOfCalculation;|$count|+|1|
+
+**!
+
+
+!** Validating Rejection list
+!define rejection_name  {Detention}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+**!
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.ValidateRejections
+
+
+!define tname {TC-177}
+ 

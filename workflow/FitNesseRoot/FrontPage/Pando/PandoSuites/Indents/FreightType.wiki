@@ -1,0 +1,6 @@
+---
+Help: Contains test cases related to freight type
+Suite
+---
+!1 Test suite for Freight type
+!contents -R2 -g -p -f -h

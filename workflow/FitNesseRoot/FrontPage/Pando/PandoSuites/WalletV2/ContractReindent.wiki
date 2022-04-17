@@ -1,0 +1,6 @@
+---
+Suite
+Suites: oel1
+---
+!1 Test suite for Contract Reindent
+!contents -R2 -g -p -f -h

@@ -1,0 +1,6 @@
+---
+Help: Payments related cases
+Suite
+---
+!1 Test suite for  Payments cases
+!contents -R2 -g -p -f -h

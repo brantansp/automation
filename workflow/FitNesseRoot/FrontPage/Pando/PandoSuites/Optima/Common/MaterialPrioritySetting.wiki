@@ -1,0 +1,15 @@
+---
+Help: Contains script to set the Material Priority
+---
+!|Script                     |Ui                                                                        |
+|navigateToUrl;              |${surl}/optima/settings                                                   |
+|click;                      |//a[contains(.,'Material Priority')]                     |xpath           |
+|click;                      |//input[@placeholder='Select Depot']                     |xpath           |
+|sendKeys;                   |//div[normalize-space(text())='Depot']/..//input         |xpath|${depo}   |
+|click;                      |//span[contains(text(),'${depo}')]                       |xpath           |
+|click;                      |//div[contains(text(),'Movement')]/following-sibling::div|xpath           |
+|click;                      |//li[contains(.,'${movement_type}')]                            |xpath           |
+|sendKeys;                   |//input[@placeholder='+ Add Material Category']          |xpath|${mat_cat}|
+|sendControlKey;             |//input[@placeholder='+ Add Material Category']          |xpath|ENTER     |
+|click;                      |//button[contains(.,'SAVE') or contains(.,'Save')]                             |xpath           |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']/following-sibling::span[text()='Optima settings updated']|xpath|30         |

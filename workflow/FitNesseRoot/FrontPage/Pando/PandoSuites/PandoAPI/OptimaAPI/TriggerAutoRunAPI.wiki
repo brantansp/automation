@@ -1,0 +1,5 @@
+!|Script    |Http                                                    |
+|addHeader; |Authorization     |bearer ${superAdminToken}            |
+|setBaseUrl;|${superaAdminUrl}/api/super-admin/tasks/trigger_auto_run|
+|$vehicle=  |getResponse;      |Application/Json     |post     |     |
+|check      |getStatusCode;    |202                                  |

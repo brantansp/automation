@@ -1,0 +1,34 @@
+---
+Help: SCN13_Ensure Optima is choosing the cheapest contract available
+Test
+---
+!5 SCN13_Ensure Optima is choosing the cheapest contract available (Rs.320)
+
+!5 Consignees - 
+!5 Consignee ref.id ->  8100847 - '10A': [65.3609, 13.673, 8]
+!5 Consignee ref.id ->  8102614 - 'X': [14.91378, 462.216, 2]
+
+!5 Vehicle with Contract
+!5 5e312d6ecce76f003644b270 - [99999, 99999] - [[1, 10, 'kg_rate', 6, '', '', '', '', '']]
+!5 5ec8a75b83060200497749cf - [999999, 999999] - [[2, 40, 'case_rate', 1, '', '', '', '', {'10a': [30, 150], '20a': [80, 400], '20b': [120, 600], '30a': [70, 350], 'default': [40, 200]}]]
+
+!5 Calculations - MAX(8*30 + 2*40, MAX(150,200)) = 240+80= Rs.320
+
+!5 https://gopando.atlassian.net/browse/PAN-2241
+
+!5 https://github.com/pandocorp/optima-v2/pull/36
+
+!|script       |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!|script       |CsvQuery                                                             |
+|getConnection;|$fileLocation|,                                                      |
+|$tresult=     |executeQuery;|SELECT Rate FROM summary WHERE File LIKE 'scn13_%'|Rate|
+|closeConnection;                                                                    |
+
+!|script  |common                                    |
+|check    |checkIfStringAreEqual;|$tresult|320.0|true|
+|$tresult=|checkIfStringAreEqual;|$tresult|320.0     |
+
+
+ 

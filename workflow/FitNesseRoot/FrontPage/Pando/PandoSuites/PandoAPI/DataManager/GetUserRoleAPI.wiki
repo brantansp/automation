@@ -1,0 +1,7 @@
+---
+Help: Uses to get the User role using API
+Test
+---
+!|Script|MongoDB|
+|initialize;|${connection}|${database}|
+|$retrieve_key_value=|roleId;|${role_type}|${surl}|

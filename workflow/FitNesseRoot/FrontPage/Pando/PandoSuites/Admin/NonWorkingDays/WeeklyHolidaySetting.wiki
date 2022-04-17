@@ -1,0 +1,16 @@
+---
+Help: Contains steps to Set Weekly holiday
+---
+!|script                     |ui                                                                                                                                                       |
+|navigateToUrl;              |${surl}/admin                                                                                                                                            |
+|click;                      |//a[normalize-space(text())='Non Working Days']                                           |xpath                                                         |
+|wait;                       |2                                                                                                                                                        |
+|click;                      |//div[text()='Depot']/../child::div//input                                                |xpath                                                         |
+|sendKeys;                   |//div[text()='Depot']/../child::div//input                                                |xpath                                      |${depot_id}       |
+|click;                      |//span[text()='${depot_id}']                                                              |xpath                                                         |
+|wait;                       |2                                                                                                                                                        |
+|mouseClick;                 |//input[@value='${weeklyHoliday}']/parent::span                                           |xpath                                                         |
+|check                       |getElementAttribute;                                                                      |//span[text()='${weeklyHoliday}']/..//input|xpath|checked|true|
+|wait;                       |2                                                                                                                                                        |
+|click;                      |//button[normalize-space(text())='SAVE']                                                  |xpath                                                         |
+|waitForElementToBeDisplayed;|//h3[contains(text(),'Success')]/following-sibling::span[contains(text(),'Changes saved')]|xpath                                      |15                |

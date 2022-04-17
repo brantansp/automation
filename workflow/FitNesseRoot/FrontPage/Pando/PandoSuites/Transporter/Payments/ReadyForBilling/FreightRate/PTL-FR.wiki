@@ -1,0 +1,6 @@
+---
+Help: Contains PTL Freight rate
+Suite
+---
+!1 Test suite PTL FR
+!contents -R2 -g -p -f -h

@@ -1,0 +1,638 @@
+---
+Help: Verify the application by clicking checked,return,resubmit,Reject and Approve Vendor movement
+Suites: srf
+Test
+---
+!** Enable Permissions in Nimbus
+!5 approve_invoice_vendor
+!5 return_invoice_vendor  
+!5 check_invoice_vendor  
+!5 accounts_reject_invoice_vendor
+!5 invoice_two_step_approval
+**!
+
+!* Test Coverage
+!5 1. Create indent 1, deliver indent,CHECK invoice in Shipper, REJECT invoice in Shipper and verify GENERATED in Transporter,REJECTED in Shipper
+!5 2. Create indent 2, deliver indent,RETURN invoice in Shipper, RESUBMIT invoice in Transporter, CHECK invoice in Shipper,APPROVE invoice in Shipper and verify APPROVED in both Shipper and Transporter
+**!
+
+!***> Unique values assignment
+!| Script  |Common                                       |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$cGroup=  |getRandomString;        |5        |ALPHAUPPER|
+|$vno_1=   |getRandomNumber;        |20       |76        |
+|$vno_2=   |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=   |getRandomNumber;        |1000     |9999      |
+|$currDate=|getCurrentDateTimeStamp |iso                 |
+|$year=    |getSubString;           |$unique  |0   |4    |
+|$today=   |getSubString;           |$currDate|0   |10   |
+|$num=     |getRandomNumber;        |100000   |999999    |
+|$indate=  |getCurrentDateTimeStamp;|yyyy/MM/dd          |
+
+!| Script      |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |0 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |0 |
+
+!| Script      |Common                                         |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer -!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer -!|
+|$rdate=       |stringConcatenation;|$rdate       |!- $timer -!|
+
+!| Script               |DateUtil                      |
+|$loadingDate=          |utcConversion;  |$loadingDate |
+|$truckindate=          |utcConversion;  |$truckindate |
+|$truckoutdate=         |utcConversion;  |$truckoutdate|
+|$invoice_filter_date=  |dateCalculation;|yyyy-MM-dd |0|
+|$voucher_filter_todate=|dateCalculation;|yyyy-MM-dd |1|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Data Creation for Vendor movement
+!**> Vendor Depot Creation
+!define depo_name {vd$unique}
+!define depo_ref_id {vdr$unique}
+!define address {Vendor Address}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600033}
+!define gst_in {gs$unique}
+!define phone {9047637908}
+!define short_code {VDSH}
+!define email {pandooelauto+vd$unique@outlook.com}
+!define region {South}
+!define site {Customer Site}
+
+!|Script       |Ui                                                                                                                          |
+|navigateToUrl;|${surl}/mdm/vendor-depots                                                                                                   |
+|click;        |//div/ul/li/button[text()='Add']                                                                       |xpath               |
+|sendKeys;     |//input[@placeholder='Enter Depot Name']                                                               |xpath|${depo_name}  |
+|sendKeys;     |//input[@placeholder='Enter Address']                                                                  |xpath|${address}    |
+|sendKeys;     |//input[@placeholder='Enter city name']                                                                |xpath|${city}       |
+|sendKeys;     |//input[@placeholder='Enter state']                                                                    |xpath|${state}      |
+|sendKeys;     |//input[@placeholder='Enter Pin code']                                                                 |xpath|${pincode}    |
+|click;        |//label[contains(text(),'Region')]/following-sibling::div[@class='searchdropdown font-bold']/div       |xpath               |
+|click;        |//div[contains(text(),'South')]                                                                        |xpath               |
+|sendKeys;     |//input[@placeholder='Enter GST IN']                                                                   |xpath|${gst_in}     |
+|sendKeys;     |//input[@placeholder='Enter Phone Number']                                                             |xpath|${phone}      |
+|click;        |//label[contains(text(),'DELIVERY TYPE')]/following-sibling::div[@class='searchdropdown font-bold']/div|xpath               |
+|click;        |//div[contains(text(),'${site}')]                                                                      |xpath               |
+|sendKeys;     |//input[@placeholder='Enter Short Code']                                                               |xpath|${short_code} |
+|sendKeys;     |//input[@placeholder='Enter Ref id']                                                                   |xpath|${depo_ref_id}|
+|click;        |//ul[@class='action-list']/li[contains(text(),'Save')]                                                 |xpath               |
+
+!|Script  |Ui                                                                    |
+|check    |isElementPresent;|//span[contains(text(),'${depo_ref_id}')]|xpath|true|
+|$tresult=|isElementPresent;|//span[contains(text(),'${depo_ref_id}')]|xpath     |
+**!
+
+!***> Transporter Creation for Indent
+
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!***> Vehicle Creation
+
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Source Depot Creation
+
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!|script      |common         |
+|$location_id=|getTrim;|$depot|
+
+!***> Gate Manager Creation
+
+!*** User Role ID Retrival
+
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!*** Gate Creation
+
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+
+!|script         |common           |
+|$source_gate_id=|getTrim;|$gate_id|
+*!
+*!
+
+!***> Uploading Rate Matrix
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,BDR Charge,BDR Label,Exclude,Trip Count}
+!define column {Point,${depo_ref_id},${gate_ref_id},${vehicle_name},100,$transporter_ref_id,$transporter_name,1,10000,per_trip,01-Jan-$year,31-Dec-2030,100,1,}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+**!
+
+!**> Indent Creation 1 and moving it to delivered
+!***> Indent Creation 1 - Inbound Vendor
+!define type {Inbound}
+!define source_location {${depo_name}}
+!define destination_location {${depot_name}}
+!define switch_depo {Vendor depot} 
+!define gate_id {vdr$unique}
+!define switch_type {2}
+!define delivery_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonVendorIndentCreationInUI
+*!
+
+!***> Indent Delivery
+!*** Adding Truck details
+
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!**> Inspection Accept
+!|script|common                                                                                          |
+|$data= |getTrim;|{"data":{"accepted":true,"inspection":{},"documents":{},"comments":"Accepted $unique"}}|
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInspection
+**!
+
+!**> Reported 
+!define loading_date {$loadingDate}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.ReportAtAPI
+**!
+
+!*** Truck In
+
+!| Script       |Common               |
+|$truck_in_date=|getTrim;|$truckindate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!*** Reached Load point
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LoadingPointAPI
+*!
+
+!*** Start Loading
+!define gate_id {$gate_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.StartLoadAPI
+*!
+
+!*** End Loading
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.EndPointAPI
+*!
+
+!*** Truck Out
+
+!| Script        |Common                |
+|$truck_out_date=|getTrim;|$truckoutdate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckOutAPI
+*!
+
+!*** Adding LR Receipt
+
+!define consignee_id {$gate_id}
+!define lr_number {lr$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+*!
+
+!**> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {cases}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {VENDOR}
+!define invoice_amount {10000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"vdr$unique","gate_ref_id":"vdr$unique","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"rq$unique","sold_to":"rq$unique","type":"${type}","invoice_number":"E2$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!**> Marking Indent as delivered
+!define consignee_id {$location_id}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+*!
+**!
+**!
+
+!**> Transporter Login
+!define transporter_email {pandotransporter+$unique@outlook.com}
+!define transporter_password {$password}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!**> Enabling Lorry Receipt
+!define indent_id {$order_id}
+!define tusername {${transporter_email}}
+!define tpassword {${transporter_password}}
+!|script|common                                                                                                                                                        |
+|$data= |getTrim;|{"data":[{"destination_id":"${destination_location_id}","source_location_id":"${location_id}","lr_number":"${lr_number}","document_available":true}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.TransporterAPI.LorryReceiptAPI
+*!
+
+!**> Validating indent 1 in Ready for billing page with Tax Invoice
+!*> Ready for billing page
+!define depot_name {d$unique}
+
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!include -c .FrontPage.Pando.Common.CommonPDFUploadInReadyForBilling
+*!
+
+!* Invoice Page
+!define invoice_number {ic$unique}
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceGeneration
+*!
+**!
+
+!** Invoice Filter
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+**!
+
+!*> Click Checked in Invoice
+!|Script                        |Ui                                                                                                                                                             |
+|click;                         |//span[contains(text(),'${transporter_name}')]                         |xpath                                                                                  |
+|waitForElementToBeDisplayed;   |//div[contains(@class,'scrolling')]                                    |xpath                                                                  |45             |
+|click;                         |//button[contains(text(),'Summary')]                                   |xpath                                                                                  |
+|click;                         |//button/span[contains(text(),'Checked')]                              |xpath                                                                                  |
+|click;                         |//button/span[normalize-space(text())='YES']                           |xpath                                                                                  |
+|waitForElementToBeDisplayed;   |//div[@role='alert']//h3[text()='Success']                             |xpath                                                                  |30             |
+|$successMessage=               |getElementAttribute;                                                   |//div[@role='alert']//h3[text()='Success']/following-sibling::span     |xpath|innerText|
+|waitForElementToDisappear;     |//div[@role='alert']//h3[text()='Success']                             |xpath                                                                  |10             |
+|refreshForElementToBeDisplayed;|//span[contains(@class,'status') and normalize-space(text())='Checked']|findBy                                                                 |2    |5        |
+|check                          |isElementPresent;                                                      |//span[contains(@class,'status') and normalize-space(text())='Checked']|xpath|true     |
+|$tresult1=                     |isElementPresent;                                                      |//span[contains(@class,'status') and normalize-space(text())='Checked']|xpath          |
+
+!|Script   |common                                                      |
+|check     |checkIfStringAreEqual;|$successMessage|Invoice Checked!|true|
+|$tresult2=|checkIfStringAreEqual;|$successMessage|Invoice Checked!     |
+**!
+
+!*> Click Reject in Invoice after checking
+!|Script                        |Ui                                                                                                                                                                |
+|refresh;                                                                                                                                                                                          |
+|click;                         |//span[contains(text(),'${transporter_name}')]                          |xpath                                                                                    |
+|waitForElementToBeDisplayed;   |//div[contains(@class,'scrolling')]                                     |xpath                                                                   |45              |
+|click;                         |//button[contains(text(),'Summary')]                                    |xpath                                                                                    |
+|click;                         |//button/span[contains(text(),'Reject')]                                |xpath                                                                                    |
+|sendKeys;                      |//textarea[@placeholder='REMARKS']                                      |xpath                                                                   |Rejected $unique|
+|click;                         |//button[text()='REJECT']                                               |xpath                                                                                    |
+|waitForElementToBeDisplayed;   |//div[@role='alert']//h3[text()='Success']                              |xpath                                                                   |30              |
+|$successMessage=               |getElementAttribute;                                                    |//div[@role='alert']//h3[text()='Success']/following-sibling::span      |xpath |innerText|
+|refreshForElementToBeDisplayed;|//span[contains(@class,'status') and normalize-space(text())='Rejected']|findBy                                                                  |2     |5        |
+|check                          |isElementPresent;                                                       |//span[contains(@class,'status') and normalize-space(text())='Rejected']|xpath |true     |
+|$tresult3=                     |isElementPresent;                                                       |//span[contains(@class,'status') and normalize-space(text())='Rejected']|xpath           |
+
+!|Script   |common                                                       |
+|check     |checkIfStringAreEqual;|$successMessage|Invoice Rejected!|true|
+|$tresult4=|checkIfStringAreEqual;|$successMessage|Invoice Rejected!     |
+**!
+
+!**> Validating invoices 
+!include -c .FrontPage.Pando.Common.CommonTransporterInvoiceFilter
+
+!|Script   |Ui                                                                                                    |
+|check     |isElementPresent;|//span[contains(@class,'status') and normalize-space(text())='Generated']|xpath|true|
+|$tresult5=|isElementPresent;|//span[contains(@class,'status') and normalize-space(text())='Generated']|xpath     |
+**!
+
+!**> Validating result
+!|Script         |Common                                                                                   |
+|$indent1_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true     |
+|check           |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|true|
+*!
+
+
+!**> Indent Creation 2 and moving it to delivered
+!***> Indent Creation 2 - Inbound Vendor
+!define type {Inbound}
+!define source_location {${depo_name}}
+!define destination_location {${depot_name}}
+!define switch_depo {Vendor depot} 
+!define gate_id {vdr$unique}
+!define switch_type {2}
+!define delivery_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonVendorIndentCreationInUI
+*!
+
+!***> Indent Delivery
+!*** Adding Truck details
+
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!**> Inspection Accept
+!|script|common                                                                                          |
+|$data= |getTrim;|{"data":{"accepted":true,"inspection":{},"documents":{},"comments":"Accepted $unique"}}|
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInspection
+**!
+
+!**> Reported 
+!define loading_date {$loadingDate}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.ReportAtAPI
+**!
+
+!*** Truck In
+
+!| Script       |Common               |
+|$truck_in_date=|getTrim;|$truckindate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!*** Reached Load point
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LoadingPointAPI
+*!
+
+!*** Start Loading
+!define gate_id {$gate_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.StartLoadAPI
+*!
+
+!*** End Loading
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.EndPointAPI
+*!
+
+!*** Truck Out
+
+!| Script        |Common                |
+|$truck_out_date=|getTrim;|$truckoutdate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckOutAPI
+*!
+
+!*** Adding LR Receipt
+
+!define consignee_id {$gate_id}
+!define lr_number {lr$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+*!
+
+!**> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {cases}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {VENDOR}
+!define invoice_amount {10000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"vdr$unique","gate_ref_id":"vdr$unique","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"rq$unique","sold_to":"rq$unique","type":"${type}","invoice_number":"E2$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!**> Marking Indent as delivered
+!define consignee_id {$location_id}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+*!
+**!
+**!
+
+!**> Enabling Lorry Receipt
+!define indent_id {$order_id}
+!define tusername {${transporter_email}}
+!define tpassword {${transporter_password}}
+!|script|common                                                                                                                                                        |
+|$data= |getTrim;|{"data":[{"destination_id":"${destination_location_id}","source_location_id":"${location_id}","lr_number":"${lr_number}","document_available":true}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.TransporterAPI.LorryReceiptAPI
+*!
+
+!**> Validating indent 2 in Ready for billing page with Tax Invoice
+!*> Ready for billing page
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!include -c .FrontPage.Pando.Common.CommonPDFUploadInReadyForBilling
+*!
+
+!*> Invoice Page
+!define invoice_number {ic2$unique}
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceGeneration
+*!
+**!
+
+!**> Invoice Filter
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+!define search_text {ic2$unique}
+!include -c .FrontPage.Pando.Common.CommonInvoiceNumberSearchInShipper
+**!
+
+!*> Click Return in Invoice
+!|Script                        |Ui                                                                                                                                                                |
+|click;                         |//span[contains(text(),'${transporter_name}')]                          |xpath                                                                                    |
+|waitForElementToBeDisplayed;   |//div[contains(@class,'scrolling')]                                     |xpath                                                                   |45              |
+|click;                         |//button[contains(text(),'Summary')]                                    |xpath                                                                                    |
+|click;                         |//button/span[contains(text(),'Return')]                                |xpath                                                                                    |
+|sendKeys;                      |//textarea[@placeholder='REMARKS']                                      |xpath                                                                   |Rejected $unique|
+|click;                         |//button[text()='RETURN']                                               |xpath                                                                                    |
+|waitForElementToBeDisplayed;   |//div[@role='alert']//h3[text()='Success']                              |xpath                                                                   |30              |
+|$successMessage=               |getElementAttribute;                                                    |//div[@role='alert']//h3[text()='Success']/following-sibling::span      |xpath |innerText|
+|refreshForElementToBeDisplayed;|//span[contains(@class,'status') and normalize-space(text())='Returned']|findBy                                                                  |2     |5        |
+|check                          |isElementPresent;                                                       |//span[contains(@class,'status') and normalize-space(text())='Returned']|xpath |true     |
+|$tresult1=                     |isElementPresent;                                                       |//span[contains(@class,'status') and normalize-space(text())='Returned']|xpath           |
+
+!|Script   |common                                                       |
+|check     |checkIfStringAreEqual;|$successMessage|Invoice Returned!|true|
+|$tresult2=|checkIfStringAreEqual;|$successMessage|Invoice Returned!     |
+**!
+
+!*> Click Resubmit in Transporter Invoice after returned
+!include -c .FrontPage.Pando.Common.CommonTransporterInvoiceFilter
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceNumberSearchInShipper
+
+!|Script                        |Ui                                                                                                                                                                  |
+|click;                         |//span[contains(@class,'status') and normalize-space(text())='Returned']    |xpath                                                                                  |
+|wait;                          |5                                                                                                                                                                   |
+|click;                         |//button[contains(text(),'Summary')]                                        |xpath                                                                                  |
+|click;                         |//button[contains(text(),'Re-Submit')]                                      |xpath                                                                                  |
+|click;                         |//button/span[normalize-space(text())='YES']                                |xpath                                                                                  |
+|refreshForElementToBeDisplayed;|//span[contains(@class,'status') and normalize-space(text())='Re-submitted']|findBy                                                                      |2    |5   |
+|check                          |isElementPresent;                                                           |//span[contains(@class,'status') and normalize-space(text())='Re-submitted']|xpath|true|
+|$tresult3=                     |isElementPresent;                                                           |//span[contains(@class,'status') and normalize-space(text())='Re-submitted']|xpath     |
+**!
+
+!**> Invoice Filter
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+**!
+
+!*> Click Checked in Invoice
+!|Script                        |Ui                                                                                                                                                             |
+|click;                         |//span[contains(text(),'${transporter_name}')]                         |xpath                                                                                  |
+|waitForElementToBeDisplayed;   |//div[contains(@class,'scrolling')]                                    |xpath                                                                  |45             |
+|click;                         |//button[contains(text(),'Summary')]                                   |xpath                                                                                  |
+|click;                         |//button/span[contains(text(),'Checked')]                              |xpath                                                                                  |
+|click;                         |//button/span[normalize-space(text())='YES']                           |xpath                                                                                  |
+|waitForElementToBeDisplayed;   |//div[@role='alert']//h3[text()='Success']                             |xpath                                                                  |30             |
+|$successMessage=               |getElementAttribute;                                                   |//div[@role='alert']//h3[text()='Success']/following-sibling::span     |xpath|innerText|
+|waitForElementToDisappear;     |//div[@role='alert']//h3[text()='Success']                             |xpath                                                                  |10             |
+|refreshForElementToBeDisplayed;|//span[contains(@class,'status') and normalize-space(text())='Checked']|findBy                                                                 |2    |5        |
+|check                          |isElementPresent;                                                      |//span[contains(@class,'status') and normalize-space(text())='Checked']|xpath|true     |
+|$tresult4=                     |isElementPresent;                                                      |//span[contains(@class,'status') and normalize-space(text())='Checked']|xpath          |
+
+!|Script   |common                                                      |
+|check     |checkIfStringAreEqual;|$successMessage|Invoice Checked!|true|
+|$tresult5=|checkIfStringAreEqual;|$successMessage|Invoice Checked!     |
+**!
+
+!*> Click Approve in Invoice after checking
+!|Script                        |Ui                                                                                                                                                               |
+|refresh;                                                                                                                                                                                         |
+|click;                         |//span[contains(text(),'${transporter_name}')]                          |xpath                                                                                   |
+|waitForElementToBeDisplayed;   |//div[contains(@class,'scrolling')]                                     |xpath                                                                   |45             |
+|click;                         |//button[contains(text(),'Summary')]                                    |xpath                                                                                   |
+|click;                         |//button/span[contains(text(),'Approve')]                               |xpath                                                                                   |
+|click;                         |//button/span[normalize-space(text())='YES']                            |xpath                                                                                   |
+|waitForElementToBeDisplayed;   |//div[@role='alert']//h3[text()='Success']                              |xpath                                                                   |30             |
+|$successMessage=               |getElementAttribute;                                                    |//div[@role='alert']//h3[text()='Success']/following-sibling::span      |xpath|innerText|
+|refreshForElementToBeDisplayed;|//span[contains(@class,'status') and normalize-space(text())='Approved']|findBy                                                                  |2    |5        |
+|check                          |isElementPresent;                                                       |//span[contains(@class,'status') and normalize-space(text())='Approved']|xpath|true     |
+|$tresult6=                     |isElementPresent;                                                       |//span[contains(@class,'status') and normalize-space(text())='Approved']|xpath          |
+
+!|Script   |common                                                       |
+|check     |checkIfStringAreEqual;|$successMessage|Invoice Approved!|true|
+|$tresult7=|checkIfStringAreEqual;|$successMessage|Invoice Approved!     |
+**!
+
+!**> Validating invoices 
+!include -c .FrontPage.Pando.Common.CommonTransporterInvoiceFilter
+
+!|Script   |Ui                                                                                                   |
+|check     |isElementPresent;|//span[contains(@class,'status') and normalize-space(text())='Approved']|xpath|true|
+|$tresult8=|isElementPresent;|//span[contains(@class,'status') and normalize-space(text())='Approved']|xpath     |
+**!
+
+!**> Validating result
+!|Script         |Common                                                                                                                 |
+|$indent2_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,true     |
+|check           |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,true|true|
+*!
+
+!**> Validating final result
+!|Script  |Common                                                                 |
+|$tresult=|checkIfStringAreEqualInArray;|$indent1_result,$indent2_result,true     |
+|check    |checkIfStringAreEqualInArray;|$indent1_result,$indent2_result,true|true|
+*!

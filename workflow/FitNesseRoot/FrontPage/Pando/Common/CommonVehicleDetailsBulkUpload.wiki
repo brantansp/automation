@@ -1,0 +1,14 @@
+---
+Help: To Upload vehicle details excel sheet
+---
+!|Script    |Common                                          |
+|$excelpath=|getPath;|testAttachment/vd_$unique.xlsx|fullpath|
+
+!|Script                |Excel                      |
+|newSheetDynamicColumns;|${row}|${column}|$excelpath|
+
+!|Script                   |Ui                                                                 |
+|navigateToUrl;            |${surl}/mdm/vehicledetail                                          |
+|click;                    |//button[contains(text(),'Upload')]               |xpath           |
+|sendKeys;                 |//span[contains(text(),'Vehicle Detail')]/../input|xpath|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch']          |xpath|30        |

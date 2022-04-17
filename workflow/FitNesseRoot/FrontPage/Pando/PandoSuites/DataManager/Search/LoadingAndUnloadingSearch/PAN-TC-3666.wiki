@@ -1,0 +1,67 @@
+---
+Help: DM LU Search by Partial Depot Name
+Test
+---
+!*** Unique value assignment
+!| script|common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$num=   |getRandomNumber;        |100  |999  |
+*!
+
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!*** Depot Creation via API
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!*** Vehicle Creation
+
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!define Vehicle_Type {v$unique}
+!define Movement {Primary}
+
+!define Depot_Ref_Id {$depot_ref_id}
+!define Loading_Cost {1000}
+!define Unloading_Cost {$num}
+!define ODA_Cost {0}
+!define unit {per_trip}
+
+!*** Loading & Unloading upload
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.LoadingAndUnloadingSearch.CommonLUUpload
+*!
+
+!define search_value {$unique}
+
+!*** Searching for the Depot Name in Loading
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.LoadingAndUnloadingSearch.CommonLoadingSearch
+*!
+
+!define search_text {$num}
+
+!*** Verify the deposit Search result in Loading
+!| script |ui                                                                                                                     |
+|check    |isElementPresent;|//div[@class='card-row card-row-show dowble-row']//span[contains(text(),'${search_text}')]|xpath|true|
+|$tresult=|isElementPresent;|//div[@class='card-row card-row-show dowble-row']//span[contains(text(),'${search_text}')]|xpath     |
+
+*!
+
+!define tname {TC-69}
+!*** Update result
+!include .FrontPage.Pando.Common.CommonResultImage
+*!

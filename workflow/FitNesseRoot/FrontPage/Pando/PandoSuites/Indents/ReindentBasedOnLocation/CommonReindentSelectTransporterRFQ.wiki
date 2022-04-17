@@ -1,0 +1,14 @@
+!|Script                        |Ui                                                                                                                         |
+|refreshForElementToBeDisplayed;|(//div[@class='order-row'])[1]//span[text()='Re-indent']|xpath                                         |3      |           |
+|click;                         |//span[text()='Re-indent']                              |xpath                                                             |
+|waitForElementToBeDisplayed;   |//div[@class='el-dialog__body']                         |xpath                                         |10                 |
+|click;                         |//input[@placeholder='Search for Transporter']          |xpath                                                             |
+|sendHumanKeys;                 |//input[@placeholder='Search for Transporter']          |xpath                                         |${transporter_name}|
+|sendControlKey;                |//input[@placeholder='Search for Transporter']          |xpath                                         |ENTER              |
+|wait;                          |4                                                                                                                          |
+|click;                         |//span[@class='el-checkbox__inner']                     |xpath                                                             |
+|click;                         |//input[@placeholder='Pick a day']                      |xpath                                                             |
+|click;                         |//td[@class='available today']/div/span                 |xpath                                                             |
+|click;                         |//button[text()='SEND']                                 |xpath                                                             |
+|waitForElementToBeDisplayed;   |//h3[text()='Success']/following-sibling::span          |xpath                                         |30                 |
+|$successMessage=               |getElementAttribute;                                    |//h3[text()='Success']/following-sibling::span|xpath  |innerText  |

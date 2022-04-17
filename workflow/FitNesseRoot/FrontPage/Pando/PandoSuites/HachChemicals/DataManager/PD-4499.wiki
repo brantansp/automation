@@ -1,0 +1,15 @@
+---
+Help: Contains Carrier creation test case
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Carrier Creation
+!|script|common                                                                                    |
+|$data= |getTrim;|{"code":"27","service":"FXRS.GROUND","description":"FedEx Intl Priority $unique"}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Hach.DataManager.CreateCarrierAPI
+**!

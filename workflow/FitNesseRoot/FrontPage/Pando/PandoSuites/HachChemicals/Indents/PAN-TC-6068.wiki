@@ -1,0 +1,150 @@
+---
+Help: New Indent creation
+Test
+---
+!*** Unique values assignment
+
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-4|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-3|
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0 |
+|$cdate=       |dateCalculation;|yyyy/MM/dd |1 |
+
+
+
+!|Script       |Common                                          |
+|$truckindate= |stringConcatenation;|$truckindate |!- 10:00:00-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- 10:00:00-!|
+|$rdate=       |stringConcatenation;|$rdate       |!- 10:00:00-!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+
+
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!*** Consignee Creation one
+
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+
+*!
+
+
+!*** Transporter Creation for Indent
+
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!*** Depot Creation
+
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!*** Gate Manager Creation
+
+!*** User Role ID Retrival
+
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!*** Gate Creation
+
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+
+*!
+
+
+!** Carrier Creation
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"consolidated_shipment":true,"data":[{"delivery_number":"D10","delivery_type":"PTL","ship_pack_method":"FX1-CAO","transporter_reference_id":"tr$unique","vehicle_requirement_date":"$loadingDate","comments":"Test","terms":"Test","drop_off":[{"pick_up":{"pick_up_type":1,"pick_up":"R$unique"},"ship_to":{"address":{"address_line_1":"Chennai","address_line_2":"","city":"Chennai","state":"TN","postal_code":"600094","country_code":"IN","country_name":"India"},"contact":{"title":"ABC","contact_name":"Moses","phone_number":"","company_name":""}},"sold_to":{"address":{"address_line_1":"Chennai","address_line_2":"","city":"Chennai","state":"TN","postal_code":"600094","country_code":"IN","country_name":"India"},"contact":{"title":"ABC","contact_name":"Moses","phone_number":"","company_name":""}}}]}]}}|
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Hach.Indent.Create_Hach_Indent
+**!

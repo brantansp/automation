@@ -1,0 +1,6 @@
+---
+Suite
+Suites: indent1
+---
+!1 Test suite for Freight Type Reindenting
+!contents -R2 -g -p -f -h

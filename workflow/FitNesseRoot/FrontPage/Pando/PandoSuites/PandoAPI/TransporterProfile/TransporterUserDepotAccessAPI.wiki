@@ -1,0 +1,15 @@
+---
+Help: Use to give user access to depots from transporter
+Test
+---
+!|Script     |Http                                                                                                         |
+|setBaseUrl; |${turl}/api/login                                                                                            |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}                |
+|$token=     |getHeader;      |x-auth-token                                                                                |
+|addHeader;  |Authorization   |bearer $token                                                                               |
+|setBaseUrl; |${turl}/api/transporter/users/${admin_transporter_id}/access                                                 |
+|$consignee= |getResponse;    |Application/Json|put|{"data":{"primary_role":"${manager_user_id}","depots":["${depot_id}"]}}|
+|$status=    |getStatusCode;                                                                                               |
+
+!|Script       |json                                |
+|$consignee_id=|getValueFromJSON;|$consignee|data.id|

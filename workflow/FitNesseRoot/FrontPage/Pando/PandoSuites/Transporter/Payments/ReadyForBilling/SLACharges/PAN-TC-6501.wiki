@@ -1,0 +1,303 @@
+---
+Help: To check the SLA charges reflected with Max Arrival SLA(%)
+Suites: srf
+Test
+---
+!***> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!***> Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!***> Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!***> Gate Manager Creation
+!*** User Role ID Retrival
+
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Material Creation 1
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!**> SLA Bulk Upload
+!define Vehicle_Type {${vehicle_name}}
+!define Movement {Secondary}
+!define Depot_Ref_Id {$depot_ref_id}
+
+!define acceptance_cost {100}
+!define assignment_cost {100}
+!define arrival_cost {250}
+!define rejection_cost {100}
+!define grace_period {0}
+
+!|script|common                     |
+|$rand1=|getTrim;|${acceptance_cost}|
+|$rand2=|getTrim;|${assignment_cost}|
+|$rand3=|getTrim;|${arrival_cost}   |
+|$rand4=|getTrim;|${rejection_cost} |
+|$rand5=|getTrim;|${grace_period}   |
+
+!define row {Vehicle Type,Movement,Depot REF ID,Acceptance cost,Assignment cost,Arrival Cost,Rejection Cost,Grace Period,Max Arrival SLA(%)}
+!define column1 {${Vehicle_Type},${Movement},${Depot_Ref_Id},$rand1,$rand2,$rand3,$rand4,$rand5,10}
+
+!include -c .FrontPage.Pando.Common.CommonSLABulkUpload
+**!
+
+!***> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,BDR Charge,BDR Label,Exclude,Trip Count}
+!define column {Point,${gate_ref_id},$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,2000,per_trip,01-Jan-$year,31-Dec-2030,100,1,}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!**> Admin SLA Setting
+!define Movement {Secondary}
+!define vehicle_movement {1}
+
+!|Script               |DateUtil                   |
+|waitForRoundoffMinute;|30                         |
+|$indentCutoffHour=    |dateCalculation;|minute|H|1|
+|$indentCutoffMin=     |dateCalculation;|minute|m|1|
+|$arrivalCutoffHour=   |dateCalculation;|minute|H|2|
+|$arrivalCutoffMin=    |dateCalculation;|minute|m|2|
+
+!|script|common                                                                                                                                                                                                                              |
+|$data= |getTrim;|{"data":{"depot_ids":["$depot"],"movement":${vehicle_movement},"sla_configurations":[{"sla_type":2,"hours":$indentCutoffHour,"mins":$indentCutoffMin},{"sla_type":1,"hours":$arrivalCutoffHour,"mins":$arrivalCutoffMin}]}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Settings.AdminSlaSettingAPI
+*!
+
+!***> Indent Creation
+!|Script                   |DateUtil                                  |
+|$vehicle_requirement_date=|dateCalculation;|yyyy/MM/dd      |-1      |
+|$vehicle_requirement_date=|utcConversion;  |$vehicle_requirement_date|
+
+!|Script               |DateUtil                                            |
+|$expected_delivery_at=|dateCalculation;|yyyy/MM/dd            |0           |
+|$expected_delivery_at=|utcConversion;  |$expected_delivery_at !- 10:00:00-!|
+
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_delivery_at}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|script     |common            |
+|$indent_id1=|getTrim;|$order_id|
+
+!|script           |DateUtil                         |
+|$indentCreateTime=|dateCalculation;|minute|hh:mm:a|0|
+*!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!**> Wait for 3 mins for the SLA to Arrival breach
+!|script|ui |
+|wait;  |180|
+**!
+
+!**> Assign Truck In
+!|Script           |DateUtil                                               |
+|$truckindate=     |dateCalculation;  |yyyy/MM/dd  |0                      |
+|$truckindateDelay=|dateCalculation;  |minute      |hh:mm:a       |0       |
+|$truckindate=     |appendDateAndTime;|$truckindate|!- $truckindateDelay -!|
+|$truck_in_date=   |utcConversion;    |$truckindate                        |
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+**!
+
+!**> Update LR for Consignee 1
+!define consignee_id {$consignee_id_1}
+!define lr_number {l1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!**> Material upload for all consingee
+!|Script            |DateUtil                                                 |
+|$truckoutdate=     |dateCalculation;  |yyyy/MM/dd   |0                       |
+|$truckoutdateDelay=|dateCalculation;  |minute       |hh:mm:a        |0       |
+|$truckoutdate=     |appendDateAndTime;|$truckoutdate|!- $truckoutdateDelay -!|
+|$truckoutdate=     |utcConversion;    |$truckoutdate                         |
+
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {cases}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {10000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** ERP Upload for Consignee 1
+!**> Wait for 1 minute
+!|script|ui|
+|wait;  |60|
+**!
+
+!|Script|DateUtil                                  |
+|$rdate=|dateCalculation;  |yyyy/MM/dd|0           |
+|$timer=|dateCalculation;  |hh:mm:a   |0           |
+|$rdate=|appendDateAndTime;|$rdate    |!- $timer -!|
+|$rdate=|utcConversion;    |$rdate                 |
+
+!|script|common                                                                                                                                                                                                                                                                                                                            |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"INV-$unique","material_code":"mc$unique","no_of_shortage":"5","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"5","no_of_carton_damage":"5","release_date":"$rdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!**> Transporter login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+!include -c  .FrontPage.Pando.Common.TransporterLogin
+**!
+
+!** Validating SLA charges
+!|Script                        |Ui                                                                                                                                                                                |
+|navigateToUrl;                 |${turl}/v2/payments?depot=${depot_name}                                                                                                                                           |
+|refreshForElementToBeDisplayed;|(//div[contains(@class,'list-row') or contains(@class,'card-row row')])[1]|xpath                                                                                            |5 |2 |
+|click;                         |//span[normalize-space(text())='Update']                                  |xpath                                                                                                  |
+|click;                         |//div[normalize-space(text())='CHARGES']                                  |xpath                                                                                                  |
+|scrollToView;                  |//span[contains(text(),'SLA Delay')]                                      |xpath                                                                                                  |
+|$slacharges=                   |getText;                                                                  |(//span[starts-with(normalize-space(),'SLA Delay')]/../parent::div/following-sibling::div)[1]/div|xpath|
+
+!|Script  |common                                     |
+|check    |checkIfStringAreEqual;|$slacharges|200|true|
+|$tresult=|checkIfStringAreEqual;|$slacharges|200     |
+*!

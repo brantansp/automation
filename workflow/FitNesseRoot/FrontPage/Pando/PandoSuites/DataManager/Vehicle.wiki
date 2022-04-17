@@ -1,0 +1,7 @@
+---
+Help: Suite contains the Depot related cases
+Suite
+Suites: dm1
+---
+!1 Test suite for Vehicle
+!contents -R2 -g -p -f -h

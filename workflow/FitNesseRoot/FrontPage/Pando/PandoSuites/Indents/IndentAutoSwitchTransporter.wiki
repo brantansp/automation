@@ -1,0 +1,6 @@
+---
+Help: Contains test cases for Indent auto switch transporter
+Suite
+---
+!1 Test suite Indent Auto Switch Transporter
+!contents -R2 -g -p -f -h

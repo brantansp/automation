@@ -1,0 +1,5 @@
+!|script                     |ui                                                                      |
+|click;                      |//div[contains(@class,'header')]/input[@type='checkbox']       |xpath   |
+|click;                      |//button[contains(text(),'Indent')]                            |xpath   |
+|click;                      |//div[@class='el-message-box']//span[contains(text(),'Create')]|xpath   |
+|waitForElementToBeDisplayed;|//div[@role='alert']/i[contains(@class,'success')]             |xpath|30|

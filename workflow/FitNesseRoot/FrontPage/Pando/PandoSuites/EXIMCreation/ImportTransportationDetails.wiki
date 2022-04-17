@@ -1,0 +1,16 @@
+---
+Help: Used to select Import Transportation Details
+---
+!|Script      |Ui                                                                                                                                                                                                                            |
+|$containers= |getHeaderColumnNumber;                                                                                                                |//div[contains(@class,'el-table__header')]//th/div[@class='cell']|xpath |Container Type|
+|click;       |(//div[contains(@class,'el-table__header')]/following-sibling::div[contains(@class,'el-table__body')]//tr)[1]//td[$containers]//input |xpath                                                                                  |
+|sendKeys;    |(//div[contains(@class,'el-table__header')]/following-sibling::div[contains(@class,'el-table__body')]//tr)[1]//td[$containers]//input |xpath                                                            |${container_name}    |
+|click;       |//li//span[contains(text(),'${container_name}')]                                                                                      |xpath                                                                                  |
+|$vehicles=   |getHeaderColumnNumber;                                                                                                                |//div[contains(@class,'el-table__header')]//th/div[@class='cell']|xpath |Vehicle Type  |
+|click;       |(//div[contains(@class,'el-table__header')]/following-sibling::div[contains(@class,'el-table__body')]//tr)[1]//td[$vehicles]//input   |xpath                                                                                  |
+|sendKeys;    |(//div[contains(@class,'el-table__header')]/following-sibling::div[contains(@class,'el-table__body')]//tr)[1]//td[$vehicles]//input   |xpath                                                            |${vehicle_name}      |
+|click;       |//li//span[contains(text(),'${vehicle_name}')]                                                                                        |xpath                                                                                  |
+|$transporter=|getHeaderColumnNumber;                                                                                                                |//div[contains(@class,'el-table__header')]//th/div[@class='cell']|xpath |Transporter   |
+|click;       |(//div[contains(@class,'el-table__header')]/following-sibling::div[contains(@class,'el-table__body')]//tr)[1]//td[$transporter]//input|xpath                                                                                  |
+|sendKeys;    |(//div[contains(@class,'el-table__header')]/following-sibling::div[contains(@class,'el-table__body')]//tr)[1]//td[$transporter]//input|xpath                                                            |${transporter_ref_id}|
+|click;       |//li//span[contains(text(),'${transporter_ref_id}')]                                                                                  |xpath                                                                                  |

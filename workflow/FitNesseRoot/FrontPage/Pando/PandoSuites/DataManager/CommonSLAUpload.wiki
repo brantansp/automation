@@ -1,0 +1,18 @@
+---
+Help: Used to upload One SLA Contract
+---
+!define row {Vehicle Type,Movement,Depot REF ID,Acceptance cost,Assignment cost,Arrival Cost,Rejection Cost,Grace Period}
+!define column1 {${Vehicle_Type},${Movement},${Depot_Ref_Id},$rand1,$rand2,$rand3,$rand4,$rand5}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+!|Script  |Excel                       |
+|newSheet;|${row}|${column1}|$excelpath|
+
+!|script                   |ui                                                              |
+|navigateToUrl;            |${surl}/mdm/sla                                                 |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|wait;                     |5                                                               |

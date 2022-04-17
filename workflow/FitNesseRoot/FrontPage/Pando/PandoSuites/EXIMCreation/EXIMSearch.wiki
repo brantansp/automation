@@ -1,0 +1,8 @@
+---
+Help: Used to find the Created Exim Indent
+---
+|Script                      |ui                                                                                                  |
+|click;                      |//div[starts-with(@class,'searchterm tagblock')]                              |xpath                |
+|clearAndSend;               |//div[normalize-space(text())='${search_field}']/following-sibling::div//input|xpath|${search_value}|
+|click;                      |//button[normalize-space(text())='Search']                                    |xpath                |
+|waitForElementToBeDisplayed;|//div[starts-with(@class,'grid-list')]                                        |xpath|30             |

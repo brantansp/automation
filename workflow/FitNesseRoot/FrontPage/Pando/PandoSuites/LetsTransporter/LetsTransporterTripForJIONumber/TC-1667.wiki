@@ -1,0 +1,26 @@
+---
+Help: Let's Transport - Trip Search by Destination
+Test
+---
+!** Search using the Destination
+
+!define truck_num {TN $vno_1 $vno_2 $vno_3}
+
+!define search_field {Destination}
+!define search_value {d$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.LetsTransporter.CommonTripSearch
+*!
+
+!** Validating the Search result
+
+!|script  |ui                                                                                             |
+|check    |isElementPresent;|(//div[@class='card-row row'])[1]//div/span[text()='${truck_num}']|xpath|true|
+|$tresult=|isElementPresent;|(//div[@class='card-row row'])[1]//div/span[text()='${truck_num}']|xpath     |
+|$trip_id=|getText;         |(//span[text()='${truck_num}']/../parent::div/div)[1]/span        |xpath     |
+
+*!
+
+!**> Update result
+!include .FrontPage.Pando.Common.CommonResultImage
+*!

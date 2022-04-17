@@ -1,0 +1,6 @@
+---
+Help: Ensure that user able able to create Indent with dispatched status via Optima Upload
+Suite
+---
+!1 Test suite Optima Direct Dispatch
+!contents -R2 -g -p -f -h

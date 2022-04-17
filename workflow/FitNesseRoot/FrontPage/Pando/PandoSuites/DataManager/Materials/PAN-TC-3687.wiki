@@ -1,0 +1,44 @@
+---
+Help: Edit Materials
+Suites: sanity1, dm1
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!** Material Update
+!define material_name {me$unique}
+!define material_code {mce$unique}
+
+!|Script                     |Ui                                                                                                          |
+|navigateToUrl;              |${surl}/mdm/materials                                                                                       |
+|waitForElementToBeDisplayed;|//span[contains(text(),'m$unique')]                                                  |xpath|30              |
+|click;                      |//span[contains(text(),'m$unique')]/ancestor::div[@class='card-row card-row-show']//a|xpath                 |
+|clearAndSend;               |//input[@placeholder='Enter Material Code']                                          |xpath|${material_code}|
+|clearAndSend;               |//input[@placeholder='Enter Name']                                                   |xpath|${material_name}|
+|clearAndSend;               |//input[@placeholder='Enter Length']                                                 |xpath|15              |
+|clearAndSend;               |//input[@placeholder='Enter Width']                                                  |xpath|20              |
+|clearAndSend;               |//input[@placeholder='Enter Height']                                                 |xpath|25              |
+|clearAndSend;               |//input[@placeholder='Enter Weight']                                                 |xpath|30              |
+|clearAndSend;               |//label[normalize-space(text())='Volume']//following-sibling::input                  |xpath|1               |
+|clearAndSend;               |//label[normalize-space(text())='Volume Per Piece']//following-sibling::input        |xpath|1               |
+|clearAndSend;               |//input[@placeholder='Enter Category']                                               |xpath|A               |
+|clearAndSend;               |//label[contains(text(),'Business Unit')]/following-sibling::input                   |xpath|10              |
+|clearAndSend;               |//label[contains(text(),'PCE Per Box')]/following-sibling::input                     |xpath|20              |
+|click;                      |//ul[@class='action-list']/li[contains(text(),'Update')]                             |xpath                 |
+|waitForElementToBeDisplayed;|//h3/following-sibling::span[text()='Record Updated!']                               |xpath|5               |
+|click;                      |//*[contains(@*,'icon-close')]                                                       |xpath                 |
+
+!|Script  |Ui                                                               |
+|check    |isElementPresent;|//span[contains(text(),'me$unique')]|xpath|true|
+|$tresult=|isElementPresent;|//span[contains(text(),'me$unique')]|xpath     |
+**!

@@ -1,0 +1,366 @@
+---
+Help: Verify Modified picklist while adding Delivery number for manual indent single pickup and single drop.(secondary)
+Suites: indent3
+Test
+---
+!**> Unique value assignment
+!| Script  |Common                                       |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$cGroup=  |getRandomString;        |5        |ALPHAUPPER|
+|$vno_1=   |getRandomNumber;        |20       |76        |
+|$vno_2=   |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=   |getRandomNumber;        |1000     |9999      |
+|$currDate=|getCurrentDateTimeStamp |iso                 |
+|$year=    |getSubString;           |$unique  |0   |4    |
+|$today=   |getSubString;           |$currDate|0   |10   |
+|$num=     |getRandomNumber;        |100000   |999999    |
+
+!| Script      |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |0 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |0 |
+
+!| Script      |Common                                          |
+|$truckindate= |stringConcatenation;|$truckindate |!- 10:00:00-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- 00:00:00-!|
+|$rdate=       |stringConcatenation;|$rdate       |!- 10:00:00-!|
+
+!| Script               |DateUtil                      |
+|$loadingDate=          |utcConversion;  |$loadingDate |
+|$truckindate=          |utcConversion;  |$truckindate |
+|$truckoutdate=         |utcConversion;  |$truckoutdate|
+|$invoice_filter_date=  |dateCalculation;|yyyy-MM-dd |0|
+|$voucher_filter_todate=|dateCalculation;|yyyy-MM-dd |1|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Kakinada Road}
+!define city {Kakinada}
+!define state {Andra Pradesh}
+!define pincode {321001}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Gate Manager Creation
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {rt$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+*!
+
+!**> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,${gate_ref_id},${consignee_ref_id},${vehicle_name},100,${transporter_ref_id},${transporter_name},1,5000,per_trip,01-Jan-2019,31-Dec-2030,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!**> Creating Indent 1
+!define type {Outbound}
+!define source_location {${depot_name}}
+!define destination_location {${consignee_name}}
+!define gate_id {rt$unique}
+!define switch_depo {Consignee} 
+!define switch_type {2}
+!define delivery_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonSecondaryIndentInUI
+
+!| Script    |Common            |
+|$order_id_1=|getTrim;|$order_id|
+**!
+
+!** Validating the modified picklist after creating indent
+!|Script                      |MongoDBQuery                                                        |
+|getMongoConnection;          |${connection}                |db_pando_testing                      |
+|$modified_picklist_1=        |getModifiedPicklist;         |$order_id       |pickup_code|rt$unique|
+|$modified_picklist_payload_1=|getModifiedPicklistpayload;  |$order_id                             |
+|check                        |getValueFromModifiedPicklist;|type            |SECONDARY            |
+|check                        |getValueFromModifiedPicklist;|vehicle_type    |${vehicle_name}      |
+|check                        |getValueFromModifiedPicklist;|indication      |CREATE               |
+|check                        |getValueFromModifiedPicklist;|transporter_code|tr$unique            |
+|check                        |getValueFromModifiedPicklist;|depot_code      |r$unique             |
+|check                        |getValueFromModifiedPicklist;|pickup_code     |rt$unique            |
+|check                        |getValueFromModifiedPicklist;|sold_to         |cr$unique            |
+|check                        |getValueFromModifiedPicklist;|ship_to         |cr$unique            |
+|check                        |getValueFromModifiedPicklist;|delivery_number |                     |
+
+!|Script         |Common                                                        |
+|$schemaFilePath=|getPath;|data/schemafiles/modify_picklist_schema.json|fullpath|
+
+!|script|json                                                                   |
+|check  |validateJsonDocument;|$schemaFilePath|$modified_picklist_payload_1|true|
+*!
+
+!*> Filter depot
+!define depot_selection {${depot_name}}
+!define delivery_number {dn$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!define search_text {$order_id}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|Script                     |ui                                                                                                              |
+|check                       |isElementPresent;                             |//div[contains(text(),'Indented')]            |xpath    |true    |
+|click;                      |//span[text()='Document']                     |xpath                                                            |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]        |xpath                                         |20                |
+|check                       |isElementPresent;                             |//strong[contains(text(),'${consignee_name}')]|xpath    |true    |
+|click;                      |//div[contains(text(),'Add Delivery Numbers')]|xpath                                                            |
+|click;                      |//input[@placeholder='Select']                |xpath                                                            |
+|click;                      |//span[contains(text(),'rt$unique')]          |xpath                                                            |
+|sendKeys;                   |//input[@placeholder='Enter']                 |xpath                                         |${delivery_number}|
+|click;                      |//span[text()='Save']                         |xpath                                                            |
+|waitForElementToBeDisplayed;|//h3[text()='Success']                        |xpath                                         |20                |
+|$successtext=               |getText;                                      |//h3[text()='Success']/../span                |xpath             |
+
+!|Script   |common                                                                      |
+|check     |checkIfStringAreEqual;|$successtext|Delivery number saved successfully!|true|
+|$tresult1=|checkIfStringAreEqual;|$successtext|Delivery number saved successfully!     |
+*!
+
+!** Validating the modified picklist after updating delivery number
+!|Script                      |MongoDBQuery                                                        |
+|getMongoConnection;          |${connection}                |db_pando_testing                      |
+|$modified_picklist_2=        |getModifiedPicklist;         |$order_id       |pickup_code|rt$unique|
+|$modified_picklist_payload_2=|getModifiedPicklistpayload;  |$order_id                             |
+|check                        |getValueFromModifiedPicklist;|type            |SECONDARY            |
+|check                        |getValueFromModifiedPicklist;|vehicle_type    |${vehicle_name}      |
+|check                        |getValueFromModifiedPicklist;|indication      |UPDATE               |
+|check                        |getValueFromModifiedPicklist;|transporter_code|tr$unique            |
+|check                        |getValueFromModifiedPicklist;|depot_code      |r$unique             |
+|check                        |getValueFromModifiedPicklist;|pickup_code     |rt$unique            |
+|check                        |getValueFromModifiedPicklist;|sold_to         |cr$unique            |
+|check                        |getValueFromModifiedPicklist;|ship_to         |cr$unique            |
+|check                        |getValueFromModifiedPicklist;|delivery_number |${delivery_number}   |
+
+!|Script         |Common                                                        |
+|$schemaFilePath=|getPath;|data/schemafiles/modify_picklist_schema.json|fullpath|
+
+!|script|json                                                                   |
+|check  |validateJsonDocument;|$schemaFilePath|$modified_picklist_payload_2|true|
+*!
+
+!**> Creating Indent 2
+!define type {Outbound}
+!define source_location {${depot_name}}
+!define destination_location {${consignee_name}}
+!define gate_id {rt$unique}
+!define switch_depo {Consignee} 
+!define switch_type {2}
+!define delivery_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonSecondaryIndentInUI
+**!
+
+!*> Filter depot
+!define depot_selection {${depot_name}}
+!define delivery_number {dn$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!|Script|ui                                    |
+|click; |//div[@class='app-search-label']|xpath|
+|click; |//*[text()='Clear']             |xpath|
+|click; |//*[text()='Search']            |xpath|
+
+!define search_text {$order_id}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|Script                     |ui                                                                                                              |
+|wait;                       |5                                                                                                               |
+|check                       |isElementPresent;                             |//div[contains(text(),'Indented')]            |xpath    |true    |
+|click;                      |//span[text()='Document']                     |xpath                                                            |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]        |xpath                                         |30                |
+|check                       |isElementPresent;                             |//strong[contains(text(),'${consignee_name}')]|xpath    |true    |
+|click;                      |//div[contains(text(),'Add Delivery Numbers')]|xpath                                                            |
+|click;                      |//input[@placeholder='Select']                |xpath                                                            |
+|click;                      |//span[contains(text(),'rt$unique')]          |xpath                                                            |
+|sendKeys;                   |//input[@placeholder='Enter']                 |xpath                                         |${delivery_number}|
+|click;                      |//span[text()='Save']                         |xpath                                                            |
+|waitForElementToBeDisplayed;|//h3[text()='Error']                          |xpath                                         |20                |
+|$errortext=                 |getText;                                      |//h3[text()='Error']/../span                  |xpath             |
+
+!|Script   |common                                                                                  |
+|check     |checkIfStringAreEqual;|$errortext|Delivery Number Already exists - Validation error|true|
+|$tresult2=|checkIfStringAreEqual;|$errortext|Delivery Number Already exists - Validation error     |
+**!
+
+!**> Cancelling indent 1
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!|Script|ui                                    |
+|click; |//div[@class='app-search-label']|xpath|
+|click; |//*[text()='Clear']             |xpath|
+|click; |//*[text()='Search']            |xpath|
+|wait;  |2                                     |
+
+!define search_text {$order_id_1}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|script                     |ui                                                                                                                                   |
+|mouseHover;                 |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]|xpath                                                           |
+|check                       |isElementPresent;                                                   |//div[text()='$order_id_1']                   |xpath    |true   |
+|click;                      |//span[contains(text(),'t$unique')]                                 |xpath                                                           |
+|click;                      |//button//span[contains(text(),'Cancel')]                           |xpath                                                           |
+|check                       |isElementPresent;                                                   |//div[normalize-space(text())='Cancel Indent']|xpath    |true   |
+|sendKeys;                   |//textArea[@placeholder='Add a Comment']                            |xpath                                         |Automation Reject|
+|click;                      |//button[text()='Yes']                                              |xpath                                                           |
+|waitForElementToBeDisplayed;|//h3[text()='Success']                                              |xpath                                         |20               |
+|check                       |isElementPresent;                                                   |//span[normalize-space(text())='Cancelled']   |xpath    |true   |
+|wait;                       |3                                                                                                                                    |
+**!
+
+!** Validating the modified picklist after cancelling indent
+!|Script              |MongoDBQuery                                            |
+|getMongoConnection;  |${connection}                |db_pando_testing          |
+|$modified_picklist_4=|getModifiedPicklist;         |$order_id_1|type|SECONDARY|
+|check                |getValueFromModifiedPicklist;|indication |DELETE        |
+**!
+
+!*> Filter depot
+!define depot_selection {${depot_name}}
+!define delivery_number {dn$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!|Script|ui                                    |
+|click; |//div[@class='app-search-label']|xpath|
+|click; |//*[text()='Clear']             |xpath|
+|click; |//*[text()='Search']            |xpath|
+
+!define search_text {$order_id}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|Script                     |ui                                                                                                              |
+|check                       |isElementPresent;                             |//div[contains(text(),'Indented')]            |xpath    |true    |
+|click;                      |//span[text()='Document']                     |xpath                                                            |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]        |xpath                                         |20                |
+|check                       |isElementPresent;                             |//strong[contains(text(),'${consignee_name}')]|xpath    |true    |
+|click;                      |//div[contains(text(),'Add Delivery Numbers')]|xpath                                                            |
+|click;                      |//input[@placeholder='Select']                |xpath                                                            |
+|click;                      |//span[contains(text(),'rt$unique')]          |xpath                                                            |
+|sendKeys;                   |//input[@placeholder='Enter']                 |xpath                                         |${delivery_number}|
+|click;                      |//span[text()='Save']                         |xpath                                                            |
+|waitForElementToBeDisplayed;|//h3[text()='Success']                        |xpath                                         |20                |
+|$successtext=               |getText;                                      |//h3[text()='Success']/../span                |xpath             |
+
+!|Script   |common                                                                      |
+|check     |checkIfStringAreEqual;|$successtext|Delivery number saved successfully!|true|
+|$tresult3=|checkIfStringAreEqual;|$successtext|Delivery number saved successfully!     |
+**!
+
+!** Validating the modified picklist after updating delivery number
+!|Script                      |MongoDBQuery                                                        |
+|getMongoConnection;          |${connection}                |db_pando_testing                      |
+|$modified_picklist_4=        |getModifiedPicklist;         |$order_id       |pickup_code|rt$unique|
+|$modified_picklist_payload_3=|getModifiedPicklistpayload;  |$order_id                             |
+|check                        |getValueFromModifiedPicklist;|type            |SECONDARY            |
+|check                        |getValueFromModifiedPicklist;|vehicle_type    |${vehicle_name}      |
+|check                        |getValueFromModifiedPicklist;|indication      |UPDATE               |
+|check                        |getValueFromModifiedPicklist;|transporter_code|tr$unique            |
+|check                        |getValueFromModifiedPicklist;|depot_code      |r$unique             |
+|check                        |getValueFromModifiedPicklist;|pickup_code     |rt$unique            |
+|check                        |getValueFromModifiedPicklist;|sold_to         |cr$unique            |
+|check                        |getValueFromModifiedPicklist;|ship_to         |cr$unique            |
+|check                        |getValueFromModifiedPicklist;|delivery_number |${delivery_number}   |
+
+!|Script                        |MongoDBQuery                                           |
+|getMongoConnection;            |${connection}                       |db_pando_testing  |
+|$totalNoOfModifiedPickListSent=|getTotalNoOfItemsInModifiedPicklist;|${delivery_number}|
+
+!|script   |common                                                       |
+|check     |comparisonResult;|$totalNoOfModifiedPickListSent|equal|1|true|
+|$tresult4=|comparisonResult;|$totalNoOfModifiedPickListSent|equal|1     |
+
+!|Script         |Common                                                        |
+|$schemaFilePath=|getPath;|data/schemafiles/modify_picklist_schema.json|fullpath|
+
+!|script|json                                                                   |
+|check  |validateJsonDocument;|$schemaFilePath|$modified_picklist_payload_3|true|
+**!
+
+!** Validating results
+!|script  |common                                                                         |
+|check    |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|true|
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true     |
+**!

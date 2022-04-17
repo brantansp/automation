@@ -1,0 +1,10 @@
+---
+Help: Vehicle Details Creation Dynamic API
+Test
+---
+
+!| Script         |Http                                      |
+|addHeader;       |Authorization |bearer $stoken             |
+|setBaseUrl;      |${surl}/api/vehicle/bulk                  |
+|$vehicle_details=|getResponse;  |Application/Json|post|$data|
+|check            |getStatusCode;|204                        |

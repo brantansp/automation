@@ -1,0 +1,9 @@
+---
+Test
+---
+!|Script      |Http                                                    |
+|addHeader;   |Authorization     |bearer $stoken                       |
+|setBaseUrl;  |${surl}/api/order/$order_id/consignee/$consignee_id/epod|
+|$grnresponse=|getResponse;      |Application/Json    |put    |$data   |
+|check        |getStatusCode;    |200                                  |
+|wait;        |2                                                       |

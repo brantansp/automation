@@ -1,0 +1,20 @@
+---
+Help: DM Consignee Direct Downloading if Data <500
+Suites: export1
+Test
+---
+
+!|Script|Ui|
+|navigateToUrl;|${surl}/mdm/consignees|
+|click;|//button[text()='Export']|xpath|
+|wait;|5|
+
+!** Verifying the File download
+!|script               |common                                            |
+|$downloadPath=        |getPath;              |download|fullpath          |
+|check                 |checkIfFileDownloaded;|consignee-export |$downloadPath|true|
+|$tresult=            |checkIfFileDownloaded;|consignee-export |$downloadPath     |
+|cleanFilesInDirectory;|$downloadPath                                     |
+*!
+
+ 

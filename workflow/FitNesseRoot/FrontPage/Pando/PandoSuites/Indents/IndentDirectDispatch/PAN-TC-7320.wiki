@@ -1,0 +1,319 @@
+---
+Help: Shipper and Transporter - Check if Attachments deletion prompt a confirmation on Indents document page
+Suites: pg2
+Test
+---
+!**> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$invoicedate= |dateCalculation;|dd-MM-yyyy |2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-2|
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-1|
+
+!|Script            |Common                                        |
+|$truckindate=      |stringConcatenation;|$truckindate |!- $timer-!|
+|$truckoutdate=     |stringConcatenation;|$truckoutdate|!- $timer-!|
+|$detention_group_1=|getRandomString;    |4            |ALPHAUPPER |
+|$detention_group_2=|getRandomString;    |4            |ALPHAUPPER |
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Data creation
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {dc$unique}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation one
+
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+
+*!
+
+!***> Gate Creation two
+
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {RQ2$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_2=|getValueFromJSON;|$depotResp|data.id|
+
+*!
+
+!**> Consignee Creation one
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Egmore}
+!define city {cc$unique}
+!define state {Madya Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+**!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {2048}
+!define kg {12000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"5"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!**> Purchase order creation for transporter 1
+!define ponumber {po$unique}
+!define netvalue {10000}
+!define balvalue {5000}
+!define legalentity {le$unique}
+!define validfrom {2021-01-01}
+!define validto {2025-12-31}
+
+!define row {Purchase Order Number,Purchase Order Net Value,Purchase Order Balance value,Transporter Ref ID,Legal Entity,Valid From(YYYY-MM-DD),Valid To(YYYY-MM-DD)}
+!define column {${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity},${validfrom},${validto}}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonPOupload
+**!
+
+!**> Uploading Rate Matrix with vehicle 1
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,RQ1$unique,cr1$unique,v$unique,700,$transporter_ref_id,$transporter_name,1,1212.56,per trip,01-Jan-$year,31-Dec-2030,100,1,$detention_group_1,,100,1,per_kg,100,0,,,0-250,600,15,22,,}
+
+!include -c  .FrontPage.Pando.Common.RateMatrix
+*!
+**!
+
+!**> Direct Dispatch Contract Indent creation
+!define delivery_number {d1$unique}
+!define mrp_price {1000}
+!define material_code {mc$unique}
+!define depot_ref_id {R$unique}
+!define gate_ref_id_1 {RQ1$unique}
+!define division {${legalentity}}
+!define quantity {100}
+!define quantity_unit {NOS}
+!define weight {100}
+!define weight_unit {KG}
+!define volume {1024}
+!define volume_unit {CFT}
+!define ship_to {cr1$unique}
+!define sold_to {cr1$unique}
+!define type {Secondary}
+!define shipment_number {s1$unique}
+!define invoice_number {INV1$unique}
+!define invoice_amount {10000}
+!define category {20a}
+!define lr_number {lr1$unique}
+!define invoice_date {$invoicedate}
+!define transporter {tr$unique}
+!define vehicle_type {v$unique}
+!define vehicle_number {TN $vno_1 $vno_2 $vno_3}
+!define lr_number_1 {lr1$unique}
+!define lr_number_2 {lr2$unique}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"${delivery_number}","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id_1}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number_1}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+*!
+
+!**> Filter indent after direct_dispatch
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|script                     |ui                                                                                                                                                                                        |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                                                                                  |20        |
+|check                       |isElementPresent;                                                                      |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|mouseHover;                 |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]                   |xpath                                                                                             |
+|$order_id=                  |getText;                                                                               |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)                    |xpath     |
+**!
+
+!**> LR Upload in shipper and check delete alert in document
+!|Script   |Common                                           |
+|$pdfpath1=|getPath;|testAttachment/pdf1_$unique.pdf|fullpath|
+|$pdfpath2=|getPath;|testAttachment/pdf2_$unique.pdf|fullpath|
+
+!|Script               |FileUtil            |
+|createFileFromContent;|$pdfpath1|test|UTF-8|
+|createFileFromContent;|$pdfpath2|test|UTF-8|
+
+!|Script    |Ui                                                                                                                                     |
+|click;     |//span[text()='Document']                             |xpath                                                                           |
+|sendKeys;  |//input[@class='el-upload__input']                    |xpath                                                                |$pdfpath1 |
+|check      |isElementPresent;                                     |//span[@class='el-upload-list__item-preview']                        |xpath|true|
+|refresh;                                                                                                                                           |
+|sendKeys;  |//input[@class='el-upload__input']                    |xpath                                                                |$pdfpath2 |
+|check      |isElementPresent;                                     |//span[normalize-space(text())='+1']                                 |xpath|true|
+|click;     |//span[@class='el-upload-list__item-actions']         |xpath                                                                           |
+|check      |isElementDisplayed;                                   |//div[@class='drawer-body']                                          |xpath|true|
+|check      |isElementDisplayed;                                   |(//span[@class='el-upload-list__item-actions'])[2]                   |xpath|true|
+|check      |isElementDisplayed;                                   |(//span[@class='el-upload-list__item-actions'])[3]                   |xpath|true|
+|mouseHover;|(//span[@class='el-upload-list__item-actions'])[2]    |xpath                                                                           |
+|wait;      |2                                                                                                                                      |
+|click;     |//span[contains(@class,'el-upload-list__item-delete')]|xpath                                                                           |
+|wait;      |3                                                                                                                                      |
+|check      |isElementPresent;                                     |//p[normalize-space(text())='Are you sure to delete the attachment?']|xpath|true|
+|$tresult1= |isElementPresent;                                     |//p[normalize-space(text())='Are you sure to delete the attachment?']|xpath     |
+|$tresult2= |isElementPresent;                                     |//span[normalize-space(text())='No']                                 |xpath     |
+|$tresult3= |isElementPresent;                                     |//span[normalize-space(text())='Yes']                                |xpath     |
+|click;     |(//span[normalize-space(text())='Yes'])[2]            |xpath                                                                           |
+|wait;      |2                                                                                                                                      |
+|check      |isElementDisplayed;                                   |(//span[@class='el-upload-list__item-actions'])[2]                   |xpath|true|
+|check      |isElementNotDisplayed;                                |(//span[@class='el-upload-list__item-actions'])[3]                   |xpath|true|
+**!
+
+!** Transporter Login
+!define transporter_email {pandotransporter+$unique@outlook.com}
+!define transporter_password {$password}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!**> Transporter depot filter
+!define search_text {${depot_name}}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonTransporterIndentDepotFilter
+**!
+
+!**> Verify delete lr upload
+!|script                     |ui                                                                                                                                           |
+|click;                      |//span[text()='Document']                                   |xpath                                                                           |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]                      |xpath                                                                |20        |
+|check                       |isElementPresent;                                           |//span[@class='el-upload-list__item-preview']                        |xpath|true|
+|click;                      |//span[@class='el-upload-list__item-actions']               |xpath                                                                           |
+|check                       |isElementDisplayed;                                         |//div[@class='drawer-body']                                          |xpath|true|
+|mouseHover;                 |//span[@class='el-upload-list__item-actions']               |xpath                                                                           |
+|wait;                       |2                                                                                                                                            |
+|click;                      |//span[contains(@class,'el-upload-list__item-delete')]      |xpath                                                                           |
+|wait;                       |3                                                                                                                                            |
+|check                       |isElementPresent;                                           |//p[normalize-space(text())='Are you sure to delete the attachment?']|xpath|true|
+|$tresult4=                  |isElementPresent;                                           |//p[normalize-space(text())='Are you sure to delete the attachment?']|xpath     |
+|$tresult5=                  |isElementPresent;                                           |//span[normalize-space(text())='No']                                 |xpath     |
+|$tresult6=                  |isElementPresent;                                           |//span[normalize-space(text())='Yes']                                |xpath     |
+|wait;                       |2                                                                                                                                            |
+|click;                      |//span[normalize-space(text())='Yes']                       |xpath                                                                           |
+|wait;                       |2                                                                                                                                            |
+|check                       |isElementNotPresent;                                        |//span[@class='el-upload-list__item-actions']                        |xpath|true|
+|click;                      |//*[@class='el-drawer__body']//span[@class='el-link--inner']|xpath                                                                           |
+|check                       |isElementNotDisplayed;                                      |//span[@class='el-upload-list__item-actions']                        |xpath|true|
+**!
+
+!** Check no lr attachment in shipper
+!|Script       |Ui                                                                             |
+|navigateToUrl;|${surl}/indents/$order_id/details/0                                            |
+|check         |isElementNotDisplayed;|//span[@class='el-upload-list__item-actions']|xpath|true|
+|$tresult7=    |isElementNotDisplayed;|//span[@class='el-upload-list__item-actions']|xpath     |
+**!
+
+!**> Validating result
+!|Script  |Common                                                                                                       |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,true     |
+|check    |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,true|true|
+*!

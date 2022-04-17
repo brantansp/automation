@@ -1,0 +1,175 @@
+---
+Help: Add indent-Add consignee- Ensure if city,state and region is auto populated using pincode
+Suites: siemens
+Test
+---
+!** Configuration in mongoDB
+"autopopulate_pincode_ratecard" : true
+
+Note: 
+Script should be run for rate card with pincodes.
+Due to large data, added only 3 pincodes in pincode_ratecard collection in mongoDB
+**!
+
+!***> Unique values assignment
+!| Script  |Common                                       |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$cGroup=  |getRandomString;        |5        |ALPHAUPPER|
+|$vno_1=   |getRandomNumber;        |20       |76        |
+|$vno_2=   |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=   |getRandomNumber;        |1000     |9999      |
+|$currDate=|getCurrentDateTimeStamp |iso                 |
+|$year=    |getSubString;           |$unique  |0   |4    |
+|$today=   |getSubString;           |$currDate|0   |10   |
+|$num=     |getRandomNumber;        |100000   |999999    |
+
+!| Script      |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |0 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |0 |
+
+!| Script      |Common                                          |
+|$truckindate= |stringConcatenation;|$truckindate |!- 10:00:00-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- 00:00:00-!|
+|$rdate=       |stringConcatenation;|$rdate       |!- 10:00:00-!|
+
+!| Script               |DateUtil                      |
+|$loadingDate=          |utcConversion;  |$loadingDate |
+|$truckindate=          |utcConversion;  |$truckindate |
+|$truckoutdate=         |utcConversion;  |$truckoutdate|
+|$invoice_filter_date=  |dateCalculation;|yyyy-MM-dd |0|
+|$voucher_filter_todate=|dateCalculation;|yyyy-MM-dd |1|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Data creation
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Gate Manager Creation
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {rt$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+*!
+**!
+
+!**> Add consignee in Indent creation
+
+!define type {Outbound}
+!define source_location {${depot_name}}
+!define destination_location {${consignee_name}}
+!define gate_id {rt$unique}
+!define switch_depo {Consignee} 
+!define switch_type {2}
+!define delivery_type {FTL}
+!define consignee_name {c2$unique}
+!define consignee_ref_id {cr2$unique}
+!define newpincode {712513}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentDepotSelection
+
+!|Script                     |Ui                                                                                                                           |
+|click;                      |//div[@class='el-select select-default']                        |xpath                                                       |
+|click;                      |//span[contains(text(),'${gate_id}')]                           |xpath                                                       |
+|click;                      |//div[@class='add-block']                                       |xpath                                                       |
+|wait;                       |2                                                                                                                            |
+|waitForElementToBeDisplayed;|//div[text()='${switch_depo}']                                  |xpath                                   |20                 |
+|click;                      |//div[text()='${switch_depo}']                                  |xpath                                                       |
+|click;                      |//span[@class='el-link--inner' and contains(text(),'Consignee')]|xpath                                                       |
+|waitForElementToBeDisplayed;|//h4[contains(text(),'New Consignee')]                          |xpath                                   |20                 |
+|sendKeys;                   |//input[@placeholder='Enter Consignee Name']                    |xpath                                   |${consignee_name}  |
+|sendKeys;                   |//input[@placeholder='Enter Ref id']                            |xpath                                   |${consignee_ref_id}|
+|sendKeys;                   |//input[@placeholder='Enter Pin code']                          |xpath                                   |${newpincode}      |
+|sendControlKey;             |//input[@placeholder='Enter Pin code']                          |xpath                                   |ENTER              |
+|wait;                       |2                                                                                                                            |
+|$pincode=                   |getValue;                                                       |//input[@placeholder='Enter Pin code']  |xpath              |
+|$cityname=                  |getValue;                                                       |//input[@placeholder='Enter city name'] |xpath              |
+|$statename=                 |getValue;                                                       |//input[@placeholder='Enter state name']|xpath              |
+|$regionname=                |getValue;                                                       |//input[@placeholder='Enter Region']    |xpath              |
+|click;                      |//span[contains(text(),'Add')]                                  |xpath                                                       |
+|click;                      |//span[contains(text(),'Switch to Open Indent')]                |xpath                                                       |
+|waitForElementToBeDisplayed;|//h3[text()='Success']                                          |xpath                                   |20                 |
+|$successmessage=            |getText;                                                        |//h3[text()='Success']/..//span         |xpath              |
+
+!| Script                       |Common                                                                               |
+|check                          |checkIfStringAreEqual;       |$successmessage  |Consignee added successfully!  |true |
+|$addresult=                    |checkIfStringAreEqual;       |$successmessage  |Consignee added successfully!        |
+|$tresult1=                     |checkIfStringAreEqual;       |$pincode         |${newpincode}                        |
+|$tresult2=                     |checkIfStringAreEqual;       |$cityname        |Nayasarai                            |
+|$tresult3=                     |checkIfStringAreEqual;       |$statename       |WEST BENGAL                          |
+|$tresult4=                     |checkIfStringAreEqual;       |$regionname      |East 1                               |
+|$addnewconsignee_indent_result=|checkIfStringAreEqualInArray;|$addresult,$tresult1,$tresult2,$tresult3,$tresult4,true|
+**!
+
+!**> Verify added consignee in data manager in UI
+!|Script                  |Ui                                                                                     |
+|navigateToUrl;           |${surl}/mdm/consignees                                                                 |
+|click;                   |//div[@class='app-search-label']    |xpath                                             |
+|click;                   |//button[text()='Clear']            |xpath                                             |
+|sendHumanKeys;           |//input[@placeholder='Enter Name']  |xpath                                     |$unique|
+|wait;                    |3                                                                                      |
+|click;                   |//button[text()='Search']           |xpath                                             |
+|click;                   |//span[contains(text(),'c2$unique')]|xpath                                             |
+|wait;                    |2                                                                                      |
+|$actual_consignee_ref_id=|getValue;                           |//input[@placeholder='Enter Reference Id']|xpath  |
+|$actual_city=            |getValue;                           |//input[@placeholder='Enter City']        |xpath  |
+|$actual_state=           |getValue;                           |//input[@placeholder='Enter State']       |xpath  |
+|$actual_pincode=         |getValue;                           |//input[@placeholder='Enter Postal code'] |xpath  |
+|$actual_region=          |getValue;                           |//input[@placeholder='Enter Region']      |xpath  |
+
+!|Script   |Common                                                             |
+|$tresult1=|checkIfStringAreEqual;|$actual_consignee_ref_id|${consignee_ref_id}|
+|$tresult2=|checkIfStringAreEqual;|$actual_pincode         |${newpincode}      |
+|$tresult3=|checkIfStringAreEqual;|$actual_city            |Nayasarai          |
+|$tresult4=|checkIfStringAreEqual;|$actual_state           |WEST BENGAL        |
+|$tresult5=|checkIfStringAreEqual;|$actual_region          |East 1             |
+**!
+
+!**> Validating test results
+!|Script                |Common                                                                              |
+|$newconsigneeDM_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|
+**!
+
+!**> Validating final test results
+!|Script  |Common                                                                                  |
+|$tresult=|checkIfStringAreEqualInArray;|$addnewconsignee_indent_result,$newconsigneeDM_result,true|
+**!

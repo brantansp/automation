@@ -1,0 +1,12 @@
+---
+Help: Contains test script to create indent directly dispatched status using direct dispatch
+Test
+---
+!|Script    |Http                                      |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/erp/direct_dispatch           |
+|$indent=   |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|201                        |
+
+!|Script|Common                                     |
+|check  |checkIfStringAreEqual;|$indent|Created|true|

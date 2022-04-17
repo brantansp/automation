@@ -1,0 +1,8 @@
+---
+Static
+---
+!* Qmetry
+!define test_cycle {PAN-TR-42}
+!define qmetry_base_url {https://qtmcloud.qmetry.com}
+!define user_access_token {307e3d9a5231bd4a6ac16e3ecae0117b50414479174a065204627b9ea2e487aaa7d95e9055bbe91a7cac1535ea748554c51a93cdf108658034dd94190bdd6870e84559ca48aa545772cfbbfba70883de}
+**!

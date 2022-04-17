@@ -1,0 +1,22 @@
+---
+Help: Contains script to validate lets transporter Trip
+---
+!|script       |ui                                                                                                                          |
+|navigateToUrl;|${turl}/tracking                                                                                                            |
+|click;        |//span[text()='$trip_id']/../parent::div//span[text()='DETAILS']|xpath                                                      |
+|check         |isElementPresent;                                               |//div[normalize-space(text())='$trip_id']       |xpath|true|
+|$tresult2=    |isElementPresent;                                               |//div[normalize-space(text())='$trip_id']       |xpath     |
+|check         |isElementPresent;                                               |//div[text()='s$unique - d$unique']             |xpath|true|
+|$tresult3=    |isElementPresent;                                               |//div[text()='s$unique - d$unique']             |xpath     |
+|check         |isElementPresent;                                               |//div[text()='Telecom Partner JIO - ${is_jio}'] |xpath|true|
+|$tresult4=    |isElementPresent;                                               |//div[text()='Telecom Partner JIO - ${is_jio}'] |xpath     |
+|check         |isElementPresent;                                               |//div[text()='Truck Number - ${truck_num}']     |xpath|true|
+|$tresult5=    |isElementPresent;                                               |//div[text()='Truck Number - ${truck_num}']     |xpath     |
+|check         |isElementPresent;                                               |//div[text()='Driver Number - ${driver_number}']|xpath|true|
+|$tresult6=    |isElementPresent;                                               |//div[text()='Driver Number - ${driver_number}']|xpath     |
+|check         |isElementPresent;                                               |//div[text()='Reference ID - r$unique']         |xpath|true|
+|$tresult7=    |isElementPresent;                                               |//div[text()='Reference ID - r$unique']         |xpath     |
+|click;        |//div[@class='close-sidebar']                                   |xpath                                                      |
+#|waitForElementToBeDisplayed;|//div[@class='gmnoprint']//div[text()='Map']                       |xpath                                           |5         |
+#|check                       |isElementPresent;                                                  |//div[@class='gmnoprint']//div[text()='Map']    |xpath|true|
+#|$tresult8=                  |isElementPresent;                                                  |//div[@class='gmnoprint']//div[text()='Map']    |xpath     |

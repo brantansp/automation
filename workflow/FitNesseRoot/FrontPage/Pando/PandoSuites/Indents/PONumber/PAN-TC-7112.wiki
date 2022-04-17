@@ -1,0 +1,527 @@
+---
+Help: LR number with LE check in direct dispatched indents
+Suites: pg2
+Test
+---
+!** Test Coverage
+!5 Indent 1 - same LE and different LR number - No Rejection
+!5 Indent 2 - different LE and different LR number - No Rejection
+!5 Indent 3 - different LE and same LR number - Rejection
+!5 Indent 4 - same LE and same LR number with different consignee group - Rejection
+!5 Indent 5 - same LE and different LR number with different consignee group - No Rejection
+**!
+
+!**> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$invoicedate= |dateCalculation;|dd-MM-yyyy |2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-2|
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-1|
+
+!|Script       |Common                                        |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer-!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Data creation
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {dc$unique}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RG$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script  |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Consignee Creation 1
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Egmore}
+!define city {cc$unique}
+!define state {Madya Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1$unique@gmail.com}
+!define region {South}
+!define site {1}
+!define group {G1}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+**!
+
+!**> Consignee Creation 2
+!define consignee_name {c2$unique}
+!define consignee_ref_id {cr2$unique}
+!define address {Egmore}
+!define city {cc$unique}
+!define state {Madya Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+2$unique@gmail.com}
+!define region {South}
+!define site {1}
+!define group {G2}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_2=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_2=|getTrim;|${consignee_ref_id}|
+**!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Vehicle Creation
+!define vehicle_name {v$unique MRT}
+!define cft {2048}
+!define kg {12000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"1"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!**> Purchase order creation
+!define ponumber {po$unique}
+!define netvalue {10000}
+!define balvalue {5000}
+!define legalentity1 {le1$unique}
+!define legalentity2 {le2$unique}
+!define validfrom {2021-01-01}
+!define validto {2025-12-31}
+
+!define row {Purchase Order Number,Purchase Order Net Value,Purchase Order Balance value,Transporter Ref ID,Legal Entity,Valid From(YYYY-MM-DD),Valid To(YYYY-MM-DD)}
+!define column {${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity1},${validfrom},${validto}|${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity2},${validfrom},${validto}}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonPOupload
+**!
+
+!**> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,dc$unique,cc$unique,${vehicle_name},700,$transporter_ref_id,$transporter_name,1,3000.50,per ton,01-Jan-$year,31-Dec-2030,100,1,U,,100,1,per_kg,100,150,,,0-250,600,15,22,,}
+!include -c  .FrontPage.Pando.Common.RateMatrix
+*!
+**!
+
+!** Indent creation 1 with same LE and different LR number
+!**> Direct Dispatch Indent creation
+!define delivery_number {d1$unique}
+!define mrp_price {1000}
+!define material_code {mc$unique}
+!define depot_ref_id {R$unique}
+!define gate_ref_id {RG$unique}
+!define division {${legalentity1}}
+!define quantity {100}
+!define quantity_unit {NOS}
+!define weight {10000}
+!define weight_unit {KG}
+!define volume {1024}
+!define volume_unit {CFT}
+!define ship_to {cr1$unique}
+!define sold_to {cr1$unique}
+!define type {Secondary}
+!define shipment_number {s1$unique}
+!define invoice_number {INV1$unique}
+!define invoice_amount {10000}
+!define category {20a}
+!define lr_number1 {lr1$unique}
+!define lr_number2 {lr2$unique}
+!define invoice_date {$invoicedate}
+!define transporter {tr$unique}
+!define vehicle_type {v$unique MRT}
+!define vehicle_number {TN $vno_1 $vno_2 $vno_3}
+!define lr_number {lr1$unique}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"d1$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number1}","truck_out":""},{"delivery_number":"d2$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number2}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+*!
+
+!**> Filter indent after direct_dispatch
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|script     |ui                                                                                                                                                                     |
+|check       |isElementPresent;                                                   |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|$tresult1=  |isElementPresent;                                                   |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath     |
+|mouseHover; |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                                             |
+|$order_id_1=|getText;                                                            |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)                    |xpath     |
+*!
+
+!**> Verify LR numbers
+!|script                     |ui                                                                            |
+|click;                      |//span[text()='Document']             |xpath                                  |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]|xpath                       |20        |
+|check                       |isElementPresent;                     |//label[text()='le1$unique']|xpath|true|
+|$tresult2=                  |isElementPresent;                     |//label[text()='le1$unique']|xpath     |
+|check                       |isElementNotPresent;                  |//label[text()='le2$unique']|xpath|true|
+|$tresult3=                  |isElementNotPresent;                  |//label[text()='le2$unique']|xpath     |
+**!
+**!
+
+!** Indent creation 2 with different LE and different LR number
+!**> Direct Dispatch Indent creation
+!define division1 {${legalentity1}}
+!define division2 {${legalentity2}}
+!define shipment_number {s2$unique}
+!define lr_number1 {lr1$unique}
+!define lr_number2 {lr2$unique}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"d3$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division1}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number1}","truck_out":""},{"delivery_number":"d4$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division2}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number2}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+*!
+
+!**> Filter indent after direct_dispatch
+!|script       |ui                                    |
+|navigateToUrl;|${surl}/indents                       |
+|refresh;                                             |
+|click;        |//div[@class='app-search-label']|xpath|
+|click;        |//*[text()='Clear']             |xpath|
+|click;        |//button[text()='Search']       |xpath|
+
+!define search_text {d3$unique}
+!define search_by {Enter delivery number}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearchBy
+
+!|script     |ui                                                                                                                                                                     |
+|check       |isElementPresent;                                                   |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|$tresult4=  |isElementPresent;                                                   |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath     |
+|mouseHover; |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                                             |
+|$order_id_2=|getText;                                                            |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)                    |xpath     |
+*!
+
+!**> Verify LR numbers
+!|script                     |ui                                                                            |
+|click;                      |//span[text()='Document']             |xpath                                  |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]|xpath                       |20        |
+|check                       |isElementPresent;                     |//label[text()='le1$unique']|xpath|true|
+|$tresult5=                  |isElementPresent;                     |//label[text()='le1$unique']|xpath     |
+|check                       |isElementPresent;                     |//label[text()='le2$unique']|xpath|true|
+|$tresult6=                  |isElementPresent;                     |//label[text()='le2$unique']|xpath     |
+**!
+**!
+
+!** Indent creation 3 with different LE and same LR number
+!**> Direct Dispatch Indent creation
+!define division1 {${legalentity1}}
+!define division2 {${legalentity2}}
+!define shipment_number {s3$unique}
+!define lr_number1 {lr1$unique}
+!define lr_number2 {lr1$unique}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"d5$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division1}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number1}","truck_out":""},{"delivery_number":"d6$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division2}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number2}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+*!
+
+!**> Filter indent after direct_dispatch
+!|script       |ui                                                           |
+|navigateToUrl;|${surl}/indents                                              |
+|refresh;                                                                    |
+|click;        |//div[@class='app-search-label']             |xpath          |
+|click;        |//*[text()='Clear']                          |xpath          |
+|sendKeys;     |//input[@placeholder='Enter delivery number']|xpath|d5$unique|
+|click;        |//button[text()='Search']                    |xpath          |
+|refresh;                                                                    |
+|wait;         |2                                                            |
+
+!|script   |ui                                                                     |
+|check     |isElementPresent;|//div[contains(text(),'No Indents Found')]|xpath|true|
+|$tresult7=|isElementPresent;|//div[contains(text(),'No Indents Found')]|xpath     |
+**!
+
+!** Verify Rejections
+!**> Download Rejection list
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|Script                     |Ui                                                                                 |
+|navigateToUrl;              |${surl}/mdm/rejection                                                              |
+|waitForElementToBeDisplayed;|//div[contains(text(),'Direct Dispatch Indent')]//following-sibling::div  |xpath|20|
+|click;                      |//div[contains(text(),'Direct Dispatch Indent')]/../following-sibling::div|xpath   |
+|wait;                       |10                                                                                 |
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|script  |ExcelQuery                                                                                                                          |
+|$count1= |getCountQuery;|$filename|select * from "Pando Rejections" where "Shipment Number" = 's3$unique' and "Delivery Number" = 'd5$unique' |
+|$count2= |getCountQuery;|$filename|select * from "Pando Rejections" where "Shipment Number" = 's3$unique' and "Delivery Number" = 'd6$unique' |
+|$reason1=|selectQuery;  |$filename|select * from "Pando Rejections" where "Division" = 'le1$unique' and "Delivery Number" = 'd5$unique'|Reason|
+|$reason2=|selectQuery;  |$filename|select * from "Pando Rejections" where "Division" = 'le2$unique' and "Delivery Number" = 'd6$unique'|Reason|
+
+!|Script    |common                                                             |
+|check      |checkIfStringAreEqualInArray;|$count1,$count2,1|true               |
+|$tresult8= |checkIfStringAreEqualInArray;|$count1,$count2,1                    |
+|check      |checkIfStringAreEqual;       |$reason1         |[duplicate LR]|true|
+|$tresult9= |checkIfStringAreEqual;       |$reason1         |[duplicate LR]     |
+|check      |checkIfStringAreEqual;       |$reason2         |[duplicate LR]|true|
+|$tresult10=|checkIfStringAreEqual;       |$reason2         |[duplicate LR]     |
+**!
+**!
+**!
+
+!** Indent creation 4 with same LE and same LR number with different consignee group
+!**> Direct Dispatch Indent creation
+!define delivery_number {d1$unique}
+!define mrp_price {1000}
+!define material_code {mc$unique}
+!define depot_ref_id {R$unique}
+!define gate_ref_id {RG$unique}
+!define division {${legalentity1}}
+!define quantity {100}
+!define quantity_unit {NOS}
+!define weight {10000}
+!define weight_unit {KG}
+!define volume {1024}
+!define volume_unit {CFT}
+!define ship_to_1 {cr1$unique}
+!define sold_to_1 {cr1$unique}
+!define ship_to_2 {cr2$unique}
+!define sold_to_2 {cr2$unique}
+!define type {Secondary}
+!define shipment_number {s4$unique}
+!define invoice_number {INV1$unique}
+!define invoice_amount {10000}
+!define category {20a}
+!define lr_number1 {lr1$unique}
+!define lr_number2 {lr1$unique}
+!define invoice_date {$invoicedate}
+!define transporter {tr$unique}
+!define vehicle_type {v$unique MRT}
+!define vehicle_number {TN $vno_1 $vno_2 $vno_3}
+
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"d7$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to_1}","sold_to":"${sold_to_1}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number1}","truck_out":""},{"delivery_number":"d8$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to_2}","sold_to":"${sold_to_2}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number2}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+*!
+
+!**> Filter indent after direct_dispatch
+!|script       |ui                                                           |
+|navigateToUrl;|${surl}/indents                                              |
+|refresh;                                                                    |
+|click;        |//div[@class='app-search-label']             |xpath          |
+|click;        |//*[text()='Clear']                          |xpath          |
+|sendKeys;     |//input[@placeholder='Enter delivery number']|xpath|d7$unique|
+|click;        |//button[text()='Search']                    |xpath          |
+|refresh;                                                                    |
+|wait;         |2                                                            |
+
+!|script   |ui                                                                     |
+|check     |isElementPresent;|//div[contains(text(),'No Indents Found')]|xpath|true|
+|$tresult7=|isElementPresent;|//div[contains(text(),'No Indents Found')]|xpath     |
+**!
+
+!** Verify Rejections
+!**> Download Rejection list
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|Script                     |Ui                                                                                 |
+|navigateToUrl;              |${surl}/mdm/rejection                                                              |
+|refresh;                                                                                                        |
+|waitForElementToBeDisplayed;|//div[contains(text(),'Direct Dispatch Indent')]//following-sibling::div  |xpath|20|
+|click;                      |//div[contains(text(),'Direct Dispatch Indent')]/../following-sibling::div|xpath   |
+|wait;                       |10                                                                                 |
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|script  |ExcelQuery                                                                                                                          |
+|$count1= |getCountQuery;|$filename|select * from "Pando Rejections" where "Shipment Number" = 's4$unique' and "Delivery Number" = 'd7$unique' |
+|$count2= |getCountQuery;|$filename|select * from "Pando Rejections" where "Shipment Number" = 's4$unique' and "Delivery Number" = 'd8$unique' |
+|$reason1=|selectQuery;  |$filename|select * from "Pando Rejections" where "Division" = 'le1$unique' and "Delivery Number" = 'd8$unique'|Reason|
+
+!|Script   |common                                                                    |
+|check     |checkIfStringAreEqualInArray;|$count1,$count2,1|true                      |
+|$tresult8=|checkIfStringAreEqualInArray;|$count1,$count2,1                           |
+|check     |checkIfStringAreEqual;       |$reason1         |[LR criteria not met]|true|
+|$tresult9=|checkIfStringAreEqual;       |$reason1         |[LR criteria not met]     |
+**!
+**!
+**!
+
+!** Indent creation 5 with same LE and different LR number with different consignee group
+!**> Direct Dispatch Indent creation
+!define delivery_number {d1$unique}
+!define mrp_price {1000}
+!define material_code {mc$unique}
+!define depot_ref_id {R$unique}
+!define gate_ref_id {RG$unique}
+!define division {${legalentity1}}
+!define quantity {100}
+!define quantity_unit {NOS}
+!define weight {10000}
+!define weight_unit {KG}
+!define volume {1024}
+!define volume_unit {CFT}
+!define ship_to_1 {cr1$unique}
+!define sold_to_1 {cr1$unique}
+!define ship_to_2 {cr2$unique}
+!define sold_to_2 {cr2$unique}
+!define type {Secondary}
+!define shipment_number {s5$unique}
+!define invoice_number {INV1$unique}
+!define invoice_amount {10000}
+!define category {20a}
+!define lr_number1 {lr1$unique}
+!define lr_number2 {lr2$unique}
+!define invoice_date {$invoicedate}
+!define transporter {tr$unique}
+!define vehicle_type {v$unique MRT}
+!define vehicle_number {TN $vno_1 $vno_2 $vno_3}
+
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"d9$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to_1}","sold_to":"${sold_to_1}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number1}","truck_out":""},{"delivery_number":"d10$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to_2}","sold_to":"${sold_to_2}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number2}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+*!
+
+!**> Filter indent after direct_dispatch
+!|script       |ui                                    |
+|navigateToUrl;|${surl}/indents                       |
+|refresh;                                             |
+|click;        |//div[@class='app-search-label']|xpath|
+|click;        |//*[text()='Clear']             |xpath|
+|click;        |//button[text()='Search']       |xpath|
+
+!define search_text {d9$unique}
+!define search_by {Enter delivery number}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearchBy
+
+!|script     |ui                                                                                                                                                                     |
+|check       |isElementPresent;                                                   |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|$tresult10= |isElementPresent;                                                   |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath     |
+|mouseHover; |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                                             |
+|$order_id_5=|getText;                                                            |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)                    |xpath     |
+*!
+
+!**> Verify LR numbers
+!|script                     |ui                                                                                     |
+|click;                      |//span[text()='Document']             |xpath                                           |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]|xpath                                |20        |
+|check                       |isElementPresent;                     |//label[text()='le1$unique']         |xpath|true|
+|$tresult11=                 |isElementPresent;                     |//label[text()='le1$unique']         |xpath     |
+|check                       |isElementPresent;                     |//span[contains(text(),'lr1$unique')]|xpath|true|
+|$tresult12=                 |isElementPresent;                     |//span[contains(text(),'lr1$unique')]|xpath     |
+|check                       |isElementPresent;                     |//span[contains(text(),'lr2$unique')]|xpath|true|
+|$tresult13=                 |isElementPresent;                     |//span[contains(text(),'lr2$unique')]|xpath     |
+**!
+**!
+
+!** Verify hidden Freight working calculation in UI
+!|script    |ui                                                                                                      |
+|check      |isElementNotDisplayed;|//div[@id='tab-bifurcation' or contains(text(),'Freight Bifurcation')]|xpath|true|
+|$tresult14=|isElementNotDisplayed;|//div[@id='tab-bifurcation' or contains(text(),'Freight Bifurcation')]|xpath     |
+|check      |isElementNotDisplayed;|//div[@id='tab-calculation' or contains(text(),'Freight Calculation')]|xpath|true|
+|$tresult15=|isElementNotDisplayed;|//div[@id='tab-calculation' or contains(text(),'Freight Calculation')]|xpath     |
+**!
+
+!** Validating Test results
+!|Script  |Common                                                                                                                                                                                        |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,$tresult11,$tresult12,$tresult13,$tresult14,$tresult15,true|
+**!

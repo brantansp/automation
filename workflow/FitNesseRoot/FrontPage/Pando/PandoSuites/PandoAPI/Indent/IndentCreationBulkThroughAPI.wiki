@@ -1,0 +1,9 @@
+---
+Help: To create bulk indents through API
+Test
+---
+!|Script    |Http                                      |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/erp/bulk_indent               |
+|$indent=   |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|201                        |

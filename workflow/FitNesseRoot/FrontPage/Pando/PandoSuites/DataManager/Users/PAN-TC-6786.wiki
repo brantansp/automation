@@ -1,0 +1,240 @@
+---
+Help: Password should be unique and it cannot be a same password which was used for the past 3 instances
+Suites: common
+Test
+---
+!***> Unique value assignment
+!| script|common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$num=   |getRandomNumber;        |100  |999  |
+*!
+
+!**> User creation 
+!**> User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_name {A$unique}
+!define user_number {123}
+!define user_email {pandoautomation+$unique@gmail.com}
+!define status {1}
+
+!**> User creation 
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!include -c .FrontPage.Pando.Common.ShipperLogout
+**!
+
+!**> Reset Login
+
+!|Script     |Common                |
+|$user_email=|getTrim;|${user_email}|
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Users.CommonResetLogin
+
+!include -c .FrontPage.Pando.Common.ShipperLogout
+**!
+
+!**> Change Password with new password 1
+
+!**> Forgot Password
+!define newpwd1 {Newpassword@1234}
+
+!|Script  |Ui                                               |
+|click;   |//h4[text()='Forgot password?']|xpath            |
+|sendKeys;|//input                        |xpath|$user_email|
+|click;   |//button                       |xpath            |
+
+!|Script                     |Ui                                                                             |
+|wait;                       |5                                                                              |
+|navigateToUrl;              |${mail_url}/email?page=0&size=60                                               |
+|waitForElementToBeDisplayed;|//table[@class='striped responsive-table']                      |xpath   |30   |
+|click;                      |//td[text()='pandoautomation@gmail.com']/following-sibling::td/a|xpath         |
+|waitForElementToBeDisplayed;|//span[@class='card-title']/i[text()='email']                   |xpath   |10   |
+|$user_password=             |getText;                                                        |//strong|xpath|
+**!
+
+!**> With Reset Password
+!define user_name {$user_email}
+!define user_password {$user_password}
+
+!|Script                     |Ui                                                                                                                                                  |
+|navigateToUrl;              |${login_url}/login                                                                                                                                  |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                                   |xpath                                                        |20             |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                                        |$user_email    |
+|sendKeys;                   |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                                        |$user_password |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                                        |
+|sendKeys;                   |//label[contains(text(),'New Password')]//preceding-sibling::input    |xpath                                                        |Newpassword@123|
+|sendKeys;                   |//label[contains(text(),'CONFIRM PASSWORD')]//preceding-sibling::input|xpath                                                        |Newpassword@123|
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                                        |
+|wait;                       |3                                                                                                                                                   |
+|check                       |isElementPresent;                                                     |//span[normalize-space(text())='Cannot use last 3 passwords']|xpath   |true  |
+|wait;                       |3                                                                                                                                                   |
+|clearAndSend;               |//label[contains(text(),'New Password')]//preceding-sibling::input    |xpath                                                        |${newpwd1}     |
+|clearAndSend;               |//label[contains(text(),'CONFIRM PASSWORD')]//preceding-sibling::input|xpath                                                        |${newpwd1}     |
+|wait;                       |3                                                                                                                                                   |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                                        |
+|wait;                       |3                                                                                                                                                   |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                                        |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                             |xpath|20         |
+|clearAndSend;               |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                                        |$user_email    |
+|clearAndSend;               |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                                        |${newpwd1}     |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                                        |
+|check                       |isElementPresent;                                                     |//main[@class='container-fluid main-content']                |xpath   |true  |
+|$tresult1=                  |isElementPresent;                                                     |//main[@class='container-fluid main-content']                |xpath          |
+
+!include -c .FrontPage.Pando.Common.ShipperLogout
+*!
+*!
+
+!**> Change Password with new password 2
+
+!**> Forgot Password
+!define newpwd2 {Newpassword@12345}
+
+!|Script  |Ui                                               |
+|click;   |//h4[text()='Forgot password?']|xpath            |
+|sendKeys;|//input                        |xpath|$user_email|
+|click;   |//button                       |xpath            |
+
+!|Script                     |Ui                                                                             |
+|wait;                       |5                                                                              |
+|navigateToUrl;              |${mail_url}/email?page=0&size=60                                               |
+|waitForElementToBeDisplayed;|//table[@class='striped responsive-table']                      |xpath   |30   |
+|click;                      |//td[text()='pandoautomation@gmail.com']/following-sibling::td/a|xpath         |
+|waitForElementToBeDisplayed;|//span[@class='card-title']/i[text()='email']                   |xpath   |10   |
+|$user_password=             |getText;                                                        |//strong|xpath|
+**!
+
+!**> With Reset Password
+!define user_name {$user_email}
+!define user_password {$user_password}
+
+!|Script                     |Ui                                                                                                                                 |
+|navigateToUrl;              |${login_url}/login                                                                                                                 |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                                   |xpath                                        |20            |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                        |$user_email   |
+|sendKeys;                   |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                        |$user_password|
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                       |
+|wait;                       |3                                                                                                                                  |
+|clearAndSend;               |//label[contains(text(),'New Password')]//preceding-sibling::input    |xpath                                        |${newpwd2}    |
+|clearAndSend;               |//label[contains(text(),'CONFIRM PASSWORD')]//preceding-sibling::input|xpath                                        |${newpwd2}    |
+|wait;                       |3                                                                                                                                  |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                       |
+|wait;                       |3                                                                                                                                  |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                       |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                             |xpath|20         |
+|clearAndSend;               |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                        |$user_email   |
+|clearAndSend;               |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                        |${newpwd2}    |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                       |
+|check                       |isElementPresent;                                                     |//main[@class='container-fluid main-content']|xpath  |true  |
+|$tresult2=                  |isElementPresent;                                                     |//main[@class='container-fluid main-content']|xpath         |
+
+!include -c .FrontPage.Pando.Common.ShipperLogout
+*!
+**!
+
+!**> Change Password with new password 3
+!**> Forgot Password
+!define newpwd3 {Newpassword@123456}
+
+!|Script  |Ui                                               |
+|click;   |//h4[text()='Forgot password?']|xpath            |
+|sendKeys;|//input                        |xpath|$user_email|
+|click;   |//button                       |xpath            |
+
+!|Script                     |Ui                                                                             |
+|wait;                       |5                                                                              |
+|navigateToUrl;              |${mail_url}/email?page=0&size=60                                               |
+|waitForElementToBeDisplayed;|//table[@class='striped responsive-table']                      |xpath   |30   |
+|click;                      |//td[text()='pandoautomation@gmail.com']/following-sibling::td/a|xpath         |
+|waitForElementToBeDisplayed;|//span[@class='card-title']/i[text()='email']                   |xpath   |10   |
+|$user_password=             |getText;                                                        |//strong|xpath|
+**!
+
+!**> With Reset Password
+!define user_name {$user_email}
+!define user_password {$user_password}
+
+!|Script                     |Ui                                                                                                                                 |
+|navigateToUrl;              |${login_url}/login                                                                                                                 |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                                   |xpath                                        |20            |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                        |$user_email   |
+|sendKeys;                   |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                        |$user_password|
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                       |
+|wait;                       |3                                                                                                                                  |
+|clearAndSend;               |//label[contains(text(),'New Password')]//preceding-sibling::input    |xpath                                        |${newpwd3}    |
+|clearAndSend;               |//label[contains(text(),'CONFIRM PASSWORD')]//preceding-sibling::input|xpath                                        |${newpwd3}    |
+|wait;                       |3                                                                                                                                  |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                       |
+|wait;                       |3                                                                                                                                  |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                       |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                             |xpath|20         |
+|clearAndSend;               |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                        |$user_email   |
+|clearAndSend;               |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                        |${newpwd3}    |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                       |
+|check                       |isElementPresent;                                                     |//main[@class='container-fluid main-content']|xpath  |true  |
+|$tresult3=                  |isElementPresent;                                                     |//main[@class='container-fluid main-content']|xpath         |
+
+!include -c .FrontPage.Pando.Common.ShipperLogout
+*!
+**!
+
+!**> Change Password within last 3 password
+!**> Forgot Password
+!|Script  |Ui                                               |
+|click;   |//h4[text()='Forgot password?']|xpath            |
+|sendKeys;|//input                        |xpath|$user_email|
+|click;   |//button                       |xpath            |
+
+!|Script                     |Ui                                                                             |
+|wait;                       |5                                                                              |
+|navigateToUrl;              |${mail_url}/email?page=0&size=60                                               |
+|waitForElementToBeDisplayed;|//table[@class='striped responsive-table']                      |xpath   |30   |
+|click;                      |//td[text()='pandoautomation@gmail.com']/following-sibling::td/a|xpath         |
+|waitForElementToBeDisplayed;|//span[@class='card-title']/i[text()='email']                   |xpath   |10   |
+|$user_password=             |getText;                                                        |//strong|xpath|
+**!
+
+!**> With Reset Password
+!define user_name {$user_email}
+!define user_password {$user_password}
+
+!|Script                     |Ui                                                                                                                                                  |
+|navigateToUrl;              |${login_url}/login                                                                                                                                  |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                                   |xpath                                                        |20             |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                                        |$user_email    |
+|sendKeys;                   |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                                        |$user_password |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                                        |
+|sendKeys;                   |//label[contains(text(),'New Password')]//preceding-sibling::input    |xpath                                                        |${newpwd3}     |
+|sendKeys;                   |//label[contains(text(),'CONFIRM PASSWORD')]//preceding-sibling::input|xpath                                                        |${newpwd3}     |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                                        |
+|wait;                       |3                                                                                                                                                   |
+|check                       |isElementPresent;                                                     |//span[normalize-space(text())='Cannot use last 3 passwords']|xpath   |true  |
+|wait;                       |3                                                                                                                                                   |
+|clearAndSend;               |//label[contains(text(),'New Password')]//preceding-sibling::input    |xpath                                                        |Newpassword@123|
+|clearAndSend;               |//label[contains(text(),'CONFIRM PASSWORD')]//preceding-sibling::input|xpath                                                        |Newpassword@123|
+|wait;                       |3                                                                                                                                                   |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                                        |
+|wait;                       |3                                                                                                                                                   |
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                                        |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                             |xpath|20         |
+|clearAndSend;               |//label[contains(text(),'User name:')]//preceding-sibling::input      |xpath                                                        |$user_email    |
+|clearAndSend;               |//label[contains(text(),'Password:')]//preceding-sibling::input       |xpath                                                        |Newpassword@123|
+|click;                      |//button[@class='primary-btn']                                        |xpath                                                                        |
+|check                       |isElementPresent;                                                     |//main[@class='container-fluid main-content']                |xpath   |true  |
+|$tresult4=                  |isElementPresent;                                                     |//main[@class='container-fluid main-content']                |xpath          |
+
+!include -c .FrontPage.Pando.Common.ShipperLogout
+*!
+**!
+
+!* Validating results
+!|Script  |Common                                                                    |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+**!

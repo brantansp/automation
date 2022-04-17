@@ -1,0 +1,217 @@
+---
+Help: Multi Gate - Multi Consignee - Open - PTL - Secondary
+Suites: indent1
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Kovur}
+!define city {Nellore}
+!define state {Andhra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Consignee Creation two
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Kovur}
+!define city {Nellore}
+!define state {Andhra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!** Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {PTL}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!** Gate Manager Creation
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {rt$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+*!
+
+!** Creating Indent 
+!define type {Outbound}
+!define source_location {${depot_name}}
+!define destination_location_1 {c$unique}
+!define destination_location_2 {c1$unique}
+!define gate_id_1 {rq$unique}
+!define gate_id_2 {rt$unique}
+!define switch_depo {Consignee} 
+!define switch_type {2}
+!define delivery_type {${vehicle_type}}
+
+!** Source Selection
+!|Script                     |Ui                                                                                                                                                    |
+|navigateToUrl;              |${surl}/indents                                                                                                                                       |
+|click;                      |//div[@id='filter']//input[@placeholder='Select']                                                                            |xpath                   |
+|click;                      |//li/span[text()='${type}']                                                                                                  |xpath                   |
+|click;                      |//a[contains(@href,'/indent/create')]                                                                                        |xpath                   |
+|click;                      |//span[@class='el-breadcrumb__inner']                                                                                        |xpath                   |
+|click;                      |//span[text()='Open']                                                                                                        |xpath                   |
+|click;                      |//div[@class='card-list list-plain']//span                                                                                   |xpath                   |
+|waitForElementToBeDisplayed;|//div[contains(@class,'table-striped')]                                                                                      |xpath|10                |
+|sendKeys;                   |//section[@class='el-drawer__body']//input[@type='text']                                                                     |xpath|${source_location}|
+|waitForElementToDisappear;  |//div[@class='status-msg']//img                                                                                              |xpath|20                |
+|waitForElementToBeDisplayed;|(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${source_location}']                                   |xpath|15                |
+|click;                      |(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${source_location}']/ancestor::td/preceding-sibling::td|xpath                   |
+|wait;                       |2                                                                                                                                                     |
+|click;                      |//span[text()='Add']                                                                                                         |xpath                   |
+**!
+
+!* Destination Selection 1
+!|Script                     |Ui                                                                                                                                                                  |
+|click;                      |//div[@class='el-select select-default']                                                                                            |xpath                          |
+|click;                      |//span[contains(text(),'${gate_id_1}')]                                                                                             |xpath                          |
+|click;                      |//div[@class='add-block']                                                                                                           |xpath                          |
+|waitForElementToBeDisplayed;|(//div[contains(@class,'table-striped')])[last()-1]                                                                                 |xpath|15                       |
+|click;                      |//div[text()='${switch_depo}']                                                                                                      |xpath                          |
+|waitForElementToBeDisplayed;|(//div[contains(@class,'table-striped')])[last()]                                                                                   |xpath|10                       |
+|sendKeys;                   |(//section[@class='el-drawer__body']//input[@type='text'])[${switch_type}]                                                          |xpath|${destination_location_1}|
+|waitForElementToDisappear;  |//div[@class='status-msg']//img                                                                                                     |xpath|20                       |
+|waitForElementToBeDisplayed;|(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${destination_location_1}']                                   |xpath|15                       |
+|click;                      |(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${destination_location_1}']/ancestor::td/preceding-sibling::td|xpath                          |
+|wait;                       |2                                                                                                                                                                   |
+|click;                      |//span[text()='Add']                                                                                                                |xpath                          |
+*!
+
+!|script|ui                                                    |
+|click; |//div[@class='card-box-plain is-dotted pointer']|xpath|
+
+!* Destination Selection 2
+!|Script                     |Ui                                                                                                                                                                  |
+|click;                      |(//div[@class='el-select select-default'])[2]                                                                                       |xpath                          |
+|click;                      |(//span[contains(text(),'${gate_id_2}')])[2]                                                                                        |xpath                          |
+|click;                      |(//div[@class='add-block'])[2]                                                                                                      |xpath                          |
+|waitForElementToBeDisplayed;|(//section//div[contains(@class,'table-striped')])[last()-1]                                                                        |xpath|10                       |
+|click;                      |//div[text()='${switch_depo}']                                                                                                      |xpath                          |
+|waitForElementToBeDisplayed;|(//div[contains(@class,'table-striped')])[last()]                                                                                   |xpath|10                       |
+|sendKeys;                   |(//section[@class='el-drawer__body']//input[@type='text'])[${switch_type}]                                                          |xpath|${destination_location_2}|
+|waitForElementToDisappear;  |//div[@class='status-msg']//img                                                                                                     |xpath|20                       |
+|waitForElementToBeDisplayed;|(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${destination_location_2}']                                   |xpath|15                       |
+|click;                      |(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${destination_location_2}']/ancestor::td/preceding-sibling::td|xpath                          |
+|wait;                       |2                                                                                                                                                                   |
+|click;                      |//span[text()='Add']                                                                                                                |xpath                          |
+*!
+
+!* Selecting Types 
+!|Script  |Ui                                                                                     |
+|click;   |//label[text()='Delivery Type']/following-sibling::div//input|xpath                    |
+|click;   |//span[text()='${delivery_type}']                            |xpath                    |
+|click;   |//label[text()='Vehicle type']/following-sibling::div//input |xpath                    |
+|sendKeys;|//label[text()='Vehicle type']/following-sibling::div//input |xpath|${vehicle_name}    |
+|click;   |//span[text()='${vehicle_name}']                             |xpath                    |
+|click;   |//label[text()='Transporter']/following-sibling::div//input  |xpath                    |
+|sendKeys;|//label[text()='Transporter']/following-sibling::div//input  |xpath|${transporter_name}|
+|wait;    |2                                                                                      |
+|click;   |(//span[contains(text(),'${transporter_name}')])[3]          |xpath                    |
+|sendKeys;|//label[text()='Base Freight']/following-sibling::div//input |xpath|10000              |
+|click;   |//span[text()='Indent']                                      |xpath                    |
+|wait;    |2                                                                                      |
+*!
+*!
+
+!** Switching to Other Depo
+!define depot_selection {$depot_name}
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+**!
+
+!** Indent Assertion
+!|Script   |Ui                                                                                                 |
+|check     |isElementPresent;|//div[contains(@class,'order-row')]//span[contains(text(),'t$unique')]|xpath|true|
+|$tresult =|isElementPresent;|//div[contains(@class,'order-row')]//span[contains(text(),'t$unique')]|xpath     |
+*!

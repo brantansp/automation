@@ -1,0 +1,94 @@
+---
+Help: Create Delivery PickList
+Suites: sanity1, erp1
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$year=  |getSubString;           |$unique|0|4|
+
+!|script|common                           |
+|$depot=|getTrim;|5c74edf0c8d634115eaf23bd|
+#chennai_depot
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {optima}
+!define city {oc$unique}
+!define state {os$unique}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {1}
+!define movement_type {Primary}
+!define movement {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+*!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,chennai,oc$unique,965 CFT,100,${transporter_ref_id},${transporter_name},1,1000,per_trip,01-Jan-2019,31-Dec-2030,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+
+**!
+
+!** Delete the Line item from Depot via API
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DiscardLineItemOptimaAPI
+**!
+
+!** Delivery Picklist API 
+!|script|common                                                                                                                                                                                                                                                                                                                                                             |
+|$data= |getTrim|{"data":[{"delivery_number":"D1$unique","material_code":"m1","pickup_reference_number":"CHN01","division":"","quantity":3001,"quantity_unit":"S/O","weight":400,"weight_unit":"KG","volume":"200","volume_unit":"CFT","lr_number":"","ship_to":"${consignee_ref_id}","sold_to":"${consignee_ref_id}","line_item":"122121","type":"primary","category":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DeliveryPicklistAPI
+**!
+
+!*** Validating in UI
+!define depot {Chennai Depot}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimisingDeliveryPicklist
+
+!|Script    |Ui                                                                                                                                             |
+|click;     |(//div[@class='cardfilter-grid']//div[contains(@class,'dropdown-section')])[2]|xpath                                                           |
+|click;     |//span[@class='dropdownlisttag-text' and text()='${movement_type}']           |xpath                                                           |
+|click;     |//div[contains(@class,'row-show')]//a                                         |xpath                                                           |
+|mouseHover;|//span[contains(text(),'D1$year')]                                            |xpath                                                           |
+|check      |isElementPresent;                                                             |//div[@role='tooltip']/child::div[text()='D1$unique']|xpath|true|
+|$tresult1= |isElementPresent;                                                             |//div[@role='tooltip']/child::div[text()='D1$unique']|xpath     |
+|mouseHover;|//span[contains(text(),'cr$year')]                                            |xpath                                                           |
+|check      |isElementPresent;                                                             |//div[@role='tooltip']/child::div[text()='cr$unique']|xpath|true|
+|$tresult2= |isElementPresent;                                                             |//div[@role='tooltip']/child::div[text()='cr$unique']|xpath     |
+
+!|Script  |Common                                           |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2|
+**!
+
+!*** Update result
+!include .FrontPage.Pando.Common.CommonResultImage
+*!
+
+!** Retrieving the Job ID
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.RetrieveOptimaJobIDAPI
+*!

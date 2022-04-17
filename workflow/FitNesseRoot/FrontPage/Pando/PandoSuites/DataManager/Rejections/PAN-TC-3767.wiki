@@ -1,0 +1,49 @@
+---
+Help: Consignee ERP
+Suites: sanity2
+Test
+---
+!** Unique values assignment
+!|Script|Common|
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!define rejection_name  {Consignees}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+
+!*** ERP Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Egmore}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+
+!| Script | Http |
+| setBaseUrl; | ${surl}/api/login |
+| getResponse; | Application/Json | put | {"data":{"email":"${username}","password":"${password}"}} |
+| $token= | getHeader; | x-auth-token |
+| addHeader; | Authorization | bearer $token |
+| setBaseUrl; | ${surl}/api/erp/consignee |
+| getResponse; | Application/Json | post | {"data":[{"name":"${consignee_name}","reference_number":"${consignee_ref_id}","address":"${address}","city":"${city}","state":"${state}","region":"${region}","mobile_number":"${manager_mobile}","pincode":"${pincode}","email":"${manager_email}","category":"B","customer_type":"Shipper Site"}]}|
+| check | getStatusCode; | 204|
+*!
+
+!|Script|Common|
+|$result=|getResultOfCalculation;|$count|+|1|
+
+
+!** Validating Rejection list
+!define rejection_name  {Consignees}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+**!
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.ValidateRejections
+
+
+!define tname {TC-166}
+ 

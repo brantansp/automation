@@ -1,0 +1,59 @@
+---
+Help: Rate Matrix Rejected list should only show updated with most recent upload
+Suites: export1
+Test
+---
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {c$unique}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+
+!** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,c$unique,Nellore,965 CFT,100,,${transporter_name},1,1000,per_trip,01-Jan-2019,31-Dec-2030,100,1,}
+
+!|Script    |Common                                         |
+|$excelpath=|getPath;|testAttachment/r_$unique.xlsx|fullpath|
+
+
+!|Script                |Excel                      |
+|newSheetDynamicColumns;|${row}|${column}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/rate-matrix                                         |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|click;                    |//button[text()='Rejected List']         |xpath                 |
+|wait;                     |15                                                              |
+**!
+
+!** Get Filename and rename it
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+**!
+
+!|script  |ExcelQuery                                                                              |
+|$count=  |getCountQuery;|$filename|select * from contracts                                        |
+|$reason1=|selectQuery;  |$filename|select Reason from contracts where "Source*" = '${city}'|Reason|
+
+!|Script   |common                                                                                    |
+|check     |checkIfStringExistsIn;       |transporter_ref_id is not allowed to be empty,|$reason1|true|
+|$tresult1=|checkIfStringExistsIn;       |transporter_ref_id is not allowed to be empty,|$reason1     |
+|check     |checkIfStringAreEqual;       |$count                                        |1       |true|
+|$tresult2=|checkIfStringAreEqual;       |$count                                        |1            |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2                                         |

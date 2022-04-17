@@ -1,0 +1,147 @@
+jobName      = env.JOB_NAME
+notification = "good"
+jobStatus    = 0
+
+
+//Running all regression jobs
+def job_run_regressions(job) {
+        
+        phase = build job: job, parameters: [[$class: 'StringParameterValue', name: 'BRANCH', value: params.BRANCH], [$class: 'StringParameterValue', name: 'RERUN_COUNT', value: params.RERUN_COUNT]]
+          
+              if(phase == 'UNSTABLE' || phase == 'FAILURE') {
+                 notification = "warning"                         
+              }  
+}
+
+def job_run_failed_only (job) {
+	    def crumb = sh label: '', returnStdout: true, script: 'curl -u "common@pando.ai:119ea560608a3b365c80e1540d25742f66" -s \'http://ci.gopando.in/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)\''
+		def buildstatus = sh label: '', returnStdout: true, script: 'curl -u "common@pando.ai:119ea560608a3b365c80e1540d25742f66" -H "'+crumb+'" -X POST \'http://ci.gopando.in/view/Pando-Automation/job/Pando-Regression/job/'+job+'/lastBuild/api/xml?xpath=concat(//result,/result)\''
+        println job+" : "+buildstatus
+		
+		if (buildstatus == "UNSTABLE") {
+		      phase = build job: job, parameters: [[$class: 'StringParameterValue', name: 'BRANCH', value: params.BRANCH], [$class: 'StringParameterValue', name: 'RERUN_COUNT', value: params.RERUN_COUNT], [$class: 'StringParameterValue', name: 'RERUN_LAST_FAILED', value: params.RERUN_LAST_FAILED]]
+		} else if (buildstatus == "ABORTED" || buildstatus == "FAILURE") {
+		      phase = build job: job, parameters: [[$class: 'StringParameterValue', name: 'BRANCH', value: params.BRANCH], [$class: 'StringParameterValue', name: 'RERUN_COUNT', value: params.RERUN_COUNT], [$class: 'StringParameterValue', name: 'RERUN_LAST_FAILED', value: 'NO']]		       
+		} else {
+		      println "Skipping job rerun - " +job 
+		}
+}
+
+
+node('automation_label') { //Node where autoscaling occur
+
+//try-catch block
+	 try {
+	
+	    def jlist = [
+	                  "Reg-PG-staging",
+	                  "Reg-Perfetti",
+					  "Reg-ITC",
+					  "Reg-Files-Export-1",
+					  "Reg-Cummins-1",
+					  "Reg-Transporter-Profile-1",
+					  "Reg-TataConsumer",
+	                  "Reg-Indent-Management-1",
+			          "Reg-Transporter-Payment-New-1",
+	                  "Reg-Transporter-Payment-Old-2",
+	                  "Reg-ERP-Integration-1",					  
+	                  "Reg-Marico-2",
+	                  "Reg-Data-Manager-1",
+	                  "Reg-Oel-1",
+                      "Reg-Common",
+	                  "Reg-SRF",
+	                  "Reg-PG",
+			  		  "Reg-Castrol",
+	                  "Reg-PG-2",	                  
+                      "Reg-Siemens",
+		              "Reg-Marico",
+	                  "Reg-Britannia",
+	                  "Reg-JNJ",
+			          "Reg-Signify",
+			          "Reg-Oel-2",
+	                  "Reg-Transporter-Payment-New-2",
+			          "Reg-Transporter-Payment-Old-1",       
+	                  "Reg-Indent-Management-2",
+	                  "Reg-Indent-Management-3",
+	                  "Reg-Data-Manager-2",
+	                  "Reg-Oel-3",
+	                  "Reg-Transporter-Payment-New-3",
+	                  "Reg-Transporter-Payment-New-4",
+	                  "Reg-Transporter-Payment-Old-3",
+	                  "Reg-Transporter-Payment-Old-4",
+	                  "Reg-Oel-4"
+			  ]; 
+	    
+	    if (params.RERUN_LAST_FAILED == "YES") {
+	    
+	    	if (params.RUN_OPTIMA == true) {
+     			phase = build quietPeriod: 0, job: 'Pando-Optima-Regression/Reg-All-Optima-Features' , propagate: false, wait: false, parameters: [[$class: 'StringParameterValue', name: 'BRANCH', value: params.BRANCH], [$class: 'StringParameterValue', name: 'RERUN_COUNT', value: params.RERUN_COUNT], [$class: 'StringParameterValue', name: 'RERUN_LAST_FAILED', value: params.RERUN_LAST_FAILED]]
+     		}
+     		
+			def regressionPhase = [:]
+	    		
+			if (params.RUN_ALL_PARALLEL == true) {
+		    	jlist.each { f ->
+					regressionPhase[f] = {job_run_failed_only(f)}
+				}
+     		} else {
+				jlist.each { f ->
+					regressionPhase[f] = {
+            			lock(label: "pandoapp_lock", quantity: 1, variable: "LOCKED") {
+               				println "Locked resource: ${env.LOCKED}"
+                			job_run_failed_only(f)
+              			}
+            		}
+     			} 
+     		}
+     		
+			parallel(regressionPhase)  
+	    } else {
+	    	if (params.RUN_OPTIMA == true) {
+     		build quietPeriod: 7200, job: 'Pando-Optima-Regression/Reset-Run-Optima', propagate: false, wait: false
+     		}
+	    
+			def regressionPhase = [:]	
+		
+			if (params.RUN_ALL_PARALLEL == true) {
+     			jlist.each { f ->
+			    	regressionPhase[f] = {job_run_regressions(f)}
+				} 
+     		} else {
+				jlist.each { f ->
+					regressionPhase[f] = {
+            			lock(label: "pandoapp_lock", quantity: 1, variable: "LOCKED") {
+               				println "Locked resource: ${env.LOCKED}"
+                			job_run_regressions(f)
+              			}
+            		}
+     			} 
+     		}
+			parallel(regressionPhase)    
+	    }
+	  } 
+
+      //In case there are any errors in the above stages, this catch block will display an error message
+      catch (e) {
+
+          echo 'Issue ' + e 
+          notification = "danger"
+          sh 'exit 1'
+          
+      } finally {
+
+        //Finally all the reports are published to the user
+          stage('Publish Status') {
+          
+               if(currentBuild.result == 'UNSTABLE') {
+	             notification = "warning" 
+	           }
+	           
+	         link = "http://ci.gopando.co/view/Pando-Automation/job/$jobName/${env.BUILD_NUMBER}"
+	         slackSend color:"$notification", channel: "#automation-status", message: "Automation Completed - ${env.JOB_NAME} (<$link |Open>)"
+	           
+	         manager.addHtmlBadge("<a href='https://tm.gopando.co/lnl.php?type=metricsdashboard&apikey=dde03a7149cd15e0197c9369ce68b682dbff757773a9c1349ecdeedfb3e509d9' target='blank'>Report</a>");
+
+	      }
+      }
+}

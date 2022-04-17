@@ -1,0 +1,14 @@
+---
+Help: Contains code to upload Associated material
+---
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/am_$unique.xlsx|fullpath|
+
+!|Script  |Excel                      |
+|newSheet;|${row}|${column}|$excelpath|
+
+!|Script                   |Ui                                                                                       |
+|navigateToUrl;            |${surl}/mdm/materials                                                                    |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine                               |cssselector     |
+|sendKeys;                 |//span[text()='Associate Material Bulk Upload']/preceding-sibling::input|xpath|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch']                                |xpath|30        |

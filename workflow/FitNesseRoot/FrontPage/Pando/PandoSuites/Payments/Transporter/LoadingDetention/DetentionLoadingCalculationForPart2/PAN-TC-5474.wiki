@@ -1,0 +1,123 @@
+---
+Help: Detention Calculation Between Day1 - 4PM TO Day2 - 11PM
+Test
+---
+!**> Indent Creation
+!|Script                 |DateUtil                                        |
+|$vehicleRequirementDate=|dateCalculation;|yyyy-MM-dd'T'HH:mm:ss.SSSXXX|-3|
+
+!define order_type  {0}
+!define transporter_id {5cdb94c2b7f4590121f69c9a}
+!define vehicle_type_id {5c750bce6e2ae92e2d5bc5f8}
+!define source_type {1}
+!define location_id {5c74edf0c8d634115eaf23bd}
+!define gate_id {5c74edf083f399115e3eaa55}
+!define vehicle_requirement_date {$vehicleRequirementDate}
+!define loader_available {false}
+!define src_add_to_invoice {false}
+!define destination_type {2}
+!define destination_location_id {6144681f080a26004a6f71d8}
+!define sold_to_id {6144681f080a26004a6f71d8}
+!define unloader_available {false}
+!define dest_add_to_invoice {false}
+!define no_of_vehicle {1}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|$data= |getTrim|{"data":{"order_type":${order_type},"transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":${source_type},"location_id":"${location_id}","gate_id":"${gate_id}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${src_add_to_invoice}}],"destinations":[{"type":${destination_type},"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id}","unloader_available":${unloader_available},"add_to_invoice":${dest_add_to_invoice}}],"no_of_vehicles": ${no_of_vehicle} }}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+**!
+
+!**> LR Update
+!define consignee_id {${destination_location_id}}
+!define lr_number {$unique}
+
+!|Script       |Common                             |
+|$depot=       |getTrim;|5c74edf0c8d634115eaf23bd  |
+|$consignee_id=|getTrim;|${destination_location_id}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!**> Truck Assign
+!define driver_name {R$unique}
+!define vechicle_number {tn 09 23 9000}
+!define phone_number {1230000000}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+**!
+
+!** Truckin Setting
+!|Script|DateUtil                      |
+|$date= |dateCalculation;|dd-MM-yyyy|-2|
+|$date1=|dateCalculation;|dd-MM-yyyy|-1|
+!define in_time {4:00PM}
+!define in_date {$date}
+!define out_time {11:00PM}
+!define out_date {$date1}
+
+!include -c .FrontPage.Pando.PandoSuites.Payments.TruckinSetting
+**!
+
+!** Report@ Point
+#!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.ReportAtAPI
+**!
+
+!** Loading Point
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LoadingPointAPI
+**!
+
+!** Start load
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.StartLoadAPI
+**!
+
+!** End load
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.EndPointAPI
+**!
+
+!** Truckout Setting
+!include -c .FrontPage.Pando.PandoSuites.Payments.TruckoutSetting
+**!
+
+!** Mark as Delivered
+!|Script    |DateUtil                                       |
+|$arrivedAt=|dateCalculation;|yyyy-MM-dd'T'HH:mm:ss.SSSXXX|0|
+
+!define consignee_id {$consignee_id}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+**!
+
+!**> Transporter Validation
+!*> Ready for billing page
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!define filter_by {Enter indent id}
+!define search_text {$order_id}
+!define order_id {$order_id}
+!include -c .FrontPage.Pando.Common.CommonSearchUploadInReadyForBilling
+*!
+**!
+
+!** Detention Validation
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                   |
+|waitForElementToBeDisplayed;|//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody|xpath                                                                                          |10                                                                                                                        |
+|$HeaderNo=                  |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                |xpath                                                                                                   |Loading Detention|
+|$data1=                     |getText;                                                                  |(//tr[starts-with(@class,'el-table__row')]/td)[$HeaderNo]//div[@class='gridrefvalue']          |xpath                                                                                                                     |
+|$tabularColumn=             |getTabluarColumnValues;                                                   |//div[@class='el-table__header-wrapper']//th[not(contains(@class,'hidden'))]/div[@class='cell']|//tr[starts-with(@class,'el-table__row')]/td[not(contains(@class,'hidden'))]//div[@class='gridrefvalue']|xpath            |
+
+!|Script  |common                                |
+|check    |checkIfStringAreEqual;|$data1|400|true|
+|$tresult=|checkIfStringAreEqual;|$data1|400     |
+#|check    |checkIfStringAreEqualIgnoreCase;|$tabularColumn|{LOADING=1000, Leakage= , LR= , Fixed Charge=0, LOADING DETENTION=0, MISCELLANEOUS CHARGE= , SLA Delay=0, ODA=0, Carton Damage=0, FREIGHT=1000, UNLOADING=0, TRANSIT DELAY=0, SHORTAGE=0, UNLOADING DETENTION=0, Damage=0, ADDITIONAL POINT=0}|true|
+**!

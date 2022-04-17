@@ -1,0 +1,23 @@
+---
+Files: no
+Help: To get material details in consignee Mobile App
+RecentChanges: no
+Search: no
+Test
+---
+!|Script     |Http                                                                                         |
+|wait;       |5                                                                                            |
+|setBaseUrl; |${curl}/api/login                                                                            |
+|getResponse;|Application/Json|put             |{"data":{"email":"${cusername}","password":"${cpassword}"}}|
+|$token=     |getHeader;      |x-auth-token                                                                |
+|addHeader;  |Authorization   |bearer $token                                                               |
+|setBaseUrl; |${curl}/api/order/$order_id/${consignee_id}/materials/                                       |
+|$data=      |getResponse;    |Application/Json|get                            |                           |
+|$status=    |getStatusCode;                                                                               |
+
+!** Retrieving indent material ref id
+!|Script          |json                                                 |
+|$data=           |getValueFromJSON;      |$data|data                   |
+|$data=           |getValueFromJSON;      |$data|materials              |
+|$material_ref_id=|getValueFromJSONByType;|$data|[0].id|java.lang.String|
+*!

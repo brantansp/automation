@@ -1,0 +1,6 @@
+---
+Help: Matreial invoice scenarios
+Suite
+---
+!1 Test suite for Materials Scenario
+!contents -R2 -g -p -f -h

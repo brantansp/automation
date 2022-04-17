@@ -1,0 +1,444 @@
+---
+Help: Additional point charge and ODA charges - Only grouped consignees
+Suites: pg2
+Test
+---
+!** Test coverage
+No.Of Consignee = 3
+All Consignees are of same group
+
+Additional point charges = (No.of Consignees - 1) * Point charge of Max Freight rate consignee
+
+Since consignees are all of same group, Additional point charges is 0
+
+ODA charges = max of consignee's charges
+ODA charges = 444
+**!
+
+!**> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script         |DateUtil                                                   |
+|$contractDate=  |dateCalculation;               |dd-MMM-yyyy    |2          |
+|$invoicedate=   |dateCalculation;               |dd-MM-yyyy     |2          |
+|$releaseat_date=|dateCalculation;               |yyyy/MM/dd     |-2         |
+|$loadingDate=   |dateCalculation;               |yyyy/MM/dd     |-1         |
+|$truckindate=   |dateCalculation;               |yyyy/MM/dd     |-5         |
+|$truckoutdate=  |dateCalculation;               |yyyy/MM/dd     |-4         |
+|$expected_date= |dateCalculation;               |yyyy/MM/dd     |0          |
+|$expected_date= |utcConversion;                 |$expected_date !- $timer -!|
+|$thisday=       |dateCalculation;               |dd             |0          |
+|$nMinus3day=    |getNPreviousDateInCurrentMonth;|$thisday       |-3    |1   |
+|$nMinus1day=    |getNPreviousDateInCurrentMonth;|$thisday       |-1    |0   |
+|$today=         |getNPreviousDateInCurrentMonth;|$thisday       |0     |1   |
+|$nMinus5day=    |getNPreviousDateInCurrentMonth;|$thisday       |-5    |1   |
+|$nMinus4day=    |getNPreviousDateInCurrentMonth;|$thisday       |-4    |1   |
+
+!|Script         |Common                                            |
+|$truckindate=   |stringConcatenation;|$truckindate   |!- 10:00:00-!|
+|$truckoutdate=  |stringConcatenation;|$truckoutdate  |!- 10:00:00-!|
+|$releaseat_date=|stringConcatenation;|$releaseat_date|!- 10:00:00-!|
+
+!|Script         |DateUtil                      |
+|$loadingDate=   |utcConversion;|$loadingDate   |
+|$truckindate=   |utcConversion;|$truckindate   |
+|$truckoutdate=  |utcConversion;|$truckoutdate  |
+|$releaseat_date=|utcConversion;|$releaseat_date|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Data creation
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {dc$unique}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RG$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script  |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Updating the client config for Frieght bill
+!|Script                              |MongoDB                                      |
+|initialize;                          |${connection}|${database}                    |
+|wait;                                |2                                            |
+|updateFreightBillClientConfiguration;|${surl}      |category1|start_day|$nMinus3day|
+|updateFreightBillClientConfiguration;|${surl}      |category1|end_day  |$today     |
+|updateFreightBillClientConfiguration;|${surl}      |category2|start_day|$nMinus5day|
+|updateFreightBillClientConfiguration;|${surl}      |category2|end_day  |$nMinus4day|
+|updateFreightBillClientConfiguration;|${surl}      |category3|start_day|$nMinus3day|
+|updateFreightBillClientConfiguration;|${surl}      |category3|end_day  |$today     |
+*!
+
+!**> Consignee Creation 1
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Egmore}
+!define city {cc$unique}
+!define state {Madya Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1$unique@gmail.com}
+!define region {South}
+!define site {1}
+!define group {G$unique}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+**!
+
+!**> Consignee Creation 2
+!define consignee_name {c2$unique}
+!define consignee_ref_id {cr2$unique}
+!define address {Egmore}
+!define city {cc$unique}
+!define state {Madya Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+2$unique@gmail.com}
+!define region {South}
+!define site {1}
+!define group {G$unique}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_2=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_2=|getTrim;|${consignee_ref_id}|
+**!
+
+!**> Consignee Creation 3
+!define consignee_name {c3$unique}
+!define consignee_ref_id {cr3$unique}
+!define address {Egmore}
+!define city {cc$unique}
+!define state {Madya Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+3$unique@gmail.com}
+!define region {South}
+!define site {1}
+!define group {G$unique}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_3=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_3=|getTrim;|${consignee_ref_id}|
+**!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Vehicle Creation
+!define vehicle_name {v$unique MRT}
+!define cft {2048}
+!define kg {12000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"1"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!**> Purchase order creation
+!define ponumber {po$unique}
+!define netvalue {10000}
+!define balvalue {5000}
+!define legalentity1 {le1$unique}
+!define legalentity2 {le2$unique}
+!define legalentity3 {le3$unique}
+!define validfrom {2021-01-01}
+!define validto {2025-12-31}
+
+!define row {Purchase Order Number,Purchase Order Net Value,Purchase Order Balance value,Transporter Ref ID,Legal Entity,Valid From(YYYY-MM-DD),Valid To(YYYY-MM-DD)}
+!define column {${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity1},${validfrom},${validto}|${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity2},${validfrom},${validto}|${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity3},${validfrom},${validto}}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonPOupload
+**!
+
+!**> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,RG$unique,cr1$unique,${vehicle_name},700,$transporter_ref_id,$transporter_name,1,3000.50,per trip,01-Jan-$year,31-Dec-2030,100,1,U,,100,150,per_trip,100,100,,,0-250,600,15,22,,|Point,RG$unique,cr2$unique,${vehicle_name},700,$transporter_ref_id,$transporter_name,2,5000,per trip,01-Jan-$year,31-Dec-2030,100,1,U,,100,444,per_trip,100,500,,,0-250,600,15,22,,|Point,RG$unique,cr3$unique,${vehicle_name},700,$transporter_ref_id,$transporter_name,3,9000,per trip,01-Jan-$year,31-Dec-2030,100,1,U,,100,150,per_trip,100,200,,,0-250,600,15,22,,}
+!include -c  .FrontPage.Pando.Common.RateMatrix
+*!
+**!
+
+!** Indent creation
+!**> Direct Dispatch Indent creation
+!define delivery_number {d1$unique}
+!define mrp_price {1000}
+!define material_code {mc$unique}
+!define depot_ref_id {R$unique}
+!define gate_ref_id {RG$unique}
+!define division {${legalentity1}}
+!define quantity {100}
+!define quantity_unit {NOS}
+!define weight {10000}
+!define weight_unit {KG}
+!define volume {1024}
+!define volume_unit {CFT}
+!define ship_to_1 {cr1$unique}
+!define sold_to_1 {cr1$unique}
+!define ship_to_2 {cr2$unique}
+!define sold_to_2 {cr2$unique}
+!define ship_to_3 {cr3$unique}
+!define sold_to_3 {cr3$unique}
+!define type {Secondary}
+!define shipment_number {s1$unique}
+!define invoice_number {INV1$unique}
+!define invoice_amount {10000}
+!define category {20a}
+!define lr_number1 {lr1$unique}
+!define lr_number2 {lr2$unique}
+!define lr_number3 {lr3$unique}
+!define invoice_date {$invoicedate}
+!define transporter {tr$unique}
+!define vehicle_type {v$unique MRT}
+!define vehicle_number {TN $vno_1 $vno_2 $vno_3}
+!define lr_number {lr1$unique}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"d1$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to_1}","sold_to":"${sold_to_1}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":""},{"delivery_number":"d2$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to_2}","sold_to":"${sold_to_2}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":""},{"delivery_number":"d3$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to_3}","sold_to":"${sold_to_3}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+*!
+
+!**> Filter indent after direct_dispatch
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|script    |ui                                                                                                                                                                     |
+|check      |isElementPresent;                                                   |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|$tresult1= |isElementPresent;                                                   |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath     |
+|mouseHover;|(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                                             |
+|$order_id= |getText;                                                            |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)                    |xpath     |
+*!
+**!
+
+!**> EPOD submission through Consignee 1 APP for Consignee 1,Consignee 2,Consignee 3
+!define consignee_id {$consignee_id_1}
+!define cusername {pandoconsignee+1$unique@gmail.com}
+!define cpassword {12345}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GetMaterialConsigneeMobileAppDynamicAPI
+
+!**> Retrieving indent material ref id for both consignee
+!|Script            |json                                                  |
+|$array=            |getValueFromJSON;      |$data |data                   |
+|$array=            |getValueFromJSON;      |$array|materials              |
+|$material_ref_id_1=|getValueFromJSONByType;|$array|[0].id|java.lang.String|
+|$material_ref_id_2=|getValueFromJSONByType;|$array|[1].id|java.lang.String|
+|$material_ref_id_3=|getValueFromJSONByType;|$array|[2].id|java.lang.String|
+*!
+
+!|Script|Common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|$data= |getTrim;|{"data":{"materials":[{"id":"$material_ref_id_1","leakage_count":"0","damage_count":"1","excess_count":"0","shortage_count":"2","carton_damage_count":"3","comment":"","shortage_charge":"120","damage_charge":"507.56","carton_damage_charge":"305.67"},{"id":"$material_ref_id_2","leakage_count":"0","damage_count":"1","excess_count":"0","shortage_count":"1","carton_damage_count":"1","comment":"","shortage_charge":"12","damage_charge":"50","carton_damage_charge":"30"},{"id":"$material_ref_id_3","leakage_count":"0","damage_count":"1","excess_count":"0","shortage_count":"1","carton_damage_count":"1","comment":"","shortage_charge":"12","damage_charge":"50","carton_damage_charge":"30"}],"packages":[]}}|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GRNSubmissionThroughConsigneeMobileApp
+**!
+
+!**> Verify EPOD submission
+!|Script                     |Ui                                                                                                                                                                  |
+|click;                      |//span[text()='Document']                     |xpath                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]        |xpath                                                                                              |30               |
+|click;                      |//span[@class='title']//*[text()='cr1$unique']|xpath                                                                                                                |
+|$epodstatus_column=         |getHeaderColumnNumber;                        |//div[@class='el-table__header-wrapper']//div[@class='cell']                                       |xpath|EPOD status|
+|$material_row_number=       |getHeaderColumnNumber;                        |//div[contains(@class,'scrolling')]//span[contains(text(),'kg')]                                   |xpath|10000 kg   |
+|$epodstatus1=               |getText;                                      |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+|click;                      |//span[@class='title']//*[text()='cr2$unique']|xpath                                                                                                                |
+|$epodstatus2=               |getText;                                      |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+|click;                      |//span[@class='title']//*[text()='cr3$unique']|xpath                                                                                                                |
+|$epodstatus3=               |getText;                                      |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+
+!|Script|Common                                                                             |
+|check  |checkIfStringAreEqualInArray;|$epodstatus1,$epodstatus2,$epodstatus3,Submitted|true|
+**!
+
+!**> Marking Indent as delivered
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                      |
+|$data= |getTrim;|{"data":[{"destination_id":"$consignee_id_1","reported_at":"${arrived_at}","release_at":"${dispatched_at}"},{"destination_id":"$consignee_id_2","reported_at":"${arrived_at}","release_at":"${dispatched_at}"},{"destination_id":"$consignee_id_3","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+
+!|script                     |ui                                                                                                                                    |
+|navigateToUrl;              |${surl}/indents                                                                                                                       |
+|refresh;                                                                                                                                                           |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                              |30        |
+|check                       |isElementPresent;                                                                      |//div[contains(text(),'Delivered')]|xpath|true|
+*!
+
+!**> checking if indent is delivered
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+|refresh;                      |
+
+!define search_text {d$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|script|ui                                                                                                                                                     |
+|check  |isElementPresent;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]//div[contains(text(),'Delivered')]|xpath|true|
+*!
+
+!**> Login to Transporter
+!define transporter_email {pandotransporter+$unique@outlook.com}
+!define transporter_password {$password}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!**> Checking the Freight bill posted
+!|script                     |ui                                                                                                                                                |
+|click;                      |//li[@class='app-side-menu']                      |xpath                                                                                          |
+|click;                      |//li/a[contains(text(),'Pay')]                    |xpath                                                                                          |
+|click;                      |//li[@class='app-side-menu']/following-sibling::li|xpath                                                                                          |
+|click;                      |//li/span[text()='Freight Bill']                  |xpath                                                                                          |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row')]           |xpath                                                                                    |20   |
+|$freight_bill_no=           |getText;                                          |(//span[text()='CATEGORY1']/ancestor::div[contains(@class,'grid-list-row')]/div)[1]//span|xpath|
+|$other_charges_bill_no=     |getText;                                          |(//span[text()='CATEGORY3']/ancestor::div[contains(@class,'grid-list-row')]/div)[1]//span|xpath|
+*!
+
+!**> Changing the Freight end day for the category 1 and category 3
+!|Script                              |MongoDB                              |
+|updateFreightBillClientConfiguration;|${surl}|category1|end_day|$nMinus1day|
+|updateFreightBillClientConfiguration;|${surl}|category3|end_day|$nMinus1day|
+*!
+
+!**> Verify ODA and point charges in the created Freight Bill
+!|script                     |ui                                                                                                                                                                                                                        |
+|navigateToUrl;              |${turl}/v2/freight                                                                                                                                                                                                        |
+|click;                      |//span[text()='CATEGORY3']                                                                       |xpath                                                                                                                   |
+|waitForElementToBeDisplayed;|//div[@class='el-table__fixed']//span[normalize-space(text())='$order_id!--cat3-!']              |xpath                                                                                            |20                    |
+|$total_freight_bill_amount= |getText;                                                                                         |//div[contains(@class,'el-table__fixed-right')]//div[@class='totalvalue']                        |xpath                 |
+|waitForElementToBeDisplayed;|//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody                       |xpath                                                                                            |10                    |
+|$ODAHeaderNo=               |getHeaderColumnNumber;                                                                           |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                  |xpath|ODA             |
+|$pointchargesHeaderNo=      |getHeaderColumnNumber;                                                                           |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                  |xpath|Additional Point|
+|waitForElementToBeDisplayed;|(//tr[starts-with(@class,'el-table__row')]/td)[$ODAHeaderNo]//div[@class='gridrefvalue']         |xpath                                                                                            |10                    |
+|$actual_ODAcharge=          |getText;                                                                                         |(//tr[starts-with(@class,'el-table__row')]/td)[$ODAHeaderNo]//div[@class='gridrefvalue']         |xpath                 |
+|waitForElementToBeDisplayed;|(//tr[starts-with(@class,'el-table__row')]/td)[$pointchargesHeaderNo]//div[@class='gridrefvalue']|xpath                                                                                            |10                    |
+|$actual_pointcharge=        |getText;                                                                                         |(//tr[starts-with(@class,'el-table__row')]/td)[$pointchargesHeaderNo]//div[@class='gridrefvalue']|xpath                 |
+
+!define header_name_1 {ODA}
+!define header_name_2 {Additional Point}
+!define consignee_name {cc$unique}
+
+!|script                       |ui                                                                                                                                                                                                                                                                                            |
+|click;                        |//div[@class='el-table__fixed']//div[contains(@class,'location') and normalize-space(text())='${consignee_name}']|xpath                                                                                                                                                                       |
+|waitForElementToBeDisplayed;  |//div[@id='pane-Details']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath                                                                                                                                                |15                    |
+|click;                        |//div[@id='tab-Charges']                                                                                         |xpath                                                                                                                                                                       |
+|waitForElementToBeDisplayed;  |//div[@id='pane-Charges']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath                                                                                                                                                |15                    |
+|$charges_header_column_number=|getHeaderColumnNumber;                                                                                           |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name_1}|
+|$actual_odachargetab=         |getText;                                                                                                         |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$charges_header_column_number=|getHeaderColumnNumber;                                                                                           |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name_2}|
+|$actual_pointchargetab=       |getText;                                                                                                         |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+
+!|Script                     |common                                                |
+|check                       |checkIfStringAreEqual;|$actual_ODAcharge     |444|true|
+|$paymentresult_transporter1=|checkIfStringAreEqual;|$actual_ODAcharge     |444     |
+|check                       |checkIfStringAreEqual;|$actual_pointcharge   |0  |true|
+|$paymentresult_transporter2=|checkIfStringAreEqual;|$actual_pointcharge   |0       |
+|check                       |checkIfStringAreEqual;|$actual_odachargetab  |444|true|
+|$paymentresult_transporter3=|checkIfStringAreEqual;|$actual_odachargetab  |444     |
+|check                       |checkIfStringAreEqual;|$actual_pointchargetab|0  |true|
+|$paymentresult_transporter4=|checkIfStringAreEqual;|$actual_pointchargetab|0       |
+**!
+
+!**> Validating test result
+!|Script  |Common                                                                                                                                            |
+|$tresult=|checkIfStringAreEqualInArray;|$paymentresult_transporter1,$paymentresult_transporter2,$paymentresult_transporter3,$paymentresult_transporter4,true|
+**!
+
+!**> Reverting the Freight bill configuration to default
+!|Script                              |MongoDB                       |
+|updateFreightBillClientConfiguration;|${surl}|category1|start_day|1 |
+|updateFreightBillClientConfiguration;|${surl}|category1|end_day  |15|
+|updateFreightBillClientConfiguration;|${surl}|category2|start_day|16|
+|updateFreightBillClientConfiguration;|${surl}|category2|end_day  |31|
+|updateFreightBillClientConfiguration;|${surl}|category3|start_day|1 |
+|updateFreightBillClientConfiguration;|${surl}|category3|end_day  |31|
+*!

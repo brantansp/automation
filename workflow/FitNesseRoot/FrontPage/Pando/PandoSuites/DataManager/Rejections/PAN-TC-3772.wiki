@@ -1,0 +1,69 @@
+---
+Help: RateMatrix ERP
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$cdate= |getCurrentDateTimeStamp;|yyyy/MM/dd |
+**!
+
+
+!define rejection_name  {Rate Matrix}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+
+
+
+!** Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Egmore}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Tower City}
+!define city {Hyderabad}
+!define state {Telangana}
+!define pincode {520300}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!** Contract ERP Creation
+!| Script    |Http                                                                                                                                                                                                                                                                                                                                                     |
+|setBaseUrl; |${surl}/api/login                                                                                                                                                                                                                                                                                                                                        |
+|getResponse;|Application/Json|put             |{"data":{"email":"${username}","password":"${password}"}}                                                                                                                                                                                                                                                              |
+|$token=     |getHeader;      |x-auth-token                                                                                                                                                                                                                                                                                                                            |
+|addHeader;  |Authorization   |bearer $token                                                                                                                                                                                                                                                                                                                           |
+|setBaseUrl; |${surl}/api/erp/contract                                                                                                                                                                                                                                                                                                                                 |
+|$result=    |getResponse;    |Application/Json|post|{"data":[{"contract_type":"City","source":"Chennai","destination":"Hyderabad","vehicle_type":"965 CFT","distance":"500","transporter_reference_number":"12","transporter_name":"${transporter_name}","transit_days":"2","freight_rate":"1000","freight_unit":"kg","valid_from":"2019/01/01","valid_to":"$cdate"}]}|
+|check       |getStatusCode;  |204                                                                                                                                                                                                                                                                                                                                     |
+*!
+
+!|Script |Common                            |
+|$result=|getResultOfCalculation;|$count|+|1|
+
+
+!** Validating Rejection list
+!define rejection_name  {Rate Matrix}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+**!
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.ValidateRejections

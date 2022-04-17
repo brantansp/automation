@@ -1,0 +1,6 @@
+---
+Help: Search module for detention
+Suite
+---
+!1 Test suite for detention
+!contents -R2 -g -p -f -h

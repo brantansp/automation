@@ -1,0 +1,121 @@
+---
+Help: Ensure Route has been listed for Single Consignee
+Test
+---
+!** Unique values assignment
+!|Script         |DateUtil                                        |
+|$unique=        |getCurrentDateTimeStamp;|yMMddHHmmss            |
+|$rdate=         |dateCalculation;        |yyyy/MM/dd HH:mm:ss|-1 |
+|$rdate=         |utcConversion;          |$rdate                 |
+|$rdate_validate=|dateCalculation;        |dd MMM yyyy        |-1 |
+|$truckoutdate=  |dateCalculation;        |yyyy/MM/dd HH:mm:ss|-2 |
+|$indate=        |getCurrentDateTimeStamp;|yyyy/MM/dd             |
+|$fromdate=      |dateCalculation;        |yyyy/MM/dd         |-5 |
+|$todate=        |dateCalculation;        |yyyy/MM/dd         |365|
+**!
+
+!** Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Krishnan nager}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Rate Matrix creation
+!|Script|Common                                                                                                                                                                                                                                                                                                                            |
+|$data= |getTrim;|{"data":[{"contract_type":"City","source":"Chennai","destination":"city$unique","vehicle_type":"965 CFT","distance":"100","transporter_reference_number":"pandopay001","transporter_name":"Pando Payment","transit_days":"1","freight_rate":"1000","freight_unit":"trip","valid_from":"$fromdate","valid_to":"$todate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.RateMatrixDynamicAPI
+*!
+
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {5c750bce6e2ae92e2d5bc5f8}
+!define location_id {5c74edf0c8d634115eaf23bd}
+!define gate_id {5c74edf083f399115e3eaa55}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define unloader_available {false}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define expected_delivery_at {$expected_date}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+**!
+
+!** validating and Assinging The Truck
+!define vechicle_number {tn 09 AT 9013}
+!define driver_name  {pay driver}
+!define phone_number  {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+**!
+
+!** Create Material invoice 
+!define mrp_price {1000}
+!define quantity1 {10} 
+!define quantity2 {10} 
+!define quantity3 {10} 
+!define quantity_unit {cases}
+!define weight {400}
+!define weight_unit {KG}
+!define volume {1000}
+!define volume_unit {CFT}
+!define type {PRIMARY}
+!define invoice_amount {20000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialsInvoiceERPAPI
+**!
+
+!** EPOD Calculation
+!define no_of_shortage {0}
+!define no_of_shortage1 {0}
+!define no_of_shortage2 {0}
+!define no_of_shortage3 {0} 
+!define no_of_leakage {0}
+!define no_of_leakage1 {0}
+!define no_of_leakage2 {0}
+!define no_of_leakage3 {0} 
+!define mrp {${mrp_price}}
+!define no_of_excess {0}
+!define no_of_excess1 {0}
+!define no_of_excess2 {0}
+!define no_of_excess3 {0} 
+!define no_of_damage {0}
+!define no_of_carton_damage {0}
+!define no_of_carton_damage1 {0}
+!define no_of_carton_damage2 {0}
+!define no_of_carton_damage3 {0} 
+!define release_date {$rdate}
+!define release_date1 {$rdate}
+!define release_date2 {$rdate}
+!define release_date3 {$rdate}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodSingleIndentErpAPI
+**!
+
+!** Validating test result
+!|Script   |Common            |
+|$order_id=|getTrim;|$order_id|
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.View.CommonFilterSearchPlaceholder
+
+!|Script  |Ui                                                                           |
+|check    |isElementPresent;|//span[contains(text(),'Chennai - city$unique')]|xpath|true|
+|$tresult=|isElementPresent;|//span[contains(text(),'Chennai - city$unique')]|xpath     |
+*!

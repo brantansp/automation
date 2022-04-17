@@ -1,0 +1,242 @@
+---
+Help: Check VRD date change for the created indent and update transporter after arrival cut off time.
+Suites: marico
+Test
+---
+!**> Unique values assignment
+!|Script            |DateUtil                                      |
+|$unique=           |getCurrentDateTimeStamp;|yMMddHHmmss          |
+|$rdate=            |dateCalculation;        |yyyy/MM/dd |0        |
+|$loadingDate=      |getCurrentDateTimeStamp |iso                  |
+|$contractDate=     |dateCalculation;        |dd-MMM-yyyy|2        |
+|$indate=           |getCurrentDateTimeStamp;|yyyy/MM/dd           |
+|$indentCutoffTime= |dateCalculation;        |minute     |hh:mm:a|4|
+|$arrivalCutoffTime=|dateCalculation;        |minute     |hh:mm:a|5|
+
+!|Script|Common                                  |
+|$rdate=|stringConcatenation;|$rdate|!- $timer -!|
+
+!**> TRUCKIN DATE
+!|Script           |DateUtil                             |
+|$truckindate=     |dateCalculation;|yyyy/MM/dd|0        |
+|$truckindateDelay=|dateCalculation;|minute    |hh:mm:a|5|
+
+!|Script      |Common                                                   |
+|$truckindate=|stringConcatenation;|$truckindate|!- $truckindateDelay -!|
+
+!|Script      |DateUtil                   |
+|$truckindate=|utcConversion;|$truckindate|
+*!
+
+!**> TRUCKOUT DATE
+!|Script            |DateUtil                             |
+|$truckoutdate=     |dateCalculation;|yyyy/MM/dd|0        |
+|$truckoutdateDelay=|dateCalculation;|minute    |hh:mm:a|7|
+
+!|Script       |Common                                                     |
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $truckoutdateDelay -!|
+
+!|Script       |DateUtil                    |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+*!
+
+!|Script            |DateUtil                   |
+|$rdate=            |utcConversion;  |$rdate    |
+|$indentCutoffHour= |dateCalculation;|minute|H|4|
+|$indentCutoffMin=  |dateCalculation;|minute|m|4|
+|$arrivalCutoffHour=|dateCalculation;|minute|H|5|
+|$arrivalCutoffMin= |dateCalculation;|minute|m|5|
+**!
+
+!**> Source Depot Creation
+!|Script         |Common                           |
+|$location_id=   |getTrim;|5f76f4c57e91f8004d578206|
+|$source_gate_id=|getTrim;|5f76f4f77e91f8004d578207|
+*!
+
+!***> Destination Depot Creation
+
+!define depot_name {dest$unique}
+!define depot_state {Hariyana}
+!define depot_city {d$unique}
+!define depot_region {South}
+!define depot_short_code {d$num}
+!define depot_reference_id {dr$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {DG1$unique}
+!define g_user_email {pandoindent+2$unique@gmail.com}
+
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script                       |common           |
+|$destination_location_id=     |getTrim;|$depot  |
+|$destination_gate_location_id=|getTrim;|$gate_id|
+*!
+
+!**> Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!***> Vehicle Creation
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Uploading Rate matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,BDR Charge,BDR Label,Exclude,Trip Count,BDR Charge,BDR Label}
+!define column {City,Nagpur,d$unique,${vehicle_name},100,tr$unique,t$unique,1,5000,per_trip,01-Jan-2019,$contractDate,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!**> Admin SLA Setting
+
+!define Movement {Primary}
+!define vehicle_movement {2}
+
+!|script|common                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":{"depot_ids":["$location_id"],"movement":${vehicle_movement},"sla_configurations":[{"sla_type":2,"hours":$indentCutoffHour,"mins":$indentCutoffMin},{"sla_type":1,"hours":$arrivalCutoffHour,"mins":$arrivalCutoffMin}]}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Settings.AdminSlaSettingAPI
+*!
+
+!**> Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$location_id}
+!define gate_id {$source_gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$destination_location_id}
+!define sold_to_id {$destination_gate_location_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice}}],"destinations":[{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id}"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+*!
+
+!**> Switching Depot Filter 
+!define depot_selection {Nagpur CDC}
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+*!
+
+!***> Search for Indent ID
+!define filter_by {Enter Indent ID}
+!define search_text {$order_id}
+!include .FrontPage.Pando.Common.CommonSearchTrigger
+*!
+
+!** Validating in timeline before transporter switch
+!|Script|Ui                                                                                                                     |
+|click; |//div[contains(@class,'order-row')]//span[contains(text(),'$order_id')]|xpath                                          |
+|$data= |getText;                                                               |(//div[@class='flex-item text-right'])[2]|xpath|
+
+!|Script |DateUtil                      |
+|$vrdate=|dateCalculation;|dd MMM yyyy|0|
+
+!|Script   |Common                                   |
+|check     |checkIfStringExistsIn;|$vrdate|$data|true|
+|$tresult1=|checkIfStringExistsIn;|$vrdate|$data     |
+*!
+
+!***> Transporter Creation for Indent
+!define transporter_name {t1$unique}
+!define transporter_ref_id {tr1$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+1$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+*!
+
+!**> Retrieving Password for the Created Transporter for 2 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count,BDR Charge,BDR Label}
+!define column {City,Nagpur,d$unique,${vehicle_name},100,tr1$unique,t1$unique,1,5000,per_trip,01-Jan-2019,$contractDate,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!** Wait to breach arrival cutoff time
+!|Script|Ui |
+|wait;  |300|
+**!
+
+!** Updating to Transporter 2 in indent
+!include -c .FrontPage.Pando.Common.EditTransporterInIndentCreationPage
+**!
+
+!**> Switching Depot Filter 
+!define depot_selection {Nagpur CDC}
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+*!
+
+!** Validating in timeline after transporter switch
+!|Script|Ui                                                                                                                     |
+|click; |//div[contains(@class,'order-row')]//span[contains(text(),'$order_id')]|xpath                                          |
+|$data= |getText;                                                               |(//div[@class='flex-item text-right'])[2]|xpath|
+
+!|Script |DateUtil                      |
+|$vrdate=|dateCalculation;|dd MMM yyyy|1|
+
+!|Script   |Common                                   |
+|check     |checkIfStringExistsIn;|$vrdate|$data|true|
+|$tresult2=|checkIfStringExistsIn;|$vrdate|$data     |
+*!
+
+!**> Validating test result
+!|Script  |Common                                                |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,true|
+**!

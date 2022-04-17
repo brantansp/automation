@@ -1,0 +1,6 @@
+---
+Test
+---
+!|script         |GenerateReport                   |
+|initialize;     |${connection}|${testing_database}|
+|generateReports;|${testCycle} |${clientFilter}    |

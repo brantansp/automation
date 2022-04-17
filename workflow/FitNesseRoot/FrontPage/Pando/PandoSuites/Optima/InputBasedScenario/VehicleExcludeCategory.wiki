@@ -1,0 +1,7 @@
+---
+Help: Contains test cases for vehicle exclude category
+Suite
+Suites: optscn1
+---
+!1 Test suite Vehicle Exclude Category
+!contents -R2 -g -p -f -h

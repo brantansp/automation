@@ -1,0 +1,487 @@
+---
+Help: Indent direct dispatch - update materials,Truck type and transporter & cancel indent
+Suites: pg
+Test
+---
+!**> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$invoicedate= |dateCalculation;|dd-MM-yyyy |2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-2|
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-1|
+
+!|Script       |Common                                        |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer-!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+
+!|Script        |DateUtil                                                   |
+|$expected_date=|dateCalculation;               |yyyy/MM/dd    |0           |
+|$expected_date=|utcConversion;                 |$expected_date !- $timer -!|
+|$thisday=      |dateCalculation;               |dd            |0           |
+|$nMinus3day=   |getNPreviousDateInCurrentMonth;|$thisday      |-3    |1    |
+|$nMinus5day=   |getNPreviousDateInCurrentMonth;|$thisday      |-5    |1    |
+|$nMinus4day=   |getNPreviousDateInCurrentMonth;|$thisday      |-4    |1    |
+|$today=        |getNPreviousDateInCurrentMonth;|$thisday      |0     |1    |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Data creation
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {dc$unique}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RG$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script  |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Consignee Creation
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Egmore}
+!define city {cc$unique}
+!define state {Madya Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+**!
+
+!**> Transporter Creation 1
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!**> Vehicle Creation 1
+!define vehicle_name {v$unique MRT}
+!define cft {2048}
+!define kg {12000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Material Creation 1
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"1"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!**> Purchase order creation for transporter 1
+!define ponumber {po$unique}
+!define netvalue {10000}
+!define balvalue {5000}
+!define legalentity {le$unique}
+!define validfrom {2021-01-01}
+!define validto {2025-12-31}
+
+!define row {Purchase Order Number,Purchase Order Net Value,Purchase Order Balance value,Transporter Ref ID,Legal Entity,Valid From(YYYY-MM-DD),Valid To(YYYY-MM-DD)}
+!define column {${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity},${validfrom},${validto}}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonPOupload
+**!
+
+!**> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,dc$unique,cc$unique,${vehicle_name},700,$transporter_ref_id,$transporter_name,1,3000.50,per ton,01-Jan-$year,31-Dec-2030,100,1,U,,100,1,per_kg,100,150,,,0-250,600,15,22,,}
+
+!include -c  .FrontPage.Pando.Common.RateMatrix
+*!
+**!
+
+!**> Direct Dispatch Indent creation
+!define delivery_number {d1$unique}
+!define mrp_price {1000}
+!define material_code {mc$unique}
+!define depot_ref_id {R$unique}
+!define gate_ref_id {RG$unique}
+!define division {${legalentity}}
+!define quantity {100}
+!define quantity_unit {NOS}
+!define weight {1555}
+!define weight_unit {KG}
+!define volume {1024}
+!define volume_unit {CFT}
+!define ship_to {cr1$unique}
+!define sold_to {cr1$unique}
+!define type {Secondary}
+!define shipment_number {s1$unique}
+!define invoice_number {INV1$unique}
+!define invoice_amount {10000}
+!define category {20a}
+!define lr_number {lr1$unique}
+!define invoice_date {$invoicedate}
+!define transporter {tr$unique}
+!define vehicle_type {v$unique MRT}
+!define vehicle_number {TN $vno_1 $vno_2 $vno_3}
+!define lr_number {lr1$unique}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"${delivery_number}","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+*!
+
+!**> Check for the indent created with Dispatched status using direct_dispatch
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|script                     |ui                                                                                                                                                                                                                                                           |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]//div[contains(text(),'Dispatched')]|xpath                                                                                                                      |20   |
+|$tresult1=                  |isElementPresent;                                                                                                          |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]//div[contains(text(),'Dispatched')]|xpath|
+|mouseHover;                 |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]                                                       |xpath                                                                                                                            |
+|$order_id=                  |getText;                                                                                                                   |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]                                                     |xpath|
+
+!|script   |Ui                                                                                                |
+|check     |isElementPresent;|//div[@class='order-status-button' and contains(text(),'Dispatched')]|xpath|true|
+|$tresult2=|isElementPresent;|//div[@class='order-status-button' and contains(text(),'Dispatched')]|xpath     |
+
+!** Validate existing materials
+!|Script                            |Ui                                                                                                                                                                                                      |
+|navigateToUrl;                     |${surl}/indents/$order_id/details/0                                                                                                                                                                     |
+|waitForElementToBeDisplayed;       |//div[@class='card-right']//table                                                                                  |xpath                                                           |15                 |
+|check                              |isElementPresent;                                                                                                  |//strong[contains(text(),'${consignee_name}')]                  |xpath|true         |
+|$materialcode_header_column_number=|getHeaderColumnNumber;                                                                                             |//div[@class='el-table__header-wrapper']//div[@class='cell']    |xpath|Material Code|
+|$material_row_number=              |getHeaderColumnNumber;                                                                                             |//div[contains(@class,'scrolling')]//span[contains(text(),'kg')]|xpath|1555 kg      |
+|mouseHover;                        |((//div[contains(@class,'el-table__body')]//td[$materialcode_header_column_number])[$material_row_number]//span)[2]|xpath                                                                               |
+|$tresult3=                         |isElementPresent;                                                                                                  |//div[@role='tooltip']//div[text()='mc$unique:m$unique']        |xpath              |
+|check                              |isElementPresent;                                                                                                  |//div[@role='tooltip']//div[text()='mc$unique:m$unique']        |xpath|true         |
+|check                              |isElementPresent;                                                                                                  |//span[normalize-space(text())='1024 cft']                      |xpath|true         |
+**!
+
+!**> verify LE in indents collection with PO number 1
+!|Script             |MongoDB                                                                     |
+|initialize;         |${connection}           |${database}                                        |
+|$purchase_order_doc=|getValuesFromCollection;|indents|order_no|$order_id|purchase_order_documents|
+
+!|Script  |Common                                                   |
+|$poarray=|stringConcatenation; |"podocuments":|$purchase_order_doc |
+|$poarray=|stringConcatenation; |$poarray      |end                 |
+|$pojson= |getSubStringByString;|$poarray      |"podocuments":[|]end|
+
+!|script   |json                                  |
+|$ponumber=|getValueFromJSON;|$pojson|po_number   |
+|$lenumber=|getValueFromJSON;|$pojson|legal_entity|
+
+!|Script   |Common                                              |
+|check     |checkIfStringAreEqual;|$ponumber|${ponumber}   |true|
+|$tresult4=|checkIfStringAreEqual;|$ponumber|${ponumber}        |
+|check     |checkIfStringAreEqual;|$lenumber|${legalentity}|true|
+|$tresult5=|checkIfStringAreEqual;|$lenumber|${legalentity}     |
+**!
+*!
+
+!** Direct Dispatch update for the Indent created
+
+!**> Material Creation 2
+!define material_name {m2$unique}
+!define material_code {mc2$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"1"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!**> Updating materials
+!define material_code {mc2$unique}
+!define volume {879}
+!define volume_unit {CFT}
+!define quantity {234}
+!define quantity_unit {NOS}
+!define mrp_price {999} 
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"${delivery_number}","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+
+!** Validate updated materials
+!|Script                            |Ui                                                                                                                                                                                                      |
+|navigateToUrl;                     |${surl}/indents/$order_id/details/0                                                                                                                                                                     |
+|waitForElementToBeDisplayed;       |//div[@class='card-right']//table                                                                                  |xpath                                                           |15                 |
+|check                              |isElementPresent;                                                                                                  |//strong[contains(text(),'${consignee_name}')]                  |xpath|true         |
+|$materialcode_header_column_number=|getHeaderColumnNumber;                                                                                             |//div[@class='el-table__header-wrapper']//div[@class='cell']    |xpath|Material Code|
+|$material_row_number=              |getHeaderColumnNumber;                                                                                             |//div[contains(@class,'scrolling')]//span[contains(text(),'kg')]|xpath|1555 kg      |
+|mouseHover;                        |((//div[contains(@class,'el-table__body')]//td[$materialcode_header_column_number])[$material_row_number]//span)[2]|xpath                                                                               |
+|$tresult6=                         |isElementPresent;                                                                                                  |//div[@role='tooltip']//div[text()='mc2$unique:m2$unique']      |xpath              |
+|check                              |isElementPresent;                                                                                                  |//div[@role='tooltip']//div[text()='mc2$unique:m2$unique']      |xpath|true         |
+|check                              |isElementPresent;                                                                                                  |//span[normalize-space(text())='879 cft']                       |xpath|true         |
+|check                              |isElementPresent;                                                                                                  |//div[normalize-space(text())='999']                            |xpath|true         |
+|check                              |isElementPresent;                                                                                                  |//span[normalize-space(text())='234 NOS']                       |xpath|true         |
+**!
+*!
+
+!**> Updating Transporter and vehicle Type
+
+!** Data creation
+!**> Transporter Creation 2
+!define transporter_name {t2$unique}
+!define transporter_ref_id {tr2$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter2+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!**> Vehicle Creation 2
+!define vehicle_name {v2$unique MRT}
+!define cft {1048}
+!define kg {1200}
+!define vehicle_type {PTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Purchase order creation
+!define ponumber {po2$unique}
+!define netvalue {10000}
+!define balvalue {5000}
+!define legalentity {le2$unique}
+!define legalentity2 {le1$unique}
+!define validfrom {2021-01-01}
+!define validto {2025-12-31}
+
+!define row {Purchase Order Number,Purchase Order Net Value,Purchase Order Balance value,Transporter Ref ID,Legal Entity,Valid From(YYYY-MM-DD),Valid To(YYYY-MM-DD)}
+!define column {${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity},${validfrom},${validto}|${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity2},${validfrom},${validto}}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonPOupload
+**!
+
+!**> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,dc$unique,cc$unique,${vehicle_name},700,$transporter_ref_id,$transporter_name,1,3000.50,per ton,01-Jan-$year,31-Dec-2030,100,1,U,,100,1,per_kg,100,150,,,0-250,600,15,22,,}
+
+!include -c  .FrontPage.Pando.Common.RateMatrix
+*!
+**!
+
+!define transporter {tr2$unique}
+!define vehicle_type {v2$unique MRT}
+!define division {${legalentity}}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"${delivery_number}","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+
+!**> Filter indent after update direct_dispatch
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+**!
+
+!** Check whether shipment number is displayed in indent
+!|script    |ui                                                                                                                                                                                 |
+|refresh;                                                                                                                                                                                       |
+|$tresult7= |isElementPresent;                          |//span[normalize-space(text())='t2$unique']//ancestor::div[contains(@class,'order-row')]//div[contains(text(),'Dispatched')]|xpath     |
+|click;     |//span[normalize-space(text())='t2$unique']|xpath                                                                                                                                  |
+|check      |isElementPresent;                          |//p[contains(text(),'Transporter :')]//strong[normalize-space(text())='tr2$unique - t2$unique']                             |xpath|true|
+|$tresult8= |isElementPresent;                          |//p[contains(text(),'Transporter :')]//strong[normalize-space(text())='tr2$unique - t2$unique']                             |xpath     |
+|check      |isElementPresent;                          |//p[contains(text(),'Vehicle :')]//strong[normalize-space(text())='${vehicle_type} - ${vehicle_number}']                    |xpath|true|
+|$tresult9= |isElementPresent;                          |//p[contains(text(),'Vehicle :')]//strong[normalize-space(text())='${vehicle_type} - ${vehicle_number}']                    |xpath     |
+|check      |isElementPresent;                          |//p[contains(text(),'Delivery Type')]//strong[normalize-space(text())='PTL - ROAD']                                         |xpath|true|
+|$tresult10=|isElementPresent;                          |//p[contains(text(),'Delivery Type')]//strong[normalize-space(text())='PTL - ROAD']                                         |xpath     |
+*!
+**!
+
+!**> verify LE in indents collection with PO number 2
+!|Script             |MongoDB                                                                     |
+|initialize;         |${connection}           |${database}                                        |
+|$purchase_order_doc=|getValuesFromCollection;|indents|order_no|$order_id|purchase_order_documents|
+
+!|Script  |Common                                                   |
+|$poarray=|stringConcatenation; |"podocuments":|$purchase_order_doc |
+|$poarray=|stringConcatenation; |$poarray      |end                 |
+|$pojson= |getSubStringByString;|$poarray      |"podocuments":[|]end|
+
+!|script   |json                                  |
+|$ponumber=|getValueFromJSON;|$pojson|po_number   |
+|$lenumber=|getValueFromJSON;|$pojson|legal_entity|
+
+!|Script    |Common                                              |
+|check      |checkIfStringAreEqual;|$ponumber|${ponumber}   |true|
+|$tresult11=|checkIfStringAreEqual;|$ponumber|${ponumber}        |
+|check      |checkIfStringAreEqual;|$lenumber|${legalentity}|true|
+|$tresult12=|checkIfStringAreEqual;|$lenumber|${legalentity}     |
+**!
+**!
+
+!**> Direct dispatch update - LE/LR check - same LE with different LR
+!define lr_number1 {lr1$unique}
+!define lr_number2 {lr2$unique}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"${delivery_number}","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number1}","truck_out":""},{"delivery_number":"d2$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number2}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+
+!**> Verify LR numbers
+!|script                     |ui                                                                                     |
+|navigateToUrl;              |${surl}/indents                                                                        |
+|refresh;                                                                                                            |
+|click;                      |//span[text()='Document']             |xpath                                           |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]|xpath                                |20        |
+|check                       |isElementPresent;                     |//label[text()='le2$unique']         |xpath|true|
+|$tresult13=                 |isElementPresent;                     |//label[text()='le2$unique']         |xpath     |
+|check                       |isElementPresent;                     |//span[contains(text(),'lr1$unique')]|xpath|true|
+|$tresult14=                 |isElementPresent;                     |//span[contains(text(),'lr1$unique')]|xpath     |
+**!
+**!
+
+!**> Direct dispatch update - LE/LR check - different LE with same LR
+!define lr_number1 {lr1$unique}
+!define lr_number2 {lr1$unique}
+!define division1 {le1$unique}
+!define division2 {le2$unique}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"${delivery_number}","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division1}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number1}","truck_out":""},{"delivery_number":"d2$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id}","division":"${division2}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number2}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+
+!** Verify Rejections
+!**> Download Rejection list
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|Script                     |Ui                                                                                 |
+|navigateToUrl;              |${surl}/mdm/rejection                                                              |
+|waitForElementToBeDisplayed;|//div[contains(text(),'Direct Dispatch Indent')]//following-sibling::div  |xpath|20|
+|click;                      |//div[contains(text(),'Direct Dispatch Indent')]/../following-sibling::div|xpath   |
+|wait;                       |10                                                                                 |
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|script  |ExcelQuery                                                                                                                          |
+|$count1= |getCountQuery;|$filename|select * from "Pando Rejections" where "Shipment Number" = 's1$unique' and "Delivery Number" = 'd1$unique' |
+|$count2= |getCountQuery;|$filename|select * from "Pando Rejections" where "Shipment Number" = 's1$unique' and "Delivery Number" = 'd2$unique' |
+|$reason1=|selectQuery;  |$filename|select * from "Pando Rejections" where "Division" = 'le1$unique' and "Delivery Number" = 'd1$unique'|Reason|
+|$reason2=|selectQuery;  |$filename|select * from "Pando Rejections" where "Division" = 'le2$unique' and "Delivery Number" = 'd2$unique'|Reason|
+
+!|Script    |common                                                             |
+|check      |checkIfStringAreEqualInArray;|$count1,$count2,1|true               |
+|$tresult15=|checkIfStringAreEqualInArray;|$count1,$count2,1                    |
+|check      |checkIfStringAreEqual;       |$reason1         |[duplicate LR]|true|
+|$tresult16=|checkIfStringAreEqual;       |$reason1         |[duplicate LR]     |
+|check      |checkIfStringAreEqual;       |$reason2         |[duplicate LR]|true|
+|$tresult17=|checkIfStringAreEqual;       |$reason2         |[duplicate LR]     |
+**!
+**!
+**!
+
+!** Cancel Indent 
+!**> Cancel Direct dispatch indent via api
+!define cancel_shipment {true}
+
+!|Script|Http                                                                                                                                                          |
+|$data= |getJsonTrim;|{"data":[{"shipment_number ":"${shipment_number}","vehicle_type ":"${vehicle_type}","vehicle_number ":"","cancel_shipment": ${cancel_shipment}}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchUpdateAPI
+
+!|script                     |Ui                                                                                                                                                  |
+|navigateToUrl;              |${surl}/indents                                                                                                                                     |
+|refresh;                                                                                                                                                                         |
+|waitForElementToBeDisplayed;|//div[@class='order-status-button']                                 |xpath                                                               |20        |
+|check                       |isElementPresent;                                                   |//div[@class='order-status-button' and contains(text(),'Cancelled')]|xpath|true|
+|click;                      |//div[@class='order-status-button' and contains(text(),'Cancelled')]|xpath                                                                          |
+|click;                      |//div[text()='Timeline']                                            |xpath                                                                          |
+|check                       |isElementPresent;                                                   |//h4[text()='Indent Cancelled']                                     |xpath|true|
+|$tresult18=                 |isElementPresent;                                                   |//h4[text()='Indent Cancelled']                                     |xpath     |
+*!
+**!
+
+!**> Validating test result
+!|Script  |Common                                                                                                                                                                                                                         |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,$tresult11,$tresult12,$tresult13,$tresult14,$tresult15,$tresult16,$tresult17,$tresult18,true|
+**!

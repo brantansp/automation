@@ -1,0 +1,8 @@
+---
+Help: test
+---
+!include -c .FrontPage.Pando.Common.Import
+
+!|Script|MongoDB|
+|initialize;|
+|$result=|dbnames;|

@@ -1,0 +1,62 @@
+---
+Help: Reports download with the new restrictions
+Suites: onhold
+Test
+---
+!** Navigating to Depot for fetching Indent ID
+!|script       |ui                                                                                               |
+|navigateToUrl;|${surl}/indents                                                                                  |
+|scrollToView; |(//div[@class='order-row'])[20]|xpath                                                            |
+|$indent_id=   |getText;                       |(((//div[@class='order-row'])[20]//div)[1]//span)[last()-2]|xpath|
+*!
+
+!** Generating the Report
+!|Script       |Ui                                                                        |
+|navigateToUrl;|${surl}/reports                                                           |
+|click;        |//span[@class='multiselect__single']                  |xpath              |
+|click;        |//span[text()='Select All']                           |xpath              |
+|click;        |//span[text()='Select All']                           |xpath              |
+|sendKeys;     |//input[@placeholder='Select depots']                 |xpath|Chennai Depot|
+|click;        |//span[text()='Chennai Depot']                        |xpath              |
+|click;        |//div[@class='slideleft_menu']                        |xpath              |
+|click;        |//div[@id='Date']                                     |xpath              |
+|click;        |//div[contains(@class,'change-month-button--next')]   |xpath              |
+|click;        |//div[contains(@class,'change-month-button--next')]   |xpath              |
+|click;        |(//button[@class='asd__day-button' and text()='1'])[2]|xpath              |
+|click;        |//button[text()='Apply']                              |xpath              |
+
+!|Script|Ui                                                   |
+|click; |//span[normalize-space(text())='Indent Status']|xpath|
+|click; |//button[text()='Generate Report']             |xpath|
+*!
+
+!** Feteching Reports and Validating Result
+!|Script                        |Ui                                                                                                                                |
+|wait;                          |30                                                                                                                                |
+|navigateToUrl;                 |${mail_url}/email?page=0&size=60                                                                                                  |
+|waitForElementToBeDisplayed;   |//table[@class='striped responsive-table']                                                                       |xpath|30        |
+|refreshForElementToBeDisplayed;|//td[text()='${username}']/following-sibling::td[contains(text(),'Indent Status Report')]/following-sibling::td/a|xpath|5    |    |
+|click;                         |//td[text()='${username}']/following-sibling::td[contains(text(),'Indent Status Report')]/following-sibling::td/a|xpath           |
+|waitForElementToBePresent;     |//a[text()='click here']                                                                                         |xpath|10        |
+|$link_url=                     |getElementAttribute;                                                                                             |//p/a|xpath|href|
+**!
+
+!** Validating Excel sheet Report
+!|Script       |Ui       |
+|navigateToUrl;|$link_url|
+|wait;         |10       |
+
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|script|ExcelQuery                                                                                      |
+|check  |getCountQuery;|$filename|select * from "Indent Status Report" where "Indent ID" = '$indent_id'|1|
+|$count=|getCountQuery;|$filename|select * from "Indent Status Report" where "Indent ID" = '$indent_id'  |
+
+!|Script  |common                              |
+|check    |checkIfStringAreEqual;|$count|1|true|
+|$tresult=|checkIfStringAreEqual;|$count|1     |
+*!

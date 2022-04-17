@@ -1,0 +1,10 @@
+/target/
+*.png
+screen/
+/download/
+/FitNesseRoot/RecentChanges/
+/src/main/resources/META-INF/apidocs/*.json
+*.txt
+/FitNesseRoot/properties
+/FitNesseRoot/FitNesse/SuiteAcceptanceTests/SuiteWidgetTests/*wiki
+/FitNesseRoot/RerunLast*

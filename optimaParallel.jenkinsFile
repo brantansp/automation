@@ -1,0 +1,98 @@
+jobName      = env.JOB_NAME
+
+notification = "good"
+jobStatus    = 0
+
+//Running all regression jobs
+def job_run_regressions(job) {
+        if (job.equals("Optima-Test-API")) {
+          //running the Optima-test-API without overriding the default branch parameter
+          phase = build job: job 
+               
+        } else {
+                 //running the jobs with branch parameter overridden by master job
+                 phase = build job: job, parameters: [[$class: 'StringParameterValue', name: 'BRANCH', value: params.BRANCH], [$class: 'StringParameterValue', name: 'rerun_count', value: params.RERUN_COUNT]]
+        }
+            
+        if(phase == 'UNSTABLE' || phase == 'FAILURE') {
+        	notification = "warning"                         
+        }  
+}
+
+def job_run_failed_only (job) {
+	    def crumb = sh label: '', returnStdout: true, script: 'curl -u "common@pando.ai:119ea560608a3b365c80e1540d25742f66" -s \'http://ci.gopando.in/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,":",//crumb)\''
+		def buildstatus = sh label: '', returnStdout: true, script: 'curl -u "common@pando.ai:119ea560608a3b365c80e1540d25742f66" -H "'+crumb+'" -X POST \'http://ci.gopando.in/view/Pando-Optima/job/Pando-Optima-Regression/job/'+job+'/lastBuild/api/xml?xpath=concat(//result,/result)\''
+        println job+" : "+buildstatus
+		
+		if (buildstatus == "UNSTABLE") {
+		      phase = build job: job, parameters: [[$class: 'StringParameterValue', name: 'BRANCH', value: params.BRANCH], [$class: 'StringParameterValue', name: 'RERUN_COUNT', value: params.RERUN_COUNT], [$class: 'StringParameterValue', name: 'RERUN_LAST_FAILED', value: params.RERUN_LAST_FAILED]]
+		} else if (buildstatus == "ABORTED" || buildstatus == "FAILURE") {
+		      phase = build job: job, parameters: [[$class: 'StringParameterValue', name: 'BRANCH', value: params.BRANCH], [$class: 'StringParameterValue', name: 'RERUN_COUNT', value: params.RERUN_COUNT], [$class: 'StringParameterValue', name: 'RERUN_LAST_FAILED', value: 'NO']]		       
+		} else {
+		      println "Skipping job rerun - " +job 
+		}
+}
+
+node('automation_label') { 
+//Node where autoscaling occur
+//try-catch block
+	 try {
+	     def jlist = ["Reg-Opt-Sanity",
+	                  "Reg-Opt-Brit-1",
+			          "Reg-Opt-JnJ-1",
+			          "Reg-Opt-Cummins-1",
+	                  "Reg-Opt-Input-Based-Scenarios-1",
+			          "Reg-Opt-Movement-1",
+	                  "Reg-Opt-Auto-Run-Scenarios-1",
+	                  "Reg-Opt-FDP-Scenarios-1",
+	                  "Reg-Opt-Setting-Based-Scenarios-1",
+	                  "Reg-Opt-Optima-For-PTL-1",
+	                  "Reg-Opt-API-Test-1",
+	                  "Reg-Opt-Courier-1",
+	                  "Reg-Opt-Material-Category-1",
+	                  "Reg-Opt-Auto-Indent-1",
+	                  "Reg-Opt-Material-Cluster-1"
+	                  ];
+	                  
+	    	if (params.RERUN_LAST_FAILED == "YES") {
+	    		def regressionJobs = [:]	
+	    		jlist.each { f ->
+					regressionJobs[f] = {job_run_failed_only(f)}
+				}
+				parallel(regressionJobs)  
+	    	} else {
+	    	    def regressionPhase = [:]
+		 
+		 		if (params.RUN_ALL_PARALLEL == true) {
+			 		jlist.each { f ->
+			    	regressionPhase[f] = {job_run_regressions(f)}} 
+			    } else {
+		     		jlist.each { f ->
+			    		regressionPhase[f] = {
+        	    			lock(label: "optima_lock", quantity: 1, variable: "LOCKED") {
+            	   				println "Locked resource: ${env.LOCKED}"
+                				job_run_regressions(f)
+              				}
+            			}
+     	 			} 
+		 		}
+		 		parallel(regressionPhase)
+	    	}  
+	 } catch (e) {
+          echo 'Issue ' + e 
+          notification = "danger"
+          sh 'exit 1'   
+     } finally {
+        //Finally all the reports are published to the user
+          stage('Publish Status') {
+
+               if(currentBuild.result == 'UNSTABLE') {
+	             notification = "warning" 
+	           }
+	           
+	         link = "http://ci.gopando.in/blue/organizations/jenkins/$jobName/detail/$jobName/${env.BUILD_NUMBER}/pipeline"
+	         slackSend color:"$notification", channel: "#automation-status", message: "Automation Completed - ${env.JOB_NAME} (<$link |Open>)"
+	         manager.addHtmlBadge("<a href='https://pando.freshrelease.com/PANDO/tcm/test-runs/6049/test-cases' target='blank'>TestRun</a>"); 
+	      }
+      }
+}

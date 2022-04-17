@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://automation.pandostaging.in}
+!define username {pandoautomation@gmail.com}
+!define password {test@1234}
+!define shipper_client_id {5c74edeec8d634115eaf23b3}

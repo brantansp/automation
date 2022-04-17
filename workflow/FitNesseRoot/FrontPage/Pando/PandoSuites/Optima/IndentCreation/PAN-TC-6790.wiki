@@ -1,0 +1,106 @@
+---
+Help: Ensure that Secondary Indent are created from optima in QA sandbox
+Suites: qa
+Test
+---
+!***> Unique values assignment
+!|Script          |Common                                       |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$currDate=       |getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique  |0   |4    |
+|$detention_group=|getRandomString;        |4        |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000   |999999    |
+|$today=          |getSubString;           |$currDate|0   |10   |
+|$pincode1=       |getRandomNumber;        |111001   |999999    |
+|$pincode2=       |getRandomNumber;        |111001   |999999    |
+|$vno_1=          |getRandomNumber;        |20       |76        |
+|$vno_2=          |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=          |getRandomNumber;        |1000     |9999      |
+|$delivery_num=   |getSubString;           |$unique  |4   |14   |
+
+!|Script  |DateUtil                      |
+|$today=  |dateCalculation;|yyyy-MM-dd |0|
+|$rdate=  |dateCalculation;|yyyy/MM/dd |0|
+|$thisday=|dateCalculation;|dd MMM yyyy|0|
+
+!| Script     |Common                                      |
+|$rdate=      |stringConcatenation;   |$rdate|!- 10:00:00-!|
+|$loadingDate=|getCurrentDateTimeStamp|iso                 |
+
+!|script       |common                    |
+|$uniq_partial=|getSubString;|$unique|4|12|
+*!
+
+!define depot_selection  {Britannia Depot}
+!define movement_type {Secondary}
+!define movement {1}
+
+!** Delivery Picklist API 
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+|$data= |getJsonTrim;|{"data":[{"LIPS-PANDOID":"","LIKP-VBELN":"A$uniq_partial","LIPS-MATNR":"APP124T15","LIPS-WERKS":"DEL90","LIPS-SPART":"BK","LIPS-LFIMG":"30.000","LIPS-MEINS":"NOS","LIKP-BRGEW":"176.400","LIKP-GEWEI":"KG","LIKP-VOLUM":"1.140","LIKP-VOLEH":"M3","LIKP-BOLNR":" ","LIKP-KUNNR":"BID1","LIKP-KUNAG":"BID1","LINE_ITEM":"000240","TYPE":"SECONDARY","CATEGORY":""},{"LIPS-PANDOID":"","LIKP-VBELN":"B$uniq_partial","LIPS-MATNR":"APP124T15","LIPS-WERKS":"DEL90","LIPS-SPART":"BK","LIPS-LFIMG":"30.000","LIPS-MEINS":"NOS","LIKP-BRGEW":"176.400","LIKP-GEWEI":"KG","LIKP-VOLUM":"1.140","LIKP-VOLEH":"M3","LIKP-BOLNR":" ","LIKP-KUNNR":"CA01","LIKP-KUNAG":"CA01","LINE_ITEM":"000240","TYPE":"SECONDARY","CATEGORY":""},{"LIPS-PANDOID":"","LIKP-VBELN":"C$uniq_partial","LIPS-MATNR":"APP124T15","LIPS-WERKS":"DEL90","LIPS-SPART":"BK","LIPS-LFIMG":"30.000","LIPS-MEINS":"NOS","LIKP-BRGEW":"176.400","LIKP-GEWEI":"KG","LIKP-VOLUM":"1.140","LIKP-VOLEH":"M3","LIKP-BOLNR":" ","LIKP-KUNNR":"CA08","LIKP-KUNAG":"CA08","LINE_ITEM":"000240","TYPE":"SECONDARY","CATEGORY":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DeliveryPicklistAPI
+**!
+
+!** Delete the Line item from Depot via API
+!|script|common                           |
+|$depot=|getTrim;|5e41432098405705152f6ebf|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DiscardLineItemOptimaAPI
+**!
+
+!*** Validating Line Item in UI and Indenting D1
+!define depot {Britannia Depot}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimisingDeliveryPicklist
+
+!|Script                     |Ui                                                                                                            |
+|wait;                       |10                                                                                                            |
+|check                       |getCountOfElements;                                            |//div[@class='card-row card-row-show']|xpath|3|
+|click;                      |//div[@class='header-sticky']//input                           |xpath                                         |
+|click;                      |//button[contains(text(),'Indent')]                            |xpath                                         |
+|click;                      |//div[@class='el-message-box']//span[contains(text(),'Create')]|xpath                                         |
+|waitForElementToBeDisplayed;|//div[@role='alert']/i[contains(@class,'success')]             |xpath                                 |20     |
+**!
+
+!*** Validating that Indent in Indents page
+!|Script      |Ui     |
+|navigateToUrl|${surl}|
+
+!define search_text {Britannia Depot}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|Script     |Ui                                                    |
+|$order_id_1=|getText;|((//div[@class='order-row'])[1]/div)[1]|xpath|
+|$order_id_2=|getText;|((//div[@class='order-row'])[2]/div)[1]|xpath|
+|$order_id_3=|getText;|((//div[@class='order-row'])[3]/div)[1]|xpath|
+
+!define transporter_name_1 {Transpoter01}
+!define transporter_name_2 {Transpoter03}
+!define transporter_name_3 {Transpoter04}
+!define material_unique_number_1 {A$uniq_partial}
+!define material_unique_number_2 {B$uniq_partial}
+!define material_unique_number_3 {C$uniq_partial}
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                         |
+|check                       |isElementPresent;                                                                                                                                       |//span[contains(text(),'${transporter_name_1}')]                                                       |xpath|true|
+|click;                      |(//span[contains(text(),'${transporter_name_1}')])[1]/../ancestor::div[contains(@class,'vendor')]//following-sibling::div[contains(@class,'actions')]//a|xpath                                                                                                             |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]                                                                                                                  |xpath                                                                                                  |30        |
+|check                       |isElementPresent;                                                                                                                                       |//div[contains(@class,'table__fixed')]//td//span[normalize-space(text())='${material_unique_number_1}']|xpath|true|
+|$tresult1=                  |isElementPresent;                                                                                                                                       |//div[contains(@class,'table__fixed')]//td//span[normalize-space(text())='${material_unique_number_1}']|xpath     |
+|navigateBack;                                                                                                                                                                                                                                                                                           |
+|check                       |isElementPresent;                                                                                                                                       |//span[contains(text(),'${transporter_name_1}')]                                                       |xpath|true|
+|click;                      |(//span[contains(text(),'${transporter_name_2}')])[1]/../ancestor::div[contains(@class,'vendor')]//following-sibling::div[contains(@class,'actions')]//a|xpath                                                                                                             |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]                                                                                                                  |xpath                                                                                                  |30        |
+|check                       |isElementPresent;                                                                                                                                       |//div[contains(@class,'table__fixed')]//td//span[normalize-space(text())='${material_unique_number_2}']|xpath|true|
+|$tresult1=                  |isElementPresent;                                                                                                                                       |//div[contains(@class,'table__fixed')]//td//span[normalize-space(text())='${material_unique_number_2}']|xpath     |
+|navigateBack;                                                                                                                                                                                                                                                                                           |
+|click;                      |(//span[contains(text(),'${transporter_name_3}')])[1]/../ancestor::div[contains(@class,'vendor')]//following-sibling::div[contains(@class,'actions')]//a|xpath                                                                                                             |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]                                                                                                                  |xpath                                                                                                  |30        |
+|check                       |isElementPresent;                                                                                                                                       |//div[contains(@class,'table__fixed')]//td//span[normalize-space(text())='${material_unique_number_3}']|xpath|true|
+|$tresult2=                  |isElementPresent;                                                                                                                                       |//div[contains(@class,'table__fixed')]//td//span[normalize-space(text())='${material_unique_number_3}']|xpath     |
+|navigateBack;                                                                                                                                                                                                                                                                                           |
+
+!|Script  |Common                                                |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,true|
+*!

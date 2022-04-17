@@ -1,0 +1,18 @@
+---
+Files: no
+RecentChanges: no
+Refactor: no
+Search: no
+Static
+WhereUsed: no
+---
+!|Script                     |Ui                                                                                |
+|initialize;                 |${browser}                                                      |${remoteURL}     |
+|launchBrowser;              |${login_url}/login                                                                |
+|waitForElementToBeDisplayed;|//div[@class='login-form']                                      |xpath|40         |
+|isElementPresent;           |(//img[@class='img-responsive'])[1]                             |xpath            |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input|xpath|${username}|
+|sendSecuredKeys;            |//label[contains(text(),'Password:')]//preceding-sibling::input |xpath|${password}|
+|click;                      |//button[@class='primary-btn']                                  |xpath            |
+|waitForElementToBeDisplayed;|//main[@class='container-fluid main-content']                   |xpath|40         |
+|isElementPresent;           |//main[@class='container-fluid main-content']                   |xpath            |

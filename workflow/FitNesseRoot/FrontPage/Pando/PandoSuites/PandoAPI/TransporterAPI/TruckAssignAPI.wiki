@@ -1,0 +1,17 @@
+---
+Help: Contains script for
+Test
+---
+!|Script     |Http                                                                                                                                                          |
+|wait;       |5                                                                                                                                                             |
+|setBaseUrl; |${turl}/api/login                                                                                                                                             |
+|getResponse;|Application/Json|put             |{"data":{"email":"${username}","password":"${password}"}}                                                                   |
+|$token=     |getHeader;      |x-auth-token                                                                                                                                 |
+|addHeader;  |Authorization   |bearer $token                                                                                                                                |
+|setBaseUrl; |${turl}/api/order/$order_id/truck                                                                                                                    |
+|$truck=     |getResponse;    |Application/Json|put|{"data":{"vehicle":{"number":"${vechicle_number}"},"driver":{"name":"${driver_name}","license_number":"123456789","phone_number":"${phone_number}"},"assignTruck":true}}|
+
+
+
+!|Script         |json                                        |
+|$vehicle_number=|getValueFromJSON;|$truck|data.vehicle.number|

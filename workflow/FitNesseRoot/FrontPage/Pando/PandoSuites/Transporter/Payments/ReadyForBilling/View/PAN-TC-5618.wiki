@@ -1,0 +1,12 @@
+---
+Help: Validate filter notification number
+Test
+---
+!|Script       |Ui                                                                          |
+|navigateToUrl;|${turl}/v2/payments                                                         |
+|click;        |//button[@class='el-button el-button--default']|xpath                       |
+|click;        |//div[@class='datepickerrange-cancel']         |xpath                       |
+|wait;         |2                                                                           |
+|click;        |//button[text()='APPLY']                       |xpath                       |
+|check         |isElementPresent;                              |//sup[text()='4']|xpath|true|
+|$tresult=     |isElementPresent;                              |//sup[text()='4']|xpath     |

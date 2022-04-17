@@ -1,0 +1,9 @@
+!|Script          |Http                                                                                       |
+|wait;            |5                                                                                          |
+|setBaseUrl;      |${surl}/api/login                                                                          |
+|getResponse;     |Application/Json|put             |{"data":{"email":"${username}","password":"${password}"}}|
+|$token=          |getHeader;      |x-auth-token                                                              |
+|addHeader;       |Authorization   |bearer $token                                                             |
+|setBaseUrl;      |${surl}/api/v2/shipper/delayed-payments/                                                   |
+|$payment_trigger=|getResponse;    |Application/Json|post                        |$data                       |
+|$status=         |getStatusCode;                                                                             |

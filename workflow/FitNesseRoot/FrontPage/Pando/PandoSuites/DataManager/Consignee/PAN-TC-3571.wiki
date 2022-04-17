@@ -1,0 +1,32 @@
+---
+Help: Consignee - Ensure the data is Uploading or not
+Suites: dm1
+Test
+---
+!define row {Consignee Name,Reference Id,Display Reference Name,Contact Name,Mobile Number,Email,Address,City,State,Postal Code,Region,Category,Group}
+!define column1 {c1$unique,consignee1 $unique refrence,,consignee1 $unique,123,,Ashok Nager,Chennai,Tamil Nadu,600083,South,C,}
+!define column2 {c2$unique,consignee2 $unique refrence,,consignee2 $unique,12891,,Ashok Nager,Chennai,Tamil Nadu,600083,South,C,}
+!define column3 {c3$unique,consignee3 $unique refrence,,consignee3 $unique,12892,,Ashok Nager,Chennai,Tamil Nadu,600083,South,C,}
+!define column4 {c4$unique,consignee4 $unique refrence,,consignee4 $unique,12893,,Ashok Nager,Chennai,Tamil Nadu,600083,South,C,}
+!define column5 {c5$unique,consignee5 $unique refrence,,consignee5 $unique,12894,,Ashok Nager,Chennai,Tamil Nadu,600083,South,C,}
+!** Uploading Consignee Bulk Upload
+!include .FrontPage.Pando.PandoSuites.DataManager.ConsigneeUploadInBulk
+*!
+
+!** Verifying the Uploaded data
+!|Script       |Ui                                                               |
+|navigateToUrl;|${surl}/mdm/consignees                                           |
+|check         |isElementPresent;|//span[contains(text(),'c1$unique')]|xpath|true|
+|$tresult1=    |isElementPresent;|//span[contains(text(),'c1$unique')]|xpath     |
+|check         |isElementPresent;|//span[contains(text(),'c2$unique')]|xpath|true|
+|$tresult2=    |isElementPresent;|//span[contains(text(),'c2$unique')]|xpath     |
+|check         |isElementPresent;|//span[contains(text(),'c3$unique')]|xpath|true|
+|$tresult3=    |isElementPresent;|//span[contains(text(),'c3$unique')]|xpath     |
+|check         |isElementPresent;|//span[contains(text(),'c4$unique')]|xpath|true|
+|$tresult4=    |isElementPresent;|//span[contains(text(),'c4$unique')]|xpath     |
+|check         |isElementPresent;|//span[contains(text(),'c5$unique')]|xpath|true|
+|$tresult5=    |isElementPresent;|//span[contains(text(),'c5$unique')]|xpath     |
+
+!|Script  |Common                                                                         |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5|
+**!

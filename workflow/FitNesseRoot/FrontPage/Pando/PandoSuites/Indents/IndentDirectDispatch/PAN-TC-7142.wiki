@@ -1,0 +1,573 @@
+---
+Help: Creating Indent and update any charges in freight bill in transporter and verify Attachment / Comment Mandatory
+Suites: pg
+Test
+---
+!5 Test coverage: updated loading detention and additional charges, verified attachment and comments are mandatory.
+
+!**> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script                    |DateUtil                                                 |
+|$contractDate=             |dateCalculation;               |dd-MMM-yyyy         |2   |
+|$invoicedate=              |dateCalculation;               |dd-MM-yyyy          |2   |
+|$loadingDate=              |dateCalculation;               |yyyy/MM/dd          |-2  |
+|$truckindate=              |dateCalculation;               |yyyy/MM/dd          |-5  |
+|$truckoutdate=             |dateCalculation;               |yyyy/MM/dd          |-1  |
+|$thisday=                  |dateCalculation;               |dd                  |0   |
+|$nMinus3day=               |getNPreviousDateInCurrentMonth;|$thisday            |-3|1|
+|$nMinus1day=               |getNPreviousDateInCurrentMonth;|$thisday            |-1|0|
+|$today=                    |getNPreviousDateInCurrentMonth;|$thisday            |0 |1|
+|$nMinus5day=               |getNPreviousDateInCurrentMonth;|$thisday            |-5|1|
+|$nMinus4day=               |getNPreviousDateInCurrentMonth;|$thisday            |-4|1|
+|$expected_date_in_postgres=|dateCalculation;               |yyyy-MM-dd HH:mm:00Z|-1  |
+
+!|Script            |Common                                        |
+|$truckindate=      |stringConcatenation;|$truckindate |!- $timer-!|
+|$truckoutdate=     |stringConcatenation;|$truckoutdate|!- $timer-!|
+|$detention_group_1=|getRandomString;    |4            |ALPHAUPPER |
+|$detention_group_2=|getRandomString;    |4            |ALPHAUPPER |
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+
+!|Script               |DateUtil                               |
+|$truckinbacktimegate1=|dateCalculation;|hour       |hh:mma |-2|
+|$truckinbackdategate1=|dateCalculation;|dd-MM-yyyy |-4        |
+|$currenthrampmgate1=  |dateCalculation;|hour       |hh:mm a|-2|
+|$monthgate1=          |dateCalculation;|dd MMM yyyy|-4        |
+|$truckinbacktimegate2=|dateCalculation;|hour       |hh:mma |-3|
+|$truckinbackdategate2=|dateCalculation;|dd-MM-yyyy |-3        |
+|$currenthrampmgate2=  |dateCalculation;|hour       |hh:mm a|-3|
+|$monthgate2=          |dateCalculation;|dd MMM yyyy|-3        |
+
+!|Script                               |Common                                                   |
+|$expected_gate1_ArrivedDateInTimeline=|stringConcatenation;|$monthgate1|!- $currenthrampmgate1-!|
+|$expected_gate2_ArrivedDateInTimeline=|stringConcatenation;|$monthgate2|!- $currenthrampmgate2-!|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Updating the client config for Freight bill
+!|Script                              |MongoDB                                      |
+|initialize;                          |${connection}|${database}                    |
+|wait;                                |2                                            |
+|updateFreightBillClientConfiguration;|${surl}      |category1|start_day|$nMinus3day|
+|updateFreightBillClientConfiguration;|${surl}      |category1|end_day  |$today     |
+|updateFreightBillClientConfiguration;|${surl}      |category2|start_day|$nMinus5day|
+|updateFreightBillClientConfiguration;|${surl}      |category2|end_day  |$nMinus4day|
+|updateFreightBillClientConfiguration;|${surl}      |category3|start_day|$nMinus3day|
+|updateFreightBillClientConfiguration;|${surl}      |category3|end_day  |$today     |
+*!
+
+!**> Data creation
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {dc$unique}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation one
+
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+
+*!
+
+!***> Gate Creation two
+
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {RQ2$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_2=|getValueFromJSON;|$depotResp|data.id|
+
+*!
+
+!**> Consignee Creation one
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Egmore}
+!define city {cc$unique}
+!define state {Madya Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+**!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {2048}
+!define kg {12000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Uploading Detention for the Vehicle Group
+!define row {Vehicle Name,Group Code,Movement,LOADING_DETENTION_DAY1,LOADING_DETENTION_DAY2,LOADING_DETENTION_DAY3,LOADING_DETENTION_DAY4,LOADING_DETENTION_DAY5,LOADING_DETENTION_MORETHAN_DAY5,UnLOADING_DETENTION_DAY1,UnLOADING_DETENTION_DAY2,UnLOADING_DETENTION_DAY3,UnLOADING_DETENTION_DAY4,UnLOADING_DETENTION_DAY5,UnLOADING_DETENTION_MORETHAN_DAY5,TRANSIT_DAY1,TRANSIT_DAY2,TRANSIT_DAY3,TRANSIT_DAY4,TRANSIT_DAY5,TRANSIT_MORETHAN_DAY5,TRANSIT_DELAY_PERCENTAGE}
+!define column1 {${vehicle_name},$detention_group_1,Secondary,100,200,300,400,500,600,100,200,300,400,500,600,100,200,300,400,500,600,|${vehicle_name},$detention_group_2,Secondary,111,222,333,444,555,666,777,888,999,111,222,333,444,555,666,777,888,999,}
+
+!|Script    |Common                                          |
+|$excelpath=|getPath;|testAttachment/d2_$unique.xlsx|fullpath|
+
+!|Script                |Excel                       |
+|newSheetDynamicColumns;|${row}|${column1}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/detentions                                          |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|wait;                     |5                                                               |
+**!
+
+!** Admin settings for Detention
+!define loadingdetention_days {1}
+!define loadingdetention_hrs {0}
+
+!|Script|Http                                                                                                                                                                                                                                                                                       |
+|$data= |getJsonTrim;|{"data":{"depot_ids":["$depot"],"movement":1,"include_holiday":false,"threshold_time":"23:59","start_time":"00:00","detention_configurations":[{"detention_type":2,"days":0,"hours":0},{"detention_type":1,"days":${loadingdetention_days},"hours":${loadingdetention_hrs}}]}}|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.AdminSettings.DetentionAdminSettingsAPI
+**!
+
+!**> Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"5"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!**> Purchase order creation for transporter 1
+!define ponumber {po$unique}
+!define netvalue {10000}
+!define balvalue {5000}
+!define legalentity {le$unique}
+!define validfrom {2021-01-01}
+!define validto {2025-12-31}
+
+!define row {Purchase Order Number,Purchase Order Net Value,Purchase Order Balance value,Transporter Ref ID,Legal Entity,Valid From(YYYY-MM-DD),Valid To(YYYY-MM-DD)}
+!define column {${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity},${validfrom},${validto}}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonPOupload
+**!
+
+!**> Uploading Rate Matrix with vehicle 1
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,RQ1$unique,cr1$unique,v$unique,700,$transporter_ref_id,$transporter_name,1,1212.56,per trip,01-Jan-$year,31-Dec-2030,100,1,$detention_group_1,,100,1,per_kg,100,0,,,0-250,600,15,22,,}
+
+!include -c  .FrontPage.Pando.Common.RateMatrix
+*!
+**!
+
+!**> Direct Dispatch Contract Indent creation
+!define delivery_number {d1$unique}
+!define mrp_price {1000}
+!define material_code {mc$unique}
+!define depot_ref_id {R$unique}
+!define gate_ref_id_1 {RQ1$unique}
+!define division {${legalentity}}
+!define quantity {100}
+!define quantity_unit {NOS}
+!define weight {100}
+!define weight_unit {KG}
+!define volume {1024}
+!define volume_unit {CFT}
+!define ship_to {cr1$unique}
+!define sold_to {cr1$unique}
+!define type {Secondary}
+!define shipment_number {s1$unique}
+!define invoice_number {INV1$unique}
+!define invoice_amount {10000}
+!define category {20a}
+!define lr_number {lr1$unique}
+!define invoice_date {$invoicedate}
+!define transporter {tr$unique}
+!define vehicle_type {v$unique}
+!define vehicle_number {TN $vno_1 $vno_2 $vno_3}
+!define lr_number_1 {lr1$unique}
+!define lr_number_2 {lr2$unique}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"${delivery_number}","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id_1}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number_1}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+*!
+
+!**> Filter indent after direct_dispatch
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|script                     |ui                                                                                                                                                                                        |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                                                                                  |20        |
+|check                       |isElementPresent;                                                                      |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|mouseHover;                 |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]                   |xpath                                                                                             |
+|$order_id=                  |getText;                                                                               |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)                    |xpath     |
+**!
+
+!**> Edit Truck in for both gates in dispatched status
+!|Script               |common                        |
+|$truckinbackdategate1=|getTrim;|$truckinbackdategate1|
+|$truckinbacktimegate1=|getTrim;|$truckinbacktimegate1|
+|$truckinbackdategate2=|getTrim;|$truckinbackdategate2|
+|$truckinbacktimegate2=|getTrim;|$truckinbacktimegate2|
+
+!|Script                     |Ui                                                                                                                                                               |
+|click;                      |//span[contains(text(),'Edit Truck In')]                                                    |xpath                                                               |
+|click;                      |(//label[contains(text(),'Truck In- Date & Time')]/..//input[@placeholder='Pick a date'])[1]|xpath                                                               |
+|clearAndSend;               |//input[@placeholder='Select date']                                                         |xpath                                         |$truckinbackdategate1|
+|click;                      |//input[@placeholder='Select time']                                                         |xpath                                                               |
+|clearAndSend;               |//input[@placeholder='Select time']                                                         |xpath                                         |$truckinbacktimegate1|
+|click;                      |//div[@class='el-picker-panel__footer']                                                     |xpath                                                               |
+|click;                      |//div[@class='el-picker-panel__footer']/button/span[contains(text(),'OK')]                  |xpath                                                               |
+|wait;                       |2                                                                                                                                                                |
+|click;                      |//div[contains(text(),'Edit Truck In')]/..//*[contains(text(),'Submit')]                    |xpath                                                               |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span                                              |xpath                                         |20                   |
+|$successMessage=            |getElementAttribute;                                                                        |//h3[text()='Success']/following-sibling::span|xpath   |innerText   |
+
+!|Script   |common                                                        |
+|check     |checkIfStringAreEqual;|$successMessage|Timestamps Updated|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage|Timestamps Updated     |
+**!
+
+!**> Move to delivered
+!**> EPOD submission through Consignee APP
+!define consignee_id {$consignee_id_1}
+!define cusername {pandoconsignee+1$unique@gmail.com}
+!define cpassword {12345}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GetMaterialThroughConsigneeMobileAppAPI
+
+!|Script|Common                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":{"materials":[{"id":"$material_ref_id","leakage_count":"0","damage_count":"1","excess_count":"0","shortage_count":"2","carton_damage_count":"3","comment":"","shortage_charge":"120","damage_charge":"507.56","carton_damage_charge":"305.67"}],"packages":[]}}|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GRNSubmissionThroughConsigneeMobileApp
+
+!**> Verify EPOD submission
+!|Script                     |Ui                                                                                                                                                          |
+|click;                      |//span[text()='Document']             |xpath                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]|xpath                                                                                              |30               |
+|$epodstatus_column=         |getHeaderColumnNumber;                |//div[@class='el-table__header-wrapper']//div[@class='cell']                                       |xpath|EPOD status|
+|$material_row_number=       |getHeaderColumnNumber;                |//div[contains(@class,'scrolling')]//span[contains(text(),'kg')]                                   |xpath|100 kg     |
+|$epodstatus=                |getText;                              |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+
+!|Script|Common                                           |
+|check  |checkIfStringAreEqual;|$epodstatus|Submitted|true|
+**!
+**!
+
+!**> LR Upload in shipper
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!|Script  |Ui                                                                                         |
+|sendKeys;|//input[@class='el-upload__input']|xpath                                        |$pdfpath  |
+|check    |isElementPresent;                 |//span[@class='el-upload-list__item-preview']|xpath|true|
+**!
+
+!**> Marking Indent as delivered
+!define consignee_id {$consignee_id}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+
+!|script                     |ui                                                                                                                                    |
+|navigateToUrl;              |${surl}/indents                                                                                                                       |
+|refresh;                                                                                                                                                           |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                              |30        |
+|check                       |isElementPresent;                                                                      |//div[contains(text(),'Delivered')]|xpath|true|
+*!
+**!
+
+!** Transporter Login
+!define transporter_email {pandotransporter+$unique@outlook.com}
+!define transporter_password {$password}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!** Checking the Freight bill posted
+!|script                     |ui                                                                                                                                                |
+|click;                      |//li[@class='app-side-menu']                      |xpath                                                                                          |
+|click;                      |//li/a[contains(text(),'Pay')]                    |xpath                                                                                          |
+|click;                      |//li[@class='app-side-menu']/following-sibling::li|xpath                                                                                          |
+|click;                      |//li/span[text()='Freight Bill']                  |xpath                                                                                          |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row')]           |xpath                                                                                    |20   |
+|$freight_bill_no=           |getText;                                          |(//span[text()='CATEGORY1']/ancestor::div[contains(@class,'grid-list-row')]/div)[1]//span|xpath|
+|$other_charges_bill_no=     |getText;                                          |(//span[text()='CATEGORY3']/ancestor::div[contains(@class,'grid-list-row')]/div)[1]//span|xpath|
+*!
+
+!**> Changing the Freight end day for the category 1 and category 3
+!|Script                              |MongoDB                              |
+|updateFreightBillClientConfiguration;|${surl}|category1|end_day|$nMinus1day|
+|updateFreightBillClientConfiguration;|${surl}|category3|end_day|$nMinus1day|
+*!
+
+!**> Changing the Freight bill end day for the category 1 and category 3 in Postgres DB
+!define updatequery_1 {update public."FreightBills" set expected_erp_post_date='$expected_date_in_postgres' where bill_no='$freight_bill_no';}
+!define updatequery_2 {update public."FreightBills" set expected_erp_post_date='$expected_date_in_postgres' where bill_no='$other_charges_bill_no';}
+
+!|script|PostgresDB                                               |
+|$db1=  |updateDataInPostgresDb;|${pg_connection}|${updatequery_1}|
+|$db2=  |updateDataInPostgresDb;|${pg_connection}|${updatequery_2}|
+**!
+
+!** Verify loading detention in the created Freight Bill
+!|script                        |ui                                                                                                                                                                                                                                                           |
+|navigateToUrl;                 |${turl}/v2/freight                                                                                                                                                                                                                                           |
+|click;                         |//span[text()='CATEGORY3']                                                                                        |xpath                                                                                                                                     |
+|waitForElementToBeDisplayed;   |//div[@class='el-table__fixed']//span[normalize-space(text())='$order_id!--cat3-!']                               |xpath                                                                                                             |20                     |
+|$total_freight_bill_amount=    |getText;                                                                                                          |//div[contains(@class,'el-table__fixed-right')]//div[@class='totalvalue']                                         |xpath                  |
+|waitForElementToBeDisplayed;   |//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody                                        |xpath                                                                                                             |10                     |
+|$loadingdetentionHeaderNo=     |getHeaderColumnNumber;                                                                                            |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                   |xpath|Loading Detention|
+|waitForElementToBeDisplayed;   |(//tr[starts-with(@class,'el-table__row')]/td)[$loadingdetentionHeaderNo]//div[starts-with(@class,'gridrefvalue')]|xpath                                                                                                             |20                     |
+|$actual_loadingdetentioncharge=|getText;                                                                                                          |(//tr[starts-with(@class,'el-table__row')]/td)[$loadingdetentionHeaderNo]//div[starts-with(@class,'gridrefvalue')]|xpath                  |
+
+!define header_name1 {Loading Detention - 4 Days}
+!define header_name2 {Additional Point}
+!define consignee_name {cc$unique}
+!define updated_loadingcharge {5237}
+!define updated_addcharge {6675.56}
+!define loadingcomment {Loading charge is increased}
+!define addchargescomment {Additional Point  is increased}
+
+!|script                       |ui                                                                                                                                                                                                                                                                                                                               |
+|click;                        |//div[@class='el-table__fixed']//div[contains(@class,'location') and normalize-space(text())='${consignee_name}']|xpath                                                                                                                                                                                                          |
+|waitForElementToBeDisplayed;  |//div[@id='pane-Details']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath                                                                                                                                                                                 |15                      |
+|click;                        |//div[@id='tab-Charges']                                                                                         |xpath                                                                                                                                                                                                          |
+|waitForElementToBeDisplayed;  |//div[@id='pane-Charges']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath                                                                                                                                                                                 |15                      |
+|$charges_header_column_number=|getHeaderColumnNumber;                                                                                           |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'el-tooltip') or contains(@class,'position'))]|xpath  |${header_name1} |
+|$system_generated_amount=     |getText;                                                                                                         |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]                                      |xpath                   |
+|$transporter_column_amount1=  |getValue;                                                                                                        |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input                                                                                |xpath                   |
+|clearAndSend;                 |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input           |xpath                                                                                                                                                                                 |${updated_loadingcharge}|
+|wait;                         |2                                                                                                                                                                                                                                                                                                                                |
+|mouseHover;                   |//span[contains(@class,'el-tooltip')]                                                                            |xpath                                                                                                                                                                                                          |
+|$errortext1=                  |getText;                                                                                                         |(//div[@class='tooltipcontent'])                                                                                                                                                      |xpath                   |
+|check                         |isElementPresent;                                                                                                |//span[text()='Save']/parent::button[@disabled='disabled']                                                                                                                            |xpath  |true            |
+|$tresult2=                    |isElementPresent;                                                                                                |//span[text()='Save']/parent::button[@disabled='disabled']                                                                                                                            |xpath                   |
+|sendKeys;                     |//div[@id='loading_detention_charge']                                                                            |xpath                                                                                                                                                                                 |${loadingcomment}       |
+|sendKeys;                     |//div[@id='loading_detention_charge']/following-sibling::div[@class='collapse-bottom']//input                    |xpath                                                                                                                                                                                 |$pdfpath                |
+|check                         |isElementPresent;                                                                                                |//div[@id='loading_detention_charge']/following-sibling::div//span[@class='el-upload-list__item-preview']                                                                             |xpath  |true            |
+|click;                        |//div[@id='loading_detention_charge']/following-sibling::div//span[text()='Add']                                 |xpath                                                                                                                                                                                                          |
+|wait;                         |2                                                                                                                                                                                                                                                                                                                                |
+|$charges_header_column_number=|getHeaderColumnNumber;                                                                                           |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'el-tooltip') or contains(@class,'position'))]|xpath  |${header_name2} |
+|$system_generated_amount=     |getText;                                                                                                         |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]                                      |xpath                   |
+|$transporter_column_amount2=  |getValue;                                                                                                        |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input                                                                                |xpath                   |
+|clearAndSend;                 |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input           |xpath                                                                                                                                                                                 |${updated_addcharge}    |
+|wait;                         |5                                                                                                                                                                                                                                                                                                                                |
+|mouseHover;                   |(//span[contains(@class,'el-tooltip')])                                                                          |xpath                                                                                                                                                                                                          |
+|$errortext2=                  |getText;                                                                                                         |(//div[@class='tooltipcontent'])                                                                                                                                                      |xpath                   |
+|check                         |isElementPresent;                                                                                                |//span[text()='Save']/parent::button[@disabled='disabled']                                                                                                                            |xpath  |true            |
+|$tresult3=                    |isElementPresent;                                                                                                |//span[text()='Save']/parent::button[@disabled='disabled']                                                                                                                            |xpath                   |
+|sendKeys;                     |//div[@id='additional_point_charges']                                                                            |xpath                                                                                                                                                                                 |${addchargescomment}    |
+|sendKeys;                     |//div[@id='additional_point_charges']/following-sibling::div[@class='collapse-bottom']//input                    |xpath                                                                                                                                                                                 |$pdfpath                |
+|check                         |isElementPresent;                                                                                                |//div[@id='additional_point_charges']/following-sibling::div//span[@class='el-upload-list__item-preview']                                                                             |xpath  |true            |
+|click;                        |//div[@id='additional_point_charges']/following-sibling::div//span[text()='Add']                                 |xpath                                                                                                                                                                                                          |
+|wait;                         |3                                                                                                                                                                                                                                                                                                                                |
+|click;                        |//span[text()='Save']                                                                                            |xpath                                                                                                                                                                                                          |
+|waitUntilElementDisplayed;    |//div[@role='alert']//h3[text()='Success']                                                                       |xpath                                                                                                                                                                                 |60                      |
+|$successMessage=              |getElementAttribute;                                                                                             |//div[@role='alert']//h3[text()='Success']/following-sibling::span                                                                                                                    |xpath  |innerText       |
+
+!|Script   |common                                                                            |
+|check     |checkIfStringAreEqual;|$errortext1    |Comment & Attachment Mandatory        |true|
+|$tresult4=|checkIfStringAreEqual;|$errortext1    |Comment & Attachment Mandatory             |
+|check     |checkIfStringAreEqual;|$errortext2    |Comment & Attachment Mandatory        |true|
+|$tresult5=|checkIfStringAreEqual;|$errortext2    |Comment & Attachment Mandatory             |
+|check     |checkIfStringAreEqual;|$successMessage|Changes has been successfully updated!|true|
+|$tresult6=|checkIfStringAreEqual;|$successMessage|Changes has been successfully updated!     |
+**!
+
+!**> Generate invoice for cat 1
+!define fb_category {CATEGORY1}
+!define fb_order_id {$order_id!--cat1-!}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.FreightWorkingV2.PGFrieghtBill.CommonFreightbillGenerateForCategory
+
+!|script                   |common                       |
+|$total_invoice_value_cat1=|getTrim;|$total_invoice_value|
+**!
+
+!**> Generate invoice for cat 3
+!define fb_category {CATEGORY3}
+!define fb_order_id {$order_id!--cat3-!}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.FreightWorkingV2.PGFrieghtBill.CommonFreightbillGenerateForCategory
+
+!|script                   |common                       |
+|$total_invoice_value_cat3=|getTrim;|$total_invoice_value|
+
+!|Script   |common                                                         |
+|check     |checkIfStringAreEqual;|$total_invoice_value_cat3|13,036.56|true|
+|$tresult7=|checkIfStringAreEqual;|$total_invoice_value_cat3|13,036.56     |
+**!
+
+!**> Checking the updated charges in shipper login
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!include -c .FrontPage.Pando.Common.ShipperIndentSearch
+
+!|script|ui                                                                                                                                                                                                |
+|check  |isElementPresent;                                                                          |//div[contains(@class,'card-row row')]//*[normalize-space(text())='$freight_bill_no']      |xpath|true|
+|check  |isElementPresent;                                                                          |//div[contains(@class,'card-row row')]//*[normalize-space(text())='$other_charges_bill_no']|xpath|true|
+|click; |//div[contains(@class,'card-row row')]//*[normalize-space(text())='$other_charges_bill_no']|xpath                                                                                                 |
+
+!define header_name {Loading Detention - 4 Days}
+!define consignee_name {cc$unique}
+
+!|script                     |ui                                                                                                                        |
+|waitForElementToBeDisplayed;|//div[@class='el-table__fixed']//div[contains(@class,'location') and normalize-space(text())='${consignee_name}']|xpath|20|
+|click;                      |//div[@class='el-table__fixed']//div[contains(@class,'location') and normalize-space(text())='${consignee_name}']|xpath   |
+|waitForElementToBeDisplayed;|//div[@id='pane-Details']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath|15|
+|click;                      |//div[@id='tab-Charges']                                                                                         |xpath   |
+|waitForElementToBeDisplayed;|//div[@id='pane-Charges']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath|15|
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                   |Common                             |
+|$shipper_loadingamount=    |getTrim;|$system_generated_amount  |
+|$transporter_loadingamount=|getTrim;|$transporter_column_amount|
+
+!define header_name {Additional Point}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                      |Common                             |
+|$shipper_additionalamount=    |getTrim;|$system_generated_amount  |
+|$transporter_additionalamount=|getTrim;|$transporter_column_amount|
+
+!|Script           |ui                                                                                                                            |
+|click;            |//div[@class='el-tabs__content']//span[contains(text(),'Loading Detention')]|xpath                                            |
+|$comment1_shipper=|getText;                                                                    |//div[@id='loading_detention_charge']/..//p|xpath|
+|click;            |//div[@class='el-tabs__content']//span[contains(text(),'Additional Point')] |xpath                                            |
+|$comment2_shipper=|getText;                                                                    |//div[@id='additional_point_charges']/..//p|xpath|
+
+!|Script    |common                                                                            |
+|check      |checkIfStringAreEqual;|$shipper_loadingamount       |1000                    |true|
+|$tresult8= |checkIfStringAreEqual;|$shipper_loadingamount       |1000                         |
+|check      |checkIfStringAreEqual;|$transporter_loadingamount   |${updated_loadingcharge}|true|
+|$tresult9= |checkIfStringAreEqual;|$transporter_loadingamount   |${updated_loadingcharge}     |
+|check      |checkIfStringAreEqual;|$shipper_additionalamount    |0                       |true|
+|$tresult10=|checkIfStringAreEqual;|$shipper_additionalamount    |0                            |
+|check      |checkIfStringAreEqual;|$transporter_additionalamount|${updated_addcharge}    |true|
+|$tresult11=|checkIfStringAreEqual;|$transporter_additionalamount|${updated_addcharge}         |
+|check      |checkIfStringAreEqual;|$comment1_shipper            |${loadingcomment}       |true|
+|$tresult12=|checkIfStringAreEqual;|$comment1_shipper            |${loadingcomment}            |
+|check      |checkIfStringAreEqual;|$comment2_shipper            |${addchargescomment}    |true|
+|$tresult13=|checkIfStringAreEqual;|$comment2_shipper            |${addchargescomment}         |
+**!
+
+!**> Validating result
+!|Script  |Common                                                                                                                                                                       |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,$tresult11,$tresult12,$tresult13,true     |
+|check    |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,$tresult11,$tresult12,$tresult13,true|true|
+*!
+
+!**> Reverting the Freight bill configuration to default
+!|Script                              |MongoDB                       |
+|updateFreightBillClientConfiguration;|${surl}|category1|start_day|1 |
+|updateFreightBillClientConfiguration;|${surl}|category1|end_day  |15|
+|updateFreightBillClientConfiguration;|${surl}|category2|start_day|16|
+|updateFreightBillClientConfiguration;|${surl}|category2|end_day  |31|
+|updateFreightBillClientConfiguration;|${surl}|category3|start_day|1 |
+|updateFreightBillClientConfiguration;|${surl}|category3|end_day  |31|
+*!

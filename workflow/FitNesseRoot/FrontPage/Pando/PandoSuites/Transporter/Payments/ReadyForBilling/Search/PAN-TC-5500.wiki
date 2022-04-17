@@ -1,0 +1,17 @@
+---
+Help: Search with non indent Indent ID
+Test
+---
+!|Script                     |Ui                                                                                                                   |
+|navigateToUrl;              |${turl}/v2/payments                                                                                                  |
+|wait;                       |5                                                                                                                    |
+|click;                      |//span[text()='Search']                                                  |xpath                                      |
+|waitForElementToBeDisplayed;|//input[@placeholder='Enter Indent ID' or @placeholder='Enter indent id']|xpath                       |30            |
+|clearAndSend;               |//input[@placeholder='Enter Indent ID' or @placeholder='Enter indent id']|xpath                       |PL-CHN-2098765|
+|click;                      |//button[text()='Search']                                                |xpath                                      |
+|waitForElementToBeDisplayed;|//div[@class='emptydiv']                                                 |xpath                       |10            |
+|check                       |isElementPresent;                                                        |//div[@class='paymentempty']|xpath  |true  |
+|$tresult=                   |isElementPresent;                                                        |//div[@class='paymentempty']|xpath         |
+
+ 
+

@@ -1,0 +1,27 @@
+---
+Help: Export the Rate Matrix Data via email
+Suites: dm1
+Test
+---
+!** Exporting the Rate Matrices to Email
+
+!|Script       |Ui                                                                                                                   |
+|navigateToUrl;|${surl}/mdm/rate-matrix                                                                                              |
+|click;        |//button[text()='Export']|xpath                                                                                      |
+|check         |isElementPresent;        |//span[text()='You will receive the requested data via email in a few minutes!']|xpath|true|
+|wait;         |20                                                                                                                   |
+*!
+
+!** Checking mail for the Rate Matrix export
+
+!define email {${username}}
+!define MailUserPassword {Pando@123}
+!define subject {Contract export}
+!define search_text {Hello DM, please click here to download the data you are looking for!}
+!include .FrontPage.Pando.Common.RetrieveNotificationMail
+**!
+
+!|Script  |Common                                             |
+|check    |checkIfStringExistsIn;|${subject}    |$subject|true|
+|check    |checkIfStringExistsIn;|${search_text}|$body   |true|
+|$tresult=|checkIfStringExistsIn;|${search_text}|$body        |

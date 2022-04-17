@@ -1,0 +1,11 @@
+---
+Help: Material invoice with input as variable
+Test
+---
+!|Script    |Http                                      |
+|wait;      |5                                         |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/erp/material_invoice          |
+|$indent=   |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|204                        |
+|wait;      |5                                         |

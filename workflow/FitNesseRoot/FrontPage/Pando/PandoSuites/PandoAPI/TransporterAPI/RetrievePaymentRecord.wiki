@@ -1,0 +1,16 @@
+---
+Test
+---
+!| Script    |Http                                                                                         |
+|wait;       |10                                                                                           |
+|setBaseUrl; |${turl}/api/login                                                                            |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}|
+|$token=     |getHeader;      |x-auth-token                                                                |
+|addHeader;  |Authorization   |bearer $token                                                               |
+|setBaseUrl; |${turl}/api/payment?$query                                                                   |
+|$response=  |getResponse;    |Application/Json|get                            |                           |
+|$status=    |getStatusCode;                                                                               |
+
+|Script|Common                           |
+|$len= |getStringLength;|$response       |
+|$data=|getSubString;   |$response|8|$len|

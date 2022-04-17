@@ -1,0 +1,911 @@
+---
+Help: Verify All depots in depot filter as default in Wallet and invoice during direct dispatch and validate S/D/CD amount in wallet
+Suites: pg
+Test
+---
+!**> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$invoicedate= |dateCalculation;|dd-MM-yyyy |2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-2|
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-1|
+
+!|Script       |Common                                        |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer-!|
+
+!|Script                    |DateUtil                                                 |
+|$loadingDate=              |utcConversion;                 |$loadingDate             |
+|$truckindate=              |utcConversion;                 |$truckindate             |
+|$truckoutdate=             |utcConversion;                 |$truckoutdate            |
+|$thisday=                  |dateCalculation;               |dd                  |0   |
+|$nMinus1day=               |getNPreviousDateInCurrentMonth;|$thisday            |-1|0|
+|$nMinus3day=               |getNPreviousDateInCurrentMonth;|$thisday            |-3|1|
+|$nMinus5day=               |getNPreviousDateInCurrentMonth;|$thisday            |-5|1|
+|$nMinus4day=               |getNPreviousDateInCurrentMonth;|$thisday            |-4|1|
+|$today=                    |getNPreviousDateInCurrentMonth;|$thisday            |0 |1|
+|$expected_date_in_postgres=|dateCalculation;               |yyyy-MM-dd HH:mm:00Z|-1  |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Data Creation
+!**> Depot Creation 1
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {dc$unique}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RG$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script    |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+*!
+
+!**> Depot Creation 2
+!define depot_name {d2$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {dc2$unique}
+!define depot_region {South}
+!define depot_short_code {D2$num}
+!define depot_reference_id {R2$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+2$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RG2$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script    |json                                |
+|$gate_id_2=|getValueFromJSON;|$depotResp|data.id|
+*!
+*!
+
+!**> Depot Creation 3
+!define depot_name {d3$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {dc3$unique}
+!define depot_region {South}
+!define depot_short_code {D3$num}
+!define depot_reference_id {R3$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+3$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RG3$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script    |json                                |
+|$gate_id_3=|getValueFromJSON;|$depotResp|data.id|
+*!
+*!
+
+!**> Depot Creation 4
+!define depot_name {d4$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {dc4$unique}
+!define depot_region {South}
+!define depot_short_code {D4$num}
+!define depot_reference_id {R4$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+4$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RG4$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script    |json                                |
+|$gate_id_4=|getValueFromJSON;|$depotResp|data.id|
+*!
+*!
+
+!**> Adding newly created depot to the client config for Freight bill
+!|Script                              |MongoDB                                      |
+|initialize;                          |${connection}|${database}                    |
+|wait;                                |2                                            |
+|addToFreightBillClientConfiguration; |${surl}      |category4|depots   |$depot     |
+|updateFreightBillClientConfiguration;|${surl}      |category1|start_day|$nMinus3day|
+|updateFreightBillClientConfiguration;|${surl}      |category1|end_day  |$today     |
+|updateFreightBillClientConfiguration;|${surl}      |category2|start_day|$nMinus5day|
+|updateFreightBillClientConfiguration;|${surl}      |category2|end_day  |$nMinus4day|
+|updateFreightBillClientConfiguration;|${surl}      |category3|start_day|$nMinus5day|
+|updateFreightBillClientConfiguration;|${surl}      |category3|end_day  |$today     |
+*!
+
+!**> Consignee Creation
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Egmore}
+!define city {cc$unique}
+!define state {Madya Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+**!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Vehicle Creation 1
+!define vehicle_name {v$unique}
+!define cft {2048}
+!define kg {12000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Vehicle Creation 2
+!define vehicle_name {v2$unique}
+!define cft {2048}
+!define kg {12000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"5"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!**> Purchase order creation for transporter 1
+!define ponumber {po$unique}
+!define netvalue {10000}
+!define balvalue {5000}
+!define legalentity {le$unique}
+!define validfrom {2021-01-01}
+!define validto {2025-12-31}
+
+!define row {Purchase Order Number,Purchase Order Net Value,Purchase Order Balance value,Transporter Ref ID,Legal Entity,Valid From(YYYY-MM-DD),Valid To(YYYY-MM-DD)}
+!define column {${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity},${validfrom},${validto}}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonPOupload
+**!
+
+!**> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,dc$unique,cc$unique,v$unique,700,$transporter_ref_id,$transporter_name,1,3000.50,per ton,01-Jan-$year,31-Dec-2030,100,1,U,,100,1,per_kg,100,150,,,0-250,600,15,22,,|City,dc2$unique,cc$unique,v2$unique,700,$transporter_ref_id,$transporter_name,1,3000.50,per ton,01-Jan-$year,31-Dec-2030,100,1,U,,100,1,per_kg,100,150,,,0-250,600,15,22,,|City,dc3$unique,cc$unique,v2$unique,700,$transporter_ref_id,$transporter_name,1,3000.50,per ton,01-Jan-$year,31-Dec-2030,100,1,U,,100,1,per_kg,100,150,,,0-250,600,15,22,,|City,dc4$unique,cc$unique,v2$unique,700,$transporter_ref_id,$transporter_name,1,3000.50,per ton,01-Jan-$year,31-Dec-2030,100,1,U,,100,1,per_kg,100,150,,,0-250,600,15,22,,}
+
+!include -c  .FrontPage.Pando.Common.RateMatrix
+*!
+**!
+
+!**> Direct Dispatch Indent creation for all depots
+!define mrp_price {1000}
+!define material_code {mc$unique}
+!define division {${legalentity}}
+!define quantity {100}
+!define quantity_unit {NOS}
+!define weight {10000}
+!define weight_unit {KG}
+!define volume {1024}
+!define volume_unit {CFT}
+!define ship_to {cr1$unique}
+!define sold_to {cr1$unique}
+!define type {Secondary}
+!define invoice_number {INV1$unique}
+!define invoice_amount {10000}
+!define category {20a}
+!define lr_number {lr1$unique}
+!define invoice_date {$invoicedate}
+!define transporter {tr$unique}
+!define vehicle_type {v$unique}
+!define vehicle_number {TN $vno_1 $vno_2 $vno_3}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"d1$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"R$unique","gate_ref_id":"RG$unique","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"s1$unique","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":"$truckoutdate"},{"delivery_number":"d2$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"R2$unique","gate_ref_id":"RG2$unique","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"s2$unique","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"v2$unique","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":"$truckoutdate"},{"delivery_number":"d3$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"R3$unique","gate_ref_id":"RG3$unique","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"s3$unique","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"v2$unique","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":"$truckoutdate"},{"delivery_number":"d1$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"R4$unique","gate_ref_id":"RG4$unique","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to}","sold_to":"${sold_to}","type":"${type}","shipment_number":"s4$unique","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"v2$unique","vehicle_number":"${vehicle_number}","lr_number":"${lr_number}","truck_out":"$truckoutdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+*!
+
+!**> Verify indent for depot 1 and move it to delivered
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {d$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|script                     |ui                                                                                                                                                                                        |
+|refresh;                                                                                                                                                                                                               |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                                                                                  |30        |
+|check                       |isElementPresent;                                                                      |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|mouseHover;                 |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]                   |xpath                                                                                             |
+|$order_id_1=                |getText;                                                                               |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)                    |xpath     |
+
+!**> EPOD submission through Consignee APP
+!define consignee_id {$consignee_id}
+!define cusername {pandoconsignee+1$unique@gmail.com}
+!define cpassword {12345}
+
+!|Script   |Common              |
+|$order_id=|getTrim;|$order_id_1|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GetMaterialThroughConsigneeMobileAppAPI
+
+!|Script|Common                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":{"materials":[{"id":"$material_ref_id","leakage_count":"0","damage_count":"1","excess_count":"0","shortage_count":"2","carton_damage_count":"3","comment":"","shortage_charge":"120","damage_charge":"507.56","carton_damage_charge":"305.67"}],"packages":[]}}|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GRNSubmissionThroughConsigneeMobileApp
+
+!**> Verify EPOD submission
+!|Script                     |Ui                                                                                                                                                          |
+|click;                      |//span[text()='Document']             |xpath                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]|xpath                                                                                              |30               |
+|$epodstatus_column=         |getHeaderColumnNumber;                |//div[@class='el-table__header-wrapper']//div[@class='cell']                                       |xpath|EPOD status|
+|$material_row_number=       |getHeaderColumnNumber;                |//div[contains(@class,'scrolling')]//span[contains(text(),'kg')]                                   |xpath|10000 kg   |
+|$epodstatus=                |getText;                              |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+
+!|Script|Common                                           |
+|check  |checkIfStringAreEqual;|$epodstatus|Submitted|true|
+**!
+**!
+
+!**> LR Upload in shipper
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!|Script  |Ui                                                                                         |
+|sendKeys;|//input[@class='el-upload__input']|xpath                                        |$pdfpath  |
+|check    |isElementPresent;                 |//span[@class='el-upload-list__item-preview']|xpath|true|
+**!
+
+!**> Marking Indent as delivered
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+
+!|script                     |ui                                                                                                                                    |
+|navigateToUrl;              |${surl}/indents                                                                                                                       |
+|refresh;                                                                                                                                                           |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                              |30        |
+|check                       |isElementPresent;                                                                      |//div[contains(text(),'Delivered')]|xpath|true|
+*!
+**!
+
+!**> Verify indent for depot 2 and move it to delivered
+!define search_text {d2$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|script                     |ui                                                                                                                                                                                        |
+|refresh;                                                                                                                                                                                                               |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                                                                                  |30        |
+|check                       |isElementPresent;                                                                      |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|mouseHover;                 |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]                   |xpath                                                                                             |
+|$order_id_2=                |getText;                                                                               |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)                    |xpath     |
+
+!**> EPOD submission through Consignee APP
+!define consignee_id {$consignee_id_1}
+!define cusername {pandoconsignee+1$unique@gmail.com}
+!define cpassword {12345}
+
+!|Script   |Common              |
+|$order_id=|getTrim;|$order_id_2|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GetMaterialThroughConsigneeMobileAppAPI
+
+!|Script|Common                                                                                                                                                                                                                                                                       |
+|$data= |getTrim;|{"data":{"materials":[{"id":"$material_ref_id","leakage_count":"0","damage_count":"1","excess_count":"0","shortage_count":"5","carton_damage_count":"5","comment":"","shortage_charge":"100","damage_charge":"203","carton_damage_charge":"123.66"}],"packages":[]}}|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GRNSubmissionThroughConsigneeMobileApp
+
+!**> Verify EPOD submission
+!|Script                     |Ui                                                                                                                                                          |
+|click;                      |//span[text()='Document']             |xpath                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]|xpath                                                                                              |30               |
+|$epodstatus_column=         |getHeaderColumnNumber;                |//div[@class='el-table__header-wrapper']//div[@class='cell']                                       |xpath|EPOD status|
+|$material_row_number=       |getHeaderColumnNumber;                |//div[contains(@class,'scrolling')]//span[contains(text(),'kg')]                                   |xpath|10000 kg   |
+|$epodstatus=                |getText;                              |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+
+!|Script|Common                                           |
+|check  |checkIfStringAreEqual;|$epodstatus|Submitted|true|
+**!
+**!
+
+!**> LR Upload in shipper
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!|Script  |Ui                                                                                         |
+|sendKeys;|//input[@class='el-upload__input']|xpath                                        |$pdfpath  |
+|check    |isElementPresent;                 |//span[@class='el-upload-list__item-preview']|xpath|true|
+**!
+
+!**> Marking Indent as delivered
+!define consignee_id {$consignee_id}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+
+!|script                     |ui                                                                                                                                    |
+|navigateToUrl;              |${surl}/indents                                                                                                                       |
+|refresh;                                                                                                                                                           |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                              |30        |
+|check                       |isElementPresent;                                                                      |//div[contains(text(),'Delivered')]|xpath|true|
+*!
+**!
+
+!**> Verify indent for depot 3 and move it to delivered
+!define search_text {d3$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|script                     |ui                                                                                                                                                                                        |
+|refresh;                                                                                                                                                                                                               |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                                                                                  |30        |
+|check                       |isElementPresent;                                                                      |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|mouseHover;                 |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]                   |xpath                                                                                             |
+|$order_id_3=                |getText;                                                                               |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)                    |xpath     |
+
+!**> EPOD submission through Consignee APP
+!define cusername {pandoconsignee+1$unique@gmail.com}
+!define cpassword {12345}
+
+!|Script   |Common              |
+|$order_id=|getTrim;|$order_id_3|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GetMaterialThroughConsigneeMobileAppAPI
+
+!|Script|Common                                                                                                                                                                                                                                                                       |
+|$data= |getTrim;|{"data":{"materials":[{"id":"$material_ref_id","leakage_count":"0","damage_count":"2","excess_count":"0","shortage_count":"6","carton_damage_count":"6","comment":"","shortage_charge":"100","damage_charge":"203","carton_damage_charge":"123.66"}],"packages":[]}}|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GRNSubmissionThroughConsigneeMobileApp
+
+!**> Verify EPOD submission
+!|Script                     |Ui                                                                                                                                                          |
+|click;                      |//span[text()='Document']             |xpath                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]|xpath                                                                                              |30               |
+|$epodstatus_column=         |getHeaderColumnNumber;                |//div[@class='el-table__header-wrapper']//div[@class='cell']                                       |xpath|EPOD status|
+|$material_row_number=       |getHeaderColumnNumber;                |//div[contains(@class,'scrolling')]//span[contains(text(),'kg')]                                   |xpath|10000 kg   |
+|$epodstatus=                |getText;                              |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+
+!|Script|Common                                           |
+|check  |checkIfStringAreEqual;|$epodstatus|Submitted|true|
+**!
+**!
+
+!**> LR Upload in shipper
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!|Script  |Ui                                                                                         |
+|sendKeys;|//input[@class='el-upload__input']|xpath                                        |$pdfpath  |
+|check    |isElementPresent;                 |//span[@class='el-upload-list__item-preview']|xpath|true|
+**!
+
+!**> Marking Indent as delivered
+!define consignee_id {$consignee_id}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+
+!|script                     |ui                                                                                                                                    |
+|navigateToUrl;              |${surl}/indents                                                                                                                       |
+|refresh;                                                                                                                                                           |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                              |30        |
+|check                       |isElementPresent;                                                                      |//div[contains(text(),'Delivered')]|xpath|true|
+*!
+**!
+
+!**> Verify indent for depot 4 and move it to delivered
+!define search_text {d4$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|script                     |ui                                                                                                                                                                                        |
+|refresh;                                                                                                                                                                                                               |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                                                                                  |30        |
+|check                       |isElementPresent;                                                                      |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|mouseHover;                 |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]                   |xpath                                                                                             |
+|$order_id_4=                |getText;                                                                               |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)                    |xpath     |
+
+!**> EPOD submission through Consignee APP
+!define cusername {pandoconsignee+1$unique@gmail.com}
+!define cpassword {12345}
+
+!|Script   |Common              |
+|$order_id=|getTrim;|$order_id_4|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GetMaterialThroughConsigneeMobileAppAPI
+
+!|Script|Common                                                                                                                                                                                                                                                                  |
+|$data= |getTrim;|{"data":{"materials":[{"id":"$material_ref_id","leakage_count":"0","damage_count":"3","excess_count":"0","shortage_count":"4","carton_damage_count":"4","comment":"","shortage_charge":"105","damage_charge":"20","carton_damage_charge":"12"}],"packages":[]}}|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GRNSubmissionThroughConsigneeMobileApp
+
+!**> Verify EPOD submission
+!|Script                     |Ui                                                                                                                                                          |
+|click;                      |//span[text()='Document']             |xpath                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]|xpath                                                                                              |30               |
+|$epodstatus_column=         |getHeaderColumnNumber;                |//div[@class='el-table__header-wrapper']//div[@class='cell']                                       |xpath|EPOD status|
+|$material_row_number=       |getHeaderColumnNumber;                |//div[contains(@class,'scrolling')]//span[contains(text(),'kg')]                                   |xpath|10000 kg   |
+|$epodstatus=                |getText;                              |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+
+!|Script|Common                                           |
+|check  |checkIfStringAreEqual;|$epodstatus|Submitted|true|
+**!
+**!
+
+!**> LR Upload in shipper
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!|Script  |Ui                                                                                         |
+|sendKeys;|//input[@class='el-upload__input']|xpath                                        |$pdfpath  |
+|check    |isElementPresent;                 |//span[@class='el-upload-list__item-preview']|xpath|true|
+**!
+
+!**> Marking Indent as delivered
+!define consignee_id {$consignee_id}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+
+!|script                     |ui                                                                                                                                    |
+|navigateToUrl;              |${surl}/indents                                                                                                                       |
+|refresh;                                                                                                                                                           |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                              |30        |
+|check                       |isElementPresent;                                                                      |//div[contains(text(),'Delivered')]|xpath|true|
+*!
+**!
+
+!**> Validating Wallet entries in Shipper 
+!|Script                     |Ui                                                                                                                                                                              |
+|navigateToUrl;              |${surl}/v2/wallet                                                                                                                                                               |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row') or @class='paymentempty']|xpath                                                                                          |15             |
+|click;                      |//span[normalize-space(text())='Filter']                        |xpath                                                                                                          |
+|$default_selection=         |getElementAttribute;                                            |//label[text()='Depot']/../following-sibling::div//span[contains(@class,'multiselect__single')]|xpath|innerText|
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                              |
+|navigateToUrl;              |${surl}/v2/wallet                                                                                                                                                                                                                                                                                                               |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row') or @class='emptytext']                                                                                                                                                                                                                                                     |xpath|10     |
+|click;                      |//span[normalize-space(text())='Filter']                                                                                                                                                                                                                                                                          |xpath        |
+|click;                      |//label[text()='Depot']/../following-sibling::div/div[contains(@class,'multiselect')]                                                                                                                                                                                                                             |xpath        |
+|sendKeys;                   |//label[text()='Depot']/../following-sibling::div//input                                                                                                                                                                                                                                                          |xpath|$unique|
+|clickAll;                   |!-//div[contains(@class,'multiselect--active')]//li//span[text()='d$unique']|//div[contains(@class,'multiselect--active')]//li//span[text()='d2$unique']|//div[contains(@class,'multiselect--active')]//li//span[text()='d3$unique']|//div[contains(@class,'multiselect--active')]//li//span[text()='d4$unique']-!|xpath        |
+|wait;                       |1                                                                                                                                                                                                                                                                                                                               |
+|clearValueWA;               |//label[text()='Depot']/../following-sibling::div//input                                                                                                                                                                                                                                                          |xpath        |
+|wait;                       |1                                                                                                                                                                                                                                                                                                                               |
+|click;                      |(//div[contains(@class,'multiselect--active')]//li/span[contains(@class,'--selected')])[1]                                                                                                                                                                                                                        |xpath        |
+|click;                      |(//div[contains(@class,'page-filter')]//div)[last()]                                                                                                                                                                                                                                                              |xpath        |
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletFilterTransporterFragment
+
+!|Script|Ui                            |
+|click; |//button[text()='APPLY']|xpath|
+|wait;  |5                             |
+
+!|Script    |Ui                                                                                                                                                      |
+|$tresult1= |isElementPresent;|//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Carton Damage']|xpath|
+|$tresult2= |isElementPresent;|//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Damage']       |xpath|
+|$tresult3= |isElementPresent;|//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Shortage']     |xpath|
+|$tresult4= |isElementPresent;|//*[contains(text(),'$order_id_2')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Carton Damage']|xpath|
+|$tresult5= |isElementPresent;|//*[contains(text(),'$order_id_2')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Damage']       |xpath|
+|$tresult6= |isElementPresent;|//*[contains(text(),'$order_id_2')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Shortage']     |xpath|
+|$tresult7= |isElementPresent;|//*[contains(text(),'$order_id_3')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Carton Damage']|xpath|
+|$tresult8= |isElementPresent;|//*[contains(text(),'$order_id_3')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Damage']       |xpath|
+|$tresult9= |isElementPresent;|//*[contains(text(),'$order_id_3')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Shortage']     |xpath|
+|$tresult10=|isElementPresent;|//*[contains(text(),'$order_id_4')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Carton Damage']|xpath|
+|$tresult11=|isElementPresent;|//*[contains(text(),'$order_id_4')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Damage']       |xpath|
+|$tresult12=|isElementPresent;|//*[contains(text(),'$order_id_4')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Shortage']     |xpath|
+
+!|Script        |Common                                                                                                                                                                  |
+|$tresult13=    |checkIfStringAreEqual;       |$default_selection                                                     |Chennai Depot                                                     |
+|$shipperresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,$tresult11,$tresult12,$tresult13,true|
+**!
+
+!**> Validating Wallet amount in Shipper
+!define depot_name {d$unique}
+!define status_name_wallet {Select All}
+!define reason_wallet_1 {Shortage}
+!define reason_wallet_2 {Damage}
+!define reason_wallet_3 {Carton Damage}
+!define transporter_name {t$unique}
+!define multiple_reasons {!-//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_1}!-']|//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_2}!-']|//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_3}!-']-!}
+
+!|Script|Ui                                            |
+|click; |//span[normalize-space(text())='Filter']|xpath|
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletFilterStatusFragment
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletFilterReasonFragment
+
+!|Script|Ui                            |
+|click; |//button[text()='APPLY']|xpath|
+|wait;  |5                             |
+
+!define search_text {$order_id_1}
+!define shipnum {s1$unique}
+
+!|Script       |Ui                                                                                            |
+|click;        |//div[@class='app-search-label']                                         |xpath               |
+|click;        |//*[text()='Clear']                                                      |xpath               |
+|sendHumanKeys;|//input[@placeholder='Enter Indent ID' or @placeholder='Enter indent id']|xpath|${search_text}|
+|sendHumanKeys;|//input[@placeholder='Enter shipment no']                                |xpath|${shipnum}    |
+|click;        |//button[text()='Search']                                                |xpath               |
+|wait;         |2                                                                                             |
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                     |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row')]|xpath                                                                                                                                                                                                               |15        |
+|check                       |getCountOfElements;                    |//div[contains(@class,'grid-list-row')]                                                                                                                                                                             |xpath|3   |
+|check                       |isElementPresent;                      |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']                                                                               |xpath|true|
+|check                       |isElementPresent;                      |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']                                                                               |xpath|true|
+|check                       |isElementPresent;                      |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']                                                                               |xpath|true|
+|$shortageamt1=              |getText;                               |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[1]|xpath     |
+|$shortageamt2=              |getText;                               |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[2]|xpath     |
+|$shortageamt3=              |getText;                               |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[3]|xpath     |
+|$damageamt1=                |getText;                               |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[1]|xpath     |
+|$damageamt2=                |getText;                               |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[2]|xpath     |
+|$damageamt3=                |getText;                               |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[3]|xpath     |
+|$cartondamageamt1=          |getText;                               |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[1]|xpath     |
+|$cartondamageamt2=          |getText;                               |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[2]|xpath     |
+|$cartondamageamt3=          |getText;                               |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[3]|xpath     |
+
+!|script                      |common                                                                                                                      |
+|$tresult1=                   |checkIfStringAreEqual;       |$shortageamt1                                 |System: 120.00                                 |
+|$tresult2=                   |checkIfStringAreEqual;       |$shortageamt2                                 |Shipper: 120.00                                |
+|$tresult3=                   |checkIfStringAreEqual;       |$shortageamt3                                 |Transporter: 120.00                            |
+|$tresult4=                   |checkIfStringAreEqual;       |$cartondamageamt1                             |System: 305.67                                 |
+|$tresult5=                   |checkIfStringAreEqual;       |$cartondamageamt2                             |Shipper: 305.67                                |
+|$tresult6=                   |checkIfStringAreEqual;       |$cartondamageamt3                             |Transporter: 305.67                            |
+|$tresult7=                   |checkIfStringAreEqual;       |$damageamt1                                   |System: 507.56                                 |
+|$tresult8=                   |checkIfStringAreEqual;       |$damageamt2                                   |Shipper: 507.56                                |
+|$tresult9=                   |checkIfStringAreEqual;       |$damageamt3                                   |Transporter: 507.56                            |
+|$walletamount_shipper_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,true|
+**!
+
+!**> Transporter login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+**!
+
+!**> Validating Wallet entries in Transporter 
+!|Script                     |Ui                                                                    |
+|navigateToUrl;              |${turl}/v2/wallet                                                     |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row') or @class='emptytext']|xpath|10|
+|click;                      |//span[normalize-space(text())='Filter']                     |xpath   |
+
+!|Script      |Ui                                                                                                                                                                                                                                                                                                                              |
+|click;       |//label[text()='Depot']/../following-sibling::div/div[contains(@class,'multiselect')]                                                                                                                                                                                                                             |xpath        |
+|sendKeys;    |//label[text()='Depot']/../following-sibling::div//input                                                                                                                                                                                                                                                          |xpath|$unique|
+|clickAll;    |!-//div[contains(@class,'multiselect--active')]//li//span[text()='d$unique']|//div[contains(@class,'multiselect--active')]//li//span[text()='d2$unique']|//div[contains(@class,'multiselect--active')]//li//span[text()='d3$unique']|//div[contains(@class,'multiselect--active')]//li//span[text()='d4$unique']-!|xpath        |
+|wait;        |1                                                                                                                                                                                                                                                                                                                               |
+|clearValueWA;|//label[text()='Depot']/../following-sibling::div//input                                                                                                                                                                                                                                                          |xpath        |
+|wait;        |1                                                                                                                                                                                                                                                                                                                               |
+|click;       |(//div[contains(@class,'multiselect--active')]//li/span[contains(@class,'--selected')])[1]                                                                                                                                                                                                                        |xpath        |
+|click;       |(//div[contains(@class,'page-filter')]//div)[last()]                                                                                                                                                                                                                                                              |xpath        |
+
+!|Script|Ui                            |
+|click; |//button[text()='APPLY']|xpath|
+|wait;  |5                             |
+
+!|Script                     |Ui                                                                                                                                                                       |
+|waitForElementToBeDisplayed;|//div[@class='card-row row']|xpath                                                                                                                              |15      |
+|check                       |getCountOfElements;         |//*[contains(text(),'Generated') and contains(@class,'status-purple')]                                                             |xpath|12|
+|$count1=                    |getCountOfElements;         |//*[contains(text(),'Generated') and contains(@class,'status-purple')]                                                             |xpath   |
+|$tresult1=                  |isElementPresent;           |//span[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Carton Damage']|xpath   |
+|$tresult2=                  |isElementPresent;           |//span[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Damage']       |xpath   |
+|$tresult3=                  |isElementPresent;           |//span[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Shortage']     |xpath   |
+|$tresult4=                  |isElementPresent;           |//span[contains(text(),'$order_id_2')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Carton Damage']|xpath   |
+|$tresult5=                  |isElementPresent;           |//span[contains(text(),'$order_id_2')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Damage']       |xpath   |
+|$tresult6=                  |isElementPresent;           |//span[contains(text(),'$order_id_2')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Shortage']     |xpath   |
+|$tresult7=                  |isElementPresent;           |//span[contains(text(),'$order_id_3')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Carton Damage']|xpath   |
+|$tresult8=                  |isElementPresent;           |//span[contains(text(),'$order_id_3')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Damage']       |xpath   |
+|$tresult9=                  |isElementPresent;           |//span[contains(text(),'$order_id_3')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Shortage']     |xpath   |
+|$tresult10=                 |isElementPresent;           |//span[contains(text(),'$order_id_4')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Carton Damage']|xpath   |
+|$tresult11=                 |isElementPresent;           |//span[contains(text(),'$order_id_4')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Damage']       |xpath   |
+|$tresult12=                 |isElementPresent;           |//span[contains(text(),'$order_id_4')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Shortage']     |xpath   |
+
+!|Script            |Common                                                                                                                                                                  |
+|$tresult13=        |checkIfStringAreEqual;       |$count1                                                                |12                                                                |
+|$transporterresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,$tresult11,$tresult12,$tresult13,true|
+**!
+
+!**> Validating Wallet amount in Transporter
+!define status_name_wallet {Select All}
+!define reason_wallet_1 {Shortage}
+!define reason_wallet_2 {Damage}
+!define reason_wallet_3 {Carton Damage}
+!define multiple_reasons {!-//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_1}!-']|//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_2}!-']|//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_3}!-']-!}
+
+!define search_text {$order_id_1}
+!define shipnum {s1$unique}
+
+!|Script       |Ui                                                                                            |
+|click;        |//span[text()='Search']                                                  |xpath               |
+|sendHumanKeys;|//input[@placeholder='Enter Indent ID' or @placeholder='Enter indent id']|xpath|${search_text}|
+|sendHumanKeys;|//input[@placeholder='Enter Shipment number']                            |xpath|${shipnum}    |
+|click;        |//button[text()='Search']                                                |xpath               |
+|wait;         |2                                                                                             |
+
+!|Script                     |Ui                                                                                                                                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-row row')]|xpath                                                                                                                                                                           |15        |
+|check                       |getCountOfElements;                   |//div[contains(@class,'card-row row')]                                                                                                                                          |xpath|3   |
+|check                       |isElementPresent;                     |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']                                           |xpath|true|
+|check                       |isElementPresent;                     |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']                                           |xpath|true|
+|check                       |isElementPresent;                     |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']                                           |xpath|true|
+|$shortageamt1=              |getText;                              |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']//following::div//span[@class='']//small[1]|xpath     |
+|$shortageamt2=              |getText;                              |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']//following::div//span[@class='']//small[2]|xpath     |
+|$shortageamt3=              |getText;                              |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']//following::div//span[@class='']//small[3]|xpath     |
+|$damageamt1=                |getText;                              |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']//following::div//span[@class='']//small[1]|xpath     |
+|$damageamt2=                |getText;                              |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']//following::div//span[@class='']//small[2]|xpath     |
+|$damageamt3=                |getText;                              |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']//following::div//span[@class='']//small[3]|xpath     |
+|$cartondamageamt1=          |getText;                              |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']//following::div//span[@class='']//small[1]|xpath     |
+|$cartondamageamt2=          |getText;                              |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']//following::div//span[@class='']//small[2]|xpath     |
+|$cartondamageamt3=          |getText;                              |//*[contains(text(),'$order_id_1')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']//following::div//span[@class='']//small[3]|xpath     |
+
+!|script                          |common                                                                                                                      |
+|$tresult1=                       |checkIfStringAreEqual;       |$shortageamt1                                 |System: 120.00                                 |
+|$tresult2=                       |checkIfStringAreEqual;       |$shortageamt2                                 |Shipper: 120.00                                |
+|$tresult3=                       |checkIfStringAreEqual;       |$shortageamt3                                 |Transporter: 120.00                            |
+|$tresult4=                       |checkIfStringAreEqual;       |$cartondamageamt1                             |System: 305.67                                 |
+|$tresult5=                       |checkIfStringAreEqual;       |$cartondamageamt2                             |Shipper: 305.67                                |
+|$tresult6=                       |checkIfStringAreEqual;       |$cartondamageamt3                             |Transporter: 305.67                            |
+|$tresult7=                       |checkIfStringAreEqual;       |$damageamt1                                   |System: 507.56                                 |
+|$tresult8=                       |checkIfStringAreEqual;       |$damageamt2                                   |Shipper: 507.56                                |
+|$tresult9=                       |checkIfStringAreEqual;       |$damageamt3                                   |Transporter: 507.56                            |
+|$walletamount_transporter_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,true|
+**!
+
+!**> Checking the Freight bill posted
+!|script                     |ui                                                                                                                                                    |
+|navigateToUrl;              |${turl}/v2/freight                                                                                                                                    |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row')]          |xpath                                                                                    |20        |
+|$freight_bill_no=           |getText;                                         |(//span[text()='CATEGORY1']/ancestor::div[contains(@class,'grid-list-row')]/div)[1]//span|xpath     |
+|$other_charges_bill_no=     |getText;                                         |(//span[text()='CATEGORY3']/ancestor::div[contains(@class,'grid-list-row')]/div)[1]//span|xpath     |
+|$cat4_bill_no=              |getText;                                         |(//span[text()='CATEGORY4']/ancestor::div[contains(@class,'grid-list-row')]/div)[1]//span|xpath     |
+|click;                      |//span[contains(text(),'$freight_bill_no')]      |xpath                                                                                               |
+|check                       |isElementPresent;                                |//*[contains(text(),'d$unique')]                                                         |xpath|true|
+|check                       |isElementPresent;                                |//*[contains(text(),'d2$unique')]                                                        |xpath|true|
+|check                       |isElementPresent;                                |//*[contains(text(),'d3$unique')]                                                        |xpath|true|
+|check                       |isElementPresent;                                |//*[contains(text(),'d4$unique')]                                                        |xpath|true|
+|navigateBack;                                                                                                                                                                      |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row')]          |xpath                                                                                    |20        |
+|click;                      |//span[contains(text(),'$other_charges_bill_no')]|xpath                                                                                               |
+|check                       |isElementPresent;                                |//*[contains(text(),'d$unique')]                                                         |xpath|true|
+|check                       |isElementPresent;                                |//*[contains(text(),'d2$unique')]                                                        |xpath|true|
+|check                       |isElementPresent;                                |//*[contains(text(),'d3$unique')]                                                        |xpath|true|
+|check                       |isElementPresent;                                |//*[contains(text(),'d4$unique')]                                                        |xpath|true|
+*!
+
+!**> Changing the Freight end day for the category 1 and category 3
+!|Script                              |MongoDB                              |
+|updateFreightBillClientConfiguration;|${surl}|category1|end_day|$nMinus1day|
+|updateFreightBillClientConfiguration;|${surl}|category3|end_day|$nMinus1day|
+*!
+
+!**> Changing the Freight bill end day for the category 1 and category 3 in Postgres DB
+!define updatequery_1 {update public."FreightBills" set expected_erp_post_date='$expected_date_in_postgres' where bill_no='$freight_bill_no';}
+!define updatequery_2 {update public."FreightBills" set expected_erp_post_date='$expected_date_in_postgres' where bill_no='$other_charges_bill_no';}
+
+!|script|PostgresDB                                               |
+|$db1=  |updateDataInPostgresDb;|${pg_connection}|${updatequery_1}|
+|$db2=  |updateDataInPostgresDb;|${pg_connection}|${updatequery_2}|
+**!
+
+!**> Generate invoice for cat 1
+!define fb_category {CATEGORY1}
+!define fb_order_id {$order_id_1!--cat1-!}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.FreightWorkingV2.PGFrieghtBill.CommonFreightbillGenerateForCategory
+**!
+
+!**> Generate invoice for cat 3
+!define fb_category {CATEGORY3}
+!define fb_order_id {$order_id_1!--cat3-!}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.FreightWorkingV2.PGFrieghtBill.CommonFreightbillGenerateForCategory
+**!
+
+!**> Validating all depots filter in invoice page
+!|Script            |Ui                                                                                                            |
+|navigateToUrl;     |${turl}/v2/invoices                                                                                           |
+|click;             |//button[@class='el-button el-button--default']|xpath                                                         |
+|$default_selection=|getValue;                                      |//label[text()='Depot']/../following-sibling::div//input|xpath|
+|$tresult1=         |isElementPresent;                              |//span[contains(text(),'$freight_bill_no')]             |xpath|
+|$tresult2=         |isElementPresent;                              |//span[contains(text(),'$other_charges_bill_no')]       |xpath|
+
+!|Script                    |Common                                                          |
+|$tresult3=                 |checkIfStringAreEqual;       |$default_selection   |All depots  |
+|$transporter_invoiceresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,true|
+**!
+
+!**> Validating test result
+!|Script  |Common                                                                                                                                                       |
+|$tresult=|checkIfStringAreEqualInArray;|$shipperresult,$transporterresult,$walletamount_shipper_result,$walletamount_transporter_result,$transporter_invoiceresult,true|
+**!
+
+!**> Reverting the Freight bill configuration to default
+!|Script                              |MongoDB                       |
+|updateFreightBillClientConfiguration;|${surl}|category1|start_day|1 |
+|updateFreightBillClientConfiguration;|${surl}|category1|end_day  |15|
+|updateFreightBillClientConfiguration;|${surl}|category2|start_day|16|
+|updateFreightBillClientConfiguration;|${surl}|category2|end_day  |31|
+|updateFreightBillClientConfiguration;|${surl}|category3|start_day|1 |
+|updateFreightBillClientConfiguration;|${surl}|category3|end_day  |31|
+*!

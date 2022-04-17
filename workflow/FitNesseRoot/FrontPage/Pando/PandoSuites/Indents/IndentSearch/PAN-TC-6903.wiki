@@ -1,0 +1,412 @@
+---
+Help: Indent ID sorting when sort filter is applied and removed
+Suites: indent3
+Test
+---
+!** client configuration in mongo DB
+“indent_view” : {
+		“sort_by” : {
+			“created_at” : “desc”
+		}
+	},
+**!
+
+!***> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-5|
+|$cdate=       |dateCalculation;|yyyy/MM/dd |1 |
+
+!|Script      |DateUtil                   |
+|$loadingDate=|utcConversion;|$loadingDate|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Data creation
+!*** Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!*** Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!*** Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {PTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!*** Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!*** Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!*** Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!** Material Creation 1
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!*** Uploading Rate Matrix
+!|Script|Common                                                                                                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":[{"contract_type":"City","source":"${depot_city}","destination":"city$unique","vehicle_type":"${vehicle_name}","distance":"100","transporter_reference_number":"${transporter_ref_id}","transporter_name":"${transporter_name}","transit_days":"1","freight_rate":"1000","freight_unit":"trip","valid_from":"2019/01/01","valid_to":"$cdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.RateMatrixDynamicAPI
+*!
+**!
+
+!***> Indent Creation  1
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|Script     |Common           |
+|$order_id_1=|getTrim|$order_id|
+*!
+
+!***> Indent Creation  2
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|Script     |Common           |
+|$order_id_2=|getTrim|$order_id|
+*!
+
+!***> Indent Creation  3
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|Script     |Common           |
+|$order_id_3=|getTrim|$order_id|
+*!
+
+!**> Depo Filter in shipper
+!define depot_selection {$depot_name}
+!define indent_type {Contract}
+!define movement {All Movement Types}
+!define status {All Statuses}
+!define delivery {All Delivery Types}
+!define utilization {All Checks}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+*!
+
+!* Verify Descending order of indents in shipper
+!|Script      |Ui                                                                                                                                                         |
+|check        |isElementPresent;                                                        |//span[text()='Indent ID']/parent::a                                  |xpath|true|
+|$tresult1=   |isElementPresent;                                                        |//span[text()='Indent ID']/parent::a                                  |xpath     |
+|click;       |//span[text()='Indent ID']/parent::a                                     |xpath                                                                            |
+|check        |isElementPresent;                                                        |//span[text()='Order By']                                             |xpath|true|
+|check        |isElementPresent;                                                        |//li[contains((text())[2],'Indent Id')]                               |xpath|true|
+|check        |isElementPresent;                                                        |//li[contains(@class,'list-with-icon active')]//span[text()='Clear']  |xpath|true|
+|$tresult2=   |isElementPresent;                                                        |//li[contains(@class,'list-with-icon active')]//span[text()='Clear']  |xpath     |
+|click;       |//span[text()='Order By']/parent::a                                      |xpath                                                                            |
+|wait;        |2                                                                                                                                                          |
+|mouseHover;  |((//div[@class='order-row'])[3]/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                            |
+|wait;        |2                                                                                                                                                          |
+|$descorder_3=|getText;                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]|xpath     |
+|mouseHover;  |((//div[@class='order-row'])[2]/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                            |
+|wait;        |2                                                                                                                                                          |
+|$descorder_2=|getText;                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]|xpath     |
+|mouseHover;  |((//div[@class='order-row'])[1]/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                            |
+|wait;        |2                                                                                                                                                          |
+|$descorder_1=|getText;                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]|xpath     |
+
+!|Script                |Common                                                                              |
+|$tresult3=             |checkIfStringAreEqual;       |$order_id_1               |$descorder_3               |
+|$tresult4=             |checkIfStringAreEqual;       |$order_id_2               |$descorder_2               |
+|$tresult5=             |checkIfStringAreEqual;       |$order_id_3               |$descorder_1               |
+|$tresult_withoutfilter=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|
+*!
+
+!**> Assign vehicles all indents
+!**> Assign vehicle for indent 1
+!|Script   |Common             |
+|$order_id=|getTrim|$order_id_1|
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+**!
+
+!**> Assign vehicle for indent 3
+!|Script   |Common             |
+|$order_id=|getTrim|$order_id_3|
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+**!
+*!
+
+!**> Truck in indent 2
+!|Script   |Common             |
+|$order_id=|getTrim|$order_id_2|
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!**> Truck in only for indent 2
+!|Script   |Common             |
+|$order_id=|getTrim|$order_id_2|
+
+!|Script      |DateUtil                      |
+|$truckindate=|dateCalculation;|yyyy/MM/dd|-5|
+
+!|Script      |Common                                         |
+|$truckindate=|stringConcatenation;|$truckindate|!- 10:00:00-!|
+
+!|Script      |DateUtil                   |
+|$truckindate=|utcConversion;|$truckindate|
+
+!|Script        |Common               |
+|$truck_in_date=|getTrim;|$truckindate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+**!
+
+!** Depo Filter in shipper with status - Assigned
+!define status {Assigned}
+
+!|Script                     |Ui                                                                                                                                   |
+|navigateToUrl;              |${surl}/indents                                                                                                                      |
+|waitForElementToBeDisplayed;|//button[@class='el-button el-button--default']          |xpath                                                              |30     |
+|click;                      |//button[@class='el-button el-button--default']          |xpath                                                                      |
+|click;                      |//label[text()='Status']/../following-sibling::div//input|xpath                                                                      |
+|wait;                       |3                                                                                                                                    |
+|click;                      |//span[text()='${status}']                               |xpath                                                                      |
+|click;                      |//button[text()='APPLY']                                 |xpath                                                                      |
+|waitForElementToBeDisplayed;|//div[@class='order-row' or @class='no-order-data']      |xpath                                                              |20     |
+|check                       |getCountOfElements;                                      |//div[@class='order-status-button' and contains(text(),'Assigned')]|xpath|2|
+*!
+
+!* Verify Descending order of indents in shipper
+!|Script      |Ui                                                                                                                                                         |
+|check        |isElementPresent;                                                        |//span[text()='Indent ID']/parent::a                                  |xpath|true|
+|$tresult1=   |isElementPresent;                                                        |//span[text()='Indent ID']/parent::a                                  |xpath     |
+|click;       |//span[text()='Indent ID']/parent::a                                     |xpath                                                                            |
+|check        |isElementPresent;                                                        |//span[text()='Order By']                                             |xpath|true|
+|check        |isElementPresent;                                                        |//li[contains((text())[2],'Indent Id')]                               |xpath|true|
+|check        |isElementPresent;                                                        |//li[contains(@class,'list-with-icon active')]//span[text()='Clear']  |xpath|true|
+|$tresult2=   |isElementPresent;                                                        |//li[contains(@class,'list-with-icon active')]//span[text()='Clear']  |xpath     |
+|click;       |//span[text()='Order By']/parent::a                                      |xpath                                                                            |
+|wait;        |2                                                                                                                                                          |
+|mouseHover;  |((//div[@class='order-row'])[2]/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                            |
+|wait;        |2                                                                                                                                                          |
+|$descorder_2=|getText;                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]|xpath     |
+|mouseHover;  |((//div[@class='order-row'])[1]/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                            |
+|wait;        |2                                                                                                                                                          |
+|$descorder_1=|getText;                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]|xpath     |
+
+!|Script             |Common                                                                    |
+|$tresult3=          |checkIfStringAreEqual;       |$order_id_1          |$descorder_2          |
+|$tresult4=          |checkIfStringAreEqual;       |$order_id_3          |$descorder_1          |
+|$tresult_withfilter=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+*!
+
+!** Depo Filter in shipper with status - All status and removed sorting
+!define status {All Statuses}
+
+!|Script                     |Ui                                                                |
+|navigateToUrl;              |${surl}/indents                                                   |
+|waitForElementToBeDisplayed;|//button[@class='el-button el-button--default']          |xpath|30|
+|click;                      |//button[@class='el-button el-button--default']          |xpath   |
+|click;                      |//label[text()='Status']/../following-sibling::div//input|xpath   |
+|wait;                       |3                                                                 |
+|click;                      |//span[text()='${status}']                               |xpath   |
+|click;                      |//button[text()='APPLY']                                 |xpath   |
+|waitForElementToBeDisplayed;|//div[@class='order-row' or @class='no-order-data']      |xpath|20|
+*!
+
+!* Remove sorting and verify order of indents based on recent actions in shipper
+!|Script      |Ui                                                                                                                                                         |
+|check        |isElementPresent;                                                        |//span[text()='Indent ID']/parent::a                                  |xpath|true|
+|$tresult1=   |isElementPresent;                                                        |//span[text()='Indent ID']/parent::a                                  |xpath     |
+|click;       |//span[text()='Indent ID']/parent::a                                     |xpath                                                                            |
+|check        |isElementPresent;                                                        |//span[text()='Order By']                                             |xpath|true|
+|check        |isElementPresent;                                                        |//li[contains((text())[2],'Indent Id')]                               |xpath|true|
+|check        |isElementPresent;                                                        |//li[contains(@class,'list-with-icon active')]//span[text()='Clear']  |xpath|true|
+|$tresult2=   |isElementPresent;                                                        |//li[contains(@class,'list-with-icon active')]//span[text()='Clear']  |xpath     |
+|click;       |//span[text()='Order By']/parent::a                                      |xpath                                                                            |
+|wait;        |2                                                                                                                                                          |
+|mouseHover;  |((//div[@class='order-row'])[3]/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                            |
+|wait;        |2                                                                                                                                                          |
+|$descorder_3=|getText;                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]|xpath     |
+|mouseHover;  |((//div[@class='order-row'])[2]/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                            |
+|wait;        |2                                                                                                                                                          |
+|$descorder_2=|getText;                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]|xpath     |
+|mouseHover;  |((//div[@class='order-row'])[1]/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                            |
+|wait;        |2                                                                                                                                                          |
+|$descorder_1=|getText;                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]|xpath     |
+|click;       |//span[text()='Indent ID']/parent::a                                     |xpath                                                                            |
+|click;       |//li[contains(@class,'list-with-icon active')]//span[text()='Clear']     |xpath                                                                            |
+|click;       |//span[text()='Indent ID']/parent::a                                     |xpath                                                                            |
+|check        |isElementNotPresent;                                                     |//li[contains(@class,'list-with-icon active')]                        |xpath|true|
+|$tresult3=   |isElementNotPresent;                                                     |//li[contains(@class,'list-with-icon active')]                        |xpath     |
+|click;       |//span[text()='Order By']/parent::a                                      |xpath                                                                            |
+|mouseHover;  |((//div[@class='order-row'])[3]/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                            |
+|wait;        |2                                                                                                                                                          |
+|$descorder_4=|getText;                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]|xpath     |
+|mouseHover;  |((//div[@class='order-row'])[2]/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                            |
+|wait;        |2                                                                                                                                                          |
+|$descorder_5=|getText;                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]|xpath     |
+|mouseHover;  |((//div[@class='order-row'])[1]/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                            |
+|wait;        |2                                                                                                                                                          |
+|$descorder_6=|getText;                                                                 |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]|xpath     |
+
+!|Script              |Common                                                                                                                      |
+|$tresult4=           |checkIfStringAreEqual;       |$order_id_1                                   |$descorder_3                                   |
+|$tresult5=           |checkIfStringAreEqual;       |$order_id_2                                   |$descorder_2                                   |
+|$tresult6=           |checkIfStringAreEqual;       |$order_id_3                                   |$descorder_1                                   |
+|$tresult7=           |checkIfStringAreEqual;       |$order_id_1                                   |$descorder_4                                   |
+|$tresult8=           |checkIfStringAreEqual;       |$order_id_3                                   |$descorder_5                                   |
+|$tresult9=           |checkIfStringAreEqual;       |$order_id_2                                   |$descorder_6                                   |
+|$tresult_withoutsort=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,true|
+*!
+!** Validating final results
+!|Script  |Common                                                                                            |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult_withoutfilter,$tresult_withfilter,$tresult_withoutsort,true|
+**!

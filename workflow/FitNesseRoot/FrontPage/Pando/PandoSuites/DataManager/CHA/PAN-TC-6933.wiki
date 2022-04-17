@@ -1,0 +1,66 @@
+---
+Help: Adding CHA to MDM
+Suites: oel1
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!**> Ports Creation
+!define ports_name {c$unique}
+!define ports_refid {cr$unique}
+!define ports_shortcode {cs$unique}
+!define ports_type {SEA_PORT}
+!define city {Nellore}
+!define state {Andhra Pradesh}
+!define address {12B,Ram mohan street}
+!define geocode {12.23,45.56}
+!define country {Dubai}
+!define pincode {789065}
+
+!|script|common                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":{"name":"${ports_name}","ref_id":"${ports_refid}","display_reference_name": "","short_code":"${ports_shortcode}","type":"${ports_type}","city":"${city}","state":"${state}","address":"${address}","geo_code":"${geocode}","country":"${country}","pin_code":"${pincode}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.PortsCreationDynamicAPI
+**!
+
+!** cha Creation
+!define cha_name {cha$unique}
+!define cha_refid {char$unique}
+!define pan_number {PAN$unique}
+!define gst_number {GST$unique}
+!define admin_name {Pando}
+!define cha_email {cha+$unique@gmail.com}
+!define mobile {7890654321}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CHA.CommonCHAAdd
+**!
+
+!** Cross verifying values
+!|script                     |Ui                                                                                                         |
+|click;                      |//span[@class='tagblock_list']            |xpath                                                           |
+|sendKeys;                   |//input[@placeholder='Enter Reference Id']|xpath                                              |${cha_refid}|
+|wait;                       |3                                                                                                          |
+|click;                      |//button[contains(text(),'Search')]       |xpath                                                           |
+|waitForElementToBeDisplayed;|//span[contains(text(),'char$unique')]    |xpath                                              |20          |
+|check                       |isElementPresent;                         |//span[contains(text(),'cha$unique')]              |xpath |true |
+|$tresult1=                  |isElementPresent;                         |//span[contains(text(),'cha$unique')]              |xpath       |
+|check                       |isElementPresent;                         |//span[contains(text(),'char$unique')]             |xpath |true |
+|$tresult2=                  |isElementPresent;                         |//span[contains(text(),'char$unique')]             |xpath       |
+|mouseHover;                 |//span[contains(text(),'PAN20')]          |xpath                                                           |
+|check                       |isElementPresent;                         |//div[@role='tooltip']//div[text()='${pan_number}']|xpath |true |
+|$tresult3=                  |isElementPresent;                         |//div[@role='tooltip']//div[text()='${pan_number}']|xpath       |
+|mouseHover;                 |//span[contains(text(),'GST20')]          |xpath                                                           |
+|check                       |isElementPresent;                         |//div[@role='tooltip']//div[text()='${gst_number}']|xpath |true |
+|$tresult4=                  |isElementPresent;                         |//div[@role='tooltip']//div[text()='${gst_number}']|xpath       |
+|check                       |isElementPresent;                         |//span[contains(text(),'c$unique')]                |xpath |true |
+|$tresult5=                  |isElementPresent;                         |//span[contains(text(),'c$unique')]                |xpath       |
+
+!|Script  |Common                                                                         |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5|
+**!
+
+
+

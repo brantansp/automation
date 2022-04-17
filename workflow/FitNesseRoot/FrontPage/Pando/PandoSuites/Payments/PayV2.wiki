@@ -1,0 +1,6 @@
+---
+Help: Contains Payment v2 test cases
+Suite
+---
+!1 Test suite Pay V2
+!contents -R2 -g -p -f -h

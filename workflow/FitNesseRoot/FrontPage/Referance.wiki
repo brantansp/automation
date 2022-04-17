@@ -1,0 +1,16 @@
+!-
+<b> Automation Referance </b> <br/>
+<a href='FrontPage.Pando.PandoSuites.Transporter.Indents.EPODAndDeliveryValidation.PD-3913' target='_blank'><b>Primary Indent Creation</b></a><br>
+<a href='FrontPage.Pando.PandoSuites.Admin.NonWorkingDays.Detention.PD-9' target='_blank'><b>Primary Indent Creation Source Depo [1 Gate] to Destination Depo with [3 Gates]</a><br>
+<a href='FrontPage.Pando.PandoSuites.Indents.MarkAsDelivered.PD-3141' target='_blank'><b>Secondary indent with Delivery Status but Without EPOD</a><br/> 
+<a href='FrontPage.Pando.PandoSuites.Payments.InvoiceV2.PD-2855' target='_blank'><b>Secondary indent with Delivery Status With EPOD till Invoice Generate</a><br/> 
+<a href='FrontPage.Pando.PandoSuites.Transporter.Payments.InvoiceValidation.PD-3396' target='_blank'><b>Add New User and MAP to DEPO example will be there for Checker manager</a><br>
+<a href='FrontPage.Pando.PandoSuites.WalletV2.DebitAdjustment.PD-3707' target='_blank'><b>OEL Till Payment Flow</a><br>
+<a href='FrontPage.Pando.PandoSuites.FileExport.Reports.PD-3950' target='_blank'><b>Report Email and Excel Validation</a><br>
+<a href='FrontPage.Pando.PandoSuites.Indents.DropOffCharges.PD-3936' target='_blank'><b>Mulitple Consignee With Mulitple LR upload in Ready for Billing</a><br>
+<a href='FrontPage.Pando.PandoSuites.Transporter.Indents.EPODAndDeliveryValidation.PD-3919' target='_blank'><b>SIM tracking Case</b></a><br>
+<a href='FrontPage.Pando.PandoSuites.WalletV2.SLA.PD-4262' target='_blank'><b>Primary SLA -> RFQ T1 Reject -> BId Request T2 -> T2 Accept</b></a><br>
+<a href='FrontPage.Pando.PandoSuites.WalletV2.RFQDebit.PD-3964' target='_blank'><b>Secondary SLA -> RFQ T1 Reject -> BId Request T2 -> T2 Accept</b></a><br>
+<a href='FrontPage.Pando.PandoSuites.Transporter.Payments.PhysicalInvoice.PD-3796' target='_blank'><b>Reading Mail from PDF Content</b></a><br>
+-!
+

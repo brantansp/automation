@@ -1,0 +1,10 @@
+#Selecting Status from multiselect list
+!|Script      |Ui                                                                                                                                                     |
+|click;       |//label[text()='Status']/../following-sibling::div/div[contains(@class,'multiselect')]                                     |xpath                      |
+|click;       |//div[contains(@class,'multiselect--active')]//span[normalize-space(text())='Select All']                                  |xpath                      |
+|sendKeys;    |//label[text()='Status']/../following-sibling::div//input                                                                  |xpath|${status_name_wallet}|
+|click;       |//label[normalize-space(text())='Status']/..//following-sibling::div//span[normalize-space(text())='${status_name_wallet}']|xpath                      |
+|wait;        |1                                                                                                                                                      |
+|clearValueWA;|//label[text()='Status']/../following-sibling::div//input                                                                  |xpath                      |
+|wait;        |1                                                                                                                                                      |
+|click;       |(//div[contains(@class,'page-filter')]//div)[last()]                                                                       |xpath                      |

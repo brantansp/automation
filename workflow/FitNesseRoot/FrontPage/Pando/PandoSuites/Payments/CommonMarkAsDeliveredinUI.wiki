@@ -1,0 +1,20 @@
+---
+Help: Common mark as delivered in UI
+---
+!|Script      |Ui                                                                                                       |
+|click;       |//span[contains(text(),'MARK AS DELIVERED') or contains(text(),'Mark as delivered')]|xpath               |
+|click;       |(//div[contains(@style,'absolute')]//i[@class='el-input__icon el-icon-time'])[1]    |xpath               |
+|click;       |(//input[@placeholder='Select date'])[1]                                            |xpath               |
+|sendKeys;    |(//input[@placeholder='Select date'])[1]                                            |xpath|${report_date}|
+|click;       |(//input[@placeholder='Select time'])[1]                                            |xpath               |
+|clearValueWA;|(//input[@placeholder='Select time'])[1]                                            |xpath               |
+|sendKeys;    |(//input[@placeholder='Select time'])[1]                                            |xpath|${report_time}|
+|click;       |(//button//span[contains(text(),'OK')])[1]                                          |xpath               |
+|click;       |(//div[contains(@style,'absolute')]//i[@class='el-input__icon el-icon-time'])[2]    |xpath               |
+|click;       |(//input[@placeholder='Select date'])[2]                                            |xpath               |
+|sendKeys;    |(//input[@placeholder='Select date'])[2]                                            |xpath|${pod_date}   |
+|click;       |(//input[@placeholder='Select time'])[2]                                            |xpath               |
+|clearValueWA;|(//input[@placeholder='Select time'])[2]                                            |xpath               |
+|sendKeys;    |(//input[@placeholder='Select time'])[2]                                            |xpath|${pod_time}   |
+|click;       |(//button//span[contains(text(),'OK')])[2]                                          |xpath               |
+|click;       |//div[contains(@style,'absolute')]//*[text()='Submit']                              |xpath               |

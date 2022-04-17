@@ -1,0 +1,14 @@
+---
+Help: Search by Valid Indent ID
+Test
+---
+!|Script|Common|
+|$order_id=|getTrim;|$order_id|
+
+!define validate_text {$order_id}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.Search.CommonIndentSearch
+
+!define tname {TC-215}
+ 
+

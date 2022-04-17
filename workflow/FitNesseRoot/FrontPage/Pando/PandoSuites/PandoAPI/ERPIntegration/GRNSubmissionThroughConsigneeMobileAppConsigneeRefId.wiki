@@ -1,0 +1,13 @@
+---
+Test
+---
+!|Script      |Http                                                                                      |
+|wait;        |5                                                                                         |
+|setBaseUrl;  |${curl}/api/login                                                                         |
+|getResponse; |Application/Json|put             |{"data":{"refId":"${crefid}","password":"${cpassword}"}}|
+|$token=      |getHeader;      |x-auth-token                                                             |
+|addHeader;   |Authorization   |bearer $token                                                            |
+|setBaseUrl;  |${curl}/api/order/$order_id/${consignee_id}/grn                                           |
+|$grnresponse=|getResponse;    |Application/Json|put                        |$data                       |
+|$status=     |getStatusCode;                                                                            |
+|wait;        |2                                                                                         |

@@ -1,0 +1,51 @@
+!** Vendor Depo Selection
+!|Script                     |Ui                                                                                                                                                    |
+|navigateToUrl;              |${surl}/indents                                                                                                                                       |
+|click;                      |//div[@id='filter']//input[@placeholder='Select']                                                                            |xpath                   |
+|click;                      |//li/span[text()='${type}']                                                                                                  |xpath                   |
+|click;                      |//a[contains(@href,'/indent/create')]                                                                                        |xpath                   |
+|click;                      |//span[text()='Add Source location']                                                                                         |xpath                   |
+|waitForElementToBeDisplayed;|//div[contains(@class,'table-striped')]                                                                                      |xpath|10                |
+|click;                      |//div[text()='${switch_depo}']                                                                                               |xpath                   |
+|sendKeys;                   |(//section[@class='el-drawer__body']//input[@type='text'])[${switch_type}]                                                   |xpath|${source_location}|
+|waitForElementToDisappear;  |//div[@class='status-msg']//img                                                                                                    |xpath|20                |
+|waitForElementToBeDisplayed;|(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${source_location}']                                   |xpath|15                |
+|click;                      |(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${source_location}']/ancestor::td/preceding-sibling::td|xpath                   |
+|wait;                       |2                                                                                                                                                     |
+|click;                      |//span[text()='Add']                                                                                                         |xpath                   |
+|click;                      |//div[@class='el-select select-default']                                                                                     |xpath                   |
+|click;                      |//span[contains(text(),'$unique')]                                                                                           |xpath                   |
+**!
+
+!* Destination Depo Selection
+!|Script                     |Ui                                                                                                                                                              |
+|click;                      |//div[@class='add-block']                                                                                                         |xpath                        |
+|waitForElementToBeDisplayed;|//div[contains(@class,'table-striped')]                                                                                           |xpath|10                     |
+|sendKeys;                   |//section[@class='el-drawer__body']//input[@type='text']                                                                          |xpath|${destination_location}|
+|waitForElementToDisappear;  |//div[@class='status-msg']//img                                                                                                    |xpath|20                |
+|waitForElementToBeDisplayed;|(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${destination_location}']                                   |xpath|15                     |
+|click;                      |(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${destination_location}']/ancestor::td/preceding-sibling::td|xpath                        |
+|wait;                       |2                                                                                                                                                               |
+|click;                      |//span[text()='Add']                                                                                                              |xpath                        |
+*!
+
+!* Selecting Types 
+!|Script  |Ui                                                                                     |
+|click;   |//label[text()='Delivery Type']/following-sibling::div//input|xpath                    |
+|click;   |//span[text()='${delivery_type}']                            |xpath                    |
+|click;   |//label[text()='Transporter']/following-sibling::div//input  |xpath                    |
+|sendKeys;|//label[text()='Transporter']/following-sibling::div//input  |xpath|${transporter_name}|
+|click;   |//span[contains(text(),'${transporter_name}')]               |xpath                    |
+|click;   |//span[text()='Indent']                                      |xpath                    |
+*!
+
+!** Getting Order id
+!|Script|Ui                                 |
+|wait;  |2                                  |
+|$data= |getText;|//div[@role='alert']|xpath|
+
+!|Script   |Common                                                    |
+|$data=    |stringConcatenation; |$data|xxx                           |
+|$order_id=|getSubStringByString;|$data|Indent created with number|xxx|
+|$order_id=|getTrim;             |$order_id                           |
+**!

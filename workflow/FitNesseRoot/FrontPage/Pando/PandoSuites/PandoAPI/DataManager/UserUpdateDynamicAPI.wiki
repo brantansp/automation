@@ -1,0 +1,11 @@
+---
+Test
+---
+!|Script    |Http                                     |
+|addHeader; |Authorization |bearer $stoken            |
+|setBaseUrl;|${surl}/api/user/${user_id}              |
+|$user=     |getResponse;  |Application/Json|put|$data|
+|check      |getStatusCode;|200                       |
+
+!|script  |json                           |
+|$user_id=|getValueFromJSON;|$user|data.id|

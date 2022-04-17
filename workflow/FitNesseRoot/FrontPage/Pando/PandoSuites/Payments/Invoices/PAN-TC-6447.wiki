@@ -1,0 +1,421 @@
+---
+Help: Loose case with different product category and verify base freight calculation
+Suites: jnj
+Test
+---
+!** Calculation
+!5 loose qty: respective material volume * loose case = loose case cft // loose case cft for each material
+!5 loose qty= sum of loose case cft/3.96 ; ceil the value
+!5 loose qty, configured as big case
+
+!5 Configuration in mongoDB
+"loose_material_configuration" : {
+"material_category" : "big case",
+"volume" : 3.96
+},
+
+|Comment                                                                                                                                                              |
+|Material name                               |category  |total quantity in cases|Ceiled quantity|loose/fractional quantity|vol cft (per material)|loose case * vol cft|
+|LMAT1                                       |small case|2.3                    |2              |0.3                      |4.2261912             |1.26785736          |
+|LMAT6                                       |small case|3                      |3              |0                        |2.456                 |0                   |
+|LMAT7                                       |small case|6.8                    |6              |0.8                      |6.453                 |5.1624              |
+|LMAT2                                       |Default   |3.5                    |3              |0.5                      |3.56                  |1.78                |
+|LMAT3                                       |20a       |5                      |5              |0                        |2.765                 |0                   |
+|LMAT4                                       |20a       |6.2                    |6              |0.2                      |0.654                 |0.1308              |
+|LMAT5                                       |20a       |8.3                    |8              |0.3                      |7.154                 |2.1462              |
+|bigcase=sum of all (loose case*vol cft)/3.96|          |                       |               |                         |                      |2.648297313         |
+|roundoff big case value                     |          |                       |               |                         |                      |3                   |
+
+|Comment                                                 |
+|category  |Total cases|freight rate (per case)|case*rate|
+|small case|11         |75                     |825      |
+|big case  |3          |20                     |60       |
+|20a       |19         |30                     |570      |
+|default   |3          |10                     |30       |
+|          |           |Total                  |1485     |
+**!
+
+!***> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-4|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-3|
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0 |
+|$cdate=       |dateCalculation;|yyyy/MM/dd |1 |
+|$idate=       |dateCalculation;|MM-dd-YYYY |0 |
+
+!|Script       |Common                                         |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer -!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer -!|
+|$rdate=       |stringConcatenation;|$rdate       |!- $timer -!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=       |utcConversion;|$rdate       |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!***> Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+
+*!
+
+!***> Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {0}
+!define kg {0}
+!define vehicle_type {PTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Material upload                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+!define row {Code*,Name*,BU,Division,Piece per Box*,Length(cm)*,Width(cm)*,Height (cm)*,Weight (kg)*,Volume (CFT),GST Exempt (Yes/No),Category,Volume Per Piece (CFT)}
+!define column {LMAT1,LooseCaseMat1,PCS,DEFAULT,1,600,14,56,78,4.2261912,no,small case,0|LMAT2,LooseCaseMat2,PCS,DEFAULT,1,22,33,45,44,3.56,no,,0|LMAT3,LooseCaseMat3,PCS,DEFAULT,1,34,56,77,77,2.765,no,20a,0|LMAT4,LooseCaseMat4,PCS,DEFAULT,1,66,77,88,66,0.654,no,20a,0|LMAT5,LooseCaseMat5,PCS,DEFAULT,1,45,56,66,44,7.154,no,20a,0|LMAT6,LooseCaseMat6,PCS,DEFAULT,1,45,65,34,45,2.456,no,small case,0|LMAT7,LooseCaseMat7,PCS,DEFAULT,1,44,44,44,44,6.453,no,small case,0}
+
+!define file_name {m$unique.xlsx}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonMaterialBulkUpload
+**!
+
+!***> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!***> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Uploading Rate Matrix                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Is Dedicated,Truck Count ,Product Category,Exclude,Trip Count}
+!define column {Point,RQ$unique,$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,75,per case,01-Jan-$year,31-Dec-2030,900,0,U,False,10,small case|Point,RQ$unique,$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,20,per case,01-Jan-$year,31-Dec-2030,100,0,U,False,10,big case|Point,RQ$unique,$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,30,per case,01-Jan-$year,31-Dec-2030,100,1,U,False,10,20a|Point,RQ$unique,$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,10,per case,01-Jan-$year,31-Dec-2030,100,1,U,False,10,Default}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!**> Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+*!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!***> Truck In
+!| Script       |Common               |
+|$truck_in_date=|getTrim;|$truckindate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!***> Reached Load point
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LoadingPointAPI
+*!
+
+!***> Start Loading
+!define gate_id {$gate_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.StartLoadAPI
+*!
+
+!***> End Loading
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.EndPointAPI
+*!
+
+!**> Update LR for Consignee 1
+!define consignee_id {$consignee_id_1}
+!define lr_number {l1$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!**> Upload material invoice
+!define consignee_id_ref_1 {$consignee_id_ref_1}
+!define row {Indent Number,Shipment No,Material Code,Quantity,Quantity Unit,Total Weight,Weight Unit,Volume,Volume Unit,Pickup,Ship To,Sold To,Invoice Number,Invoice Date,Invoice Amount,Category,MRP}
+!define column {$order_id,D1$unique,LMAT1,2.3,cs,300,KG,500,cft,${gate_ref_id},${consignee_id_ref_1},${consignee_id_ref_1},INV101,01-Jan-2021,1200,small case,10|$order_id,D1$unique,LMAT2,3.5,cs,300,KG,500,cft,${gate_ref_id},${consignee_id_ref_1},${consignee_id_ref_1},INV102,01-Jan-2021,1200,,10|$order_id,D1$unique,LMAT3,5,cases,300,KG,500,cft,${gate_ref_id},${consignee_id_ref_1},${consignee_id_ref_1},INV103,01-Jan-2021,1200,20a,10|$order_id,D1$unique,LMAT4,6.2,cases,300,KG,500,cft,${gate_ref_id},${consignee_id_ref_1},${consignee_id_ref_1},INV104,01-Jan-2021,1200,20a,10|$order_id,D1$unique,LMAT5,8.3,cases,300,KG,500,cft,${gate_ref_id},${consignee_id_ref_1},${consignee_id_ref_1},INV105,01-Jan-2021,1200,20a,10|$order_id,D1$unique,LMAT6,3,cases,300,KG,500,cft,${gate_ref_id},${consignee_id_ref_1},${consignee_id_ref_1},INV106,01-Jan-2021,1200,small case,10|$order_id,D1$unique,LMAT7,6.8,pce,300,KG,500,cft,${gate_ref_id},${consignee_id_ref_1},${consignee_id_ref_1},INV107,01-Jan-2021,1200,small case,10}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+!|Script                |Excel                      |
+|newSheetDynamicColumns;|${row}|${column}|$excelpath|
+
+!include -c .FrontPage.Pando.Common.CommonIndentsMaterialBulkUpload
+
+!|Script|common                                                                                                      |
+|check  |checkIfStringAreEqual;|$successMessage|Material Bulk Upload succeeded. 7 entries uploaded successfully.|true|
+**!
+
+!***> Truck Out
+!| Script        |Common                |
+|$truck_out_date=|getTrim;|$truckoutdate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckOutAPI
+*!
+
+!***> Marking Indent as delivered
+!define consignee_id {$consignee_id}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+*!
+
+!**> Transporter Login
+!define transporter_email {pandotransporter+$unique@outlook.com}
+!define transporter_password {$password}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!*> Ready for billing page
+!|script                        |Ui                                                 |
+|wait;                          |5                                                  |
+|navigateToUrl;                 |${turl}/v2/payments?depot=${depot_name}            |
+|refreshForElementToBeDisplayed;|//div[starts-with(@class,'card-row row')]|xpath|3|3|
+|click;                         |//span[normalize-space(text())='Filter'] |xpath    |
+|click;                         |//button[text()='APPLY']                 |xpath    |
+
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!include -c .FrontPage.Pando.Common.CommonPDFUploadInReadyForBilling
+*!
+
+!** Verify freight charge
+!define header_name {Freight}
+!define consignee_name {c$unique}
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                       |
+|waitForElementToBeDisplayed;|//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody|xpath                                                                                                                                                                                                                         |10             |
+|$FreightHeaderNo=           |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                               |xpath|Freight  |
+|$consignee1_row_number=     |getHeaderColumnNumber;                                                    |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//div[@class='tabletitle']/span)[1]                                                                                |xpath|$order_id|
+|$freight_transporter=       |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$FreightHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']|xpath          |
+
+!|script                     |ui                                                                                                                                                                                                                               |
+|click;                      |//div[@class='el-table__fixed']//div[contains(@class,'location') and normalize-space(text())='${consignee_name}']|xpath                                                                                                          |
+|waitForElementToBeDisplayed;|//div[@id='pane-Details']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath                                                                                               |15        |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'small case:')]                                                                 |xpath|true|
+|$smallcase_rate=            |getText;                                                                                                         |//p[contains(text(),'small case:')]//strong                                                         |xpath     |
+|$smallcase_Qty=             |getText;                                                                                                         |//p[starts-with(normalize-space(),'small')]/following-sibling::p[contains(text(),'Qty:')]//strong   |xpath     |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'20a:')]                                                                        |xpath|true|
+|$rate2=                     |getText;                                                                                                         |//p[contains(text(),'20a:')]//strong                                                                |xpath     |
+|$Qty2=                      |getText;                                                                                                         |//p[starts-with(normalize-space(),'20a')]/following-sibling::p[contains(text(),'Qty:')]//strong     |xpath     |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'c$unique:')]                                                                   |xpath|true|
+|$default_rate=              |getText;                                                                                                         |//p[contains(text(),'c$unique:')]//strong                                                           |xpath     |
+|$default_Qty=               |getText;                                                                                                         |//p[starts-with(normalize-space(),'c$unique')]/following-sibling::p[contains(text(),'Qty:')]//strong|xpath     |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'big case:')]                                                                   |xpath|true|
+|$bigcase_rate=              |getText;                                                                                                         |//p[contains(text(),'big case:')]//strong                                                           |xpath     |
+|$bigcase_Qty=               |getText;                                                                                                         |//p[starts-with(normalize-space(),'big')]/following-sibling::p[contains(text(),'Qty:')]//strong     |xpath     |
+|click;                      |//div[@id='tab-Charges']                                                                                         |xpath                                                                                                          |
+|waitForElementToBeDisplayed;|//div[@id='pane-Charges']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath                                                                                               |15        |
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!|script|ui                                                                                       |
+|click; |//div[contains(text(),'$order_id')]/..//button//i[contains(@class,'el-icon-close')]|xpath|
+
+!| Script                        |Common                                                          |
+|$transporter_freight_chargestab=|getTrim;              |$system_generated_amount                 |
+|check                           |checkIfStringAreEqual;|$smallcase_rate                |75  |true|
+|check                           |checkIfStringAreEqual;|$smallcase_Qty                 |11  |true|
+|check                           |checkIfStringAreEqual;|$rate2                         |30  |true|
+|check                           |checkIfStringAreEqual;|$Qty2                          |19  |true|
+|check                           |checkIfStringAreEqual;|$default_rate                  |10  |true|
+|check                           |checkIfStringAreEqual;|$default_Qty                   |3   |true|
+|check                           |checkIfStringAreEqual;|$bigcase_rate                  |20  |true|
+|check                           |checkIfStringAreEqual;|$bigcase_Qty                   |3   |true|
+|$tresult1=                      |checkIfStringAreEqual;|$freight_transporter           |1485     |
+|check                           |checkIfStringAreEqual;|$freight_transporter           |1485|true|
+|$tresult2=                      |checkIfStringAreEqual;|$transporter_freight_chargestab|1485     |
+|check                           |checkIfStringAreEqual;|$transporter_freight_chargestab|1485|true|
+**!
+
+!**> Generate invoice
+!define invoice_number {ic$unique}
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceGeneration
+**!
+
+!**> Invoice Filter
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+**!
+
+!** Verify freight charge in shipper invoice
+
+!define click_invoice {t$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.CommonNavigatingToInvoiceDetailsShipperInvoice
+
+!define header_name {Freight}
+!define consignee_name {c$unique}
+
+!|Script                     |Ui                                                                                 |
+|waitForElementToBeDisplayed;|//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody|xpath|10|
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.CommonPaymentValidationByConsigneeInShipperInvoice
+
+!| Script                |Common                         |
+|$shipper_freight_charge=|getTrim;|$shipper_payment_value|
+
+!|script                     |ui                                                                                                                                                                                                                               |
+|click;                      |//div[@class='el-table__fixed']//div[contains(@class,'location') and normalize-space(text())='${consignee_name}']|xpath                                                                                                          |
+|waitForElementToBeDisplayed;|//div[@id='pane-Details']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath                                                                                               |15        |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'small case:')]                                                                 |xpath|true|
+|$smallcase_rate=            |getText;                                                                                                         |//p[contains(text(),'small case:')]//strong                                                         |xpath     |
+|$smallcase_Qty=             |getText;                                                                                                         |//p[starts-with(normalize-space(),'small')]/following-sibling::p[contains(text(),'Qty:')]//strong   |xpath     |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'20a:')]                                                                        |xpath|true|
+|$rate2=                     |getText;                                                                                                         |//p[contains(text(),'20a:')]//strong                                                                |xpath     |
+|$Qty2=                      |getText;                                                                                                         |//p[starts-with(normalize-space(),'20a')]/following-sibling::p[contains(text(),'Qty:')]//strong     |xpath     |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'c$unique:')]                                                                   |xpath|true|
+|$default_rate=              |getText;                                                                                                         |//p[contains(text(),'c$unique:')]//strong                                                           |xpath     |
+|$default_Qty=               |getText;                                                                                                         |//p[starts-with(normalize-space(),'c$unique')]/following-sibling::p[contains(text(),'Qty:')]//strong|xpath     |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'big case:')]                                                                   |xpath|true|
+|$bigcase_rate=              |getText;                                                                                                         |//p[contains(text(),'big case:')]//strong                                                           |xpath     |
+|$bigcase_Qty=               |getText;                                                                                                         |//p[starts-with(normalize-space(),'big')]/following-sibling::p[contains(text(),'Qty:')]//strong     |xpath     |
+|click;                      |//div[@id='tab-Charges']                                                                                         |xpath                                                                                                          |
+|waitForElementToBeDisplayed;|//div[@id='pane-Charges']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath                                                                                               |15        |
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                    |Common                                                      |
+|$shipper_freight_chargestab=|getTrim;              |$system_generated_amount             |
+|check                       |checkIfStringAreEqual;|$smallcase_rate            |75  |true|
+|check                       |checkIfStringAreEqual;|$smallcase_Qty             |11  |true|
+|check                       |checkIfStringAreEqual;|$rate2                     |30  |true|
+|check                       |checkIfStringAreEqual;|$Qty2                      |19  |true|
+|check                       |checkIfStringAreEqual;|$default_rate              |10  |true|
+|check                       |checkIfStringAreEqual;|$default_Qty               |3   |true|
+|check                       |checkIfStringAreEqual;|$bigcase_rate              |20  |true|
+|check                       |checkIfStringAreEqual;|$bigcase_Qty               |3   |true|
+|$tresult3=                  |checkIfStringAreEqual;|$shipper_freight_charge    |1485     |
+|check                       |checkIfStringAreEqual;|$shipper_freight_charge    |1485|true|
+|$tresult4=                  |checkIfStringAreEqual;|$shipper_freight_chargestab|1485     |
+|check                       |checkIfStringAreEqual;|$shipper_freight_chargestab|1485|true|
+**!
+
+!**> Validating Test Results
+!|script  |common                                                                    |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+**!

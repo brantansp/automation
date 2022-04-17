@@ -1,0 +1,12 @@
+---
+Test
+---
+!|Script     |Http                                                                                                                           |
+|wait;|2|
+|setBaseUrl; |${turl}/api/login                                                                                                              |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}                                  |
+|$token=     |getHeader;      |x-auth-token                                                                                                  |
+|addHeader;  |Authorization   |bearer $token                                                                                                 |
+|setBaseUrl; |${turl}/api/order/$order_id/rfq                                                                                                |
+|$response=  |getResponse;    |Application/Json|put|$data|
+

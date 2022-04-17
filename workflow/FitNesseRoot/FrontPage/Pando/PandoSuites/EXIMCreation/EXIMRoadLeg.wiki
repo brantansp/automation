@@ -1,0 +1,15 @@
+---
+Help: Used to select the Road leg Destination Port
+---
+!|Script      |Ui                                                                                                             |
+|click;       |//label[normalize-space(text())='Port of Receiving']/following-sibling::div//span//i     |xpath                |
+|sendKeys;    |//label[normalize-space(text())='Port of Receiving']/following-sibling::div//input       |xpath|${srcport_name}|
+|click;       |//li//span[contains(text(),'${srcport_name}')]                                           |xpath                |
+|click;       |//label[normalize-space(text())='Vehicle Requirement Date']/following-sibling::div//input|xpath                |
+|click;       |(//input[@placeholder='Select date'])[1]                                                 |xpath                |
+|sendKeys;    |(//input[@placeholder='Select date'])[1]                                                 |xpath|${reporteddate}|
+|click;       |(//input[@placeholder='Select time'])[1]                                                 |xpath                |
+|clearValueWA;|(//input[@placeholder='Select time'])[1]                                                 |xpath                |
+|sendKeys;    |(//input[@placeholder='Select time'])[1]                                                 |xpath|${reportedtime}|
+|click;       |(//span[contains(text(),'OK')])[1]                                                       |xpath                |
+|sendKeys;    |//label[normalize-space(text())='Expected Delivery Date']/following-sibling::div//input  |xpath|${expecteddate}|

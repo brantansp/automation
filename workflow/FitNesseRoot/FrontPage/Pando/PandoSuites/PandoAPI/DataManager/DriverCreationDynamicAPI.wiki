@@ -1,0 +1,9 @@
+---
+Help: Driver Details Creation Dynamic API
+Test
+---
+!| Script        |Http                                      |
+|addHeader;      |Authorization |bearer $stoken             |
+|setBaseUrl;     |${surl}/api/erp/driver                    |
+|$driver_details=|getResponse;  |Application/Json|post|$data|
+|check           |getStatusCode;|200                        |

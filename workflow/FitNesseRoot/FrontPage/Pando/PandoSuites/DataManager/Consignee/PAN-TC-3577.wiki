@@ -1,0 +1,73 @@
+---
+Help: Add - Consignee
+Suites: sanity1, dm1
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Kovur}
+!define city {Nellore}
+!define state {Andhra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {Customer Site}
+!define loading_starttime {00:30}
+!define loading_endtime {12:00}
+!define unloading_starttime {12:00}
+!define unloading_endtime {23:30}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Consignee.ConsigneeCreation
+
+!|script                     |Ui                                                                                |
+|waitForElementToBeDisplayed;|//span[contains(text(),'c$unique')]|xpath                              |20        |
+|check                       |isElementPresent;                  |//span[contains(text(),'c$unique')]|xpath|true|
+|$add_tresult=               |isElementPresent;                  |//span[contains(text(),'c$unique')]|xpath     |
+**!
+
+!** Verify added consignee values
+!|Script                     |Ui                                                                                                           |
+|navigateToUrl;              |${surl}/mdm/consignees                                                                                       |
+|click;                      |//span[contains(text(),'c$unique')]|xpath                                                                    |
+|wait;                       |2                                                                                                            |
+|$actual_consignee_ref_id=   |getValue;                          |//input[@placeholder='Enter Reference Id']                         |xpath|
+|$actual_address=            |getValue;                          |//input[@placeholder='Enter Address']                              |xpath|
+|$actual_city=               |getValue;                          |//input[@placeholder='Enter City']                                 |xpath|
+|$actual_state=              |getValue;                          |//input[@placeholder='Enter State']                                |xpath|
+|$actual_pincode=            |getValue;                          |//input[@placeholder='Enter Postal code']                          |xpath|
+|$actual_name=               |getValue;                          |//input[@placeholder='Enter Representative Name']                  |xpath|
+|$actual_mobile=             |getValue;                          |//input[@placeholder='Enter Representative Mobile']                |xpath|
+|$actual_email=              |getValue;                          |//input[@placeholder='Enter Representative Email']                 |xpath|
+|$actual_region=             |getValue;                          |//input[@placeholder='Enter Region']                               |xpath|
+|$actual_loading_starttime=  |getValue;                          |//label[contains(text(),'Loading Start Time')]/parent::div//input  |xpath|
+|$actual_loading_endtime=    |getValue;                          |//label[contains(text(),'Loading End Time')]/parent::div//input    |xpath|
+|$actual_unloading_starttime=|getValue;                          |//label[contains(text(),'Unloading Start Time')]/parent::div//input|xpath|
+|$actual_unloading_endtime=  |getValue;                          |//label[contains(text(),'Unloading End Time')]/parent::div//input  |xpath|
+
+!|Script    |Common                                                                   |
+|$tresult1= |checkIfStringAreEqual;|$actual_consignee_ref_id   |${consignee_ref_id}   |
+|$tresult2= |checkIfStringAreEqual;|$actual_address            |${address}            |
+|$tresult3= |checkIfStringAreEqual;|$actual_city               |${city}               |
+|$tresult4= |checkIfStringAreEqual;|$actual_state              |${state}              |
+|$tresult5= |checkIfStringAreEqual;|$actual_pincode            |${pincode}            |
+|$tresult6= |checkIfStringAreEqual;|$actual_name               |${manager_name}       |
+|$tresult7= |checkIfStringAreEqual;|$actual_mobile             |${manager_mobile}     |
+|$tresult8= |checkIfStringAreEqual;|$actual_email              |${manager_email}      |
+|$tresult9= |checkIfStringAreEqual;|$actual_loading_starttime  |${loading_starttime}  |
+|$tresult10=|checkIfStringAreEqual;|$actual_loading_endtime    |${loading_endtime}    |
+|$tresult11=|checkIfStringAreEqual;|$actual_unloading_starttime|${unloading_starttime}|
+|$tresult12=|checkIfStringAreEqual;|$actual_unloading_endtime  |${unloading_endtime}  |
+**!
+
+!**> Validating test results
+!|Script  |Common                                                                                                                                                                    |
+|$tresult=|checkIfStringAreEqualInArray;|$add_tresult,$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,$tresult11,$tresult12,true|
+**!

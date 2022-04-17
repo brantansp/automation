@@ -1,0 +1,186 @@
+---
+Help: Damage with Default value
+Test
+---
+!** Unique values assignment
+!|Script       |DateUtil                               |
+|$unique=      |getCurrentDateTimeStamp;|yMMddHHmmss   |
+|$truckoutdate=|dateCalculation;        |yyyy/MM/dd |-1|
+|$rdate=       |dateCalculation;        |yyyy/MM/dd |0 |
+|$indate=      |getCurrentDateTimeStamp;|yyyy/MM/dd    |
+|$loadingDate= |getCurrentDateTimeStamp |iso           |
+|$contractDate=|dateCalculation;        |dd-MMM-yyyy|2 |
+
+!|Script|Common                      |
+|$num=  |getRandomNumber;|10000|99999|
+**!
+
+!** Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Krishnan nager}
+!define city {Chittor}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {5c750bce6e2ae92e2d5bc5f8}
+!define location_id {5c74edf0c8d634115eaf23bd}
+!define gate_id {5c74edf083f399115e3eaa55}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define unloader_available {false}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define expected_delivery_at {$expected_date}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+**!
+
+!** validating and Assinging The Truck
+!define vechicle_number {tn 09 AT 9013}
+!define driver_name  {pay driver}
+!define phone_number  {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+**!
+
+!** Create Material invoice 
+!define mrp_price {1000}
+!define quantity1 {10}
+!define quantity_unit {cases}
+!define weight {400}
+!define weight_unit {KG}
+!define volume {1000}
+!define volume_unit {CFT}
+!define type {PRIMARY}
+!define invoice_amount {20000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialsInvoiceERPAPI
+**!
+
+!** EPOD Calculation
+!**> Wait for 1 minute
+!|script|ui|
+|wait;  |60|
+**!
+!|Script|DateUtil                     |
+|$rdate=|dateCalculation;|yyyy/MM/dd|0|
+|$timer=|dateCalculation;|hh:mm:a   |0|
+
+!|Script|Common                                  |
+|$rdate=|stringConcatenation;|$rdate|!- $timer -!|
+
+!|Script|DateUtil             |
+|$rdate=|utcConversion;|$rdate|
+
+!define no_of_shortage {0}
+!define no_of_leakage {0}
+!define mrp {${mrp_price}}
+!define no_of_excess {0}
+!define no_of_damage {2}
+!define no_of_carton_damage {0}
+!define release_date {$rdate}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodSingleIndentErpAPI
+**!
+
+!**> Transporter Validation
+!*> Ready for billing page
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!define filter_by {Enter indent id}
+!define search_text {$order_id}
+!define order_id {$order_id}
+
+!include -c .FrontPage.Pando.Common.CommonSearchUploadInReadyForBilling
+*!
+**!
+
+!** Detention Validation
+!|Script                     |Ui                                                                                                                                                                                                                                                                           |
+|waitForElementToBeDisplayed;|//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody|xpath                                                                                          |10                                                                                                |
+|$HeaderNo=                  |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                |xpath                                                                                      |Damage|
+|$data1=                     |getText;                                                                  |(//tr[starts-with(@class,'el-table__row')]/td)[$HeaderNo]//div[@class='gridrefvalue']                       |xpath                                                                                             |
+|$tabularColumn=             |getTabluarColumnValues;                                                   |//div[@class='el-table__header-wrapper']//th[not(contains(@class,'hidden'))]/div[@class='cell']|//tr[starts-with(@class,'el-table__row')]/td[not(contains(@class,'hidden'))]//div[@class='gridrefvalue']|xpath |
+**!
+
+!** Get Values and assert it on transporter side
+!define calculation_total {3600}
+!define amount_without_tax {47,400}
+!define discount {4740}
+!define amount_tax {4,266}
+!define final_amount {46,926}
+
+!|Script                     |Ui                                                                                                                                                                                        |
+|$shipper_requested=         |getText;                                      |//button[@class='el-tooltip item']/div                                                                                     |xpath          |
+|click;                      |//button[normalize-space(text())='Summary']   |xpath                                                                                                                                      |
+|$total_taxable_value=       |getText;                                      |//span[contains(text(),'Total Taxable Value')]/ancestor::div[@class='row labelgrid']/div[contains(@class,'floatright')]/div|xpath          |
+|$discount=                  |getText;                                      |//div[contains(text(),'discount (10%)')]/ancestor::div[@class='row labelgrid']/div[contains(@class,'floatright')]/div      |xpath          |
+|$gst_method=                |getText;                                      |//div[contains(text(),'GST Method')]/ancestor::div[@class='row labelgrid']/div[contains(@class,'floatright')]/div          |xpath          |
+|$igst_amount=               |getText;                                      |//div[contains(text(),'IGST')]/ancestor::div[@class='row labelgrid']/div[contains(@class,'floatright')]/div                |xpath          |
+|$total_invoice_value=       |getText;                                      |//div[@class='bgfooter']//div[contains(@class,'floatright')]                                                               |xpath          |
+|sendKeys;                   |//input[@placeholder='Enter Invoice Number']  |xpath                                                                                                                      |inv-$unique    |
+|click;                      |(//input[@placeholder='Select'])[4]           |xpath                                                                                                                                      |
+|clickJS;                    |//li//span[text()='${service_provider_state}']|xpath                                                                                                                                      |
+|sendKeys;                   |//input[@placeholder='Enter GSTIN Number']    |xpath                                                                                                                      |gst$unique     |
+|sendKeys;                   |//textarea                                    |xpath                                                                                                                      |remarks $unique|
+|wait;                       |3                                                                                                                                                                                         |
+|click;                      |//button[contains(text(),'Generate Invoice')] |xpath                                                                                                                                      |
+|click;                      |//button/span[normalize-space(text())='YES'] |xpath                                                                               |
+|waitUntilElementDisplayed;|//div[@role='alert']//h3[text()='Success']    |xpath                                                                                                                      |30             |
+|$successMessage=            |getElementAttribute;                          |//div[@role='alert']//h3[text()='Success']/following-sibling::span                                                         |xpath|innerText|
+
+!|Script   |Common                                                                         |
+|$tresult1=|checkIfStringAreEqual;       |$data1               |${calculation_total}       |
+|check     |checkIfStringAreEqual;       |$data1               |${calculation_total}  |true|
+|$tresult2=|checkIfStringAreEqual;       |$total_taxable_value |${amount_without_tax}      |
+|check     |checkIfStringAreEqual;       |$total_taxable_value |${amount_without_tax} |true|
+|$tresult3=|checkIfStringAreEqual;       |$discount            |${discount}                |
+|check     |checkIfStringAreEqual;       |$discount            |${discount}           |true|
+|$tresult4=|checkIfStringAreEqual;       |$igst_amount         |${amount_tax}              |
+|check     |checkIfStringAreEqual;       |$igst_amount         |${amount_tax}         |true|
+|$tresult5=|checkIfStringAreEqual;       |$total_invoice_value |${final_amount}            |
+|check     |checkIfStringAreEqual;       |$total_invoice_value |${final_amount}       |true|
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5|
+**!
+
+!* Verify Invoice page in Shipper Side
+!**> Filter depot and verify search in Invoice page
+!include .FrontPage.Pando.Common.ShipperInvoiceFilter
+**!
+
+!** Search using Invoice number
+!define search_text {Enter invoice number}
+!define search_value {inv-$unique}
+!define verify_value {inv-$unique}
+
+!include .FrontPage.Pando.PandoSuites.Payments.FilterV1.CommonSearchInShipperInvoicePage
+
+!|Script                     |Ui                                                                                                                                                                                                                                                          |
+|click;                      |//span[contains(text(),'Pando Payment')]                                  |xpath                                                                                                                                                                            |
+|waitForElementToBeDisplayed;|//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody|xpath                                                                                                                                                               |10          |
+|$damageHeaderNo=            |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                     |xpath|Damage|
+|$shipper_damage=            |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[1]//td[$damageHeaderNo]//div[@class='gridrefvalue']|xpath       |
+
+!|Script|common                                                          |
+|check  |checkIfStringAreEqual;|$shipper_damage|${calculation_total}|true|
+**!

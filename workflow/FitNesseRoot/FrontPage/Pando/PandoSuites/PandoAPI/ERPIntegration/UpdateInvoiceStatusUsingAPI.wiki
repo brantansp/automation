@@ -1,0 +1,9 @@
+---
+Help: To update invoice status using API
+Test
+---
+!|Script    |Http                                             |
+|addHeader; |Authorization   |bearer $stoken                  |
+|setBaseUrl;|${surl}/api/v2/shipper/invoice/$invoice_id/status|
+|$status=   |getResponse;    |Application/Json  |put  |$data  |
+|check      |getStatusCode;  |202                             |

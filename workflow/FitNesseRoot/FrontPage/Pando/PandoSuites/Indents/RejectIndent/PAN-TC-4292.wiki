@@ -1,0 +1,188 @@
+---
+Help: Rejecting the Indent by Transporter
+Test
+---
+!** Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Egmore}
+!define city {city$unique}
+!define state {Tamil Nadu}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!*** Vehicle Creation
+
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!*** Depot Creation
+
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+*!
+
+!*** Gate Manager Creation
+
+!*** User Role ID Retrival
+
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+
+*!
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!*** Gate Creation
+
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+
+!|Script  |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,${gate_city},city$unique,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,1000,per_trip,01-Jan-$year,31-Dec-2030,100,1,}
+!include -c  .FrontPage.Pando.Common.RateMatrix
+*!
+
+!** Indent Creation
+
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+*!
+
+!** Transporter login
+
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+!include -c  .FrontPage.Pando.Common.TransporterLogin
+
+*!
+
+!include -c .FrontPage.Pando.Common.CommonTransporterDepoFilter
+
+!** Rejecting the Indent created for the Transporter
+!|script  |ui                                                                                             |
+|check    |isElementPresent;                              |//span[normalize-space(text())='$order_id']|xpath     |true     |
+|click;   |//span[text()='Reject']                        |xpath                                          |
+|sendKeys;|//textarea[@placeholder='REASON FOR REJECTION']|xpath                     |Automation Rejection|
+|click;   |//button/span[text()='Reject']                 |xpath                                          |
+|wait;    |3                                                                                              |
+
+!include -c .FrontPage.Pando.Common.CommonTransporterDepoFilter
+
+!|Script   |Ui                                                    |
+|check     |isElementPresent;|//div[@class='emptytext']|xpath|true|
+|$tresult1=|isElementPresent;|//div[@class='emptytext']|xpath     |
+*!
+
+!** Verifying the Reindent option for the Rejected Indent
+
+!|script       |ui             |
+|navigateToUrl;|${surl}\indents|
+
+!** Filtering the Depot
+!define search_text {$depot_name}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+*!
+
+!define verify_text {Re-indent}
+!*** Verify the Indent search result
+!| script  |ui                                                                                                        |
+|check     |isElementPresent;|//div[@class='order-row']//div/span[normalize-space(text())='${verify_text}']|xpath|true|
+|$tresult2=|isElementPresent;|//div[@class='order-row']//div/span[normalize-space(text())='${verify_text}']|xpath     |
+*!
+
+*!
+
+!** Validating the test
+!|script  |common                                           |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2|
+*!
+
+!*** Update result
+ 
+*!

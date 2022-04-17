@@ -1,0 +1,276 @@
+---
+Help: Unloading Charges Calculation Based on Primary - Movement- Vehicle Type - Per Case PTL
+Test
+---
+!** Unique values assignment
+!|Script       |DateUtil                                |
+|$unique=      |getCurrentDateTimeStamp;|yMMddHHmmss    |
+|$truckoutdate=|dateCalculation;        |yyyy/MM/dd |-10|
+|$rdate=       |dateCalculation;        |yyyy/MM/dd |0  |
+|$indate=      |getCurrentDateTimeStamp;|yyyy/MM/dd     |
+|$loadingDate= |getCurrentDateTimeStamp |iso            |
+|$contractDate=|dateCalculation;        |dd-MMM-yyyy|2  |
+|$rdate1=|dateCalculation;|yyyy/MM/dd|0|
+|$rdate2=|dateCalculation;|yyyy/MM/dd|-4|
+|$rdate3=|dateCalculation;|yyyy/MM/dd|-5|
+
+!|Script       |Common                                          |
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer -!|
+|$rdate=      |stringConcatenation;|$rdate      |!- $timer -!|
+|$rdate1=|stringConcatenation;|$rdate1|!-  $timer -!|
+|$rdate2=|stringConcatenation;|$rdate2|!- $timer -!|
+|$rdate3=|stringConcatenation;|$rdate3|!- $timer -!|
+
+!|Script       |DateUtil                                |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=|utcConversion;|$rdate|
+|$rdate1=|utcConversion;|$rdate1|
+|$rdate2=|utcConversion;|$rdate2|
+|$rdate3=|utcConversion;|$rdate3|
+**!
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+
+
+!*** Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {PTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+
+
+!** Source Depot Creation
+
+!define depot_name {s$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {s$num}
+!define depot_reference_id {sr$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {SG1$unique}
+!define g_user_email {pandoindent+$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script|common|
+|$location_id=|getTrim;| $depot|
+|$source_gate_id=|getTrim;| $gate_id|
+
+*!
+
+
+!** Destination Depo
+!define depot_name {d$unique}
+!define depot_state {Andhra Pradesh}
+!define depot_city {Vijayawada}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!** Gate Manager Creation 1
+
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+1$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+
+
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script  |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!** Gate Manager Creation 2
+
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+2$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+
+
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {rq2$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script  |json                                |
+|$gate_id_2=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!** Gate Manager Creation 3
+
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+3$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+
+
+!define depot_id {$depot}
+!define gate_name {Gate 3}
+!define gate_ref_id {rq3$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G3$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script  |json                                |
+|$gate_id_3=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+
+!** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,Chennai,Vijayawada,${vehicle_name},100,pandopay001,Pando Payment,1,50,per_case,01-Jan-2019,$contractDate,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!** New Detention upload
+!define row {Vehicle Type,Movement,Depot REF ID,Loading cost,Unloading cost,ODA cost,Unit}
+!define column {${vehicle_name},primary,r$unique,0,60,0,case}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.CommonLoadingUnloadingBulkUpload
+**!
+
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$location_id}
+!define gate_id {$source_gate_id}
+!define expected_delivery_at {$expected_date}
+!define vehicle_requirement_date {$loadingDate}
+!define destination_location_id {$depot}
+
+
+!|script|common|
+|$data= |getTrim;|{"data":{"order_type":"${order_type}","transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":false,"add_to_invoice":false}],"destinations":[{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"$gate_id_1","unloader_available":false,"add_to_invoice":false,"gate_id":"$gate_id_1"},{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"$gate_id_2","unloader_available":false,"add_to_invoice":false,"gate_id":"$gate_id_2"},{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"$gate_id_3","unloader_available":false,"add_to_invoice":false,"gate_id":"$gate_id_3"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+*!
+
+!*** Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!** Material upload for all consingee
+!define mrp_price {1000}
+!define quantity1 {10} 
+!define quantity_unit {cases}
+!define weight {400}
+!define weight_unit {KG}
+!define volume {1000}
+!define volume_unit {CFT}
+!define type {PRIMARY}
+!define invoice_amount {20000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common|
+|$data=|getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"1000","material_code":"mc$unique","depot_ref_id":"sr$unique","gate_ref_id":"SG1$unique","division":"BK","quantity":"10","quantity_unit":"cases","weight":"1","weight_unit":"KG","volume":"1","volume_unit":"CFT","ship_to":"rq1$unique","sold_to":"rq1$unique","type":"PRIMARY","invoice_number":"INV1-$unique","invoice_amount":"20000","invoice_date":"$indate","category":"","truck_out":"$truckoutdate"},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"1000","material_code":"mc$unique","depot_ref_id":"sr$unique","gate_ref_id":"SG1$unique","division":"BK","quantity":"20","quantity_unit":"cases","weight":"1","weight_unit":"KG","volume":"1","volume_unit":"CFT","ship_to":"rq2$unique","sold_to":"rq2$unique","type":"PRIMARY","invoice_number":"INV2-$unique","invoice_amount":"20000","invoice_date":"$indate","category":"","truck_out":"$truckoutdate"},{"indent_no":"$order_id","delivery_number":"D3$unique","mrp_price":"1000","material_code":"mc$unique","depot_ref_id":"sr$unique","gate_ref_id":"SG1$unique","division":"BK","quantity":"30","quantity_unit":"cases","weight":"1","weight_unit":"KG","volume":"1","volume_unit":"CFT","ship_to":"rq3$unique","sold_to":"rq3$unique","type":"PRIMARY","invoice_number":"INV3-$unique","invoice_amount":"20000","invoice_date":"$indate","category":"","truck_out":"$truckoutdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** Adding LR
+!|script|common|
+|$data=|getTrim;| {"data":[{"destination_id":"$depot","source_location_id":"$location_id","lr_number":"$unique"}]}|
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateDynamicAPI
+*!
+
+!** EPOD upload validation
+
+!|script|common|
+|$data=|getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"rq1$unique","sold_to":"rq1$unique","material_invoice_number":"INV1-$unique","material_code":"mc$unique","no_of_shortage":"0","no_of_leakage":"0","mrp":"${mrp_price}","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate1"},{"indent_number":"$order_id","ship_to":"rq2$unique","sold_to":"rq2$unique","material_invoice_number":"INV2-$unique","material_code":"mc$unique","no_of_shortage":"0","no_of_leakage":"0","mrp":"${mrp_price}","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate2"},{"indent_number":"$order_id","ship_to":"rq3$unique","sold_to":"rq3$unique","material_invoice_number":"INV3-$unique","material_code":"mc$unique","no_of_shortage":"0","no_of_leakage":"0","mrp":"${mrp_price}","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate3"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+
+!define pay_calcualtion  {Unloading}
+!define depot_name {s$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.UnloadingCharges.UnloadingPTLCalculation
+
+
+!|Script  |Common                                     |
+|check    |checkIfStringAreEqual;|$calResult|3600|true|
+|$tresult=|checkIfStringAreEqual;|$calResult|3600     |
+
+
+ 
+
+
+
+
+

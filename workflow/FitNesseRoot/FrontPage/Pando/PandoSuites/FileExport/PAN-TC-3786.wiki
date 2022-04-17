@@ -1,0 +1,62 @@
+---
+Help: Consignee Rejected list should only show updated with most recent upload
+Suites: export1
+Test
+---
+!** Uploading Consignee Bulk Upload
+!define row {Consignee Name,Reference Id,Contact Name,Mobile Number,Email,Address,City,State,Postal Code,Region,Customer Type,Category,Group,Display Reference Name}
+!define column1 {,consignee1 $unique refrence,consignee1 $unique,123,pandoconsigneee+1$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,South,Customer site,hign,,}
+!define column2 {cbulk2$unique,consignee2 $unique refrence,consignee2 $unique,12891,pandoconsigneee+2$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,,South,Customer site,hign,,}
+!define column3 {cbulk3$unique,consignee3 $unique refrence,consignee3 $unique,12892,pandoconsigneee+3$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,South,Shipper site,hign,,}
+!define column4 {cbulk4$unique,consignee4 $unique refrence,consignee4 $unique,12893,pandoconsigneee+4$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,South,Customer site,hign,,}
+!define column5 {cbulk5$unique,,consignee5 $unique,12894,pandoconsigneee+5$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,South,Shipper site,hign,,}
+
+!define columns { ${column1}|${column2}|${column3}|${column4}|${column5} }
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+
+!|Script                |Excel                       |
+|newSheetDynamicColumns;|${row}|${columns}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/consignees                                          |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|click;                    |//button[text()='Rejected List']         |xpath                 |
+|wait;                     |30                                                              |
+**!
+
+!** Get Filename and rename it
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+**!
+
+!|script  |ExcelQuery                                                                                                      |
+|$count=  |getCountQuery;|$filename|select * from consignees                                                               |
+|$reason1=|selectQuery;  |$filename|select reason from consignees where Email = 'pandoconsigneee+5$unique@gmail.com'|reason|
+|$reason2=|selectQuery;  |$filename|select reason from consignees where Email = 'pandoconsigneee+2$unique@gmail.com'|reason|
+|$reason3=|selectQuery;  |$filename|select reason from consignees where Email = 'pandoconsigneee+1$unique@gmail.com'|reason|
+
+!|Script   |common                                                                        |
+|check     |checkIfStringExistsIn;       |Reference Id should not be empty  |$reason1|true|
+|$tresult1=|checkIfStringExistsIn;       |Reference Id should not be empty  |$reason1     |
+|check     |checkIfStringExistsIn;       |Postal Code should not be empty   |$reason2|true|
+|$tresult2=|checkIfStringExistsIn;       |Postal Code should not be empty   |$reason2     |
+|check     |checkIfStringExistsIn;       |Consignee Name should not be empty|$reason3|true|
+|$tresult3=|checkIfStringExistsIn;       |Consignee Name should not be empty|$reason3     |
+|check     |checkIfStringAreEqual;       |$count                            |3       |true|
+|$tresult4=|checkIfStringAreEqual;       |$count                            |3            |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4         |
+
+ 
+
+
+
+
+

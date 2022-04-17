@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://pvmi-auto.pandostaging.in}
+!define username {pandopvmiauto@gmail.com}
+!define password {test@1234}
+!define shipper_client_id {621ee5c071a20c4a57fb13eb}

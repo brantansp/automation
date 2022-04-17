@@ -1,0 +1,9 @@
+---
+Help: Contains API for shipper verifying the Invoice
+Test
+---
+!|Script    |Http                                    |
+|addHeader; |Authorization  |bearer $stoken          |
+|setBaseUrl;|${surl}/api/invoice/${invoice_id}/verify|
+|$response= |getResponse;   |Application/Json |put | |
+|check      |getStatusCode; |200                     |

@@ -1,0 +1,545 @@
+---
+Help: Check consignee wise break down will be available for PTL the indent
+Suites: britannia
+Test
+---
+!*** Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-9|
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-8|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-7|
+|$rdate1=      |dateCalculation;|yyyy/MM/dd |-4|
+|$rdate2=      |dateCalculation;|yyyy/MM/dd |-2|
+|$rdate3=      |dateCalculation;|yyyy/MM/dd |-1|
+
+!|Script       |Common                                          |
+|$truckindate= |stringConcatenation;|$truckindate |!- 10:00:00-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- 10:00:00-!|
+|$rdate1=      |stringConcatenation;|$rdate1      |!- 10:00:00-!|
+|$rdate2=      |stringConcatenation;|$rdate2      |!- 10:00:00-!|
+|$rdate3=      |stringConcatenation;|$rdate3      |!- 10:00:00-!|
+
+!|Script      |DateUtil                   |
+|$loadingDate=|utcConversion;|$loadingDate|
+
+!|Script        |DateUtil                                     |
+|$expected_date=|dateCalculation;|yyyy/MM/dd        |0        |
+|$expected_date=|utcConversion;  |$expected_date !- 10:00:00-!|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!** Consignee Creation one
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Krishnan nager}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+**!
+
+!** Consignee Creation two
+!define consignee_name {c2$unique}
+!define consignee_ref_id {cr2$unique}
+!define address {Krishnan nager}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_2=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_2=|getTrim;|${consignee_ref_id}|
+**!
+
+!** Consignee Creation three
+!define consignee_name {c3$unique}
+!define consignee_ref_id {cr3$unique}
+!define address {Krishnan nager}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_3=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_3=|getTrim;|${consignee_ref_id}|
+**!
+
+!*** Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!*** Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {PTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!*** Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!*** Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!*** Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!** Material Creation 1
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!** Detention Upload
+!define row {Vehicle Name,Group Code,Movement,LOADING_DETENTION_DAY1,LOADING_DETENTION_DAY2,LOADING_DETENTION_DAY3,LOADING_DETENTION_DAY4,LOADING_DETENTION_DAY5,LOADING_DETENTION_MORETHAN_DAY5,UnLOADING_DETENTION_DAY1,UnLOADING_DETENTION_DAY2,UnLOADING_DETENTION_DAY3,UnLOADING_DETENTION_DAY4,UnLOADING_DETENTION_DAY5,UnLOADING_DETENTION_MORETHAN_DAY5,TRANSIT_DAY1,TRANSIT_DAY2,TRANSIT_DAY3,TRANSIT_DAY4,TRANSIT_DAY5,TRANSIT_MORETHAN_DAY5,TRANSIT_DELAY_PERCENTAGE}
+!define column {v$unique,P,Secondary,100,200,300,300,500,600,904,200,300,300,500,600,100,200,300,400,500,600,10}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonDetentionBulkUpload
+**!
+
+!*** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,${gate_ref_id},$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,1000,per_trip,01-Jan-$year,31-Dec-2030,100,1,P|Point,${gate_ref_id},$consignee_id_ref_2,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,1000,per_trip,01-Jan-$year,31-Dec-2030,100,1,P|Point,${gate_ref_id},$consignee_id_ref_3,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,1000,per_trip,01-Jan-$year,31-Dec-2030,100,1,P}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!*** Indent Creation Date 1
+!*** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define unloader_available {false}
+!define destination_location_id_1 {$consignee_id_1}
+!define sold_to_id_1 {$consignee_id_1}
+!define expected_delivery_at_1 {$expected_date}
+!define destination_location_id_2 {$consignee_id_2}
+!define sold_to_id_2 {$consignee_id_2}
+!define expected_delivery_at_2 {$expected_date}
+!define destination_location_id_3 {$consignee_id_3}
+!define sold_to_id_3 {$consignee_id_3}
+!define expected_delivery_at_3 {$expected_date}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationMultiConsigneeAPI
+
+!|script     |common            |
+|$indent_id1=|getTrim;|$order_id|
+*!
+
+!*** Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!** Update LR for Consignee 1
+!define consignee_id {$consignee_id_1}
+!define lr_number {l1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!** Update LR for Consignee 2
+!define consignee_id {$consignee_id_2}
+!define lr_number {l2}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!** Update LR for Consignee 3
+!define consignee_id {$consignee_id_3}
+!define lr_number {l3}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!|script|Ui|
+|wait;  |5 |
+
+!** Material upload for first consingee 
+!define material_code_1 {${material_code}}
+!define material_code_2 {${material_code}}
+!define mrp_price_1 {1000}
+!define mrp_price_2 {2000}
+!define quantity1 {10} 
+!define quantity2 {12} 
+!define quantity_unit_1 {pce}
+!define quantity_unit_2 {pce}
+!define weight_1 {20}
+!define weight_2 {30}
+!define weight_unit_1 {KG}
+!define weight_unit_2 {KG}
+!define volume_1 {10}
+!define volume_2 {60}
+!define volume_unit_1 {CFT}
+!define volume_unit_2 {CFT}
+!define type_1 {SECONDARY}
+!define type_2 {SECONDARY}
+!define sold_to_1 {cr1$unique}
+!define ship_to_1 {cr1$unique}
+!define sold_to_2 {cr1$unique}
+!define ship_to_2 {cr1$unique}
+!define invoice_number_1 {INV1-$unique}
+!define invoice_number_2 {INV2-$unique}
+!define invoice_amount_1 {2000}
+!define invoice_amount_2 {3000}
+!define delivery_number_1 {D1-$unique}  
+!define delivery_number_2 {D2-$unique}  
+!define invoice_date {$indate}
+!define division_1 {d}
+!define division_2 {d}
+!define category {}
+!define truck_out {$truckoutdate}
+!define erp_depo_id_api {${depot_reference_id}}
+!define erp_gate_id_api {${gate_ref_id}}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialsInvoiceMutipleConsigneeDynamicERPAPI
+**!
+
+!|script|Ui|
+|wait;  |5 |
+
+!** Material upload for second consingee 
+!define material_code_1 {${material_code}}
+!define material_code_2 {${material_code}}
+!define mrp_price_1 {1000}
+!define mrp_price_2 {2000}
+!define quantity1 {40} 
+!define quantity2 {30} 
+!define quantity_unit_1 {pce}
+!define quantity_unit_2 {pce}
+!define weight_1 {40}
+!define weight_2 {55}
+!define weight_unit_1 {KG}
+!define weight_unit_2 {KG}
+!define volume_1 {70}
+!define volume_2 {25}
+!define volume_unit_1 {CFT}
+!define volume_unit_2 {CFT}
+!define division_1 {d}
+!define division_2 {d}
+!define type_1 {SECONDARY}
+!define type_2 {SECONDARY}
+!define sold_to_1 {cr2$unique}
+!define ship_to_1 {cr2$unique}
+!define sold_to_2 {cr2$unique}
+!define ship_to_2 {cr2$unique}
+!define invoice_number_1 {INV3-$unique}
+!define invoice_number_2 {INV4-$unique}
+!define invoice_amount_1 {2000}
+!define invoice_amount_2 {3000}
+!define delivery_number_1 {D3-$unique}  
+!define delivery_number_2 {D4-$unique}  
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+!define erp_depo_id_api {${depot_reference_id}}
+!define erp_gate_id_api {${gate_ref_id}}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{ "data": [ { "indent_no": "$order_id", "delivery_number": "${delivery_number_1}", "mrp_price": "${mrp_price_1}", "material_code": "${material_code_1}", "depot_ref_id": "${erp_depo_id_api}", "gate_ref_id": "${erp_gate_id_api}", "division": "${division_1}", "quantity": "${quantity1}", "quantity_unit": "${quantity_unit_1}", "weight": "${weight_1}", "weight_unit": "${weight_unit_1}", "volume": "${volume_1}", "volume_unit": "${volume_unit_1}", "ship_to": "${ship_to_1}", "sold_to": "${sold_to_1}", "type": "${type_1}", "invoice_number": "${invoice_number_1}", "invoice_amount": "${invoice_amount_1}", "invoice_date": "${invoice_date}","category": "","truck_out": "${truck_out}","shipment_number":"ship$unique" },{ "indent_no": "$order_id", "delivery_number": "${delivery_number_2}", "mrp_price": "${mrp_price_2}", "material_code": "${material_code_2}", "depot_ref_id": "${erp_depo_id_api}", "gate_ref_id": "${erp_gate_id_api}", "division": "${division_2}", "quantity": "${quantity2}", "quantity_unit": "${quantity_unit_2}", "weight": "${weight_2}", "weight_unit": "${weight_unit_2}", "volume": "${volume_2}", "volume_unit": "${volume_unit_2}", "ship_to": "${ship_to_2}", "sold_to": "${sold_to_2}", "type": "${type_2}", "invoice_number": "${invoice_number_2}", "invoice_amount": "${invoice_amount_2}", "invoice_date": "${invoice_date}","category": "","truck_out": "${truck_out}" ,"shipment_number":"ship$unique"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!|script|Ui|
+|wait;  |5 |
+
+!** Material upload for thrid consingee
+!define material_code_1 {${material_code}}
+!define material_code_2 {${material_code}}
+!define mrp_price_1 {1000}
+!define mrp_price_2 {2000}
+!define quantity1 {100} 
+!define quantity2 {200} 
+!define quantity_unit_1 {pce}
+!define quantity_unit_2 {pce}
+!define weight_1 {37}
+!define weight_2 {85}
+!define weight_unit_1 {KG}
+!define weight_unit_2 {KG}
+!define volume_1 {90}
+!define volume_2 {68}
+!define volume_unit_1 {CFT}
+!define volume_unit_2 {CFT}
+!define type_1 {SECONDARY}
+!define type_2 {SECONDARY}
+!define division_1 {d}
+!define division_2 {d}
+!define sold_to_1 {cr3$unique}
+!define ship_to_1 {cr3$unique}
+!define sold_to_2 {cr3$unique}
+!define ship_to_2 {cr3$unique}
+!define invoice_number_1 {INV5-$unique}
+!define invoice_number_2 {INV6-$unique}
+!define invoice_amount_1 {2000}
+!define invoice_amount_2 {3000}
+!define delivery_number_1 {D5-$unique}  
+!define delivery_number_2 {D6-$unique}  
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+!define erp_depo_id_api {${depot_reference_id}}
+!define erp_gate_id_api {${gate_ref_id}}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{ "data": [ { "indent_no": "$order_id", "delivery_number": "${delivery_number_1}", "mrp_price": "${mrp_price_1}", "material_code": "${material_code_1}", "depot_ref_id": "${erp_depo_id_api}", "gate_ref_id": "${erp_gate_id_api}", "division": "${division_1}", "quantity": "${quantity1}", "quantity_unit": "${quantity_unit_1}", "weight": "${weight_1}", "weight_unit": "${weight_unit_1}", "volume": "${volume_1}", "volume_unit": "${volume_unit_1}", "ship_to": "${ship_to_1}", "sold_to": "${sold_to_1}", "type": "${type_1}", "invoice_number": "${invoice_number_1}", "invoice_amount": "${invoice_amount_1}", "invoice_date": "${invoice_date}","category": "","truck_out": "${truck_out}","shipment_number":"ship$unique" },{ "indent_no": "$order_id", "delivery_number": "${delivery_number_2}", "mrp_price": "${mrp_price_2}", "material_code": "${material_code_2}", "depot_ref_id": "${erp_depo_id_api}", "gate_ref_id": "${erp_gate_id_api}", "division": "${division_2}", "quantity": "${quantity2}", "quantity_unit": "${quantity_unit_2}", "weight": "${weight_2}", "weight_unit": "${weight_unit_2}", "volume": "${volume_2}", "volume_unit": "${volume_unit_2}", "ship_to": "${ship_to_2}", "sold_to": "${sold_to_2}", "type": "${type_2}", "invoice_number": "${invoice_number_2}", "invoice_amount": "${invoice_amount_2}", "invoice_date": "${invoice_date}","category": "","truck_out": "${truck_out}" ,"shipment_number":"ship$unique"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** EPOD Calculation
+!define material_invoice_number_1 {INV1-$unique}
+!define material_invoice_number_2 {INV2-$unique}
+!define material_code_1 {${material_code}}
+!define material_code_2 {${material_code}}
+!define ship_to_1 {cr1$unique}
+!define ship_to_2 {cr1$unique}
+!define sold_to_1 {cr1$unique}
+!define sold_to_2 {cr1$unique}
+!define no_of_shortage1 {0}
+!define no_of_shortage2 {0}
+!define no_of_leakage1 {0}
+!define no_of_leakage2 {0}
+!define mrp {${mrp_price}}
+!define no_of_excess1 {0}
+!define no_of_excess2 {0}
+!define no_of_damage1 {0}
+!define no_of_damage2 {0}
+!define no_of_carton_damage1 {0}
+!define no_of_carton_damage2 {0}
+!define release_date1 {$rdate1}
+!define release_date2 {$rdate1}
+!define mrp_1 {1000}
+!define mrp_2 {2000}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"${ship_to_1}","sold_to":"${sold_to_1}","material_invoice_number":"${material_invoice_number_1}","material_code":"${material_code_1}","no_of_shortage":"${no_of_shortage1}","no_of_leakage":"${no_of_leakage1}","mrp":"${mrp_1}","no_of_excess":"${no_of_excess1}","no_of_damage":"${no_of_damage1}","no_of_carton_damage":"${no_of_carton_damage1}","release_date":"${release_date1}","shipment_number":"ship$unique"},{"indent_number":"$order_id","ship_to":"${ship_to_2}","sold_to":"${sold_to_2}","material_invoice_number":"${material_invoice_number_2}","material_code":"${material_code_2}","no_of_shortage":"${no_of_shortage2}","no_of_leakage":"${no_of_leakage2}","mrp":"${mrp_2}","no_of_excess":"${no_of_excess2}","no_of_damage":"${no_of_damage2}","no_of_carton_damage":"${no_of_carton_damage2}","release_date":"${release_date2}","shipment_number":"ship$unique"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!** EPOD Calculation
+!define material_invoice_number_1 {INV3-$unique}
+!define material_invoice_number_2 {INV4-$unique}
+!define material_code_1 {${material_code}}
+!define material_code_2 {${material_code}}
+!define ship_to_1 {cr2$unique}
+!define ship_to_2 {cr2$unique}
+!define sold_to_1 {cr2$unique}
+!define sold_to_2 {cr2$unique}
+!define no_of_shortage1 {0}
+!define no_of_shortage2 {0}
+!define no_of_leakage1 {0}
+!define no_of_leakage2 {0}
+!define mrp {${mrp_price}}
+!define no_of_excess1 {0}
+!define no_of_excess2 {0}
+!define no_of_damage1 {0}
+!define no_of_damage2 {0}
+!define no_of_carton_damage1 {0}
+!define no_of_carton_damage2 {0}
+!define release_date1 {$rdate2}
+!define release_date2 {$rdate2}
+!define mrp_1 {1000}
+!define mrp_2 {2000}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"${ship_to_1}","sold_to":"${sold_to_1}","material_invoice_number":"${material_invoice_number_1}","material_code":"${material_code_1}","no_of_shortage":"${no_of_shortage1}","no_of_leakage":"${no_of_leakage1}","mrp":"${mrp_1}","no_of_excess":"${no_of_excess1}","no_of_damage":"${no_of_damage1}","no_of_carton_damage":"${no_of_carton_damage1}","release_date":"${release_date1}","shipment_number":"ship$unique"},{"indent_number":"$order_id","ship_to":"${ship_to_2}","sold_to":"${sold_to_2}","material_invoice_number":"${material_invoice_number_2}","material_code":"${material_code_2}","no_of_shortage":"${no_of_shortage2}","no_of_leakage":"${no_of_leakage2}","mrp":"${mrp_2}","no_of_excess":"${no_of_excess2}","no_of_damage":"${no_of_damage2}","no_of_carton_damage":"${no_of_carton_damage2}","release_date":"${release_date2}","shipment_number":"ship$unique"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!** EPOD Calculation
+!define material_invoice_number_1 {INV5-$unique}
+!define material_invoice_number_2 {INV6-$unique}
+!define material_code_1 {${material_code}}
+!define material_code_2 {${material_code}}
+!define ship_to_1 {cr3$unique}
+!define ship_to_2 {cr3$unique}
+!define sold_to_1 {cr3$unique}
+!define sold_to_2 {cr3$unique}
+!define no_of_shortage1 {0}
+!define no_of_shortage2 {0}
+!define no_of_leakage1 {0}
+!define no_of_leakage2 {0}
+!define mrp {${mrp_price}}
+!define no_of_excess1 {0}
+!define no_of_excess2 {0}
+!define no_of_damage1 {0}
+!define no_of_damage2 {0}
+!define no_of_carton_damage1 {0}
+!define no_of_carton_damage2 {0}
+!define release_date1 {$rdate3}
+!define release_date2 {$rdate3}
+!define mrp_1 {1000}
+!define mrp_2 {2000}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"${ship_to_1}","sold_to":"${sold_to_1}","material_invoice_number":"${material_invoice_number_1}","material_code":"${material_code_1}","no_of_shortage":"${no_of_shortage1}","no_of_leakage":"${no_of_leakage1}","mrp":"${mrp_1}","no_of_excess":"${no_of_excess1}","no_of_damage":"${no_of_damage1}","no_of_carton_damage":"${no_of_carton_damage1}","release_date":"${release_date1}","shipment_number":"ship$unique"},{"indent_number":"$order_id","ship_to":"${ship_to_2}","sold_to":"${sold_to_2}","material_invoice_number":"${material_invoice_number_2}","material_code":"${material_code_2}","no_of_shortage":"${no_of_shortage2}","no_of_leakage":"${no_of_leakage2}","mrp":"${mrp_2}","no_of_excess":"${no_of_excess2}","no_of_damage":"${no_of_damage2}","no_of_carton_damage":"${no_of_carton_damage2}","release_date":"${release_date2}","shipment_number":"ship$unique"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+**!
+
+!** Validating Wallet entries in Shipper
+
+!define wallet_reason {Transit Delay}
+!define wallet_amount {2800.00}
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.WalletValidationShipper
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row') or contains(@class,'card-row row') or @class='emptytext']|xpath                                                                                                                                                                                                                 |15        |
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]                                                                                                                                                                                     |xpath|true|
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']                                                                                           |xpath|true|
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']//parent::span//parent::div//following-sibling::div//*[contains(text(),'${wallet_amount}')]|xpath|true|
+|$tresult=                   |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']//parent::span//parent::div//following-sibling::div//*[contains(text(),'${wallet_amount}')]|xpath     |
+**!
+
+!** Validating Details Split
+!|script   |ui                                                                                                         |
+|click;    |//span[text()='DETAILS']|xpath                                                                             |
+|check     |isElementPresent;       |//div[contains(text(),'c1$unique')]/child::div[contains(text(),'300')] |xpath|true|
+|$tresult1=|isElementPresent;       |//div[contains(text(),'c1$unique')]/child::div[contains(text(),'300')] |xpath     |
+|check     |isElementPresent;       |//div[contains(text(),'c2$unique')]/child::div[contains(text(),'1000')]|xpath|true|
+|$tresult2=|isElementPresent;       |//div[contains(text(),'c2$unique')]/child::div[contains(text(),'1000')]|xpath     |
+|check     |isElementPresent;       |//div[contains(text(),'c3$unique')]/child::div[contains(text(),'1500')]|xpath|true|
+|$tresult3=|isElementPresent;       |//div[contains(text(),'c3$unique')]/child::div[contains(text(),'1500')]|xpath     |
+**!
+
+!** Transporter login
+
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+!include -c  .FrontPage.Pando.Common.TransporterLogin
+
+**!
+
+!** Validating Wallet entries in Transporter
+
+!define wallet_reason {Transit Delay}
+!define wallet_amount {2800.00}
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.WalletValidationTransporter
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row') or contains(@class,'card-row row') or @class='emptytext']|xpath                                                                                                                                                                                                                 |15        |
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]                                                                                                                                                                                     |xpath|true|
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']                                                                                           |xpath|true|
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']//parent::span//parent::div//following-sibling::div//*[contains(text(),'${wallet_amount}')]|xpath|true|
+|$tresult4=                  |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']//parent::span//parent::div//following-sibling::div//*[contains(text(),'${wallet_amount}')]|xpath     |
+
+!** Validating Details Split
+!|script   |ui                                                                                                         |
+|click;    |//span[text()='DETAILS']|xpath                                                                             |
+|check     |isElementPresent;       |//div[contains(text(),'c1$unique')]/child::div[contains(text(),'300')] |xpath|true|
+|$tresult5=|isElementPresent;       |//div[contains(text(),'c1$unique')]/child::div[contains(text(),'300')] |xpath     |
+|check     |isElementPresent;       |//div[contains(text(),'c2$unique')]/child::div[contains(text(),'1000')]|xpath|true|
+|$tresult6=|isElementPresent;       |//div[contains(text(),'c2$unique')]/child::div[contains(text(),'1000')]|xpath     |
+|check     |isElementPresent;       |//div[contains(text(),'c3$unique')]/child::div[contains(text(),'1500')]|xpath|true|
+|$tresult7=|isElementPresent;       |//div[contains(text(),'c3$unique')]/child::div[contains(text(),'1500')]|xpath     |
+**!
+
+!|script  |common                                                                                                  |
+|check    |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7|true|
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7     |
+**!

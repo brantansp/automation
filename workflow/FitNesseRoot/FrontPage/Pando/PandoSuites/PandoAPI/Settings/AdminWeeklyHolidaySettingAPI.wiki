@@ -1,0 +1,9 @@
+---
+Help: Contains API script to set holiday
+Test
+---
+!| Script   |Http                                      |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/settings/depot/holidays       |
+|$response= |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|201                        |

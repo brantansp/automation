@@ -1,0 +1,47 @@
+---
+Help: Update Consignee ERP
+Suites: erp1
+Test
+---
+!** Unique values assignment
+!|Script|Common|
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!*** ERP Update Consignee
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Egmore}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+
+
+!define consignee_name_update {c1$unique}
+
+!| Script | Http |
+| setBaseUrl; | ${surl}/api/login |
+| getResponse; | Application/Json | put | {"data":{"email":"${username}","password":"${password}"}} |
+| $token= | getHeader; | x-auth-token |
+| addHeader; | Authorization | bearer $token |
+| setBaseUrl; | ${surl}/api/erp/consignee |
+|$data=| getResponse; | Application/Json | post | {"data":[{"name":"${consignee_name_update}","reference_number":"${consignee_ref_id}","address":"${address}","city":"${city}","state":"${state}","region":"${region}","mobile_number":"${manager_mobile}","pincode":"${pincode}","email":"${manager_email}","category":"B","customer_type":"customer site"}]}|
+| check | getStatusCode; | 204|
+*!
+
+!*** Validating in UI
+!|Script|Ui|
+|wait;|5|
+|navigateToUrl;|${surl}/mdm/consignees|
+|waitForElementToBeDisplayed; | //span[contains(text(),'${consignee_name_update}')]|xpath| 30 |
+|check|isElementPresent;|//span[contains(text(),'${consignee_name_update}')]|xpath|true|
+|$tresult=|isElementPresent;|//span[contains(text(),'${consignee_name_update}')]|xpath|
+**! 

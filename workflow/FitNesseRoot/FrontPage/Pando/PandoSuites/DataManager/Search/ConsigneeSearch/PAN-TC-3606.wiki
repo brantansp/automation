@@ -1,0 +1,51 @@
+---
+Help: Filter_By Active and City Combination
+Test
+---
+!** Unique values assignment
+!|Script  |Common                                 |
+|$unique= |getCurrentDateTimeStamp;|yMMddHHmmss   |
+|$srandom=|getRandomString;        |5|ALPHANUMERIC|
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Egmore}
+!define city {$srandom}
+!define state {Tamil Nadu}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+!define consignee_status {1}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Search by city and active
+
+!** Filter active status in consignee
+!define status_value {Active}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Search.ConsigneeSearch.CommonStatusFilterInConsignee
+**!
+
+!define search_value {${city}}
+!define search_count {1}
+!define search_text {Enter City}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Search.ConsigneeSearch.CommonConsigneeSearch
+
+!|script  |common                              |
+|$tresult=|checkIfStringAreEqual;|1|$totalCount|
+**!
+
+
+!define tname {TC-277}
+ 
+
+

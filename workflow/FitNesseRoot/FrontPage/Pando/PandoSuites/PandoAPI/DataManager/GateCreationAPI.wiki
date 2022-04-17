@@ -1,0 +1,14 @@
+---
+Help: Use to add Gates for the created Depots
+Test
+---
+!|Script    |Http                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|addHeader; |Authorization |bearer $stoken                                                                                                                                                                                                                                                                                                                                                                                               |
+|setBaseUrl;|${surl}/api/depot/${depot_id}/gate                                                                                                                                                                                                                                                                                                                                                                                          |
+|$depotResp=|getResponse;  |Application/Json|post|{"data":{"name":"${gate_name}","reference_id":"${gate_ref_id}","address":"No 15 GST Road","city":"${gate_city}","state":"${gate_state}","region":"${gate_region}","pincode":"${gate_pincode}","short_code":"${gate_short_code}","special_tax_rebate":"${special_tax_rebate}","user_ids":["${gate_user_id}"],"combine":true,"exclude_trucks":[],"category":"b","is_virtual_gate":false}}|
+|check      |getStatusCode;|200                                                                                                                                                                                                                                                                                                                                                                                                          |
+
+!|Script      |json                                          |
+|$gate_name=  |getValueFromJSON;|$depotResp|data.name        |
+|$gate_ref_id=|getValueFromJSON;|$depotResp|data.reference_id|
+|$gate_id=    |getValueFromJSON;|$depotResp|data.id          |

@@ -1,0 +1,11 @@
+---
+Help: Contains steps for filtering the records in the shipper invoice
+---
+!|script       |ui                                                                                                    |
+|navigateToUrl;|${surl}/invoices                                                                                      |
+|click;        |//span[@class='search-trigger']                                                  |xpath               |
+|click;        |//div[text()='Filter By Status']/..//li[normalize-space(text())='${filter_text}']|xpath               |
+|click;        |//span[@class='search-trigger']                                                  |xpath               |
+|click;        |//div[text()='Search By']/..//li[normalize-space(text())='${search_by}']         |xpath               |
+|sendKeys;     |//div[normalize-space(text())='Indent Id']//ancestor::li//input                  |xpath|${search_text}|
+|wait;         |3                                                                                                     |

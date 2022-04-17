@@ -1,0 +1,9 @@
+---
+Help: Use to Add Lorry Receipt number to Contract Indent
+---
+!|script                     |ui                                                     |
+|navigateToUrl;              |${surl}/indents/$order_id/details/0?category=0         |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')] |xpath|30       |
+|click;                      |//div[@class='form-value']/span        |xpath          |
+|sendKeys;                   |//input[@placeholder='Enter LR number']|xpath|${lr_num}|
+|click;                      |//i[@class='text-blue']                |xpath          |

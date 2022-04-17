@@ -1,0 +1,12 @@
+!|Script  |Ui                                                                                |
+|click;   |//span[contains(text(),'Vehicle') or contains(text(),'VEHICLE')] |xpath           |
+|sendKeys;|(//div[@aria-hidden='false']//input[@placeholder='xx'])[1]       |xpath|TN        |
+|sendKeys;|//div[@aria-hidden='false']//input[@placeholder='99']            |xpath|09        |
+|sendKeys;|(//div[@aria-hidden='false']//input[@placeholder='xx'])[2]       |xpath|CT        |
+|sendKeys;|//div[@aria-hidden='false']//input[@placeholder='9999']          |xpath|1204      |
+|sendKeys;|//div[@aria-hidden='false']//input[@placeholder='900132CTZPXXXX']|xpath|$unique   |
+|sendKeys;|//div[@aria-hidden='false']//input[@placeholder='CTZP12345XXXX'] |xpath|c$unique  |
+|sendKeys;|//div[@aria-hidden='false']//input[@placeholder='99XXXXXXXX']    |xpath|1234567890|
+|sendKeys;|//div[@aria-hidden='false']//input[@placeholder='Ramesh Garg ']  |xpath|Ramesh    |
+|click;   |//div[@aria-hidden='false']//button[@class='btn primary-button'] |xpath           |
+|wait;    |3                                                                                 |

@@ -1,0 +1,14 @@
+---
+Test
+---
+!|Script    |Http                                                                                                                                                                                                                                                                                                                    |
+|wait;      |5                                                                                                                                                                                                                                                                                                                       |
+|addHeader; |Authorization |bearer $stoken                                                                                                                                                                                                                                                                                           |
+|setBaseUrl;|${surl}/api/material/                                                                                                                                                                                                                                                                                                   |
+|$material= |getResponse;  |Application/Json|post|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}"}}|
+|check      |getStatusCode;|200                                                                                                                                                                                                                                                                                                      |
+
+!|Script        |json                                 |
+|$material_id=  |getValueFromJSON;|$material|data.id  |
+|$material_code=|getValueFromJSON;|$material|data.code|
+|$material_name=|getValueFromJSON;|$material|data.name|

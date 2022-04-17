@@ -1,0 +1,186 @@
+---
+Help: Ensure Route has been listed as MULTIDROP  for Multiple Consignee
+Test
+---
+!** Unique values assignment
+!|Script         |DateUtil                                        |
+|$unique=        |getCurrentDateTimeStamp;|yMMddHHmmss            |
+|$rdate=         |dateCalculation;        |yyyy/MM/dd HH:mm:ss|-1 |
+|$rdate=         |utcConversion;          |$rdate                 |
+|$rdate_validate=|dateCalculation;        |dd MMM yyyy        |-1 |
+|$truckoutdate=  |dateCalculation;        |yyyy/MM/dd HH:mm:ss|-2 |
+|$indate=        |getCurrentDateTimeStamp;|yyyy/MM/dd             |
+|$fromdate=      |dateCalculation;        |yyyy/MM/dd         |-5 |
+|$todate=        |dateCalculation;        |yyyy/MM/dd         |365|
+**!
+
+!** Consignee Creation one
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Krishnan nager}
+!define city {city1$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+**!
+
+!** Consignee Creation two
+!define consignee_name {c2$unique}
+!define consignee_ref_id {cr2$unique}
+!define address {Krishnan nager}
+!define city {city1$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1+$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_2=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_2=|getTrim;|${consignee_ref_id}|
+**!
+
+!** Consignee Creation three
+!define consignee_name {c3$unique}
+!define consignee_ref_id {cr3$unique}
+!define address {Krishnan nager}
+!define city {city1$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1+$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_3=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_3=|getTrim;|${consignee_ref_id}|
+**!
+
+!** Rate Matrix creation
+!|Script|Common                                                                                                                                                                                                                                                                                                                             |
+|$data= |getTrim;|{"data":[{"contract_type":"City","source":"Chennai","destination":"city1$unique","vehicle_type":"900 CFT","distance":"100","transporter_reference_number":"pandopay001","transporter_name":"Pando Payment","transit_days":"1","freight_rate":"1000","freight_unit":"trip","valid_from":"$fromdate","valid_to":"$todate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.RateMatrixDynamicAPI
+*!
+
+!** Indent Creation
+!|Script     |Common                           |
+|$vehicle_id=|getTrim;|5d7a4bc4da03036f3e5d52c3|
+|$depot=     |getTrim;|5c74edf0c8d634115eaf23bd|
+|$gate_id=   |getTrim;|5c74edf083f399115e3eaa55|
+
+!define order_type  {0}
+!define freight_open_schmea {,"freight_rate":0,"freight_unit":1}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define unloader_available {false}
+!define destination_location_id_1 {$consignee_id_1}
+!define sold_to_id_1 {$consignee_id_1}
+!define expected_delivery_at_1 {$expected_date}
+!define destination_location_id_2 {$consignee_id_2}
+!define sold_to_id_2 {$consignee_id_2}
+!define expected_delivery_at_2 {$expected_date}
+!define destination_location_id_3 {$consignee_id_3}
+!define sold_to_id_3 {$consignee_id_3}
+!define expected_delivery_at_3 {$expected_date}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationMultiConsigneeAPI
+**!
+
+!** validating and Assinging The Truck
+!define vechicle_number {tn 09 AT 9013}
+!define driver_name  {pay driver}
+!define phone_number  {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+**!
+
+!** Material upload for all consingee
+!define mrp_price {1000}
+!define quantity1 {10} 
+!define quantity2 {10} 
+!define quantity3 {10} 
+!define quantity_unit {cases}
+!define weight {400}
+!define weight_unit {KG}
+!define volume {1000}
+!define volume_unit {CFT}
+!define type {PRIMARY}
+!define invoice_amount {20000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialsInvoiceMutipleConsigneeERPAPI
+**!
+
+!** EPOD Calculation
+!define no_of_shortage {0}
+!define no_of_shortage1 {0}
+!define no_of_shortage2 {0}
+!define no_of_shortage3 {0} 
+!define no_of_leakage {0}
+!define no_of_leakage1 {0}
+!define no_of_leakage2 {0}
+!define no_of_leakage3 {0} 
+!define mrp {${mrp_price}}
+!define no_of_excess {0}
+!define no_of_excess1 {0}
+!define no_of_excess2 {0}
+!define no_of_excess3 {0} 
+!define no_of_damage {0}
+!define no_of_damage1 {0}
+!define no_of_damage2 {0}
+!define no_of_damage3 {0}
+!define no_of_carton_damage {0}
+!define no_of_carton_damage1 {0}
+!define no_of_carton_damage2 {0}
+!define no_of_carton_damage3 {0} 
+!define release_date {$rdate}
+!define release_date1 {$rdate}
+!define release_date2 {$rdate}
+!define release_date3 {$rdate}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodSingleIndentMutliConsigneeErpAPI
+**!
+
+!** Validating test result
+!|Script   |Common            |
+|$order_id=|getTrim;|$order_id|
+
+!define validate_text {$order_id}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.Search.CommonIndentSearch
+
+!|Script    |Ui                                                                       |
+|mouseHover;|//span[text()='Chennai - Multidrop']|xpath                               |
+|$tdata=    |getText;                            |//div[@class='tooltipcontent']|xpath|
+
+!|Script  |Common                                                                     |
+|check    |checkIfStringAreEqual;|$tdata|city1$unique, city1$unique, city1$unique|true|
+|$tresult=|checkIfStringAreEqual;|$tdata|city1$unique, city1$unique, city1$unique     |
+*!

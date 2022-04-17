@@ -1,0 +1,6 @@
+---
+Help: Rate Matrix scenarios
+Suite
+---
+!1 Test suite for rate matrix
+!contents -R2 -g -p -f -h

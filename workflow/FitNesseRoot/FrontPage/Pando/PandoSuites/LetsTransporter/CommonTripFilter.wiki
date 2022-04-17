@@ -1,0 +1,11 @@
+---
+Help: Contains the Test for Trip filter
+---
+!|script       |ui                                                                                                                                              |
+|navigateToUrl;|${turl}/tracking                                                                                                                                |
+|click;        |//button[@class='el-button el-button--default']                                          |xpath                                                                  |
+|click;        |//label[text()='${filter_type}']/../following-sibling::div//input       |xpath                                                                  |
+|click;        |//div[@class='el-scrollbar']//span[text()='${filter_value}']/../self::li|xpath                                                                  |
+|wait;                       |2                                                                       |
+|click;        |//button[text()='APPLY']                                                |xpath                                                                  |
+|check         |isElementPresent;                                                       |//div[@class='selectedlist']//span[text()='${filter_value}']|xpath|true|

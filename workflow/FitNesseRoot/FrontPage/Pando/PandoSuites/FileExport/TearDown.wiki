@@ -1,0 +1,35 @@
+!|script|common                                   |
+|check  |checkIfStringAreEqual;|$tresult|true|true|
+
+!** Verifying the File download
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+*!
+
+!include -c .FrontPage.Pando.Common.CommonResultImage
+
+!|Script     |Ui                                                                                                                                      |
+|endTestCase;|${test_cycle}|${RUNNING_PAGE_NAME}|$tresult|$unique|${surl}|${extent_tag}|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME}|$testCaseDescription|
+|closeBrowser;                                                                                                                                        |
+
+!|script    |common        |
+|$tresult=  |getTrim;|false|
+|$tresult1= |getTrim;|false|
+|$tresult2= |getTrim;|false|
+|$tresult3= |getTrim;|false|
+|$tresult4= |getTrim;|false|
+|$tresult5= |getTrim;|false|
+|$tresult6= |getTrim;|false|
+|$tresult7= |getTrim;|false|
+|$tresult8= |getTrim;|false|
+|$tresult9= |getTrim;|false|
+|$tresult10=|getTrim;|false|
+|$tresult11=|getTrim;|false|
+|$tresult12=|getTrim;|false|
+|$tresult13=|getTrim;|false|
+|$tresult14=|getTrim;|false|
+|$tresult15=|getTrim;|false|
+|$tresult16=|getTrim;|false|
+|$tresult17=|getTrim;|false|
+|$tresult18=|getTrim;|false|

@@ -1,0 +1,314 @@
+---
+Help: Quotes received from the transporter should not be visible to the depot manager.
+Suites: oel2
+Test
+---
+!** Unique values assignment
+!|Script |Common                                |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss  |
+|$num=   |getRandomNumber;        |100000|999999|
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Thanesar Road}
+!define city {Thanesar}
+!define state {Haryana}
+!define pincode {120100}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@outlook.com}
+!define region {North}
+!define site {1}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationSignifyAPI
+
+**!
+
+!** Retrieving Password for the Created Transporter
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+
+!** Vehicle Creation
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!** Gate Manager Creation
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandooelauto+$unique@outlook.com}
+!define status {1}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {South}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {rt$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {South}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+*!
+
+**!
+
+!** Uploading Rate Matrix for transporter 1
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,${gate_ref_id},${consignee_ref_id},${vehicle_name},100,${transporter_ref_id},${transporter_name},1,5000,per_trip,01-Jan-2019,31-Dec-2030,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+
+**!
+
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+**!
+
+
+!** Rejecting Indent
+!define tusername {${manager_email}}
+!define tpassword {$password}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.TransporterProfile.TransporterRejectIndent
+**!
+
+!** Transporter Creation 2
+!define transporter_name {t2$unique}
+!define transporter_ref_id {tr2$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager2 $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+2$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationSignifyAPI
+
+
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+
+!|script     |common            |
+|$tpassword2=|getTrim;|$password|
+
+**!
+
+!** Uploading Rate Matrix for transporter 2
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,$depot_ref_id,${consignee_ref_id},${vehicle_name},100,${transporter_ref_id},${transporter_name},1,5000,per_trip,01-Jan-2019,31-Dec-2030,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+
+**!
+
+!** Transporter Creation 3
+!define transporter_name {t3$unique}
+!define transporter_ref_id {tr3$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager3 $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+3$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationSignifyAPI
+
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+
+!|script     |common            |
+|$tpassword3=|getTrim;|$password|
+**!
+
+!** Uploading Rate Matrix for transporter 3
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,$depot_ref_id,${consignee_ref_id},${vehicle_name},100,${transporter_ref_id},${transporter_name},1,5000,per_trip,01-Jan-2019,31-Dec-2030,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+
+!** Login out as Super Admin
+!|Script|Ui                                   |
+|click; |//span[@class='pointer']       |xpath|
+|click; |//a[contains(text(),'LOG OUT')]|xpath|
+**!
+
+
+
+
+!** Creating Depo Manager Role
+
+!** User Role ID Retrival
+!define role_type {depot_manager}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define user_name {Depo Manager $unique}
+!define user_number {123}
+!define user_email {pandooelauto+depo$unique@outlook.com}
+!define role_id {$retrieve_key_value}
+!define status {1}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+
+**!
+
+!** Mapping Depo to Depo user
+
+!define users {["5e8f0144b496cb0adf752bb6","$user_id"]}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserDepoMappingAPI
+
+**!
+
+
+!** Unique values assignment
+!|Script     |Common                |
+|$user_email=|getTrim;|${user_email}|
+**!
+
+!define login_url {${surl}}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Users.CommonResetLogin
+
+**!
+
+
+!** Reindent new transporter
+!define depot_selection {${depot_name}}
+!define transporter_name {t1$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|Script                     |Ui                                                            |
+|click;                      |//span[normalize-space(text())='Re-indent']                    |xpath          |
+|waitForElementToBeDisplayed;|//div[@class='el-dialog__body']               |xpath|10       |
+|sendKeys;                   |//input[@placeholder='Search for Transporter']|xpath|t2$unique|
+|wait;                       |3                                                             |
+|click;                      |(//div[@class='el-radio-group'])[1]           |xpath          |
+|clearValue;                 |//input[@placeholder='Search for Transporter']|xpath          |
+|sendKeys;                   |//input[@placeholder='Search for Transporter']|xpath|t3$unique|
+|wait;                       |3                                                             |
+|click;                      |(//div[@class='el-radio-group'])[1]           |xpath          |
+|click;                      |//input[@placeholder='Pick a day']            |xpath          |
+|click;                      |//td[@class='available today']/div/span       |xpath          |
+|click;                      |//button[text()='SEND']                       |xpath          |
+|wait;                       |5                                                             |
+**!
+
+!** Bids quotes from transporter side
+!|Script     |DateUtil                                    |
+|$arrival_at=|getCurrentDateTimeStamp;|yyyy/MM/dd HH:mm:ss|
+|$arrival_at=|utcConversion;          |$arrival_at        |
+!define freight_charge {5000}
+!define rfq_status {3}
+
+!define tusername {pandotransporter+2$unique@outlook.com}
+!define tpassword {$tpassword2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqStatus
+
+!define tusername {pandotransporter+3$unique@outlook.com}
+!define tpassword {$tpassword3}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqStatus
+
+**!
+
+
+
+!**  Quotes not Visiable to Depo Manager
+!define depot_selection {${depot_name}}
+!define transporter_name {t1$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!|Script|Ui                                                                             |
+|click; |//div/span[contains(text(),'Quotes')]|xpath                                    |
+|$data= |getText;                             |//p[@class='el-alert__description']|xpath|
+
+!|Script  |Common                                                                                           |
+|check    |checkIfStringExistsIn;|You do not have permission to view or accept transporter quotes|$data|true|
+|$tresult=|checkIfStringExistsIn;|You do not have permission to view or accept transporter quotes|$data     |
+**!

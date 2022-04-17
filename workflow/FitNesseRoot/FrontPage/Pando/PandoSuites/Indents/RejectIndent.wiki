@@ -1,0 +1,7 @@
+---
+Help: This Suite contains all the Indents rejections
+Suite
+Suites: indent2
+---
+!1 Test suite Reject Indents
+!contents -R2 -g -p -f -h

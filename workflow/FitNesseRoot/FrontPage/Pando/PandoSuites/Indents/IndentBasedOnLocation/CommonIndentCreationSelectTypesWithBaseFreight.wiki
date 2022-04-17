@@ -1,0 +1,20 @@
+!|Script  |Ui                                                                                         |
+|click;   |//label[text()='Delivery Type']/following-sibling::div//input  |xpath                      |
+|click;   |//span[text()='${delivery_type}']                              |xpath                      |
+|click;   |//label[text()='Vehicle type']/following-sibling::div//input   |xpath                      |
+|sendKeys;|//label[text()='Vehicle type']/following-sibling::div//input   |xpath|${vehicle_name}      |
+|click;   |//span[text()='${vehicle_name}']                               |xpath                      |
+|click;   |//label[text()='Transporter']/following-sibling::div//input    |xpath                      |
+|sendKeys;|//label[text()='Transporter']/following-sibling::div//input    |xpath|${transporter_ref_id}|
+|click;   |//span[contains(text(),'${transporter_ref_id}')]               |xpath                      |
+|click;   |//label[text()='No. of vehicles']/following-sibling::div//input|xpath                      |
+|sendKeys;|//label[text()='No. of vehicles']/following-sibling::div//input|xpath|${no_of_vehicle}     |
+|click;   |//li/span[normalize-space(text())='${no_of_vehicle}']          |xpath                      |
+|click;   |//label[text()='Base Freight']/following-sibling::div//input   |xpath                      |
+|sendKeys;|//label[text()='Base Freight']/following-sibling::div//input   |xpath|${base_freight}      |
+|click;   |//label[text()='Freight type']/following-sibling::div//input   |xpath                      |
+|sendKeys;|//label[text()='Freight type']/following-sibling::div//input   |xpath|${freight_type}      |
+|click;   |//li/span[normalize-space(text())='${freight_type}']           |xpath                      |
+|wait;    |4                                                                                          |
+|click;   |//span[text()='Indent']                                        |xpath                      |
+|wait;    |3                                                                                          |

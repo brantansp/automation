@@ -1,0 +1,7 @@
+---
+Help: LoadingSetting
+---
+!|Script|Ui|
+|click;|//span[contains(text(),'REACHED LOADING POINT')]|xpath|
+|click;|//span[contains(text(),'START LOAD')]|xpath|
+|click;|//span[contains(text(),'END LOAD')]|xpath|

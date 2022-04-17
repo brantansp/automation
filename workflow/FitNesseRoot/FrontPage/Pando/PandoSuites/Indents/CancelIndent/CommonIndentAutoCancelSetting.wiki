@@ -1,0 +1,34 @@
+!|script |ui |
+|navigateToUrl; |${surl}/admin |
+|click; |//div[text()='Movement']/..//input[@class='el-input__inner'] |xpath |
+|click; |//span[text()='${vehicle_movement}'] |xpath |
+|click; |//div[text()='Depot']/..//input[@class='el-input__inner'] |xpath |
+|scrollToView; |//span[text()='${depot_id}']/../self::li |xpath |
+|click; |//span[text()='${depot_id}']/../self::li |xpath |
+
+!|Script|Ui|
+|click;|//div[text()='INDENT - AUTO CANCELLATION']/following::div/div[@class='el-select']|xpath|
+|click;|//span[text()='0 day']|xpath|
+|click;|//div[text()='INDENT - AUTO CANCELLATION']/following::input[@placeholder='HH:MM']|xpath|
+|clearAndSend;|//div[text()='INDENT - AUTO CANCELLATION']/following::input[@placeholder='HH:MM']|xpath|$indentAutoCancelTime|
+
+!|Script|Ui|
+|mouseHover; |//div[contains(text(),'INDENT - CUTOFF')]/following-sibling::div//input |xpath |
+|click; |//div[contains(text(),'INDENT - CUTOFF')]/following-sibling::div//i[@class='el-input__icon el-icon-circle-close'] |xpath |
+|click; |//div[contains(text(),'INDENT - CUTOFF')]/following-sibling::div//input |xpath |
+|clearValue; |//div[normalize-space(text())='INDENT - CUTOFF']/following-sibling::div//input |xpath |
+|sendKeys; |//div[normalize-space(text())='INDENT - CUTOFF']/following-sibling::div//input |xpath|${indent_cutoff_time} |
+|sendControlKey; |//div[normalize-space(text())='INDENT - CUTOFF']/following-sibling::div//input |xpath|ENTER |
+
+!|Script|Ui|
+|mouseHover; |//div[contains(text(),'ARRIVAL - CUTOFF')]/following-sibling::div//input |xpath |
+|click; |//div[contains(text(),'ARRIVAL - CUTOFF')]/following-sibling::div//i[@class='el-input__icon el-icon-circle-close'] |xpath |
+|click; |//div[contains(text(),'ARRIVAL - CUTOFF')]/following-sibling::div//input |xpath |
+|clearValue; |//div[normalize-space(text())='ARRIVAL - CUTOFF']/following-sibling::div//input |xpath |
+|sendKeys; |//div[normalize-space(text())='ARRIVAL - CUTOFF']/following-sibling::div//input |xpath|${arrivel_cutoff_time} |
+|sendControlKey; |//div[normalize-space(text())='ARRIVAL - CUTOFF']/following-sibling::div//input |xpath|ENTER |
+
+!|Script|Ui|
+|scrollUp;|
+|click; |//button[normalize-space(text())='SAVE'] |xpath |
+|wait;|3|

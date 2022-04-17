@@ -1,0 +1,8 @@
+!|script       |Ui                                                                  |
+|navigateToUrl;|${turl}/v2/invoices                                                 |
+|click;        |//button[@class='el-button el-button--default']|xpath               |
+|click;        |(//div[@class='slideleft_menu']//input)[2]     |xpath               |
+|sendKeys;     |(//div[@class='slideleft_menu']//input)[2]     |xpath|${filter_text}|
+|click;        |//li/span[text()='${filter_text}']             |xpath               |
+|wait;         |2                                                                   |
+|click;        |//button[text()='APPLY']                       |xpath               |

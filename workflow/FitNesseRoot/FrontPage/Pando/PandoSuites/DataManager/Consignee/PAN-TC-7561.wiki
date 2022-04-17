@@ -1,0 +1,52 @@
+---
+Help: To verify rejection in consignee master for invalid consignee data
+Suites: pg2
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+*!
+
+!** ERP Consignee Creation without consignee name
+!define consignee_name {}
+!define consignee_ref_id {cr$unique}
+!define address {Egmore}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {622001}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+
+!|Script|common                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":[{"name":"${consignee_name}","reference_number":"${consignee_ref_id}","address":"${address}","city":"${city}","state":"${state}","region":"${region}","mobile_number":"${manager_mobile}","pincode":"${pincode}","email":"${manager_email}","category":"B","customer_type":"customer site"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.CommonERPAPI.CommonConsigneeCreationDynamicERPAPI
+*!
+
+!* Downloading consignee rejection list
+!|Script                     |Ui                                                                                              |
+|navigateToUrl;              |${surl}/mdm/rejection                                                                           |
+|waitForElementToBeDisplayed;|//h4[contains(text(),'Master Rejections')]/../div[1]                                   |xpath|30|
+|click;                      |//div[contains(text(),'Consignees')]/../../descendant::div[contains(text(),'Download')]|xpath   |
+|wait;                       |20                                                                                              |
+
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+*!
+
+!* Verifying reason of consignee rejection
+!|script |ExcelQuery                                                                                               |
+|$count= |getCountQuery;|$filename|select * from "Pando Rejections"                                                |
+|$reason=|selectQuery;  |$filename|select Reason from "Pando Rejections" where "Reference Id*" = 'cr$unique'|Reason|
+
+!|Script  |common                                                                |
+|check    |checkIfStringExistsIn;|Consignee Name should not be empty|$reason|true|
+|$tresult=|checkIfStringExistsIn;|Consignee Name should not be empty|$reason     |
+|check    |checkIfStringAreEqual;|$tresult                          |true   |true|
+*!

@@ -1,0 +1,14 @@
+---
+Suites: hold
+Test
+---
+!|Script|Ui|
+|navigateToUrl;|${surl}/mdm/detentions|
+|click;|//button[text()='Export']|xpath|
+|wait;|10|
+
+!|Script|FileUtil|
+|$fdata=|findFilesWithExtension;|/workspace|xlsx|
+
+!|Script|Common|
+|check|checkIfStringExistsIn;|detention-export-2019|$fdata[0]|true|

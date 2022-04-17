@@ -1,0 +1,163 @@
+---
+Help: Add and edit docks in depot
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {605009}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!|Script              |json                                          |
+|$source_depot_id=    |getValueFromJSON;|$depotResp|data.id          |
+|$source_depot_name=  |getValueFromJSON;|$depotResp|data.name        |
+|$source_depot_ref_id=|getValueFromJSON;|$depotResp|data.reference_id|
+*!
+
+!**> Gate Manager Creation
+!***> User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@outlook.com}
+!define status {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+***!
+*!
+
+!***> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RG$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {605009}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script    |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!** ADD Dock
+!define search_value {d$unique}
+!define search_count {1}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Search.DepoSearch.CommonDepoSearch
+
+!define dock_name {dock $unique}
+!define short_code {D$unique}
+!define dock_ref_id {D$unique}
+
+!|Script                     |ui                                                                                                                                                 |
+|click;                      |//span[normalize-space(text())='d$unique']/../parent::div/..//a[2]|xpath                                                                           |
+|check                       |isElementPresent;                                                 |//span[contains(text(),'${gate_name}')]                         |xpath|true     |
+|click;                      |//div[contains(text(),'${gate_ref_id}')]/parent::div//a           |xpath                                                                           |
+|click;                      |//a[contains(text(),'DOCK')]                                      |xpath                                                                           |
+|check                       |isElementPresent;                                                 |//label[text()='DOCK NAME']                                     |xpath|true     |
+|sendKeys;                   |//input[@name='name']                                             |xpath                                                           |${dock_name}   |
+|check                       |isElementPresent;                                                 |//label[text()='Short Code']                                    |xpath|true     |
+|sendKeys;                   |//input[@name='short_code']                                       |xpath                                                           |${short_code}  |
+|check                       |isElementPresent;                                                 |//label[text()='Reference Id']                                  |xpath|true     |
+|sendKeys;                   |//input[@name='reference_id']                                     |xpath                                                           |${dock_ref_id} |
+|click;                      |//a[contains(text(),'Save')]                                      |xpath                                                                           |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Error']                          |xpath                                                           |30             |
+|$errorMessage=              |getElementAttribute;                                              |//div[@role='alert']//h3[text()='Error']/following-sibling::span|xpath|innerText|
+
+!|Script   |common                                                               |
+|check     |checkIfStringAreEqual;|$errorMessage|Please select dock managers|true|
+|$tresult1=|checkIfStringAreEqual;|$errorMessage|Please select dock managers     |
+**!
+
+!**> Dock Manager Creation
+!***> User Role ID Retrival
+!define key {name}
+!define role_type {dock_manager}
+!define retrieve_key {id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {dkm$unique}
+!define user_email {pandoindent+dk$unique@outlook.com}
+!define status {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+***!
+*!
+
+!** Add Dock manager
+!|Script                     |ui                                                                                                                                     |
+|click;                      |//a[contains(text(),'DOCK MANAGER')]                |xpath                                                                             |
+|wait;                       |2                                                                                                                                      |
+|click;                      |//span[contains(text(),'dkm$unique - Dock Manager')]|xpath                                                                             |
+|click;                      |//a[contains(text(),'Save')]                        |xpath                                                                             |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']          |xpath                                                             |30             |
+|$successMessage=            |getElementAttribute;                                |//div[@role='alert']//h3[text()='Success']/following-sibling::span|xpath|innerText|
+|check                       |isElementPresent;                                   |//p[contains(text(),'${dock_name}')]                              |xpath|true     |
+|check                       |isElementPresent;                                   |//p[contains(text(),'${short_code}')]                             |xpath|true     |
+|check                       |isElementPresent;                                   |//p[contains(text(),'${dock_ref_id}')]                            |xpath|true     |
+|check                       |isElementPresent;                                   |//div[contains(text(),'${user_name}')]                            |xpath|true     |
+|check                       |isElementPresent;                                   |//div[contains(text(),'${user_email}')]                           |xpath|true     |
+
+  
+!|Script   |common                                                               |
+|check     |checkIfStringAreEqual;|$successMessage|Dock created successfully|true|
+|$tresult2=|checkIfStringAreEqual;|$successMessage|Dock created successfully     |
+**!
+
+!** UPDATE Dock
+!define new_dock_name {ndock $unique}
+!define new_short_code {nD$unique}
+!define new_dock_ref_id {nD$unique}
+
+!|Script                     |ui                                                                                                                                           |
+|refresh;                                                                                                                                                                  |
+|click;                      |//div[contains(text(),'${gate_ref_id}')]/parent::div//a|xpath                                                                                |
+|click;                      |//a[contains(text(),'Edit')]                           |xpath                                                                                |
+|clearAndSend;               |//input[@name='name']                                  |xpath                                                             |${new_dock_name}  |
+|clearAndSend;               |//input[@name='short_code']                            |xpath                                                             |${new_short_code} |
+|clearAndSend;               |//input[@name='reference_id']                          |xpath                                                             |${new_dock_ref_id}|
+|click;                      |//a[contains(text(),'Save')]                           |xpath                                                                                |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']             |xpath                                                             |30                |
+|$successMessage=            |getElementAttribute;                                   |//div[@role='alert']//h3[text()='Success']/following-sibling::span|xpath  |innerText |
+|check                       |isElementPresent;                                      |//p[contains(text(),'${new_dock_name}')]                          |xpath  |true      |
+|check                       |isElementPresent;                                      |//p[contains(text(),'${new_short_code}')]                         |xpath  |true      |
+|check                       |isElementPresent;                                      |//p[contains(text(),'${new_dock_ref_id}')]                        |xpath  |true      |
+|check                       |isElementPresent;                                      |//div[contains(text(),'${user_name}')]                            |xpath  |true      |
+|check                       |isElementPresent;                                      |//div[contains(text(),'${user_email}')]                           |xpath  |true      |
+
+!|Script   |common                                                           |
+|check     |checkIfStringAreEqual;|$successMessage|Dock has been updated|true|
+|$tresult3=|checkIfStringAreEqual;|$successMessage|Dock has been updated     |
+**!
+
+!**> Validating test result
+!|Script  |Common                                                          |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,true|
+**!

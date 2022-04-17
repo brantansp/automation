@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://marico-auto.pandostaging.in}
+!define username {pandomaricoauto@gmail.com}
+!define password {test@1234}
+!define shipper_client_id {5e6879714210bf3da4df3bcf}

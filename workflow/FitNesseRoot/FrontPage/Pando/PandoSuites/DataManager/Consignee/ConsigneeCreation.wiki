@@ -1,0 +1,26 @@
+---
+Static
+WhereUsed: no
+---
+!|Script        |Ui                                                                                              |
+|navigateToUrl; |${surl}/mdm/consignees                                                                          |
+|click;         |//button[text()='Add']                                             |xpath                       |
+|sendKeys;      |//input[@placeholder='Enter Consignee Name']                       |xpath|${consignee_name}     |
+|sendKeys;      |//input[@placeholder='Enter Reference Id']                         |xpath|${consignee_ref_id}   |
+|sendKeys;      |//input[@placeholder='Enter Address']                              |xpath|${address}            |
+|sendKeys;      |//input[@placeholder='Enter City']                                 |xpath|${city}               |
+|sendKeys;      |//input[@placeholder='Enter State']                                |xpath|${state}              |
+|sendKeys;      |//input[@placeholder='Enter Postal code']                          |xpath|${pincode}            |
+|sendKeys;      |//input[@placeholder='Enter Representative Name']                  |xpath|${manager_name}       |
+|sendKeys;      |//input[@placeholder='Enter Representative Mobile']                |xpath|${manager_mobile}     |
+|sendKeys;      |//input[@placeholder='Enter Representative Email']                 |xpath|${manager_email}      |
+|sendKeys;      |//input[@placeholder='Enter Region']                               |xpath|${region}             |
+|click;         |//label[contains(text(),'Loading Start Time')]/parent::div//input  |xpath                       |
+|click;         |(//div[contains(text(),'${loading_starttime}')])[last()]           |xpath                       |
+|click;         |//label[contains(text(),'Loading End Time')]/parent::div//input    |xpath                       |
+|click;         |(//div[contains(text(),'${loading_endtime}')])[last()]             |xpath                       |
+|sendKeys;      |//label[contains(text(),'Unloading Start Time')]/parent::div//input|xpath|${unloading_starttime}|
+|sendControlKey;|//label[contains(text(),'Unloading Start Time')]/parent::div//input|xpath|ENTER                 |
+|sendKeys;      |//label[contains(text(),'Unloading End Time')]/parent::div//input  |xpath|${unloading_endtime}  |
+|sendControlKey;|//label[contains(text(),'Unloading End Time')]/parent::div//input  |xpath|ENTER                 |
+|click;         |//span[contains(text(),'Save')]                                    |xpath                       |

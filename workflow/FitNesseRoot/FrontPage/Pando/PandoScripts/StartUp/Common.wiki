@@ -1,0 +1,6 @@
+---
+Suite
+Suites: allreg
+---
+!1 Test suite Common Client
+!contents -R2 -g -p -f -h

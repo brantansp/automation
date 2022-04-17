@@ -1,0 +1,85 @@
+---
+Help: Validate whether the terms of use pop up displayed with config and click accept/decline
+Suites: indent2
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!**> User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!**> User creation 
+!define role_id {$retrieve_key_value}
+!define user_name {A$unique}
+!define user_number {123}
+!define user_email {pandoautomation+$unique@gmail.com}
+!define status {1}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+
+!include -c .FrontPage.Pando.Common.ShipperLogout
+*!
+
+!**> Unique values assignment
+!|Script     |Common                |
+|$user_email=|getTrim;|${user_email}|
+**!
+
+!**> Reset Password
+!include .FrontPage.Pando.PandoSuites.DataManager.Users.CommonPasswordReset
+**!
+
+!** Login new user and decline Terms of Use
+!|Script       |Ui                                                                                                            |
+|navigateToUrl;|${login_url}/login                                                                                            |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                             |xpath|20         |
+|sendKeys;     |//label[contains(text(),'User name:')]//preceding-sibling::input|xpath                        |$user_email    |
+|sendKeys;     |//label[contains(text(),'Password:')]//preceding-sibling::input |xpath                        |Newpassword@123|
+|click;        |//button[@class='primary-btn']                                  |xpath                                        |
+|check         |isElementPresent;                                               |//span[text()='Terms of Use']|xpath   |true  |
+|$tresult1=    |isElementPresent;                                               |//span[text()='Terms of Use']|xpath          |
+|click;        |//span[text()='Decline']                                        |xpath                                        |
+|check         |isElementPresent;                                               |//div[@class='login-form']   |xpath   |true  |
+|$tresult2=    |isElementPresent;                                               |//div[@class='login-form']   |xpath          |
+**!
+
+!** Login new user and accept Terms of Use
+!|Script   |Ui                                                                                                                            |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                             |xpath|20         |
+|sendKeys; |//label[contains(text(),'User name:')]//preceding-sibling::input|xpath                                        |$user_email    |
+|sendKeys; |//label[contains(text(),'Password:')]//preceding-sibling::input |xpath                                        |Newpassword@123|
+|click;    |//button[@class='primary-btn']                                  |xpath                                                        |
+|check     |isElementPresent;                                               |//span[text()='Terms of Use']                |xpath   |true  |
+|$tresult3=|isElementPresent;                                               |//span[text()='Terms of Use']                |xpath          |
+|click;    |//span[text()='Accept']                                         |xpath                                                        |
+|check     |isElementPresent;                                               |//main[@class='container-fluid main-content']|xpath   |true  |
+|$tresult4=|isElementPresent;                                               |//main[@class='container-fluid main-content']|xpath          |
+|click;    |//span[@class='pointer']                                        |xpath                                                        |
+|click;    |//a[contains(text(),'LOG OUT')]                                 |xpath                                                        |
+|wait;     |3                                                                                                                             |
+**!
+
+!** Login new user after accepting Terms of Use
+!|Script       |Ui                                                                                                                            |
+|navigateToUrl;|${login_url}/login                                                                                                            |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                             |xpath|20         |
+|sendKeys;     |//label[contains(text(),'User name:')]//preceding-sibling::input|xpath                                        |$user_email    |
+|sendKeys;     |//label[contains(text(),'Password:')]//preceding-sibling::input |xpath                                        |Newpassword@123|
+|click;        |//button[@class='primary-btn']                                  |xpath                                                        |
+|check         |isElementNotDisplayed;                                          |//span[text()='Terms of Use']                |xpath   |true  |
+|$tresult5=    |isElementNotDisplayed;                                          |//span[text()='Terms of Use']                |xpath          |
+|check         |isElementPresent;                                               |//main[@class='container-fluid main-content']|xpath   |true  |
+|$tresult6=    |isElementPresent;                                               |//main[@class='container-fluid main-content']|xpath          |
+**!
+
+!**> Validating test result
+!|Script  |Common                                                                                        |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,true|
+**!

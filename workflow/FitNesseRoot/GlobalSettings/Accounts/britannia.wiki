@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://britannia-auto.pandostaging.in}
+!define username {pandobritanniaauto@gmail.com}
+!define password {test@1234}
+!define shipper_client_id {5e687a8b52cf5b4800d91cb9}

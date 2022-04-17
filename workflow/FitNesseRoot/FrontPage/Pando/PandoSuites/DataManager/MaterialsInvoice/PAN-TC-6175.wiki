@@ -1,0 +1,224 @@
+---
+Help: Material invoice upload to verify data overwriting through ERP
+Suites: britannia
+Test
+---
+!**> Unique values assignment
+!|Script |Common                                  |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss    |
+|$num1=  |getRandomNumber;        |20  |76        |
+|$num2=  |getRandomNumber;        |1000|9999      |
+|$rand1= |getRandomString;        |2   |ALPHAUPPER|
+
+!|Script       |DateUtil                      |
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd|-5|
+
+!|Script       |Common                                          |
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- 10:00:00-!|
+
+!|Script       |DateUtil                    |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+**!
+
+!**> Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Rajahmundry Road}
+!define city {ci$unique}
+!define state {st$unique}
+!define pincode {321001}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!**> Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Gate Manager Creation
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+**!
+
+!**> Material 1 Creation 
+!define material_name {m1$unique}
+!define material_code {mc1$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                             |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!**> Material 2 Creation 
+!define material_name2 {m2$unique}
+!define material_code2 {mc2$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":{"name":"${material_name2}","code":"${material_code2}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!**> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point-City,${gate_ref_id},ci$unique,${vehicle_name},100,${transporter_ref_id},${transporter_name},1,5000,per_trip,01-Jan-2019,31-Dec-2030,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!**> Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|Script      |DateUtil                   |
+|$loadingDate=|getCurrentDateTimeStamp|iso|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+**!
+
+!**> Changing the status of indent from indented to arrived
+!define vechicle_number {TN $num1 $rand1 $num2}
+!define driver_name {d$unique}
+!define phone_number {123}
+!** Adding vehicle number
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+**!
+
+!** Upload Material invoice through ERP with material 1
+!|Script    |Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|wait;      |5                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|addHeader; |Authorization|bearer $stoken                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|setBaseUrl;|${surl}/api/erp/material_invoice                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$indent=   |getResponse; |Application/Json|post|{ "data": [ { "indent_no": "$order_id", "delivery_number": "D1$unique", "mrp_price": "100", "material_code": "${material_code}", "depot_ref_id": "${depot_reference_id}", "gate_ref_id": "${gate_ref_id}", "division": "BK", "quantity": "100", "quantity_unit": "cases", "weight": "300", "weight_unit": "KG", "volume": "300", "volume_unit": "CFT", "ship_to": "${consignee_ref_id}", "sold_to": "${consignee_ref_id}", "type": "PRIMARY", "invoice_number": "INV101", "invoice_amount": "12000", "invoice_date": "2021/05/12", "category": "","truck_out": "$truckoutdate"} ] }|
+|wait;      |10                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+**!
+
+!** Verifying the material invoice uploaded with material 1
+!|Script                            |Ui                                                                                                                                                                                                      |
+|navigateToUrl;                     |${surl}/indents/$order_id/details/0                                                                                                                                                                     |
+|waitForElementToBeDisplayed;       |//div[@class='card-right']//table                                                                                  |xpath                                                           |30                 |
+|check                              |isElementPresent;                                                                                                  |//strong[contains(text(),'${consignee_name}')]                  |xpath|true         |
+|$tresult1=                         |isElementPresent;                                                                                                  |//strong[contains(text(),'${consignee_name}')]                  |xpath              |
+|$materialcode_header_column_number=|getHeaderColumnNumber;                                                                                             |//div[@class='el-table__header-wrapper']//div[@class='cell']    |xpath|Material Code|
+|$material_row_number=              |getHeaderColumnNumber;                                                                                             |//div[contains(@class,'scrolling')]//span[contains(text(),'kg')]|xpath|300 kg       |
+|mouseHover;                        |((//div[contains(@class,'el-table__body')]//td[$materialcode_header_column_number])[$material_row_number]//span)[2]|xpath                                                                               |
+|$tresult2=                         |isElementPresent;                                                                                                  |//div[@role='tooltip']//div[text()='mc1$unique:m1$unique']      |xpath              |
+|check                              |isElementPresent;                                                                                                  |//div[@role='tooltip']//div[text()='mc1$unique:m1$unique']      |xpath|true         |
+|mouseHover;                        |(//td//span[contains(text(),'D1')])[2]                                                                             |xpath                                                                               |
+|check                              |isElementPresent;                                                                                                  |//div[@role='tooltip']//div[text()='D1$unique']                 |xpath|true         |
+|$tresult3=                         |isElementPresent;                                                                                                  |//div[@role='tooltip']//div[text()='D1$unique']                 |xpath              |
+|check                              |isElementPresent;                                                                                                  |//span[normalize-space(text())='INV101']                        |xpath|true         |
+|$tresult4=                         |isElementPresent;                                                                                                  |//span[normalize-space(text())='INV101']                        |xpath              |
+**!
+
+!** Upload Material invoice through ERP with material 2
+!|Script    |Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|wait;      |5                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|addHeader; |Authorization|bearer $stoken                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|setBaseUrl;|${surl}/api/erp/material_invoice                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$indent=   |getResponse; |Application/Json|post|{ "data": [ { "indent_no": "$order_id", "delivery_number": "D2$unique", "mrp_price": "100", "material_code": "${material_code2}", "depot_ref_id": "${depot_reference_id}", "gate_ref_id": "${gate_ref_id}", "division": "BK", "quantity": "100", "quantity_unit": "cases", "weight": "450", "weight_unit": "KG", "volume": "300", "volume_unit": "CFT", "ship_to": "${consignee_ref_id}", "sold_to": "${consignee_ref_id}", "type": "PRIMARY", "invoice_number": "INV101", "invoice_amount": "12000", "invoice_date": "2021/05/12", "category": "","truck_out": "$truckoutdate"} ] }|
+|wait;      |10                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+**!
+
+!** Verifying the material invoice uploaded with material 2 whether the material 1 is replaced with material 2
+!|Script                            |Ui                                                                                                                                                                                                      |
+|navigateToUrl;                     |${surl}/indents/$order_id/details/0                                                                                                                                                                     |
+|waitForElementToBeDisplayed;       |//div[@class='card-right']//table                                                                                  |xpath                                                           |15                 |
+|check                              |isElementPresent;                                                                                                  |//strong[contains(text(),'${consignee_name}')]                  |xpath|true         |
+|$tresult5=                         |isElementPresent;                                                                                                  |//strong[contains(text(),'${consignee_name}')]                  |xpath              |
+|$materialcode_header_column_number=|getHeaderColumnNumber;                                                                                             |//div[@class='el-table__header-wrapper']//div[@class='cell']    |xpath|Material Code|
+|$material_row_number=              |getHeaderColumnNumber;                                                                                             |//div[contains(@class,'scrolling')]//span[contains(text(),'kg')]|xpath|450 kg       |
+|mouseHover;                        |((//div[contains(@class,'el-table__body')]//td[$materialcode_header_column_number])[$material_row_number]//span)[2]|xpath                                                                               |
+|$tresult6=                         |isElementPresent;                                                                                                  |//div[@role='tooltip']//div[text()='mc2$unique:m2$unique']     |xpath              |
+|check                              |isElementPresent;                                                                                                  |//div[@role='tooltip']//div[text()='mc2$unique:m2$unique']     |xpath|true         |
+|mouseHover;                        |(//td//span[contains(text(),'D2')])[2]                                                                             |xpath                                                                               |
+|check                              |isElementPresent;                                                                                                  |//div[@role='tooltip']//div[text()='D2$unique']                 |xpath|true         |
+|$tresult7=                         |isElementPresent;                                                                                                  |//div[@role='tooltip']//div[text()='D2$unique']                 |xpath              |
+|check                              |isElementPresent;                                                                                                  |//span[normalize-space(text())='INV101']                        |xpath|true         |
+|$tresult8=                         |isElementPresent;                                                                                                  |//span[normalize-space(text())='INV101']                        |xpath              |
+**!
+
+!**> Validating test result
+!|Script  |Common                                                                                                            |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,true|
+**!

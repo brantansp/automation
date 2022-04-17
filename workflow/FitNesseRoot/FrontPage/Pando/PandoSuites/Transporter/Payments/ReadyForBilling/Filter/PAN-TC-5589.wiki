@@ -1,0 +1,26 @@
+---
+Help: Ensure No indent should be listed if particular depo doesn't have any indent
+Test
+---
+!** Filter setting 
+!define client {Automation}
+!define depo {Banglore Depot} 
+!define invoice_type {All Indents}
+!define delivery_type {All delivery types}
+
+!|Script|DateUtil|
+|$filter_start=|dateCalculation;|yyyy-MM-dd|0|
+|$filter_end=|dateCalculation;|yyyy-MM-dd|0|
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.Filter.CommonFilterPage
+**!
+
+!** Validating Apply list page
+!|Script|Ui|
+|check|isElementPresent;|//div[@class='paymentempty']|xpath|true|
+|$tresult=|isElementPresent;|//div[@class='paymentempty']|xpath|
+**!
+
+!define tname {TC-1229}
+ 
+

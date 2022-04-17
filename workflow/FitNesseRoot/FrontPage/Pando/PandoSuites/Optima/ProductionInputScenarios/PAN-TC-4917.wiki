@@ -1,0 +1,18 @@
+---
+Help: SCN10_Check whether Rate is not returned as Float.MAX
+Test
+---
+!|script       |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!|script       |CsvQuery                                                                                             |
+|getConnection;|$fileLocation|,                                                                                      |
+|$tresult=     |executeQuery;|SELECT Rate FROM summary WHERE File LIKE 'scn10_%' AND Consignee = 'sy0042u00002:'|Rate|
+|closeConnection;                                                                                                    |
+
+!|script  |common                                |
+|check    |isFloatMax;           |$tresult|false |
+|$tresult=|isFloatMax;           |$tresult       |
+|$tresult=|checkIfStringAreEqual;|$tresult|false |
+
+ 

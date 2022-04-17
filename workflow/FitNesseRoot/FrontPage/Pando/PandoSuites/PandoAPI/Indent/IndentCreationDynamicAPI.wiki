@@ -1,0 +1,17 @@
+---
+Help: Contains Indent Creation with data as a variable in TC
+Test
+---
+!|Script    |Http                                      |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/order/v1/                     |
+|$indent=   |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|200                        |
+
+!|Script    |json                                   |
+|$order_id= |getValueFromJSON;|$indent|data.order_no|
+|$indent_id=|getValueFromJSON;|$indent|data._id     |
+
+!|Script    |Common                                      |
+|$order_id= |getSubStringByString;|$indent|{"data":["|"]}|
+|$indent_id=|getSubStringByString;|$indent|{"data":["|"]}|

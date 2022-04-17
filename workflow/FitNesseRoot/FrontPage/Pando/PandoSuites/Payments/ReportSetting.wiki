@@ -1,0 +1,6 @@
+---
+Help: Report Setting
+---
+!|Script|Ui|
+|navigateToUrl;|${surl}/indents/|
+|click;|//div[contains(text(),'$order_id')]/following-sibling::div[@class='order-col order-actions']/div[contains(text(),'Reported')]|xpath|

@@ -1,0 +1,7 @@
+---
+Help: All pando searching will be under this roof
+Suite
+Suites: dm2
+---
+!1 Test suite for Pando Search
+!contents -R2 -g -p -f -h

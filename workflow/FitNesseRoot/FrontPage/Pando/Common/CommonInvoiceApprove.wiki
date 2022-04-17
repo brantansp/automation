@@ -1,0 +1,10 @@
+!|script                        |ui                                                                                                                                                                                 |
+|check                          |isElementPresent;                                                                          |//span[contains(text(),'${invoice_number}')]                                |xpath|true|
+|$tresult1=                     |isElementPresent;                                                                          |//span[contains(text(),'${invoice_number}')]                                |xpath     |
+|click;                         |//span[contains(text(),'${invoice_number}')]                                               |xpath                                                                                  |
+|click;                         |//button[contains(text(),'Summary')]                                                       |xpath                                                                                  |
+|click;                         |//button/span[contains(text(),'Approve')]                                                  |xpath                                                                                  |
+|click; |//button/span[normalize-space(text())='YES']                    |xpath|
+|waitForElementToBeDisplayed;   |//h3[text()='Success']/following-sibling::span[normalize-space(text())='Invoice Approved!']|xpath                                                                       |60        |
+|refreshForElementToBeDisplayed;|//div[contains(@class,'card-row')]//span[normalize-space(text())='Approved']               |xpath                                                                       |3    |3   |
+|check                          |isElementDisplayed;                                                                        |//div[contains(@class,'card-row')]//span[normalize-space(text())='Approved']|xpath|true|

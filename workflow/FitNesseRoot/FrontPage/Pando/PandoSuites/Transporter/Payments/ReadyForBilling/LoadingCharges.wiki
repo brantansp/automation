@@ -1,0 +1,7 @@
+---
+Help: Loading Charges for Payment Ready for billing
+Suite
+Suites: pay4
+---
+!1 Test suite for Loading charges
+!contents -R2 -g -p -f -h

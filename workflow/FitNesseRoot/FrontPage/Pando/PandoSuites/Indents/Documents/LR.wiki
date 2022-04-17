@@ -1,0 +1,7 @@
+---
+Help: Suite for Lorry Receipt cases
+Suite
+Suites: indent1
+---
+!1 Test suite for Lorry Receipt cases
+!contents -R2 -g -p -f -h

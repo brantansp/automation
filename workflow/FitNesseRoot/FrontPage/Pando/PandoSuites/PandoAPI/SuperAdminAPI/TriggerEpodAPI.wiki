@@ -1,0 +1,9 @@
+---
+Help: Contains test cases for EPOD rejection case
+Test
+---
+!|Script    |Http                                                     |
+|addHeader; |Authorization    |bearer ${superAdminToken}              |
+|setBaseUrl;|${superaAdminUrl}/api/super-admin/trigger-epod-rejections|
+|$vehicle=  |getResponse;     |Application/Json    |post    |$data    |
+|check      |getStatusCode;|200                                                             |

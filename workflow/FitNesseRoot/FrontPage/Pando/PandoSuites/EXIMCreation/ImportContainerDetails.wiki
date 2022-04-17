@@ -1,0 +1,8 @@
+---
+Help: Used to add the container details in Source
+---
+!|Script  |ui                                                                             |
+|click;   |//div[normalize-space(text())='Add Container']         |xpath                  |
+|click;   |//tbody//tr[1]//td[2]//i                               |xpath                  |
+|sendKeys;|//div[@class='cell']//input[@type='text']              |xpath|${container_name}|
+|click;   |//li//span[normalize-space(text())='${container_name}']|xpath                  |

@@ -1,0 +1,319 @@
+---
+Help: To check the SLA charges should reflected in Wallet
+Suites: srf
+Test
+---
+!** Unique values assignment
+!|Script       |DateUtil                              |
+|$unique=      |getCurrentDateTimeStamp;|yMMddHHmmss  |
+|$rdate=       |dateCalculation;        |yyyy/MM/dd |0|
+|$loadingDate= |getCurrentDateTimeStamp |iso          |
+|$contractDate=|dateCalculation;        |dd-MMM-yyyy|2|
+|$indate=      |getCurrentDateTimeStamp;|yyyy/MM/dd   |
+
+!|Script|Common                                  |
+|$rdate=|stringConcatenation;|$rdate|!- $timer -!|
+
+!** TRUCKIN DATE
+!|Script           |DateUtil                             |
+|$truckindate=     |dateCalculation;|yyyy/MM/dd|0        |
+|$truckindateDelay=|dateCalculation;|minute    |hh:mm:a|5|
+
+!|Script      |Common                                                   |
+|$truckindate=|stringConcatenation;|$truckindate|!- $truckindateDelay -!|
+
+!|Script      |DateUtil                   |
+|$truckindate=|utcConversion;|$truckindate|
+*!
+
+!** TRUCKOUT DATE
+!|Script            |DateUtil                             |
+|$truckoutdate=     |dateCalculation;|yyyy/MM/dd|0        |
+|$truckoutdateDelay=|dateCalculation;|minute    |hh:mm:a|7|
+
+!|Script       |Common                                                     |
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $truckoutdateDelay -!|
+
+!|Script       |DateUtil                    |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+*!
+
+!|Script            |DateUtil                   |
+|$rdate=            |utcConversion;  |$rdate    |
+|$indentCutoffHour= |dateCalculation;|minute|H|2|
+|$indentCutoffMin=  |dateCalculation;|minute|m|2|
+|$arrivalCutoffHour=|dateCalculation;|minute|H|3|
+|$arrivalCutoffMin= |dateCalculation;|minute|m|3|
+**!
+
+!** Source Depot Creation
+!define depot_name {src$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {s$unique}
+!define depot_region {South}
+!define depot_short_code {s$num}
+!define depot_reference_id {s$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {SG1$unique}
+!define g_user_email {pandoindent+1$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script              |common                |
+|$location_id=        |getTrim;|$depot       |
+|$source_gate_id=     |getTrim;|$gate_id     |
+|$source_depot_ref_id=|getTrim;|$depot_ref_id|
+*!
+
+!*** Destination Depot Creation
+!define depot_name {dest$unique}
+!define depot_state {Hariyana}
+!define depot_city {d$unique}
+!define depot_region {South}
+!define depot_short_code {d$num}
+!define depot_reference_id {dr$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {DG1$unique}
+!define g_user_email {pandoindent+2$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script                       |common           |
+|$destination_location_id=     |getTrim;|$depot  |
+|$destination_gate_location_id=|getTrim;|$gate_id|
+*!
+
+!** Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!*** Vehicle Creation
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!*** Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+*!
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,BDR Charge,BDR Label,Exclude,Trip Count}
+!define column {City,s$unique,d$unique,${vehicle_name},100,tr$unique,t$unique,1,5000,per_trip,01-Jan-2019,$contractDate,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+
+!** Admin SLA Setting
+!define Movement {Primary}
+!define vehicle_movement {2}
+
+!|script|common                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":{"depot_ids":["$location_id"],"movement":${vehicle_movement},"sla_configurations":[{"sla_type":2,"hours":$indentCutoffHour,"mins":$indentCutoffMin},{"sla_type":1,"hours":$arrivalCutoffHour,"mins":$arrivalCutoffMin}]}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Settings.AdminSlaSettingAPI
+*!
+
+!** SLA Bulk Upload
+!define Vehicle_Type {${vehicle_name}}
+!define Movement {Primary}
+!define Depot_Ref_Id {$source_depot_ref_id}
+
+!define acceptance_cost {100}
+!define assignment_cost {100}
+!define arrival_cost {600}
+!define rejection_cost {100}
+!define grace_period {0}
+
+!|script|common                     |
+|$rand1=|getTrim;|${acceptance_cost}|
+|$rand2=|getTrim;|${assignment_cost}|
+|$rand3=|getTrim;|${arrival_cost}   |
+|$rand4=|getTrim;|${rejection_cost} |
+|$rand5=|getTrim;|${grace_period}   |
+
+!define row {Vehicle Type,Movement,Depot REF ID,Acceptance cost,Assignment cost,Arrival Cost,Rejection Cost,Grace Period,Max Arrival SLA(%)}
+!define column1 {${Vehicle_Type},${Movement},${Depot_Ref_Id},$rand1,$rand2,$rand3,$rand4,$rand5,10}
+
+!include -c .FrontPage.Pando.Common.CommonSLABulkUpload
+**!
+
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$location_id}
+!define gate_id {$source_gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$destination_location_id}
+!define sold_to_id {$destination_gate_location_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice}}],"destinations":[{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id}"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+*!
+
+!** Wait for 5 mins
+!|script|ui |
+|wait;  |200|
+**!
+
+!*** Transporter Creation for Indent
+!define transporter_name {t1$unique}
+!define transporter_ref_id {tr1$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager1 $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+1$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+*!
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!** Uploading Rate Matrix for transporter 2
+!|script|common|
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,BDR Charge,BDR Label,Exclude,Trip Count}
+!define column {City,s$unique,d$unique,${vehicle_name},100,tr1$unique,t1$unique,1,5000,per_trip,01-Jan-2019,$contractDate,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!** Shipper Bid Request To Transporter
+!|Script|Common                                                                                 |
+|$data= |getTrim;|{"data":{"loading_date":"$truckindate","transporter_ids":["$transporter_id"]}}|
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqSendBidRequest
+**!
+
+!** Bids quotes from transporter side
+!|Script     |DateUtil                                    |
+|$arrival_at=|getCurrentDateTimeStamp;|yyyy/MM/dd HH:mm:ss|
+|$arrival_at=|utcConversion;          |$arrival_at        |
+
+!|script      |common                    |
+|$randFreight=|getRandomNumber;|7000|8000|
+
+!define freight_charge {$randFreight}
+!define rfq_status {3}
+!define vehicle_type_id {$vehicle_id}
+
+!define tusername {pandotransporter+1$unique@outlook.com}
+!define tpassword {$password}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqStatus
+**!
+
+!** Bids Accepted by Shipper from Transporter
+!|Script|Common                                                                                              |
+|$data= |getTrim;|{"data":{"comment":"Thank you","quotes":[{"transporter_id":"$transporter_id","status":2}]}}|
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqAcceptBidRequest
+**!
+
+!*** Adding Truck details
+!define vechicle_number {TN09CF2804}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!*** Truck In
+!| Script       |Common               |
+|$truck_in_date=|getTrim;|$truckindate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!** Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {S/0}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {PRIMARY}
+!define invoice_amount {10000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"s$unique","gate_ref_id":"SG1$unique","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"DG1$unique","sold_to":"DG1$unique","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** ERP Upload for Consignee 1
+!|script|common                                                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"DG1$unique","sold_to":"DG1$unique","material_invoice_number":"INV-$unique","material_code":"mc$unique","no_of_shortage":"5","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!** Validating Wallet entries in Transporter
+!define status_name_wallet {Select All}
+!define reason_wallet_1 {Carton Damage}
+!define reason_wallet_2 {SLA Breach - Reassigned}
+!define reason_wallet_3 {RFQ Debit}
+!define transporter_name {t$unique}
+!define multiple_reasons {!-//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_1}!-']|//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_2}!-']|//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_3}!-']-!}
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletFilterShipper
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletIndentSearch
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                           |
+|waitForElementToBeDisplayed;|//div[contains(@class,'list-row') or contains(@class,'card-row')]|xpath                                                                                                                                                                                                                           |15        |
+|check                       |getCountOfElements;                                              |//div[contains(@class,'card-row') or contains(@class,'list-row')]                                                                                                                                                               |xpath|2   |
+|check                       |isElementPresent;                                                |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']//ancestor::div[contains(@class,'col')]//following-sibling::div//*[contains(text(),'600.00')]|xpath|true|
+|$tresult=                   |isElementPresent;                                                |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']//ancestor::div[contains(@class,'col')]//following-sibling::div//*[contains(text(),'600.00')]|xpath     |
+*!

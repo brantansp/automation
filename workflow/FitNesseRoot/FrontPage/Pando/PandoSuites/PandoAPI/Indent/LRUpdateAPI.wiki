@@ -1,0 +1,8 @@
+---
+Test
+---
+!|Script    |Http                                                                                                                                        |
+|addHeader; |Authorization |bearer $stoken                                                                                                               |
+|setBaseUrl;|${surl}/api/order/$order_id/lorry_receipt                                                                                                   |
+|$lrresult= |getResponse;  |Application/Json|put|{"data":[{"destination_id":"${consignee_id}","source_location_id":"$depot","lr_number":"${lr_number}"}]}|
+|check      |getStatusCode;|200                                                                                                                          |

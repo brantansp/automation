@@ -1,0 +1,7 @@
+---
+Help: Contains test cases for randomizing lat long of consignee with same pincode
+Suite
+Suites: optscn7
+---
+!1 Test suite Randomizing lat long
+!contents -R2 -g -p -f -h

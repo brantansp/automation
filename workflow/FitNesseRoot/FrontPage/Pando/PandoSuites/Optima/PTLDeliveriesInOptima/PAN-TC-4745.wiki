@@ -1,0 +1,246 @@
+---
+Help: Ensure that optima suggests multipickup multidrop orders with FTL and PTL Deliveries as Courier
+Suites: optscn3
+Test
+---
+!5 Description : Ensure that optima suggests multipickup multidrop orders with FTL and PTL Deliveries as Courier
+
+!***> Unique values assignment
+!|Script          |Common                                       |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$currDate=       |getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique  |0   |4    |
+|$detention_group=|getRandomString;        |4        |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000   |999999    |
+|$today=          |getSubString;           |$currDate|0   |10   |
+|$pincode1=       |getRandomNumber;        |111001   |999999    |
+|$pincode2=       |getRandomNumber;        |111001   |999999    |
+|$vno_1=          |getRandomNumber;        |20       |76        |
+|$vno_2=          |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=          |getRandomNumber;        |1000     |9999      |
+
+!|Script  |DateUtil                      |
+|$today=  |dateCalculation;|yyyy-MM-dd |0|
+|$rdate=  |dateCalculation;|yyyy/MM/dd |0|
+|$thisday=|dateCalculation;|dd MMM yyyy|0|
+
+!| Script     |Common                                      |
+|$rdate=      |stringConcatenation;   |$rdate|!- 10:00:00-!|
+|$loadingDate=|getCurrentDateTimeStamp|iso                 |
+*!
+
+!** Delete Old Optima_materials entries
+!|script                    |MongoDB                                                                                                                      |
+|initialize;                |mongodb+srv://staging-admin:VpbUDlaBkv4vTzJ8@tsm-staging-mlxar.mongodb.net/db_pando_staging?retryWrites=true|db_pando_staging|
+|removingOldOptimaMaterials;|${surl}                                                                                                     |Nagpur CDC      |
+*!
+
+!***> Delete the Line item from Depot via API
+!define movement {1}
+
+!|script|common                           |
+|$depot=|getTrim;|5f76f4c57e91f8004d578206|
+
+!define movement {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DiscardLineItemOptimaAPI
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DiscardLineItemOptimaAPI
+**!
+
+!** Depot Optima Setting
+!define depot_name {Nagpur CDC}
+!define depo {Nagpur CDC}
+!define max_split {3}
+!define split_factor {5}
+!define ftl_certify {false}
+!define algorithm {3}
+!define distance_deviation {100}
+!define degree_of_deviation {30}
+!define optima_type {1}
+!define weight {1}
+!define volume {1}
+!define mode {0}
+!define max_pickup {2}
+!define fitment {0}
+!define max_dropoff {2}
+!define optima_for_ptl {false}
+!define ptl_club_gates {false}
+!define limited_truck_count {false}
+!define hybrid_split {false}
+!define depot_id {5f6984ca0d4907004daa301c}
+!define movement {2}
+!define movement_type {Primary}
+!define ptl_contracts {2}
+!define material_category {"MT","GT"}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split": ${max_split},"split_factor": ${split_factor},"ftl_certify": ${ftl_certify},"algorithm": ${algorithm},"distance_deviation":"${distance_deviation}","degree_of_deviation":${degree_of_deviation},"optima_type":${optima_type},"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":${weight},"volume":${volume}},"material_categories":[${material_category}],"mode":${mode},"max_pickup_points":${max_pickup},"fitment":${fitment},"max_drop_points":${max_dropoff},"drop_off_rule":[],"optima_for_ptl":${optima_for_ptl},"ptl_club_gates":${ptl_club_gates},"pickup_threshold": {"weight": 2000,"volume": 200},"floor_one": {"weight": 5400,"volume": 600},"floor_two": {"weight": 90,"volume": 90},"limited_truck_count":${limited_truck_count},"hybrid_split": ${hybrid_split},"ptl_contracts":${ptl_contracts}},"depot_ids":["${depot_id}"],"movement":${movement}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!** Optima uploading Material and Optimizing
+!define row {Sales Doc./Delivery Number/Material Invoice Number,Material Code,Order Quantity,Quantity Unit,Weight,Weight Unit,Volume,Volume Unit,Pickup Ref Id,Customer/Ship To Ref Id,Sold To Ref Id,Category,Sub Category	,Date(YYYY-MM-DD),STN,Material Category,Category Priority,Invoice Date(YYYY-MM-DD),Invoice Value,Transporter Reference Id,MRP}
+!define column {6162000651,703459,10.00,NOS,1000.00,KG,100.00,CFT,R394,D535,D535,X,,2020-09-21,0.01,oil,GT,,,|
+6162000652,703461,10.00,NOS,1000.00,KG,100.00,CFT,R395,D537,D537,X,,2020-09-21,0.02,oil,MT,,,|
+6162000653,706693,5.00,NOS,3500.00,KG,200.00,CFT,R394,D535,D535,X,,2020-09-21,0.12,oil,MT,,,|
+6162000654,704337,5.00,NOS,3500.00,KG,200.00,CFT,R395,D537,D537,X,,2020-09-22,0.22,oil,GT,,,|
+6162000655,704586,5.00,NOS,3500.00,KG,200.00,CFT,R394,D535,D535,X,,2020-09-22,0.32,oil,MT,,,|
+6162000656,704338,5.00,NOS,3500.00,KG,200.00,CFT,R395,D537,D537,X,,2020-09-23,0.42,oil,MT,,,|
+6162000657,706694,5.00,NOS,3500.00,KG,200.00,CFT,R394,D535,D535,X,,2020-09-23,0.52,oil,GT,,,|
+6162000658,706695,5.00,NOS,3500.00,KG,200.00,CFT,R395,D537,D537,X,,2020-09-23,0.62,oil,GT,,,|
+6162000659,706720,5.00,NOS,500.00,KG,50.00,CFT,R394,D536,D536,X,,2020-09-21,0.72,food,GT,,,|
+6162000660,706924,5.00,NOS,500.00,KG,50.00,CFT,R394,D535,D535,X,,2020-09-21,0.62,food,GT,,,|
+6162000661,706696,5.00,NOS,500.00,KG,50.00,CFT,R395,D535,D535,X,,2020-09-21,0.82,food,GT,,,|
+6162000662,711969,5.00,NOS,500.00,KG,50.00,CFT,R395,D536,D536,X,,2020-09-22,0.82,food,GT,,,}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+!|Script                |Excel                      |
+|newSheetDynamicColumns;|${row}|${column}|$excelpath|
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimaMaterialUpload
+
+!|Script|Common                                                                                |
+|check  |checkIfStringExistsIn;|12 Valid materials and 0 Invalid materials out of 12|$data|true|
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimizeAndFilter
+
+!|Script   |Ui                                                                                                                                                                                                                              |
+|check     |getCountOfElements;                                |//div[@class='card-row card-row-show']                                                                                                                           |xpath|3   |
+|check     |isElementPresent;                                  |//span[text()='R394']/ancestor::div[contains(@class,'row-show')]//span[text()='R395']/ancestor::div[contains(@class,'row-show')]//span[contains(text(),'16 Ton')]|xpath|true|
+|check     |isElementPresent;                                  |//span[text()='R394']/ancestor::wrappercontainer//span[normalize-space(text())='D535']                                                                           |xpath|true|
+|check     |isElementPresent;                                  |//span[text()='R395']/ancestor::wrappercontainer//span[normalize-space(text())='D537']                                                                           |xpath|true|
+|check     |isElementPresent;                                  |//span[text()='R395']/ancestor::wrappercontainer//span[normalize-space(text())='D535']                                                                           |xpath|true|
+|check     |isElementPresent;                                  |//span[text()='R394']/ancestor::wrappercontainer//span[normalize-space(text())='D536']                                                                           |xpath|true|
+|check     |isElementPresent;                                  |//span[text()='R394']/ancestor::wrappercontainer/..//span[normalize-space(text())='D536']                                                                        |xpath|true|
+|check     |isElementPresent;                                  |//span[text()='R394']/ancestor::wrappercontainer/following-sibling::wrappercontainer//span[normalize-space(text())='D535']                                       |xpath|true|
+|check     |isElementPresent;                                  |//span[text()='R395']/ancestor::div[contains(@class,'row-show')]//span[contains(text(),'Air-Cou')]                                                               |xpath|true|
+|check     |isElementPresent;                                  |//span[text()='R394']/ancestor::div[contains(@class,'row-show')]//span[contains(text(),'Air-Cou')]                                                               |xpath|true|
+|click;    |//span[text()='R395']/ancestor::wrappercontainer//a|xpath                                                                                                                                                                       |
+|check     |isElementPresent;                                  |//span[normalize-space(text())='706696']                                                                                                                         |xpath|true|
+|$tresult1=|isElementPresent;                                  |//span[normalize-space(text())='706696']                                                                                                                         |xpath     |
+|check     |getCountOfElements;                                |//div[contains(@class,'table-rowbg')]                                                                                                                            |xpath|1   |
+|click;    |//div[@class='back-option']                        |xpath                                                                                                                                                                       |
+**!
+
+!** Validate Indent - Order 1: FTL Multipickup and Multi drop
+!|Script                     |Ui                                                                                                                                                                          |
+|click;                      |//span[text()='R394']/ancestor::div[contains(@class,'row-show')]//span[text()='R395']/ancestor::div[contains(@class,'row-show')]//span[contains(@class,'checkbox')]|xpath   |
+|click;                      |//button[contains(text(),'Indent')]                                                                                                                                |xpath   |
+|click;                      |//div[@class='el-message-box']//span[contains(text(),'Create')]                                                                                                    |xpath   |
+|waitForElementToBeDisplayed;|//div[@role='alert']/i[contains(@class,'success')]                                                                                                                 |xpath|20|
+
+!define depot_selection  {Nagpur CDC}
+
+!|Script       |Ui                                                                                      |
+|navigateToUrl;|${surl}/indents                                                                         |
+|click;        |//button[@class='el-button el-button--default']|xpath                                   |
+|click;        |(//div[@class='slideleft_menu']//input)[1]     |xpath                                   |
+|click;        |//span[text()='${depot_selection}']            |xpath                                   |
+|click;        |//button[text()='APPLY']                       |xpath                                   |
+|wait;         |2                                                                                       |
+|$order_id=    |getText;                                       |(//div[@class='order-row']/div)[1]|xpath|
+
+!|script   |common                            |
+|$order_id=|replaceString;|$order_id|$thisday||
+|$order_id=|replaceString;|$order_id|\n      ||
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                       |
+|click;                      |(//div[@class='order-row'])[1]//span[normalize-space(text())='16 Tonne Truck']|xpath                                                                                                                                                                                     |
+|waitForElementToBeDisplayed;|//div[contains(@class,'drawer-header')]                                       |xpath                                                                                                                                                                          |30        |
+|check                       |isElementPresent;                                                             |//div[text()='Gate 1']/../self::div/following-sibling::div//strong[text()='R394']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D535')]|xpath|true|
+|$tresult2=                  |isElementPresent;                                                             |//div[text()='Gate 1']/../self::div/following-sibling::div//strong[text()='R394']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D535')]|xpath     |
+|click;                      |//div[text()='Gate 2']                                                        |xpath                                                                                                                                                                                     |
+|check                       |isElementPresent;                                                             |//div[text()='Gate 2']/../self::div/following-sibling::div//strong[text()='R395']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D537')]|xpath|true|
+|$tresult3=                  |isElementPresent;                                                             |//div[text()='Gate 2']/../self::div/following-sibling::div//strong[text()='R395']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D537')]|xpath     |
+|click;                      |//a[contains(@class,'close')]                                                 |xpath                                                                                                                                                                                     |
+*!
+
+!** Indenting Order 2:PTL Single drop
+!|Script                     |Ui                                                                                                                                                                                    |
+|wait;                       |5                                                                                                                                                                                     |
+|navigateToUrl;              |${surl}/optima                                                                                                                                                                        |
+|click;                      |(//div[@class='cardfilter-grid']//input)[1]/../self::div                                                                                                          |xpath              |
+|sendKeys;                   |(//div[@class='cardfilter-grid']//input)[1]                                                                                                                       |xpath|${depot_name}|
+|click;                      |//span[contains(text(),'${depot_name}')]                                                                                                                          |xpath              |
+|wait                        |2                                                                                                                                                                                     |
+|click;                      |(//div[@class='cardfilter-grid']//input)[2]                                                                                                                       |xpath              |
+|click;                      |//span[contains(text(),'${movement_type}')]                                                                                                                       |xpath              |
+|click;                      |//span[text()='R395']//ancestor::wrappercontainer//span[contains(text(),'Air-Cou')]//ancestor::div[contains(@class,'row-show')]//span[contains(@class,'checkbox')]|xpath              |
+|click;                      |//button[contains(text(),'Indent')]                                                                                                                               |xpath              |
+|click;                      |//div[@class='el-message-box']//span[contains(text(),'Create')]                                                                                                   |xpath              |
+|waitForElementToBeDisplayed;|//div[@role='alert']/i[contains(@class,'success')]                                                                                                                |xpath|20           |
+
+!|Script       |Ui                                                                                      |
+|navigateToUrl;|${surl}/indents                                                                         |
+|click;        |//button[@class='el-button el-button--default']|xpath                                   |
+|click;        |(//div[@class='slideleft_menu']//input)[1]     |xpath                                   |
+|click;        |//span[text()='${depot_selection}']            |xpath                                   |
+|click;        |//button[text()='APPLY']                       |xpath                                   |
+|wait;         |2                                                                                       |
+|$order_id=    |getText;                                       |(//div[@class='order-row']/div)[1]|xpath|
+
+!|script   |common                            |
+|$order_id=|replaceString;|$order_id|$thisday||
+|$order_id=|replaceString;|$order_id|\n      ||
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                    |
+|click;                      |(//div[@class='order-row'])[1]//span[normalize-space(text())='Air-Courier']|xpath                                                                                                                                                                                     |
+|waitForElementToBeDisplayed;|//div[contains(@class,'drawer-header')]                                    |xpath                                                                                                                                                                          |30        |
+|check                       |isElementPresent;                                                          |//div[text()='Gate 2']/../self::div/following-sibling::div//strong[text()='R395']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D535')]|xpath|true|
+|$tresult4=                  |isElementPresent;                                                          |//div[text()='Gate 2']/../self::div/following-sibling::div//strong[text()='R395']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D535')]|xpath     |
+|click;                      |//a[contains(@class,'close')]                                              |xpath                                                                                                                                                                                     |
+*!
+
+!** Indenting Order 3:PTL Multi drop
+!|Script                     |Ui                                                                                                                                                                                    |
+|wait;                       |5                                                                                                                                                                                     |
+|navigateToUrl;              |${surl}/optima                                                                                                                                                                        |
+|click;                      |(//div[@class='cardfilter-grid']//input)[1]/../self::div                                                                                                          |xpath              |
+|sendKeys;                   |(//div[@class='cardfilter-grid']//input)[1]                                                                                                                       |xpath|${depot_name}|
+|click;                      |//span[contains(text(),'${depot_name}')]                                                                                                                          |xpath              |
+|wait                        |2                                                                                                                                                                                     |
+|click;                      |(//div[@class='cardfilter-grid']//input)[2]                                                                                                                       |xpath              |
+|click;                      |//span[contains(text(),'${movement_type}')]                                                                                                                       |xpath              |
+|click;                      |//span[text()='R394']//ancestor::wrappercontainer//span[contains(text(),'Air-Cou')]//ancestor::div[contains(@class,'row-show')]//span[contains(@class,'checkbox')]|xpath              |
+|click;                      |//button[contains(text(),'Indent')]                                                                                                                               |xpath              |
+|click;                      |//div[@class='el-message-box']//span[contains(text(),'Create')]                                                                                                   |xpath              |
+|waitForElementToBeDisplayed;|//div[@role='alert']/i[contains(@class,'success')]                                                                                                                |xpath|20           |
+
+!|Script       |Ui                                                                                      |
+|navigateToUrl;|${surl}/indents                                                                         |
+|click;        |//button[@class='el-button el-button--default']|xpath                                   |
+|click;        |(//div[@class='slideleft_menu']//input)[1]     |xpath                                   |
+|click;        |//span[text()='${depot_selection}']            |xpath                                   |
+|click;        |//button[text()='APPLY']                       |xpath                                   |
+|wait;         |2                                                                                       |
+|$order_id=    |getText;                                       |(//div[@class='order-row']/div)[1]|xpath|
+
+!|script   |common                            |
+|$order_id=|replaceString;|$order_id|$thisday||
+|$order_id=|replaceString;|$order_id|\n      ||
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                    |
+|click;                      |(//div[@class='order-row'])[1]//span[normalize-space(text())='Air-Courier']|xpath                                                                                                                                                                                     |
+|waitForElementToBeDisplayed;|//div[contains(@class,'drawer-header')]                                    |xpath                                                                                                                                                                          |30        |
+|check                       |isElementPresent;                                                          |//div[text()='Gate 1']/../self::div/following-sibling::div//strong[text()='R394']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D535')]|xpath|true|
+|$tresult5=                  |isElementPresent;                                                          |//div[text()='Gate 1']/../self::div/following-sibling::div//strong[text()='R394']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D535')]|xpath     |
+|check                       |isElementPresent;                                                          |//div[text()='Gate 1']/../self::div/following-sibling::div//strong[text()='R394']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D536')]|xpath|true|
+|$tresult6=                  |isElementPresent;                                                          |//div[text()='Gate 1']/../self::div/following-sibling::div//strong[text()='R394']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D536')]|xpath     |
+|click;                      |//a[contains(@class,'close')]                                              |xpath                                                                                                                                                                                     |
+*!
+
+!** Validating Result
+!|Script  |Common                                                                                   |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6|
+|check    |checkIfStringAreEqual;       |$tresult              |true              |true             |
+*!
+
+!** Retrieving the Job ID using API
+!|Script|Common                           |
+|$depot=|getTrim;|5f6984ca0d4907004daa301c|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.RetrieveOptimaJobIDAPI
+*!

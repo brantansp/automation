@@ -1,0 +1,62 @@
+---
+Help: SCN26_Ensure both pickup materials creates indents
+Test
+---
+!5 SCN26_Ensure both pickup materials creates indents 
+
+-!|Comment|
+|Test case description                                       |
+|Both the Pickup materials is above f1 and below f2 for day 1|
+
+-!|Comment|
+|Input                                          |
+|Pickup               |Case   |TON   |CFT       |
+|Material for pickup 1|340.657|5.397 |316.663046|
+|Material for pickup 2|595.066|11.888|830.009894|
+
+-!|Comment|
+|Expected Output                    |
+|Indent  |Case|KG        |CFT       |
+|Indent 1|875 |15999.6665|1044.14387|
+
+-!|Comment|
+|External links                                                                             |
+|Jira           |https://gopando.atlassian.net/browse/PAN-3252                              |
+|Github         |https://github.com/pandocorp/optima-v2/pull/81                             |
+|Test Management|https://tm.gopando.co/linkto.php?tprojectPrefix=PD&item=testcase&id=PD-3619|
+
+-!|Comment|
+|Test Script|
+
+!** Reading the Output file
+!|Script   |Common                                                                     |
+|$jsonpath=|getPath;|download/scn26_Ensure_both_pickup_indents_FDP_output.json|fullpath|
+*!
+
+!** Querying the json
+!|script           |QueryOptimaOutput                             |
+|getParsedJson;    |$jsonpath                                     |
+|$noOfOrders=      |getTotalNumberOfOrders;                       |
+|$totalWeight=     |getTotalOutputWeight;                         |
+|$totalVolume=     |getTotalOutputVolume;                         |
+|$materialWeight=  |getTotalMaterialWeightForDelivery;  |196645369|
+|$materialVolume=  |getTotalMaterialVolumeForDelivery;  |196645369|
+|$materialQuantity=|getTotalMaterialQuantityForDelivery;|196645369|
+*!
+
+!** Validating the Test result
+!| script  |common                                                                                   |
+|check     |checkIfStringAreEqual;       |$noOfOrders            |1       |true                      |
+|$tresult1=|checkIfStringAreEqual;       |$noOfOrders            |1                                  |
+|check     |comparisonResult;            |$totalWeight           |<=      |15999.667      |true      |
+|$tresult2=|comparisonResult;            |$totalWeight           |<=      |15999.667                 |
+|check     |comparisonResult;            |$totalVolume           |<=      |1044.1438      |true      |
+|$tresult3=|comparisonResult;            |$totalVolume           |<=      |1044.1438                 |
+|check     |comparisonResult;            |$materialWeight        |<=      |401.6667       |true      |
+|$tresult4=|comparisonResult;            |$materialWeight        |<=      |401.6667                  |
+|check     |comparisonResult;            |$materialVolume        |<=      |32.040333      |true      |
+|$tresult5=|comparisonResult;            |$materialVolume        |<=      |32.040333                 |
+|check     |comparisonResult;            |$materialQuantity      |<=      |20             |true      |
+|$tresult6=|comparisonResult;            |$materialQuantity      |<=      |20                        |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6|
+*!

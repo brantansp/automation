@@ -1,0 +1,6 @@
+---
+Help: Contains the test cases for rate matrix bulk upload
+Suite
+---
+!1 Test suite for Rate matrix Bullk upload
+!contents -R2 -g -p -f -h

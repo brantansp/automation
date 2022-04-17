@@ -1,0 +1,93 @@
+---
+Help: Edit Depot and Create Indent for the Depot
+Test
+---
+!*** Unique value assignment
+!| script|common                                |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss  |
+|$num=   |getRandomNumber;        |100000|999999|
+*!
+
+!define depot_name {depo$num}
+!define depot_state {s$unique}
+!define depot_city {c$unique}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {$num}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!** Gate Manager Creation
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!define depot_name {$depot_name}
+!define field_to_edit {name}
+!define new_value {de$num}
+!** Edit Depot
+!include .FrontPage.Pando.PandoSuites.DataManager.Depot.CommonDepotDetailsEdit
+*!
+
+!define depot_name {de$num}
+!define field_to_edit {reference_id}
+!define new_value {R$unique}
+!** Edit Depot
+!include .FrontPage.Pando.PandoSuites.DataManager.Depot.CommonDepotDetailsEdit
+*!
+
+!define search_text {${depot_name}}
+!** Verify the field edited in Depot
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonVerifySearch
+*!
+
+!** Verify the Depot in Indent Creation
+!|script                     |ui                                                                                                             |
+|navigateToUrl;              |${surl}/indent/create/0                                                                                        |
+|click;                      |//span[text()='Add Source location']                    |xpath                                                 |
+|waitForElementToBeDisplayed;|//section[@class='el-drawer__body']                     |xpath                                   |30           |
+|sendKeys;                   |//input[@placeholder='Search by DEPOT Name, city or ID']|xpath                                   |${depot_name}|
+|check                       |isElementPresent;                                       |//span[contains(text(),'${depot_name}')]|xpath  |true |
+|$tresult1=                  |isElementPresent;                                       |//span[contains(text(),'${depot_name}')]|xpath        |
+*!
+
+!** Validating the test
+!|script  |common                                          |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult,$tresult1|
+*!
+
+!*** Update result
+!include .FrontPage.Pando.Common.CommonResultImage
+*!

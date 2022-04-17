@@ -1,0 +1,9 @@
+---
+Help: To search transporter in data manager
+---
+!|Script                     |Ui                                                                                   |
+|navigateToUrl;              |${surl}/mdm/transporter                                                              |
+|click;                      |//div[starts-with(@class,'searchterm tagblock')]                |xpath               |
+|clearAndSend;               |//input[@placeholder='${search_field}']                         |xpath|${search_text}|
+|click;                      |//button[text()='Search']                                       |xpath               |
+|waitForElementToBeDisplayed;|//div[@class='emptytext' or starts-with(@class,'grid-list-row')]|xpath|30            |

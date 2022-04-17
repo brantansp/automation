@@ -1,0 +1,7 @@
+---
+Help: Exclude vehicle type
+Suite
+Suites: optscn1
+---
+!1 Test suite for Extra Vechicle Validation
+!contents -R2 -g -p -f -h

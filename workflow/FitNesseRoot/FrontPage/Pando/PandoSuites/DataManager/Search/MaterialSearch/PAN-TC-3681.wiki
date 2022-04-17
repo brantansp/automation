@@ -1,0 +1,31 @@
+---
+Help: DM Material Search based on Material Code
+Test
+---
+!*** Unique value assignment
+!| script|common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$num=   |getRandomNumber;        |100  |999  |
+*!
+
+!define material_name {m $unique}
+!define material_code {mc$unique}
+
+!** Material creation 
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+*!
+
+!define search_value {${material_code}}
+!** Material search by Material code
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.MaterialSearch.CommonMaterialSearch
+*!
+
+!define search_text {${material_name}}
+!** Verify search result
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonVerifySearch
+*!
+
+!define tname {TC-282}
+!*** Update Test result
+ 
+*!

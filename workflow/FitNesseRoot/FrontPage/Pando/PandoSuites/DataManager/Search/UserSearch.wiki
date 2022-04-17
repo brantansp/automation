@@ -1,0 +1,6 @@
+---
+Help: Search module for Users
+Suite
+---
+!1 Test suite for Users search
+!contents -R2 -g -p -f -h

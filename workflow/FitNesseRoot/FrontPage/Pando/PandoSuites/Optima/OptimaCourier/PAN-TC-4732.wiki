@@ -1,0 +1,102 @@
+---
+Help: Ensure PTL and PTL Gate Club settings should become disabled, If you want to run courier mode.
+Test
+---
+!5 Description : Check the optima depot configuration is available optima_for_PTL and PTL_club_gates to enable and disable.
+!5 Expected : Customer should be able to set the PTL setting in /optima/cs setting page and the same should retain
+
+!***> Unique values assignment
+!| Script         |Common                                       |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$currDate=       |getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique|0   |4    |
+|$detention_group=|getRandomString;        |4        |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000   |999999    |
+*!
+
+!** Depot for Shipper
+!define depot_name {d$unique}
+!define depot_state {Madhya Pradesh}
+!define depot_city {B$unique}
+!define depot_region {North}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {462001}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!*** Gate Creation for shipper depot
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!*** Gate Manager Creation
+!define role_id {$retrieve_key_value}
+!define user_number {12891}
+!define user_name {u1$unique}
+!define user_email {pandoindent+1+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation one
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {North}
+!define gate_pincode {462001}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+*!
+*!
+
+!** Depot CS setting for enabling Courier as Algorithm mode
+!define movement_type {Secondary}
+
+!|Script                     |Ui                                                                                                                                                                                              |
+|navigateToUrl;              |${surl}/optima/cs                                                                                                                                                                               |
+|click;                      |//input[@placeholder='Select Depot']                                                                |xpath                                                                                      |
+|sendKeys;                   |//div[normalize-space(text())='Depot']/..//input                                                    |xpath                                                                        |${depot_name}|
+|click;                      |//span[contains(text(),'${depot_name}')]                                                            |xpath                                                                                      |
+|click;                      |//div[contains(text(),'Movement')]/following-sibling::div                                           |xpath                                                                                      |
+|click;                      |//li[contains(.,'${movement_type}')]                                                                |xpath                                                                                      |
+|$ptlDeliveries1=            |getValue;                                                                                           |//div[normalize-space(text())='PTL Deliveries']/following-sibling::div//input|xpath        |
+|click;                      |//div[normalize-space(text())='Algorithm Mode']/..//input                                           |xpath                                                                                      |
+|click;                      |(//li/span[text()='Courier'])[2]                                                                    |xpath                                                                                      |
+|click;                      |//button[normalize-space(text())='SAVE' or normalize-space(text())='Save']                                                           |xpath                                                                                      |
+*!
+
+!** Verify that Algorithm mode settings is persisting for the Depot
+!define movement_type {Secondary}
+
+!|Script       |Ui                                                                                                                               |
+|navigateToUrl;|${surl}/optima/cs                                                                                                                |
+|click;        |//input[@placeholder='Select Depot']                     |xpath                                                                  |
+|sendKeys;     |//div[normalize-space(text())='Depot']/..//input         |xpath                                                    |${depot_name}|
+|click;        |//span[contains(text(),'${depot_name}')]                 |xpath                                                                  |
+|click;        |//div[contains(text(),'Movement')]/following-sibling::div|xpath                                                                  |
+|click;        |//li[contains(.,'${movement_type}')]                     |xpath                                                                  |
+|$defaultValue=|getValue;                                                |//div[normalize-space(text())='Algorithm Mode']/..//input|xpath        |
+
+*!
+
+!** Validating Test Result
+!|Script  |Common                                                  |
+|check    |checkIfStringAreEqual;       |$defaultValue|Courier|true|
+|$tresult=|checkIfStringAreEqualInArray;|$defaultValue,Courier     |
+*!

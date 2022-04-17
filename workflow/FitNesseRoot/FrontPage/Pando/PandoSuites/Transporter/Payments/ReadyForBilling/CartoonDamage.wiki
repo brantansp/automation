@@ -1,0 +1,7 @@
+---
+Help: Cartoon Damage
+Suite
+Suites: pay1
+---
+!1 Test suite for cartoon Damage
+!contents -R2 -g -p -f -h

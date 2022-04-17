@@ -1,0 +1,223 @@
+---
+Help: Validate the application when filter is applied in MDM-Depots,Rate matrix,Vendor Depots
+Test
+---
+!**> Unique values assignment
+!|script   |common                                 |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss   |
+|$num=     |getRandomNumber;        |100000 |999999|
+|$currDate=|getCurrentDateTimeStamp |default       |
+|$year=    |getSubString;           |$unique|0  |4 |
+
+!|script|DateUtil                     |
+|$cdate=|dateCalculation;|yyyy/MM/dd|1|
+**!
+
+!***> Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoauto+consignee$unique@outlook.com}
+!define region {South}
+!define site {2}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!***> Transporter Creation for Indent
+
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!***> Vehicle Creation
+
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {PTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Depot Creation
+
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!***> Gate Manager Creation
+
+!***> User Role ID Retrival
+
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation
+
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+
+*!
+
+!** Search Depot after creation
+!define search_count {1}
+!define search_value {d$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Search.DepoSearch.CommonDepoSearch
+
+!|Script   |Common                                   |
+|check     |checkIfStringAreEqual;|$totalCount|1|true|
+|$tresult1=|checkIfStringAreEqual;|$totalCount|1     |
+
+!* Refresh page
+!|script|ui|
+|refresh;  |
+*!
+
+!** Verify Content in Depot page after refresh
+!|Script   |Ui                                                                   |
+|check     |isElementPresent;  |//span[contains(text(),'d$unique')]   |xpath|true|
+|$tresult2=|isElementPresent;  |//span[contains(text(),'d$unique')]   |xpath     |
+|$count1=  |getCountOfElements;|//div[@class='card-row card-row-show']|xpath     |
+**!
+**!
+
+!***> Uploading Rate Matrix
+!|Script|Common                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":[{"contract_type":"City","source":"${depot_city}","destination":"city$unique","vehicle_type":"${vehicle_name}","distance":"100","transporter_reference_number":"${transporter_ref_id}","transporter_name":"${transporter_name}","transit_days":"1","freight_rate":"10000","freight_unit":"trip","valid_from":"2019/01/01","valid_to":"$cdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.RateMatrixDynamicAPI
+*!
+
+!** Search Transporter in Rate Matrix
+!define search_value {t$unique}
+!define search_field {Enter Transporter Name}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonTransporterSearchInRateMatrix
+
+!** Verify Content after Search
+!|Script|Ui                                                              |
+|check  |isElementPresent;|//span[contains(text(),'t$unique')]|xpath|true|
+**!
+
+!* Refresh page
+!|script|ui|
+|refresh;  |
+*!
+
+!** Verify Content in Rate Matrix page after refresh
+!|Script   |Ui                                                                       |
+|check     |isElementPresent;  |//span[contains(text(),'t$unique')]       |xpath|true|
+|$tresult3=|isElementPresent;  |//span[contains(text(),'t$unique')]       |xpath     |
+|$count2=  |getCountOfElements;|//div[starts-with(@class,'grid-list-row')]|xpath     |
+**!
+**!
+
+!**> Vendor Depot Creation
+!define depot_name {vd$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {V$unique}
+!define depot_region {South}
+!define depot_short_code {VD$num}
+!define depot_reference_id {vr$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {656456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define type {2} 
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|$data= |getTrim;|{"data":{"name":"${depot_name}","state":"${depot_state}","city":"${depot_city}","region":"${depot_region}","display_reference_name": "","short_code":"${depot_short_code}","reference_id":"${depot_reference_id}","address":"${depot_address}","pincode":"${depot_pincode}","gstn_no":"${depot_gstn_no}","ports_associated": [],"timezone": "", "fax_number": "", "type":${type},"plant_type":1,"delivery_type":${depot_delivery_type},"unloading_capacity":0}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationDynamicAPI
+*!
+
+!** Search Vendor Depot after creation
+!define search_value {vr$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonVendorDepotSearch
+
+!** Verify Content after Search
+!|Script|Ui                                                               |
+|check  |isElementPresent;|//span[contains(text(),'vr$unique')]|xpath|true|
+**!
+
+!* Refresh page
+!|script|ui|
+|refresh;  |
+*!
+
+!** Verify Content in Vendor Depot page after refresh
+!|Script   |Ui                                                                   |
+|check     |isElementPresent;  |//span[contains(text(),'vr$unique')]  |xpath|true|
+|$tresult4=|isElementPresent;  |//span[contains(text(),'vr$unique')]  |xpath     |
+|$count3=  |getCountOfElements;|//div[@class='card-row card-row-show']|xpath     |
+**!
+**!
+
+!** Validating count
+!|Script   |Common                                                      |
+|check     |checkIfStringAreEqualInArray |$count1,$count2,$count3,1|true|
+|$tresult5=|checkIfStringAreEqualInArray;|$count1,$count2,$count3,1     |
+**!
+
+!**> Validating the test results
+!|Script  |Common                                                                              |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|
+**!

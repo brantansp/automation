@@ -1,0 +1,19 @@
+#navigating to the wallet page and clicking on filter
+!|Script                     |Ui                                                                    |
+|navigateToUrl;              |${surl}/v2/wallet                                                     |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row') or @class='emptytext']|xpath|10|
+|wait;                       |5                                                                     |
+|click;                      |//span[normalize-space(text())='Filter']                     |xpath   |
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletFilterDepotFragment
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletFilterTransporterFragment
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletFilterStatusFragment
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletFilterReasonFragment
+
+#Clicking on Apply to apply the filter
+!|Script|Ui                            |
+|click; |//button[text()='APPLY']|xpath|
+|wait;  |5                             |

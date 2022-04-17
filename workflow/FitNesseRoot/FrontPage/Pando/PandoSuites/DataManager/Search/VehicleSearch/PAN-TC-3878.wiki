@@ -1,0 +1,20 @@
+---
+Help: DM Vehicle Search based on Invalid Vehicle Name
+Test
+---
+!** Unique value assignment
+!| Script|Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+*!
+!define search_value {$unique}
+!** Searching for the Vehicle Name in Vehicle
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonVehicleSearch
+*!
+
+
+!*** verifying the search result for No records
+!| script |ui|
+|waitForElementToBeDisplayed;|//div[@class='empty-stage-text']|xpath|30|
+|check    |isElementPresent;|//div[@class='empty-stage-text']|xpath|true|
+|$tresult=|isElementPresent;|//div[@class='empty-stage-text']|xpath     |
+*!

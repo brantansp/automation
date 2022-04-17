@@ -1,0 +1,11 @@
+---
+Help: Filter common
+---
+!|Script|Ui|
+|navigateToUrl;|${surl}/mdm/consignees|
+|click;|//span[@class='search-trigger']|xpath|
+|click;|//li[contains(text(),'${filter_value}')]|xpath|
+|sendKeys;|//input[@placeholder='Enter search term']|xpath|${search_value}|
+|wait;|3|
+|check|isElementPresent;|${xpath}|xpath|true|
+|$tresult=|isElementPresent;|${xpath}|xpath|

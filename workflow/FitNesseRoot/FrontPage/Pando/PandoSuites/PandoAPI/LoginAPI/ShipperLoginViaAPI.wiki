@@ -1,0 +1,9 @@
+---
+Help: Contains Shipper Login script
+Test
+---
+!|Script     |Http                                                                          |
+|setBaseUrl; |${surl}/api/login                                                             |
+|getResponse;|Application/Json|put|{"data":{"email":"${username}","password":"${password}"}}|
+|$stoken=    |getHeader;      |x-auth-token                                                 |
+|check      |getStatusCode;|204                        |

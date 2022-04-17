@@ -1,0 +1,410 @@
+{
+	"definitions": {},
+	"$schema": "http://json-schema.org/draft-07/schema#", 
+	"$id": "https://example.com/object1632159718.json", 
+	"title": "Root", 
+	"type": "object",
+	"required": [
+		"@xmlns",
+		"RESTHeader",
+		"InputParameters"
+	],
+	"additionalProperties": false,
+	"properties": {
+		"@xmlns": {
+			"$id": "#root/@xmlns", 
+			"title": "@xmlns", 
+			"type": "string",
+			"default": "",
+			"pattern": "^.*$"
+		},
+		"RESTHeader": {
+			"$id": "#root/RESTHeader", 
+			"title": "Restheader", 
+			"type": "object",
+			"required": [
+				"xmlns",
+				"Responsibility",
+				"RespApplication",
+				"SecurityGroup",
+				"NLSLanguage",
+				"Org_Id"
+			],
+			"additionalProperties": false,
+			"properties": {
+				"xmlns": {
+					"$id": "#root/RESTHeader/xmlns", 
+					"title": "Xmlns", 
+					"type": "string",
+					"default": "",
+					"pattern": "^.*$"
+				},
+				"Responsibility": {
+					"$id": "#root/RESTHeader/Responsibility", 
+					"title": "Responsibility", 
+					"type": "string",
+					"default": "",
+					"pattern": "^.*$"
+				},
+				"RespApplication": {
+					"$id": "#root/RESTHeader/RespApplication", 
+					"title": "Respapplication", 
+					"type": "string",
+					"default": "",
+					"pattern": "^.*$"
+				},
+				"SecurityGroup": {
+					"$id": "#root/RESTHeader/SecurityGroup", 
+					"title": "Securitygroup", 
+					"type": "string",
+					"default": "",
+					"pattern": "^.*$"
+				},
+				"NLSLanguage": {
+					"$id": "#root/RESTHeader/NLSLanguage", 
+					"title": "Nlslanguage", 
+					"type": "string",
+					"default": "",
+					"pattern": "^.*$"
+				},
+				"Org_Id": {
+					"$id": "#root/RESTHeader/Org_Id", 
+					"title": "Org_id", 
+					"type": "string",
+					"default": "",
+					"pattern": "^.*$"
+				}
+			}
+		}
+,
+		"InputParameters": {
+			"$id": "#root/InputParameters", 
+			"title": "Inputparameters", 
+			"type": "object",
+			"required": [
+				"P_FREIGHT_DETAILS_TBL"
+			],
+			"additionalProperties": false,
+			"properties": {
+				"P_FREIGHT_DETAILS_TBL": {
+					"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL", 
+					"title": "P_freight_details_tbl", 
+					"type": "object",
+					"required": [
+						"items"
+					],
+					"additionalProperties": false,
+					"properties": {
+						"items": {
+							"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items", 
+							"title": "Items", 
+							"type": "array",
+							"default": [],
+							"items":{
+								"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items", 
+								"title": "Items", 
+								"type": "object",
+								"required": [
+									"TRANSPORTER_CODE",
+									"TRANSPORTER_NAME",
+									"INDENT_NUMBER",
+									"INDENT_STATUS",
+									"TOTAL_INDENT_VALUE",
+									"SOURCE_CODE",
+									"GATE_CODE",
+									"SOURCE_NAME",
+									"DESTINATION_CODE",
+									"DESTINATION_NAME",
+									"MATERIAL_CODE",
+									"DELIVERY_NO",
+									"INVOICE_NUMBER",
+									"INVOICE_AMOUNT",
+									"INVOICE_DATE",
+									"QUANTITY",
+									"QUANTITY_UNIT",
+									"WEIGHT",
+									"WEIGHT_UNIT",
+									"VOLUME",
+									"VOLUME_UNIT",
+									"BASE_FREIGHT_PROVISION",
+									"OTHER_CHARGES_PROVISION",
+									"DETENTION_PROVISION",
+									"TOTAL_FREIGHT_PROVISION",
+									"BASE_FREIGHT_ACTUAL",
+									"OTHER_CHARGES_ACTUAL",
+									"DETENTION_ACTUAL",
+									"ACTUAL_FREIGHT_TOTAL",
+									"FREIGHT_STATUS",
+									"ATTRIBUTE1",
+									"ATTRIBUTE2",
+									"ATTRIBUTE3",
+									"ATTRIBUTE4",
+									"ATTRIBUTE5",
+									"ATTRIBUTE6",
+									"ATTRIBUTE7",
+									"ATTRIBUTE8"
+								],
+								"additionalProperties": false,
+								"properties": {
+									"TRANSPORTER_CODE": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/TRANSPORTER_CODE", 
+										"title": "Transporter_code", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"TRANSPORTER_NAME": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/TRANSPORTER_NAME", 
+										"title": "Transporter_name", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"INDENT_NUMBER": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/INDENT_NUMBER", 
+										"title": "Indent_number", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"INDENT_STATUS": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/INDENT_STATUS", 
+										"title": "Indent_status", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"TOTAL_INDENT_VALUE": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/TOTAL_INDENT_VALUE", 
+										"title": "Total_indent_value", 
+										"type": "integer",
+										"default": 0
+									},
+									"SOURCE_CODE": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/SOURCE_CODE", 
+										"title": "Source_code", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"GATE_CODE": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/GATE_CODE", 
+										"title": "Gate_code", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"SOURCE_NAME": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/SOURCE_NAME", 
+										"title": "Source_name", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"DESTINATION_CODE": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/DESTINATION_CODE", 
+										"title": "Destination_code", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"DESTINATION_NAME": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/DESTINATION_NAME", 
+										"title": "Destination_name", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"MATERIAL_CODE": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/MATERIAL_CODE", 
+										"title": "Material_code", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"DELIVERY_NO": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/DELIVERY_NO", 
+										"title": "Delivery_no", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"INVOICE_NUMBER": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/INVOICE_NUMBER", 
+										"title": "Invoice_number", 
+										"type": [ "string", "null" ],
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"INVOICE_AMOUNT": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/INVOICE_AMOUNT", 
+										"title": "Invoice_amount", 
+										"type": "integer",
+										"default": 0
+									},
+									"INVOICE_DATE": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/INVOICE_DATE", 
+										"title": "Invoice_date", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"QUANTITY": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/QUANTITY", 
+										"title": "Quantity", 
+										"type": "integer",
+										"default": 0
+									},
+									"QUANTITY_UNIT": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/QUANTITY_UNIT", 
+										"title": "Quantity_unit", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"WEIGHT": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/WEIGHT", 
+										"title": "Weight", 
+										"type": "integer",
+										"default": 0
+									},
+									"WEIGHT_UNIT": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/WEIGHT_UNIT", 
+										"title": "Weight_unit", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"VOLUME": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/VOLUME", 
+										"title": "Volume", 
+										"type": "integer",
+										"default": 0
+									},
+									"VOLUME_UNIT": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/VOLUME_UNIT", 
+										"title": "Volume_unit", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"BASE_FREIGHT_PROVISION": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/BASE_FREIGHT_PROVISION", 
+										"title": "Base_freight_provision", 
+										"type": "integer",
+										"default": 0
+									},
+									"OTHER_CHARGES_PROVISION": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/OTHER_CHARGES_PROVISION", 
+										"title": "Other_charges_provision", 
+										"type": "integer",
+										"default": 0
+									},
+									"DETENTION_PROVISION": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/DETENTION_PROVISION", 
+										"title": "Detention_provision", 
+										"type": "integer",
+										"default": 0
+									},
+									"TOTAL_FREIGHT_PROVISION": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/TOTAL_FREIGHT_PROVISION", 
+										"title": "Total_freight_provision", 
+										"type": "integer",
+										"default": 0
+									},
+									"BASE_FREIGHT_ACTUAL": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/BASE_FREIGHT_ACTUAL", 
+										"title": "Base_freight_actual", 
+										"type": "integer",
+										"default": 0
+									},
+									"OTHER_CHARGES_ACTUAL": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/OTHER_CHARGES_ACTUAL", 
+										"title": "Other_charges_actual", 
+										"type": "integer",
+										"default": 0
+									},
+									"DETENTION_ACTUAL": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/DETENTION_ACTUAL", 
+										"title": "Detention_actual", 
+										"type": "integer",
+										"default": 0
+									},
+									"ACTUAL_FREIGHT_TOTAL": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/ACTUAL_FREIGHT_TOTAL", 
+										"title": "Actual_freight_total", 
+										"type": "integer",
+										"default": 0
+									},
+									"FREIGHT_STATUS": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/FREIGHT_STATUS", 
+										"title": "Freight_status", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"ATTRIBUTE1": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/ATTRIBUTE1", 
+										"title": "Attribute1", 
+										"type": "integer",
+										"default": 0
+									},
+									"ATTRIBUTE2": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/ATTRIBUTE2", 
+										"title": "Attribute2", 
+										"type": "integer",
+										"default": 0
+									},
+									"ATTRIBUTE3": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/ATTRIBUTE3", 
+										"title": "Attribute3", 
+										"type": "integer",
+										"default": 0
+									},
+									"ATTRIBUTE4": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/ATTRIBUTE4", 
+										"title": "Attribute4", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"ATTRIBUTE5": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/ATTRIBUTE5", 
+										"title": "Attribute5", 
+										"type": "string",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"ATTRIBUTE6": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/ATTRIBUTE6", 
+										"title": "Attribute6", 
+										"type": [ "string", "null" ],
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"ATTRIBUTE7": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/ATTRIBUTE7", 
+										"title": "Attribute7", 
+										"type": "integer",
+										"default": "",
+										"pattern": "^.*$"
+									},
+									"ATTRIBUTE8": {
+										"$id": "#root/InputParameters/P_FREIGHT_DETAILS_TBL/items/items/ATTRIBUTE8", 
+										"title": "Attribute8", 
+										"type": [ "string", "null" ],
+										"default": "",
+										"pattern": "^.*$"
+									}
+								}
+							}
+
+						}
+					}
+				}
+
+			}
+		}
+
+	}
+}

@@ -1,0 +1,20 @@
+---
+Help: Contains script to run the Delivery Picklist
+---
+!5 depot = depot name
+!5 movement = Primary (or) Secondary
+
+!|Script                     |Ui                                                                                         |
+|wait;                       |10                                                                                         |
+|navigateToUrl;              |${surl}/optima/settings                                                                    |
+|waitForElementToBeDisplayed;|//div[contains(@class,'admin-centerblog')]                          |xpath|30              |
+|click;                      |//a[contains(.,'Delivery picklist')]                                |xpath                 |
+|wait;                       |3                                                                                          |
+|click;                      |//input[@placeholder='Select Depot']                                |xpath                 |
+|sendKeys;                   |//div[normalize-space(text())='Depot']/..//input                    |xpath|${depot}        |
+|click;                      |//span[contains(text(),'${depot}')]                                 |xpath                 |
+|click;                      |//div[normalize-space(text())='Movement']/..//input                 |xpath                 |
+|sendKeys;                   |//div[normalize-space(text())='Movement']/..//input                 |xpath|${movement_type}|
+|click;                      |//span[contains(text(),'${movement_type}')]                         |xpath                 |
+|click;                      |//button[contains(text(),'OPTIMIZE') or contains(text(),'Optimize')]|xpath                 |
+|waitForElementToDisappear;  |//p[contains(@class,'el-loading') or contains(text(),'processing')] |xpath|300             |

@@ -1,0 +1,7 @@
+---
+Help: Rejection list cases
+Suite
+Suites: dm1
+---
+!1 Test suite for Exception Report
+!contents -R2 -g -p -f -h

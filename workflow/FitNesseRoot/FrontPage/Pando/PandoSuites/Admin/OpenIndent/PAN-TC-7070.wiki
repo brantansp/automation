@@ -1,0 +1,511 @@
+---
+Help: verify whether Vendor movement - detention and other charges for open indents
+Suites: srf
+Test
+---
+!* configurations
+!5 enable view_open_indents_settings and update_open_indents_settings in Nimbus
+!5 admin settings - open indent - enable depotwise movement and toggle buttons for charges
+!5 configure detention in client collection
+!5 Note: SRF does not use adminsettings - depot level detention period
+**!
+
+!***> Unique values assignment
+!| Script  |Common                                       |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$cGroup=  |getRandomString;        |5        |ALPHAUPPER|
+|$vno_1=   |getRandomNumber;        |20       |76        |
+|$vno_2=   |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=   |getRandomNumber;        |1000     |9999      |
+|$currDate=|getCurrentDateTimeStamp |iso                 |
+|$year=    |getSubString;           |$unique  |0   |4    |
+|$today=   |getSubString;           |$currDate|0   |10   |
+|$num=     |getRandomNumber;        |100000   |999999    |
+|$indate=  |getCurrentDateTimeStamp;|yyyy/MM/dd          |
+
+!| Script           |DateUtil                        |
+|$contractDate=     |dateCalculation;|dd-MMM-yyyy|2  |
+|$invoicedate=      |dateCalculation;|dd-MM-yyyy |2  |
+|$loadingDate=      |dateCalculation;|yyyy/MM/dd |-4 |
+|$releaseat_date=   |dateCalculation;|yyyy/MM/dd |-2 |
+|$truckindate=      |dateCalculation;|yyyy/MM/dd |-8 |
+|$truckoutdate=     |dateCalculation;|yyyy/MM/dd |-5 |
+|$vechicle_req_date=|dateCalculation;|yyyy/MM/dd |-10|
+
+!| Script           |Common                                               |
+|$truckindate=      |stringConcatenation;|$truckindate      |!- 10:00:00-!|
+|$truckoutdate=     |stringConcatenation;|$truckoutdate     |!- 10:00:00-!|
+|$detention_group_1=|getRandomString;    |4                 |ALPHAUPPER   |
+|$releaseat_date=   |stringConcatenation;|$releaseat_date   |!- 10:00:00-!|
+|$rdate=            |stringConcatenation;|$rdate            |!- $timer -! |
+|$vechicle_req_date=|stringConcatenation;|$vechicle_req_date|!- 10:00:00-!|
+
+!|Script            |DateUtil                         |
+|$loadingDate=      |utcConversion;|$loadingDate      |
+|$truckindate=      |utcConversion;|$truckindate      |
+|$truckoutdate=     |utcConversion;|$truckoutdate     |
+|$releaseat_date=   |utcConversion;|$releaseat_date   |
+|$vechicle_req_date=|utcConversion;|$vechicle_req_date|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Data Creation for Vendor movement
+!***> Vendor Depot Creation (Source)
+!define vendor_depot_name {vd$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {V$unique}
+!define depot_region {South}
+!define depot_short_code {VD$num}
+!define depot_reference_id {vr$unique}
+!define vendor_depot_address {vend$unique}
+!define depot_pincode {456789}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define type {2} 
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getTrim;|{"data":{"name":"${vendor_depot_name}","state":"${depot_state}","city":"${depot_city}","region":"${depot_region}","display_reference_name": "","short_code":"${depot_short_code}","reference_id":"${depot_reference_id}","address":"${vendor_depot_address}","pincode":"${depot_pincode}","gstn_no":"${depot_gstn_no}","type":${type},"plant_type":1,"delivery_type":${depot_delivery_type},"unloading_capacity":0}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationDynamicAPI
+
+!|Script       |json                                |
+|$vendor_depot=|getValueFromJSON;|$depotResp|data.id|
+
+!define depot_id {$depot}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetDepotDetailsAPI
+
+!|Script           |json                                      |
+|$depot_gate_array=|getValueFromJSON;|$depotDetails|data.gates|
+
+!|script             |common                                           |
+|$vendor_src_gate_id=|getSubStringByString;|$depot_gate_array|"id":"|",|
+*!
+
+!***> Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!***> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!|script      |common         |
+|$location_id=|getTrim;|$depot|
+
+!***> Gate Manager Creation
+
+!*** User Role ID Retrival
+
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!*** Gate Creation
+
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+
+!|script        |common           |
+|$depot_gate_id=|getTrim;|$gate_id|
+*!
+*!
+
+!**> Uploading DROP OFF CHARGES for Vendor and Return movement
+!define row1 {Depot Reference ID,Movement,Exta Drop Off Charge}
+!define column1 {${depot_reference_id},Vendor,7000|${depot_reference_id},Return,4000}
+
+!|Script    |Common                                         |
+|$excelpath=|getPath;|testAttachment/i_$unique.xlsx|fullpath|
+
+!|Script                |Excel                        |
+|newSheetDynamicColumns;|${row1}|${column1}|$excelpath|
+
+!|Script                   |Ui                                                                                                          |
+|navigateToUrl;            |${surl}/mdm/extra-drop-off-charge                                                                           |
+|sendKeys;                 |//input[@id='file']                                 |xpath                            |$excelpath           |
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch']            |xpath                            |30                   |
+|wait;                     |2                                                                                                           |
+|sendKeys;                 |//input[@placeholder='Search by Depot reference Id']|xpath                            |${depot_reference_id}|
+|wait;                     |2                                                                                                           |
+|check                     |isElementPresent;                                   |//span[contains(text(),'Return')]|xpath      |true     |
+|check                     |isElementPresent;                                   |//span[contains(text(),'Vendor')]|xpath      |true     |
+**!
+
+!** Loading/Unloading charges upload
+!define row {Vehicle Type,Movement,Depot REF ID,Loading cost,Unloading cost,ODA cost,Unit}
+!define column {${vehicle_name},vendor,r$unique,555,666,0,trip}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.CommonLoadingUnloadingBulkUpload
+**!
+
+!**> Uploading Detention for the Vehicle Group
+!define row {Vehicle Name,Group Code,Movement,LOADING_DETENTION_DAY1,LOADING_DETENTION_DAY2,LOADING_DETENTION_DAY3,LOADING_DETENTION_DAY4,LOADING_DETENTION_DAY5,LOADING_DETENTION_MORETHAN_DAY5,UnLOADING_DETENTION_DAY1,UnLOADING_DETENTION_DAY2,UnLOADING_DETENTION_DAY3,UnLOADING_DETENTION_DAY4,UnLOADING_DETENTION_DAY5,UnLOADING_DETENTION_MORETHAN_DAY5,TRANSIT_DAY1,TRANSIT_DAY2,TRANSIT_DAY3,TRANSIT_DAY4,TRANSIT_DAY5,TRANSIT_MORETHAN_DAY5,TRANSIT_DELAY_PERCENTAGE}
+!define column1 {${vehicle_name},U,Vendor,111,144,345,234,500,600,100,200,300,400,500,600,111,222,300,400,500,600,}
+
+!|Script    |Common                                          |
+|$excelpath=|getPath;|testAttachment/d2_$unique.xlsx|fullpath|
+
+!|Script                |Excel                       |
+|newSheetDynamicColumns;|${row}|${column1}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/detentions                                          |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|wait;                     |5                                                               |
+**!
+
+!** Open indent settings in admin settings
+!define dest_depot_id {$location_id}
+!define movement {3}
+
+!|Script|Http                                                                                                                                                                                                                   |
+|$data= |getJsonTrim;|{"data":{"depot_ids":["${dest_depot_id}"],"movement":${movement},"open_indents_charge":{"loading_charge":true,"loading_detention_charge":true,"unloading_charge":true,"unloading_detention_charge":true}}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.AdminSettings.OpenIndentAdminSettingsAPI
+**!
+**!
+
+!**> Indent Creation and moving it to delivered
+
+!**> Indent creation - vendor
+!define order_type {1}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$vendor_depot}
+!define vehicle_requirement_date {$vechicle_req_date}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$location_id}
+!define sold_to_id {$depot_gate_id}
+!define unloader_available {false}
+!define expected_delivery_at {$vechicle_req_date}
+!define vendor_gate_id {$vendor_src_gate_id} 
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":3,"location_id":"${location_id}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice},"gate_id": "${vendor_gate_id}"}],"destinations":[{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","sold_to_id":"${sold_to_id}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id}","source_gate_id": "${vendor_gate_id}","expected_delivery_at": "${expected_delivery_at}"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+*!
+
+!** Adding Freight rate
+!define freight_rate {5000}
+
+!|script|common                                                                                     |
+|$data= |getTrim;|{"data":{"freight_amount":"${freight_rate}","freight_unit":1,"attachment_ids":[]}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentFreightUpdateForOpenIndentAPI
+**!
+
+!*** Adding Truck details
+
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!**> Inspection Accept
+!|script|common                                                                                          |
+|$data= |getTrim;|{"data":{"accepted":true,"inspection":{},"documents":{},"comments":"Accepted $unique"}}|
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInspection
+**!
+
+!**> Reported 
+!define loading_date {$loadingDate}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.ReportAtAPI
+**!
+
+!*** Truck In
+
+!| Script       |Common               |
+|$truck_in_date=|getTrim;|$truckindate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!*** Reached Load point
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LoadingPointAPI
+*!
+
+!*** Start Loading
+!define gate_id {$gate_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.StartLoadAPI
+*!
+
+!*** End Loading
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.EndPointAPI
+*!
+
+!*** Truck Out
+
+!| Script        |Common                |
+|$truck_out_date=|getTrim;|$truckoutdate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckOutAPI
+*!
+
+!*** Adding LR Receipt
+
+!define consignee_id {$gate_id}
+!define lr_number {lr$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+*!
+
+!**> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {cases}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {VENDOR}
+!define invoice_amount {10000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"vr$unique","gate_ref_id":"vr$unique","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"rq$unique","sold_to":"rq$unique","type":"${type}","invoice_number":"INV$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!**> Marking Indent as delivered
+!define consignee_id {$location_id}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$releaseat_date}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+*!
+**!
+
+!**> Transporter Login
+!define transporter_email {pandotransporter+$unique@outlook.com}
+!define transporter_password {$password}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!** Validating Payments in Transporter
+!*> Ready for billing page
+!define depot_name {d$unique}
+
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!include -c .FrontPage.Pando.Common.CommonPDFUploadInReadyForBilling
+*!
+
+!**> Validating payments in ready for billing
+!define header_name {Loading}
+!define consignee_name {Chennai}
+
+!|script                       |ui                                                                                                                                                                                                                                                                                          |
+|click;                        |//div[@class='el-table__fixed']//div[contains(@class,'location') and normalize-space(text())='${consignee_name}']|xpath                                                                                                                                                                     |
+|waitForElementToBeDisplayed;  |//div[@id='pane-Details']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath                                                                                                                                                |15                  |
+|click;                        |//div[@id='tab-Charges']                                                                                         |xpath                                                                                                                                                                     |
+|waitForElementToBeDisplayed;  |//div[@id='pane-Charges']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath                                                                                                                                                |15                  |
+|$charges_header_column_number=|getHeaderColumnNumber;                                                                                           |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name}|
+|$system_generated_amount=     |getText;                                                                                                         |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath               |
+
+!| Script                    |Common                           |
+|$transporter_loading_charge=|getTrim;|$system_generated_amount|
+
+!define header_name {Loading Detention - 3 Days}
+!define consignee_name {Chennai}
+
+!|script                       |ui                                                                                                                                                                                               |
+|$charges_header_column_number=|getHeaderColumnNumber;|//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name}|
+|$system_generated_amount=     |getText;              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath               |
+
+!| Script                       |Common                           |
+|$transporter_loading_detention=|getTrim;|$system_generated_amount|
+
+!define header_name {UnLoading Detention - 2 Days}
+!define consignee_name {Chennai}
+
+!|script                       |ui                                                                                                                                                                                               |
+|$charges_header_column_number=|getHeaderColumnNumber;|//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name}|
+|$system_generated_amount=     |getText;              |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath               |
+
+!| Script                         |Common                           |
+|$transporter_unloading_detention=|getTrim;|$system_generated_amount|
+
+!define header_name {Unloading}
+!define consignee_name {Chennai}
+
+!|script                       |ui                                                                                                                                                                                                                                                            |
+|$charges_header_column_number=|getHeaderColumnNumber;                                                             |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name}|
+|$system_generated_amount=     |getText;                                                                           |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath               |
+|click;                        |//div[contains(text(),'$order_id')]/..//button//i[contains(@class,'el-icon-close')]|xpath                                                                                                                                                                     |
+
+!| Script                      |Common                           |
+|$transporter_unloading_charge=|getTrim;|$system_generated_amount|
+
+!|Script                      |common                                                          |
+|check                        |checkIfStringAreEqual;|$transporter_loading_charge     |555|true|
+|$paymentresult_transporter_1=|checkIfStringAreEqual;|$transporter_loading_charge     |555     |
+|check                        |checkIfStringAreEqual;|$transporter_loading_detention  |600|true|
+|$paymentresult_transporter_2=|checkIfStringAreEqual;|$transporter_loading_detention  |600     |
+|check                        |checkIfStringAreEqual;|$transporter_unloading_detention|300|true|
+|$paymentresult_transporter_3=|checkIfStringAreEqual;|$transporter_unloading_detention|300     |
+|check                        |checkIfStringAreEqual;|$transporter_unloading_charge   |666|true|
+|$paymentresult_transporter_4=|checkIfStringAreEqual;|$transporter_unloading_charge   |666     |
+**!
+**!
+
+!**> Generate Invoice
+!define invoice_number {ic$unique}
+!define gstn_no {gst$unique}
+!define remarks {remarks $unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonGenerateInvoice
+**!
+
+!**> Validating Payments on shipper invoice
+!define depot_name {d$unique}
+
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!define click_invoice {t$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.CommonNavigatingToInvoiceDetailsShipperInvoice
+
+!define header_name {Loading}
+!define consignee_name {Chennai}
+
+!|script                     |ui                                                                                                                        |
+|click;                      |//div[@class='el-table__fixed']//div[contains(@class,'location') and normalize-space(text())='${consignee_name}']|xpath   |
+|waitForElementToBeDisplayed;|//div[@id='pane-Details']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath|15|
+|click;                      |//div[@id='tab-Charges']                                                                                         |xpath   |
+|waitForElementToBeDisplayed;|//div[@id='pane-Charges']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath|15|
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                |Common                           |
+|$shipper_loading_charge=|getTrim;|$system_generated_amount|
+
+!define header_name {Loading Detention - 3 Days}
+!define consignee_name {Chennai}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                   |Common                           |
+|$shipper_loading_detention=|getTrim;|$system_generated_amount|
+
+!define header_name {UnLoading Detention - 2 Days}
+!define consignee_name {Chennai}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                     |Common                           |
+|$shipper_unloading_detention=|getTrim;|$system_generated_amount|
+
+!define header_name {Unloading}
+!define consignee_name {Chennai}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                  |Common                           |
+|$shipper_unloading_charge=|getTrim;|$system_generated_amount|
+
+!|Script                  |common                                                      |
+|check                    |checkIfStringAreEqual;|$shipper_loading_charge     |555|true|
+|$paymentresult_shipper_1=|checkIfStringAreEqual;|$shipper_loading_charge     |555     |
+|check                    |checkIfStringAreEqual;|$shipper_loading_detention  |600|true|
+|$paymentresult_shipper_2=|checkIfStringAreEqual;|$shipper_loading_detention  |600     |
+|check                    |checkIfStringAreEqual;|$shipper_unloading_detention|300|true|
+|$paymentresult_shipper_3=|checkIfStringAreEqual;|$shipper_unloading_detention|300     |
+|check                    |checkIfStringAreEqual;|$shipper_unloading_charge   |666|true|
+|$paymentresult_shipper_4=|checkIfStringAreEqual;|$shipper_unloading_charge   |666     |
+**!
+
+!**> Validating result
+!|Script  |Common                                                                                                                                                                                                                                                         |
+|$tresult=|checkIfStringAreEqualInArray;|$paymentresult_transporter_1,$paymentresult_transporter_2,$paymentresult_transporter_3,$paymentresult_transporter_4,$paymentresult_shipper_1,$paymentresult_shipper_2,$paymentresult_shipper_3,$paymentresult_shipper_4,true     |
+|check    |checkIfStringAreEqualInArray;|$paymentresult_transporter_1,$paymentresult_transporter_2,$paymentresult_transporter_3,$paymentresult_transporter_4,$paymentresult_shipper_1,$paymentresult_shipper_2,$paymentresult_shipper_3,$paymentresult_shipper_4,true|true|
+*!

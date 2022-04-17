@@ -1,0 +1,14 @@
+!|Script                     |Ui                                                                                                                                 |
+|waitForElementToBeDisplayed;|//div[contains(@class,'table__body')]         |xpath                                                             |20               |
+|click;                      |//button[contains(text(),'Summary')]          |xpath                                                                               |
+|$value1=                    |getText;                                      |//div[@class='bgfooter']/div/div[@class='col-6 floatright']       |xpath            |
+|sendKeys;                   |//input[@placeholder='Enter Invoice Number']  |xpath                                                             |${invoice_number}|
+|click;                      |(//input[@placeholder='Select'])[4]           |xpath                                                                               |
+|clickJS;                    |//li//span[text()='${service_provider_state}']|xpath                                                                               |
+|sendKeys;                   |//input[@placeholder='Enter GSTIN Number']    |xpath                                                             |gst$unique       |
+|sendKeys;                   |//textarea                                    |xpath                                                             |remarks $unique  |
+|wait;                       |10                                                                                                                                 |
+|click;                      |//button[contains(text(),'Generate Invoice')] |xpath                                                                               |
+|click;                      |//button/span[normalize-space(text())='YES'] |xpath                                                                               |
+|waitUntilElementDisplayed;|//div[@role='alert']//h3[text()='Success']    |xpath                                                             |60               |
+|$successMessage=            |getElementAttribute;                          |//div[@role='alert']//h3[text()='Success']/following-sibling::span|xpath |innerText |

@@ -1,0 +1,32 @@
+---
+Help: DM Material Search based on invalid Material Code
+Test
+---
+!*** Unique value assignment
+!| script|common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$num=   |getRandomNumber;        |100  |999  |
+*!
+
+!define material_name {m $unique}
+!define material_code {mc$unique}
+
+!** Material creation 
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+*!
+
+!define search_value {invalid_$unique}
+!** Material search by Material code
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.MaterialSearch.CommonMaterialSearch
+*!
+
+!*** verifying the search result for No records
+!| script |ui                                                           |
+|check    |isElementPresent;|//div[@class='empty-stage-text']|xpath|true|
+|$tresult=|isElementPresent;|//div[@class='empty-stage-text']|xpath     |
+*!
+
+!define tname {TC-282}
+!*** Update Test result
+ 
+*!

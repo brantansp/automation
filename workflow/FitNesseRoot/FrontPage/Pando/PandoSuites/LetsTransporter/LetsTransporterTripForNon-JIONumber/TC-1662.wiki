@@ -1,0 +1,54 @@
+---
+Help: Add New trip for Source and Destination with non-JIO number
+Test
+---
+!** Unique values assignment
+!|Script    |Common                                    |
+|$unique=   |getCurrentDateTimeStamp;|yMMddHHmmss      |
+|$vno_1=    |getRandomNumber;        |20    |76        |
+|$vno_2=    |getRandomString;        |2     |ALPHAUPPER|
+|$vno_3=    |getRandomNumber;        |1000  |9999      |
+|$s_pincode=|getRandomNumber;        |100000|999999    |
+|$d_pincode=|getRandomNumber;        |100000|999999    |
+
+
+!define truck_num {TN $vno_1 $vno_2 $vno_3}
+**!
+
+!** Adding a New Trip
+
+!define driver_number {9894060407}
+!define ping_interval {15 minutes}
+!define is_jio {false}
+!define reference_city {Chennai}
+!define autocomplete_by {24 hours}
+
+!include -c .FrontPage.Pando.PandoSuites.LetsTransporter.CommonAddTrip
+
+!|script   |ui                                                                                             |
+|check     |isElementPresent;|(//div[@class='card-row row'])[1]//div/span[text()='${truck_num}']|xpath|true|
+|$tresult1=|isElementPresent;|(//div[@class='card-row row'])[1]//div/span[text()='${truck_num}']|xpath     |
+|$trip_id= |getText;         |(//span[text()='${truck_num}']/../parent::div/div)[1]/span        |xpath     |
+*!
+
+!** Validating created Indent
+
+!include -c .FrontPage.Pando.PandoSuites.LetsTransporter.CommonValidateTrip
+*!
+
+!** Ending Trip
+!include -c .FrontPage.Pando.PandoSuites.LetsTransporter.CommonEndTrip
+
+!|script  |ui                                                                                                        |
+|check    |isElementPresent;|//span[text()='$trip_id']/../following-sibling::div//span[text()='COMPLETED']|xpath|true|
+|$tresul8=|isElementPresent;|//span[text()='$trip_id']/../following-sibling::div//span[text()='COMPLETED']|xpath     |
+*!
+
+!** Validating Result
+!|Script  |Common                                                                                                       |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8|
+*!
+
+!*** Update result
+!include .FrontPage.Pando.Common.CommonResultImage
+*!

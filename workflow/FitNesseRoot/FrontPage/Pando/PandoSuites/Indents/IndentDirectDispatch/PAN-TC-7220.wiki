@@ -1,0 +1,43 @@
+---
+Help: verify auto approval for the previous day created indent
+Suites: pgstaging
+Test
+---
+!** coverage
+1.Fetch the previous day order id from mongodb
+2.Check wallet in accepted status
+**!
+
+!** Get auto-approved order number from mongoDB
+!define client_id {5fd89a8abdadf630f4e5f413}
+!define connection {mongodb+srv://staging-admin:VpbUDlaBkv4vTzJ8@tsm-staging-mlxar.mongodb.net/db_pando_testing?retryWrites=true}
+
+!|Script    |MongoDB                                                        |
+|initialize;|${connection}           |db_pando_testing                      |
+|$order_id= |getValuesFromCollection;|order_id_pg|name|pg_staging|order_id_2|
+**!
+
+!** Validating Wallet entries in Shipper 
+!define depot_name {Chennai Depot}
+!include -c .FrontPage.Pando.Common.ShipperWalletFilter
+
+!define search_text {$order_id}
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletIndentSearch
+
+!|Script             |Ui                                                                                                                                                                                              |
+|check               |isElementPresent;|//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Carton Damage']                                     |xpath|true|
+|check               |isElementPresent;|//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Damage']                                            |xpath|true|
+|check               |isElementPresent;|//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Shortage']                                          |xpath|true|
+|$shortagestatus=    |getText;         |(//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Shortage']/../../preceding-sibling::div)[3]//p     |xpath     |
+|$damagestatus=      |getText;         |(//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Damage']/../../preceding-sibling::div)[3]//p       |xpath     |
+|$cartondamagestatus=|getText;         |(//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Carton Damage']/../../preceding-sibling::div)[3]//p|xpath     |
+
+!|Script   |common                                                          |
+|check     |checkIfStringAreEqual;       |$shortagestatus     |ACCEPTED|true|
+|$tresult1=|checkIfStringAreEqual;       |$shortagestatus     |ACCEPTED     |
+|check     |checkIfStringAreEqual;       |$damagestatus       |ACCEPTED|true|
+|$tresult2=|checkIfStringAreEqual;       |$damagestatus       |ACCEPTED     |
+|check     |checkIfStringAreEqual;       |$cartondamagestatus |ACCEPTED|true|
+|$tresult3=|checkIfStringAreEqual;       |$cartondamagestatus |ACCEPTED     |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,true|
+**!

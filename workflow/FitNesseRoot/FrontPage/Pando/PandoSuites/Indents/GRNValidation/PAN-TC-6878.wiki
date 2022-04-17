@@ -1,0 +1,365 @@
+---
+Help: Ensure validation for amount field while entering GRN details in shipper and transporter
+Suites: marico
+Test
+---
+!5 config to be enabled "is_grn_enabled_for_transporter" :
+!5 {
+!5 		"secondary" : true,
+!5 		"inward" : false,
+!5 		"return" : false,
+!5 		"primary" : false
+!5 	}
+
+!5	"indent_configuration_settings" : {
+!5		"grn_movement_delivery_block" : {
+!5			"secondary" : true
+!5		}
+!5	}
+
+!***> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-4|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-3|
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0 |
+
+!|Script       |Common                                         |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer -!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer -!|
+|$rdate=       |stringConcatenation;|$rdate       |!- $timer -!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=       |utcConversion;|$rdate       |
+
+!|Script        |DateUtil                                    |
+|$expected_date=|dateCalculation;|yyyy/MM/dd        |0       |
+|$expected_date=|utcConversion;  |$expected_date !- $timer -!|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!***> Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {1}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!***> Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {PTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!***> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Material Creation 1
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!***> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,${gate_ref_id},$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,2000,per_trip,01-Jan-$year,31-Dec-2030,100,1,}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!***> Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|script     |common            |
+|$indent_id1=|getTrim;|$order_id|
+*!
+
+!**> Enable Admin setting
+!define movement {Secondary}
+!define amount_type {INR}
+!define threshold_amount {3000}
+!define type1 {Shortage}
+!define s_value {Material MRP}
+!define s_factor {1}
+!define type2 {Damage}
+!define d_value {Material Invoice}
+!define d_factor {1}
+!define type3 {Carton Damage}
+!define cd_value {Fixed Price}
+!define cd_factor {30}
+
+!|script|common                                                                                                                                                  |
+|$data= |getTrim;|{"insurance_threshold":0,"shortage":{"value":4,"factor":1},"damage":{"value":4,"factor":1},"carton_damage":{"value":4,"factor":1},"movement":1}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.AdminSettings.ShortageDamageSettingAPI
+**!
+
+!**> Update client config to allow grn for secondary
+!|script                   |MongoDB                                                                               |
+|initialize;               |${connection}|${database}                                                             |
+|updateClientConfiguration;|${surl}      |indent_configuration_settings.grn_movement_delivery_block.secondary|true|
+**!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {1234567890}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!**> Update LR for Consignee 1
+!define consignee_id {$consignee_id_1}
+!define lr_number {l1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!**> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {cases}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {1000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** Verify SDCD validation in Transporter Web
+!**> Login to Transporter
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!** Validating S/D/CD qty+amount validation in Transporter
+!|Script                     |Ui                                                                                                                           |
+|navigateToUrl;              |${turl}/indents/$order_id                                                                                                    |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]                          |xpath                                       |30             |
+|click;                      |(//div[contains(@class,'cell-value') and contains(text(),0)])[7]|xpath                                                       |
+|clearAndSend;               |(//input[@type='number'])[1]                                    |xpath                                       |7              |
+|wait;                       |2                                                                                                                            |
+|clearAndSend;               |(//input[@type='number'])[2]                                    |xpath                                       |5              |
+|click;                      |//span[@role='link' and normalize-space(text())='Documents']    |xpath                                                       |
+|waitForElementToBeDisplayed;|//h3[text()='Error']                                            |xpath                                       |30             |
+|$errormessage1=             |getElementAttribute;                                            |//h3[text()='Error']/following-sibling::span|xpath|innerText|
+|wait;                       |2                                                                                                                            |
+|refresh;                                                                                                                                                  |
+|click;                      |(//div[contains(@class,'cell-value') and contains(text(),0)])[8]|xpath                                                       |
+|clearAndSend;               |(//input[@type='number'])[1]                                    |xpath                                       |7              |
+|clearAndSend;               |(//input[@type='number'])[2]                                    |xpath                                       |5              |
+|wait;                       |2                                                                                                                            |
+|click;                      |//span[@role='link' and normalize-space(text())='Documents']    |xpath                                                       |
+|waitForElementToBeDisplayed;|//h3[text()='Error']                                            |xpath                                       |30             |
+|$errormessage2=             |getElementAttribute;                                            |//h3[text()='Error']/following-sibling::span|xpath|innerText|
+|refresh;                                                                                                                                                  |
+|click;                      |(//div[contains(@class,'cell-value') and contains(text(),0)])[9]|xpath                                                       |
+|clearAndSend;               |(//input[@type='number'])[1]                                    |xpath                                       |7              |
+|wait;                       |2                                                                                                                            |
+|clearAndSend;               |(//input[@type='number'])[2]                                    |xpath                                       |5              |
+|click;                      |//span[@role='link' and normalize-space(text())='Documents']    |xpath                                                       |
+|waitForElementToBeDisplayed;|//h3[text()='Error']                                            |xpath                                       |30             |
+|$errormessage3=             |getElementAttribute;                                            |//h3[text()='Error']/following-sibling::span|xpath|innerText|
+
+!|Script   |common                                                                  |
+|$tresult1=|checkIfStringAreEqual;|$errormessage1|Amount should be greater than zero|
+|$tresult2=|checkIfStringAreEqual;|$errormessage2|Amount should be greater than zero|
+|$tresult3=|checkIfStringAreEqual;|$errormessage3|Amount should be greater than zero|
+*!
+**!
+
+!***> Marking Indent as delivered
+!define consignee_id {$consignee_id}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|ui|
+|wait;  |10|
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+*!
+
+!** Validating S/D/CD qty+amount validation in Shipper
+!|Script                     |Ui                                                                                                                           |
+|navigateToUrl;              |${surl}/indents/$order_id/details/0                                                                                          |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]                          |xpath                                       |30             |
+|click;                      |(//div[contains(@class,'cell-value') and contains(text(),0)])[7]|xpath                                                       |
+|clearAndSend;               |(//input[@type='number'])[1]                                    |xpath                                       |7              |
+|wait;                       |2                                                                                                                            |
+|clearAndSend;               |(//input[@type='number'])[2]                                    |xpath                                       |5              |
+|click;                      |//div[text()='Materials + EPoD']                                |xpath                                                       |
+|waitForElementToBeDisplayed;|//h3[text()='Error']                                            |xpath                                       |30             |
+|$errormessage1=             |getElementAttribute;                                            |//h3[text()='Error']/following-sibling::span|xpath|innerText|
+|wait;                       |2                                                                                                                            |
+|refresh;                                                                                                                                                  |
+|click;                      |(//div[contains(@class,'cell-value') and contains(text(),0)])[8]|xpath                                                       |
+|clearAndSend;               |(//input[@type='number'])[1]                                    |xpath                                       |7              |
+|wait;                       |2                                                                                                                            |
+|clearAndSend;               |(//input[@type='number'])[2]                                    |xpath                                       |5              |
+|wait;                       |2                                                                                                                            |
+|click;                      |//div[text()='Materials + EPoD']                                |xpath                                                       |
+|waitForElementToBeDisplayed;|//h3[text()='Error']                                            |xpath                                       |30             |
+|$errormessage2=             |getElementAttribute;                                            |//h3[text()='Error']/following-sibling::span|xpath|innerText|
+|refresh;                                                                                                                                                  |
+|click;                      |(//div[contains(@class,'cell-value') and contains(text(),0)])[9]|xpath                                                       |
+|clearAndSend;               |(//input[@type='number'])[1]                                    |xpath                                       |7              |
+|wait;                       |2                                                                                                                            |
+|clearAndSend;               |(//input[@type='number'])[2]                                    |xpath                                       |5              |
+|click;                      |//div[text()='Materials + EPoD']                                |xpath                                                       |
+|waitForElementToBeDisplayed;|//h3[text()='Error']                                            |xpath                                       |30             |
+|$errormessage3=             |getElementAttribute;                                            |//h3[text()='Error']/following-sibling::span|xpath|innerText|
+
+!|Script   |common                                                                  |
+|$tresult4=|checkIfStringAreEqual;|$errormessage1|Amount should be greater than zero|
+|$tresult5=|checkIfStringAreEqual;|$errormessage2|Amount should be greater than zero|
+|$tresult6=|checkIfStringAreEqual;|$errormessage3|Amount should be greater than zero|
+*!
+
+!**> Validating the Result
+!|Script  |Common                                                                                        |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,true|
+*!
+
+!**> Reverting client config to allow grn for secondary
+!|script                   |MongoDB                                                                                |
+|initialize;               |${connection}|${database}                                                              |
+|updateClientConfiguration;|${surl}      |indent_configuration_settings.grn_movement_delivery_block.secondary|false|
+**!
+
+!**> Enable Admin setting to default
+!|script|common                                                                                                                                                      |
+|$data= |getTrim;|{"insurance_threshold":0,"shortage":{"value":1,"factor":0.85},"damage":{"value":1,"factor":1},"carton_damage":{"value":1,"factor":30},"movement":1}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.AdminSettings.ShortageDamageSettingAPI
+**!

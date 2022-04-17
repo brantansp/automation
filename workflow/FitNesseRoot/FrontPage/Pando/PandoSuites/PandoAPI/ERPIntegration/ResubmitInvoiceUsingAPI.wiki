@@ -1,0 +1,12 @@
+---
+Help: To resubmit invoice using API in transporter
+Test
+---
+!|Script     |Http                                                                                                            |
+|setBaseUrl; |${turl}/api/login                                                                                               |
+|getResponse;|Application/Json|put             |{"data":{"email":"${transporter_email}","password":"${transporter_password}"}}|
+|$token=     |getHeader;      |x-auth-token                                                                                   |
+|addHeader;  |Authorization   |bearer $token                                                                                  |
+|setBaseUrl; |${turl}/api/v2/transporter/invoice/$invoice_id/status                                                           |
+|$status=    |getResponse;    |Application/Json|put                                   |$data                                  |
+|$status=    |getStatusCode;                                                                                                  |

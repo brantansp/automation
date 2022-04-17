@@ -1,0 +1,16 @@
+---
+Help: Contains test case for Approving the Invoice
+Test
+---
+!** Click on Approve invoice
+!|Script    |Http                                                                                                                   |
+|addHeader; |Authorization |bearer $stoken                                                                                          |
+|setBaseUrl;|${surl}/api/conversation                                                                                               |
+|$response= |getResponse;  |Application/Json|post|{"data":{"comment":"APPROVING INVOICE","id":"${invoice_id}","type":2,"section":2}}|
+|check      |getStatusCode;|200                                                                                                     |
+
+!|script    |Http                                                                                               |
+|setBaseUrl;|${surl}/api/invoice/${invoice_id}/accept                                                           |
+|$response= |getResponse;  |Application/Json|put|{"data":{"type":2,"amount":0,"reference_number":"PND-$unique"}}|
+|check      |getStatusCode;|200                                                                                 |
+*!

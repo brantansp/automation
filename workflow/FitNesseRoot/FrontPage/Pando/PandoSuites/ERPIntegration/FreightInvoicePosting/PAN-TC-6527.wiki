@@ -1,0 +1,528 @@
+---
+Help: Check custom invoice posting payload for SRF invoice value freight w/o tax
+Suites: srf
+Test
+---
+!5 ${RUNNING_PAGE_NAME} Check custom invoice posting payload for SRF invoice value freight w/o tax
+		"freight_provision" : {
+			"valid_status" : [
+				"dispatched",
+				"delivered",
+				"invoice_approved"
+			]
+		}
+
+!**> Unique values assignment
+!|Script            |DateUtil                               |
+|$unique=           |getCurrentDateTimeStamp;|yMMddHHmmss   |
+|$truckoutdate=     |dateCalculation;        |yyyy/MM/dd |-1|
+|$rdate=            |dateCalculation;        |yyyy/MM/dd |0 |
+|$contractDate=     |dateCalculation;        |dd-MMM-yyyy|2 |
+|$indate=           |getCurrentDateTimeStamp;|yyyy/MM/dd    |
+|$indate2=          |dateCalculation;        |yyyy-MM-dd |0 |
+|$vechicle_req_date=|dateCalculation;        |yyyy/MM/dd |-6|
+
+!|Script            |Common                                              |
+|$truckoutdate=     |stringConcatenation;|$truckoutdate     |!- $timer -!|
+|$vechicle_req_date=|stringConcatenation;|$vechicle_req_date|!- $timer -!|
+|$rdate=            |stringConcatenation;|$rdate            |!- $timer -!|
+|$num=              |getRandomNumber;    |100000            |999999      |
+
+!|Script            |DateUtil                                  |
+|$truckoutdate=     |utcConversion;         |$truckoutdate     |
+|$rdate=            |utcConversion;         |$rdate            |
+|$vechicle_req_date=|utcConversion;         |$vechicle_req_date|
+|$loadingDate=      |getCurrentDateTimeStamp|iso               |
+**!
+
+!**> Source Depot Creation
+!define depot_name {src$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {s$unique}
+!define depot_region {South}
+!define depot_short_code {s$num}
+!define depot_reference_id {s$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {SG1$unique}
+!define g_user_email {pandoindent+1$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script         |common           |
+|$location_id=   |getTrim;|$depot  |
+|$source_gate_id=|getTrim;|$gate_id|
+*!
+
+!**> Destination Depot Creation
+!define depot_name {dest$unique}
+!define depot_state {Hariyana}
+!define depot_city {d$unique}
+!define depot_region {South}
+!define depot_short_code {d$num}
+!define depot_reference_id {dr$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {DG1$unique}
+!define g_user_email {pandoindent+2$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script                       |common           |
+|$destination_location_id=     |getTrim;|$depot  |
+|$destination_gate_location_id=|getTrim;|$gate_id|
+*!
+
+!**> Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!**> Vehicle Creation
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Rate Matrix upload
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,BDR Charge,BDR Label,Exclude,Trip Count}
+!define column {City,s$unique,d$unique,${vehicle_name},100,tr$unique,t$unique,1,5000,per_trip,01-Jan-2019,$contractDate,100,1,P}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!**> Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$location_id}
+!define gate_id {$source_gate_id}
+!define vehicle_requirement_date {$vechicle_req_date}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$destination_location_id}
+!define sold_to_id {$destination_gate_location_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice}}],"destinations":[{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id}"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+*!
+
+!**> validating and Assinging The Truck
+!define vechicle_number {tn 09 AT 9013}
+!define driver_name  {pay driver}
+!define phone_number  {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+**!
+
+!**> Create Material invoice 
+!define mrp_price {1000}
+!define quantity1 {10} 
+!define quantity_unit {cases}
+!define weight {400}
+!define weight_unit {KG}
+!define volume {1000}
+!define volume_unit {CFT}
+!define type {PRIMARY}
+!define invoice_amount {20000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|$data= |getTrim;|{ "data": [ { "indent_no": "$order_id", "delivery_number": "${delivery_number}", "mrp_price": "${mrp_price}", "material_code": "${material_code}", "depot_ref_id": "s$unique", "gate_ref_id": "SG1$unique", "division": "BK", "quantity": "${quantity1}", "quantity_unit": "${quantity_unit}", "weight": "${weight}", "weight_unit": "${weight_unit}", "volume": "${volume}", "volume_unit": "${volume_unit}", "ship_to": "DG1$unique", "sold_to": "DG1$unique", "type": "${type}", "invoice_number": "${invoice_number}", "invoice_amount": "${invoice_amount}", "invoice_date": "${invoice_date}","category": "","truck_out": "${truck_out}" }] }|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+
+!|script|ui|
+|wait;  |8 |
+**!
+
+!** Validating the Freight provision sent in DISPATCHED status
+!|Script              |MongoDBQuery                                                                                                                   |
+|getMongoConnection;  |${connection}                             |db_pando_testing                                                                    |
+|$erp_invoice_details=|getSrfCustomFreightProvisionPayload;      |$order_id                                                                           |
+|check                |getRestHeaderValuesFromInvoicePayload;    |xmlns                  |http://xmlns.oracle.com/apps/ont/rest/srfdelpicklist1/header|
+|check                |getRestHeaderValuesFromInvoicePayload;    |Responsibility         |CAPEX MASTER                                                |
+|check                |getRestHeaderValuesFromInvoicePayload;    |RespApplication        |JA                                                          |
+|check                |getRestHeaderValuesFromInvoicePayload;    |SecurityGroup          |STANDARD                                                    |
+|check                |getRestHeaderValuesFromInvoicePayload;    |NLSLanguage            |AMERICAN                                                    |
+|check                |getRestHeaderValuesFromInvoicePayload;    |Org_Id                 |85                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TRANSPORTER_CODE       |tr$unique                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TRANSPORTER_NAME       |t$unique                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INDENT_NUMBER          |$order_id                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INDENT_STATUS          |DISPATCHED                                                  |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TOTAL_INDENT_VALUE     |5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|SOURCE_CODE            |s$unique                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|GATE_CODE              |SG1$unique                                                  |
+|check                |getFreightDetailsValuesFromInvoicePayload;|SOURCE_NAME            |src$unique                                                  |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DESTINATION_CODE       |dr$unique                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DESTINATION_NAME       |dest$unique                                                 |
+|check                |getFreightDetailsValuesFromInvoicePayload;|MATERIAL_CODE          |mc$unique                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DELIVERY_NO            |D$unique                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_NUMBER         |INV-$unique                                                 |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_AMOUNT         |5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_DATE           |$indate2                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|QUANTITY               |10                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|QUANTITY_UNIT          |cases                                                       |
+|check                |getFreightDetailsValuesFromInvoicePayload;|WEIGHT                 |400                                                         |
+|check                |getFreightDetailsValuesFromInvoicePayload;|WEIGHT_UNIT            |kg                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|VOLUME                 |1000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|VOLUME_UNIT            |cft                                                         |
+|check                |getFreightDetailsValuesFromInvoicePayload;|BASE_FREIGHT_PROVISION |5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|OTHER_CHARGES_PROVISION|0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DETENTION_PROVISION    |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TOTAL_FREIGHT_PROVISION|5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|BASE_FREIGHT_ACTUAL    |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|OTHER_CHARGES_ACTUAL   |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DETENTION_ACTUAL       |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ACTUAL_FREIGHT_TOTAL   |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|FREIGHT_STATUS         |DISPATCHED                                                  |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE1             |2                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE2             |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE3             |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE4             |                                                            |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE5             |PER_TRIP                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE6             |                                                            |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE7             |1                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE8             |                                                            |
+
+|comment                                                                                                                                              |
+|check|getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE6|${transporter_ref_id}/SRF/s$num/100|//auto-generate-lr made false so this should be empty|
+|check|getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE4|                                   |//timestampvalidation kept empty                     |
+
+!|Script         |Common                                                                     |
+|$schemaFilePath=|getPath;|data/schemafiles/srf_custom_freight_provision_schema.json|fullpath|
+
+!|script|json                                                           |
+|check  |validateJsonDocument;|$schemaFilePath|$erp_invoice_details|true|
+*!
+
+!**> Marking Indent as delivered
+!define consignee_id {$destination_location_id}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+
+!|script|ui|
+|wait;  |8 |
+*!
+
+!** Validating the Freight provision sent in DELIVERED status
+!|Script              |MongoDBQuery                                                                                                                   |
+|getMongoConnection;  |${connection}                             |db_pando_testing                                                                    |
+|$erp_invoice_details=|getSrfCustomFreightProvisionPayload;      |$order_id                                                                           |
+|check                |getRestHeaderValuesFromInvoicePayload;    |xmlns                  |http://xmlns.oracle.com/apps/ont/rest/srfdelpicklist1/header|
+|check                |getRestHeaderValuesFromInvoicePayload;    |Responsibility         |CAPEX MASTER                                                |
+|check                |getRestHeaderValuesFromInvoicePayload;    |RespApplication        |JA                                                          |
+|check                |getRestHeaderValuesFromInvoicePayload;    |SecurityGroup          |STANDARD                                                    |
+|check                |getRestHeaderValuesFromInvoicePayload;    |NLSLanguage            |AMERICAN                                                    |
+|check                |getRestHeaderValuesFromInvoicePayload;    |Org_Id                 |85                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TRANSPORTER_CODE       |tr$unique                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TRANSPORTER_NAME       |t$unique                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INDENT_NUMBER          |$order_id                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INDENT_STATUS          |DELIVERED                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TOTAL_INDENT_VALUE     |5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|SOURCE_CODE            |s$unique                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|GATE_CODE              |SG1$unique                                                  |
+|check                |getFreightDetailsValuesFromInvoicePayload;|SOURCE_NAME            |src$unique                                                  |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DESTINATION_CODE       |dr$unique                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DESTINATION_NAME       |dest$unique                                                 |
+|check                |getFreightDetailsValuesFromInvoicePayload;|MATERIAL_CODE          |mc$unique                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DELIVERY_NO            |D$unique                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_NUMBER         |INV-$unique                                                 |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_AMOUNT         |5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_DATE           |$indate2                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|QUANTITY               |10                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|QUANTITY_UNIT          |cases                                                       |
+|check                |getFreightDetailsValuesFromInvoicePayload;|WEIGHT                 |400                                                         |
+|check                |getFreightDetailsValuesFromInvoicePayload;|WEIGHT_UNIT            |kg                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|VOLUME                 |1000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|VOLUME_UNIT            |cft                                                         |
+|check                |getFreightDetailsValuesFromInvoicePayload;|BASE_FREIGHT_PROVISION |5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|OTHER_CHARGES_PROVISION|0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DETENTION_PROVISION    |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TOTAL_FREIGHT_PROVISION|5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|BASE_FREIGHT_ACTUAL    |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|OTHER_CHARGES_ACTUAL   |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DETENTION_ACTUAL       |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ACTUAL_FREIGHT_TOTAL   |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|FREIGHT_STATUS         |DELIVERED                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE1             |2                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE2             |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE3             |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE4             |                                                            |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE5             |PER_TRIP                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE6             |                                                            |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE7             |1                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE8             |                                                            |
+
+|comment                                                                                                                                              |
+|check|getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE6|${transporter_ref_id}/SRF/s$num/100|//auto-generate-lr made false so this should be empty|
+|check|getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE4|                                   |//timestampvalidation kept empty                     |
+
+!|Script         |Common                                                                     |
+|$schemaFilePath=|getPath;|data/schemafiles/srf_custom_freight_provision_schema.json|fullpath|
+
+!|script|json                                                           |
+|check  |validateJsonDocument;|$schemaFilePath|$erp_invoice_details|true|
+*!
+
+!**> Transporter Login
+!define transporter_email {pandotransporter+$unique@outlook.com}
+!define transporter_password {$password}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!**> Enabling Lorry Receipt
+!define depot_name {src$unique}
+!define indent_id {$order_id}
+!define tusername {${transporter_email}}
+!define tpassword {${transporter_password}}
+!define lr_number {l1$unique}
+
+!|script|common                                                                                                                                                        |
+|$data= |getTrim;|{"data":[{"destination_id":"${destination_location_id}","source_location_id":"${location_id}","lr_number":"${lr_number}","document_available":true}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.TransporterAPI.LorryReceiptAPI
+*!
+
+!**> Validating in Ready for billing page without Tax Invoice
+!* Ready for billing page
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!include -c .FrontPage.Pando.Common.CommonPDFUploadInReadyForBilling
+*!
+
+!* Invoice Page
+!define invoice_number {inv$num}
+!define gstin_number {$unique}
+!define provider_state {Assam}
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceGeneration
+
+!|script|ui|
+|wait;  |40|
+!5 30+ seconds waiting for the Freight provision to be sent
+*!
+*!
+
+!** Validating the Freight provision sent in INVOICED status
+!|Script              |MongoDBQuery                                                                                                                   |
+|getMongoConnection;  |${connection}                             |db_pando_testing                                                                    |
+|$erp_invoice_details=|getSrfCustomFreightProvisionPayload;      |$order_id                                                                           |
+|check                |getRestHeaderValuesFromInvoicePayload;    |xmlns                  |http://xmlns.oracle.com/apps/ont/rest/srfdelpicklist1/header|
+|check                |getRestHeaderValuesFromInvoicePayload;    |Responsibility         |CAPEX MASTER                                                |
+|check                |getRestHeaderValuesFromInvoicePayload;    |RespApplication        |JA                                                          |
+|check                |getRestHeaderValuesFromInvoicePayload;    |SecurityGroup          |STANDARD                                                    |
+|check                |getRestHeaderValuesFromInvoicePayload;    |NLSLanguage            |AMERICAN                                                    |
+|check                |getRestHeaderValuesFromInvoicePayload;    |Org_Id                 |85                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TRANSPORTER_CODE       |tr$unique                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TRANSPORTER_NAME       |t$unique                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INDENT_NUMBER          |$order_id                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INDENT_STATUS          |INVOICED                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TOTAL_INDENT_VALUE     |5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|SOURCE_CODE            |s$unique                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|GATE_CODE              |SG1$unique                                                  |
+|check                |getFreightDetailsValuesFromInvoicePayload;|SOURCE_NAME            |src$unique                                                  |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DESTINATION_CODE       |dr$unique                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DESTINATION_NAME       |dest$unique                                                 |
+|check                |getFreightDetailsValuesFromInvoicePayload;|MATERIAL_CODE          |mc$unique                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DELIVERY_NO            |D$unique                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_NUMBER         |INV-$unique                                                 |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_AMOUNT         |5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_DATE           |$indate2                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|QUANTITY               |10                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|QUANTITY_UNIT          |cases                                                       |
+|check                |getFreightDetailsValuesFromInvoicePayload;|WEIGHT                 |400                                                         |
+|check                |getFreightDetailsValuesFromInvoicePayload;|WEIGHT_UNIT            |kg                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|VOLUME                 |1000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|VOLUME_UNIT            |cft                                                         |
+|check                |getFreightDetailsValuesFromInvoicePayload;|BASE_FREIGHT_PROVISION |5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|OTHER_CHARGES_PROVISION|0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DETENTION_PROVISION    |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TOTAL_FREIGHT_PROVISION|5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|BASE_FREIGHT_ACTUAL    |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|OTHER_CHARGES_ACTUAL   |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DETENTION_ACTUAL       |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ACTUAL_FREIGHT_TOTAL   |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|FREIGHT_STATUS         |INVOICED                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE1             |2                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE2             |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE3             |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE4             |                                                            |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE5             |PER_TRIP                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE6             |                                                            |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE7             |1                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE8             |${invoice_number}                                           |
+
+|comment                                                                                                                                              |
+|check|getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE6|${transporter_ref_id}/SRF/s$num/100|//auto-generate-lr made false so this should be empty|
+|check|getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE4|                                   |//timestampvalidation kept empty                     |
+
+!|Script         |Common                                                                     |
+|$schemaFilePath=|getPath;|data/schemafiles/srf_custom_freight_provision_schema.json|fullpath|
+
+!|script|json                                                           |
+|check  |validateJsonDocument;|$schemaFilePath|$erp_invoice_details|true|
+*!
+
+!** Approving Invoice in Shipper
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceCheck
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceApprove
+
+!|script|ui|
+|wait;  |8 |
+*!
+
+!** Validating the Freight provision sent in APPROVED status
+!|Script              |MongoDBQuery                                                                                                                   |
+|getMongoConnection;  |${connection}                             |db_pando_testing                                                                    |
+|$erp_invoice_details=|getSrfCustomFreightProvisionPayload;      |$order_id                                                                           |
+|check                |getRestHeaderValuesFromInvoicePayload;    |xmlns                  |http://xmlns.oracle.com/apps/ont/rest/srfdelpicklist1/header|
+|check                |getRestHeaderValuesFromInvoicePayload;    |Responsibility         |CAPEX MASTER                                                |
+|check                |getRestHeaderValuesFromInvoicePayload;    |RespApplication        |JA                                                          |
+|check                |getRestHeaderValuesFromInvoicePayload;    |SecurityGroup          |STANDARD                                                    |
+|check                |getRestHeaderValuesFromInvoicePayload;    |NLSLanguage            |AMERICAN                                                    |
+|check                |getRestHeaderValuesFromInvoicePayload;    |Org_Id                 |85                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TRANSPORTER_CODE       |tr$unique                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TRANSPORTER_NAME       |t$unique                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INDENT_NUMBER          |$order_id                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INDENT_STATUS          |APPROVED                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TOTAL_INDENT_VALUE     |5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|SOURCE_CODE            |s$unique                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|GATE_CODE              |SG1$unique                                                  |
+|check                |getFreightDetailsValuesFromInvoicePayload;|SOURCE_NAME            |src$unique                                                  |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DESTINATION_CODE       |dr$unique                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DESTINATION_NAME       |dest$unique                                                 |
+|check                |getFreightDetailsValuesFromInvoicePayload;|MATERIAL_CODE          |mc$unique                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DELIVERY_NO            |D$unique                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_NUMBER         |INV-$unique                                                 |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_AMOUNT         |5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_DATE           |$indate2                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|QUANTITY               |10                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|QUANTITY_UNIT          |cases                                                       |
+|check                |getFreightDetailsValuesFromInvoicePayload;|WEIGHT                 |400                                                         |
+|check                |getFreightDetailsValuesFromInvoicePayload;|WEIGHT_UNIT            |kg                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|VOLUME                 |1000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|VOLUME_UNIT            |cft                                                         |
+|check                |getFreightDetailsValuesFromInvoicePayload;|BASE_FREIGHT_PROVISION |5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|OTHER_CHARGES_PROVISION|0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DETENTION_PROVISION    |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TOTAL_FREIGHT_PROVISION|5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|BASE_FREIGHT_ACTUAL    |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|OTHER_CHARGES_ACTUAL   |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DETENTION_ACTUAL       |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ACTUAL_FREIGHT_TOTAL   |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|FREIGHT_STATUS         |APPROVED                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE1             |2                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE2             |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE3             |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE4             |                                                            |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE5             |PER_TRIP                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE6             |                                                            |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE7             |1                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE8             |${invoice_number}                                           |
+
+|comment                                                                                                                                              |
+|check|getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE6|${transporter_ref_id}/SRF/s$num/100|//auto-generate-lr made false so this should be empty|
+|check|getFreightDetailsValuesFromInvoicePayload;|ATTRIBUTE4|                                   |//timestampvalidation kept empty                     |
+
+!|Script         |Common                                                                     |
+|$schemaFilePath=|getPath;|data/schemafiles/srf_custom_freight_provision_schema.json|fullpath|
+
+!|script|json                                                           |
+|check  |validateJsonDocument;|$schemaFilePath|$erp_invoice_details|true|
+*!
+
+!** Validating the Freight invoice posting
+!|Script              |MongoDBQuery                                                                                                                   |
+|getMongoConnection;  |${connection}                             |db_pando_testing                                                                    |
+|$erp_invoice_details=|getSrfCustomInvoicePostingPayload;        |${invoice_number}                                                                   |
+|check                |getRestHeaderValuesFromInvoicePayload;    |xmlns                  |http://xmlns.oracle.com/apps/ont/rest/srfdelpicklist1/header|
+|check                |getRestHeaderValuesFromInvoicePayload;    |Responsibility         |CAPEX MASTER                                                |
+|check                |getRestHeaderValuesFromInvoicePayload;    |RespApplication        |JA                                                          |
+|check                |getRestHeaderValuesFromInvoicePayload;    |SecurityGroup          |STANDARD                                                    |
+|check                |getRestHeaderValuesFromInvoicePayload;    |NLSLanguage            |AMERICAN                                                    |
+|check                |getRestHeaderValuesFromInvoicePayload;    |Org_Id                 |85                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TRANSPORTER_CODE       |tr$unique                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_NUMBER         |${invoice_number}                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_TOTAL          |5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_DATE           |$indate2                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TAX_CODE               |1                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TAX_TYPE               |1                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|TAX_PERCENTAGE         |10                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|NOTE_TYPE              |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|NOTE_AMOUNT            |0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INDENT_ID              |$order_id                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|SKU                    |${material_code}                                            |
+|check                |getFreightDetailsValuesFromInvoicePayload;|SOURCE_CODE            |s$unique                                                    |
+|check                |getFreightDetailsValuesFromInvoicePayload;|DESTINATION_CODE       |dr$unique                                                   |
+|check                |getFreightDetailsValuesFromInvoicePayload;|QUANTITY               |10                                                          |
+|check                |getFreightDetailsValuesFromInvoicePayload;|WEIGHT                 |400                                                         |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_VALUE_FREIGHT  |5000                                                        |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_VALUE_DETENTION|0                                                           |
+|check                |getFreightDetailsValuesFromInvoicePayload;|INVOICE_VALUE_DEFECT   |0                                                           |
+
+!|Script         |Common                                                                   |
+|$schemaFilePath=|getPath;|data/schemafiles/srf_custom_invoice_posting_schema.json|fullpath|
+
+!|script|json                                                           |
+|check  |validateJsonDocument;|$schemaFilePath|$erp_invoice_details|true|
+*!
+
+!** Validating test result
+!|script  |common            |
+|$tresult=|getTrim;|$tresult1|
+*!

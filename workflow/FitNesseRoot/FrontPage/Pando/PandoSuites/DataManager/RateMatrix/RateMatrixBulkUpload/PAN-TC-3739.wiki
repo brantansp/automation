@@ -1,0 +1,163 @@
+---
+Help: Rate matrix upload with Per KM slab
+Suites: dm1
+Test
+---
+!** Unique values assignment
+!|Script          |Common                                     |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num=            |getRandomNumber;        |100000 |999999    |
+|$currDate=       |getCurrentDateTimeStamp |iso               |
+|$year=           |getSubString;           |$unique|0    |4   |
+|$detention_group=|getRandomString;        |4      |ALPHAUPPER|
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Rajahmundry Road}
+!define city {ci$unique}
+!define state {st$unique}
+!define pincode {321001}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!** Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {PTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!** Gate Manager Creation
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+**!
+
+
+!** Uploading Rate Matrix
+!define erp_gate_id_api_1 {rq1$unique}
+!define transit_days {1}
+!define ratec {1000}
+!define rtrip {per_case}
+!define mrate {10000}
+!define mfactor {1}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,B$unique,C1$unique,${vehicle_name},${transit_days},$transporter_ref_id,$transporter_name,${transit_days},1000,${rtrip},01-Jan-$year,31-Dec-2030,${mrate},${mfactor},$detention_group,AT,100,10,Per KG,3,200,no,2,0-250,600,15,22,YES,500}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!define search_field {Enter Transporter Name}
+!define search_value {${transporter_name}}
+!** Searching for the added Transporter in Rate Matrix
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.RateMatrixSearch.RateMatrixSearchCommon
+*!
+
+!define column_name {Type}
+!define visiblity {false}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.RateMatrixSearch.RateMatrixColumnDisable
+
+!define column_name {Source}
+!define visiblity {false}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.RateMatrixSearch.RateMatrixColumnDisable
+
+!define column_name {Destination}
+!define visiblity {false}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.RateMatrixSearch.RateMatrixColumnDisable
+
+!define column_name {Vehicle Name}
+!define visiblity {false}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.RateMatrixSearch.RateMatrixColumnDisable
+
+!define column_name {Hilly Region Addition %}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheck
+
+!define column_name {Is Round Trip Eligible}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheck
+
+!define column_name {Return Round Trip}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheck
+
+!|Script |Ui                                                                                                                       |
+|$header=|getHeaderColumnNumber;|//div[starts-with(@class,'grid-header')]//div/span                  |xpath|Hilly Region Addition %|
+|$data1= |getText;              |((//div[starts-with(@class,'grid-list-row')])[1]//div/span)[$header]|xpath                        |
+|$header=|getHeaderColumnNumber;|//div[starts-with(@class,'grid-header')]//div/span                  |xpath|Is Round Trip Eligible |
+|$data2= |getText;              |((//div[starts-with(@class,'grid-list-row')])[1]//div/span)[$header]|xpath                        |
+|$header=|getHeaderColumnNumber;|//div[starts-with(@class,'grid-header')]//div/span                  |xpath|Return Round Trip      |
+|$data3= |getText;              |((//div[starts-with(@class,'grid-list-row')])[1]//div/span)[$header]|xpath                        |
+
+!|Script  |Common                                |
+|check    |checkIfStringAreEqual;|$data1|22 |true|
+|check    |checkIfStringAreEqual;|$data2|Yes|true|
+|check    |checkIfStringAreEqual;|$data3|500|true|
+|$tresult=|checkIfStringAreEqual;|$data2|Yes     |

@@ -1,0 +1,11 @@
+!|Script                     |Ui                                                                                                       |
+|click;                      |//button[@class='el-button el-button--default']                                     |xpath               |
+|click;                      |//div[@class='multiselect']                                                         |xpath               |
+|sendKeys;                   |//input[@placeholder='Select depots']                                               |xpath|${search_text}|
+|click;                      |//li//span[normalize-space(text())='${search_text}']                                |xpath               |
+|clearValueWA;               |//input[@placeholder='Select depots']                                               |xpath               |
+|wait;                       |2                                                                                                        |
+|click;                      |(//span[normalize-space(text())='Select All']/ancestor::li/following-sibling::li)[1]|xpath               |
+|click;                      |//span[starts-with(@class,'tag-default')]                                           |xpath               |
+|click;                      |//button[text()='APPLY']                                                            |xpath               |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row')]                                             |xpath|30            |

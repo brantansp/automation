@@ -1,0 +1,19 @@
+---
+Help: SCN8_Consignee 'P9053' - with hybrid_split flag - one FTL(56000) and one courier (27000)
+Test
+---
+!|script       |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!|script       |CsvQuery                                                                                                                           |
+|getConnection;|$fileLocation|,                                                                                                                    |
+|$tresult=     |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE File LIKE 'scn8_%' AND Consignee LIKE '%p9053%'|noOfOccurrences|
+|closeConnection;                                                                                                                                  |
+
+#SELECT count(*) as noOfOccurrences FROM summary WHERE File LIKE 'scn8_%' AND Consignee = 'p9053:' AND (Rate LIKE '56000%' OR "Truck Type" LIKE '9999%')
+
+!|script  |common                                |
+|check    |checkIfStringAreEqual;|$tresult|2|true|
+|$tresult=|checkIfStringAreEqual;|$tresult|2     |
+
+ 

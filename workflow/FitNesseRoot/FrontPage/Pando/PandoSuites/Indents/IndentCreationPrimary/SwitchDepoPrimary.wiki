@@ -1,0 +1,7 @@
+!** Switching to Other Depo
+!|Script|Ui|
+|wait;|10|
+|refresh;|
+|click;|//div[@class='depot']|xpath|
+|click;|//li[contains(text(),' Nellore Depot ')]|xpath|
+**!

@@ -1,0 +1,25 @@
+---
+Help: startpage
+---
+!include -c .FrontPage.Pando.Common.Import
+
+!|Script              |Ui                                                                                                                  |
+|$testCaseDescription=|getTestCaseDescription;|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME}                                                   |
+|startTestCase;       |${RUNNING_PAGE_NAME}   |${extent_tag}|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME} : $testCaseDescription|${log_to_elk}|
+
+!|script  |common        |
+|$tresult=|getTrim;|false|
+
+!define login_url {${surl}}
+!include -c .FrontPage.Pando.Common.Login
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.LoginAPI.ShipperLoginViaAPI
+
+!define transporter_email {ptdetention@gmail.com}
+!define transporter_password {212983}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+
+!** Assign value to transporter id
+!|Script         |Common                           |
+|$transporter_id=|getTrim;|5cdb94c2b7f4590121f69c9a|
+**!

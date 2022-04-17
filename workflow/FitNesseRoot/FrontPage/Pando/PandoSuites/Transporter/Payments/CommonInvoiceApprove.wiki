@@ -1,0 +1,11 @@
+!|Script                     |Ui                                                                                                                                                                              |
+|$shipper_requested=         |getText;                                 |//button[@class='el-tooltip item']/div                                                                                     |xpath     |
+|click;                      |//button[contains(text(),'Summary')]     |xpath                                                                                                                                 |
+|waitForElementToBeDisplayed;|//div[contains(text(),'${invoice_no}')]  |xpath                                                                                                                      |10        |
+|$total_taxable_value=       |getText;                                 |//span[contains(text(),'Total Taxable Value')]/ancestor::div[@class='row labelgrid']/div[contains(@class,'floatright')]/div|xpath     |
+|$gst_method=                |getText;                                 |//span[contains(text(),'GST Method')]/ancestor::div[@class='row labelgrid']/div[contains(@class,'floatright')]/div         |xpath     |
+|$igst_amount=               |getText;                                 |//span[contains(text(),'IGST')]/ancestor::div[@class='row labelgrid']/div[contains(@class,'floatright')]/div               |xpath     |
+|$total_invoice_value=       |getText;                                 |//div[@class='bgfooter']//div[contains(@class,'floatright')]                                                               |xpath     |
+|check                       |isElementPresent;                        |//button/span[contains(text(),'Approve')]                                                                                  |xpath|true|
+|click;                      |//button/span[contains(text(),'Approve')]|xpath                                                                                                                                 |
+|click; |//button/span[normalize-space(text())='YES']                    |xpath|

@@ -1,0 +1,11 @@
+---
+Test
+---
+!** Contract ERP Creation
+!| Script   |Http                                      |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/erp/contract                  |
+|$result=   |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|204                        |
+|wait;      |3                                         |
+*!

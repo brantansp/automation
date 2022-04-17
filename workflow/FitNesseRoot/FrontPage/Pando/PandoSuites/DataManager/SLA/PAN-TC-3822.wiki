@@ -1,0 +1,151 @@
+---
+Help: Verify Export in SLA with/without SLA max arrival field
+Suites: dm1
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!**> Vehicle Creation 
+!define vehicle_name {v$unique}
+!define cft {600}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!** Uploading the SLA Contract with max arrival SLA
+!|script|common                  |
+|$rand1=|getRandomNumber;|100|999|
+|$rand2=|getRandomNumber;|100|999|
+|$rand3=|getRandomNumber;|100|999|
+|$rand4=|getRandomNumber;|100|999|
+|$rand5=|getRandomNumber;|1  |9  |
+
+!define Movement {Primary}
+!define row {Vehicle Type,Movement,Depot REF ID,Acceptance cost,Assignment cost,Arrival Cost,Rejection Cost,Grace Period,Max Arrival SLA(%)}
+!define column {${vehicle_name},${Movement},${depot_reference_id},$rand1,$rand2,$rand3,$rand4,$rand5,5}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+!|Script  |Excel                      |
+|newSheet;|${row}|${column}|$excelpath|
+
+!|script                   |ui                                                              |
+|navigateToUrl;            |${surl}/mdm/sla                                                 |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|wait;                     |5                                                               |
+*!
+
+!** Search the depot and click Export in SLA 
+!|script       |ui                                                                                                            |
+|navigateToUrl;|${surl}/mdm/sla                                                                                               |
+|sendKeys;     |//input[@placeholder='Search by depot Name']|xpath                                              |${depot_name}|
+|mouseHover;   |//span[contains(text(),'d2')]               |xpath                                                            |
+|check         |isElementPresent;                           |//div[@role='tooltip']//div[text()='${depot_name}']|xpath  |true |
+|$tresult1=    |isElementPresent;                           |//div[@role='tooltip']//div[text()='${depot_name}']|xpath        |
+
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+
+!|Script|Ui                             |
+|wait;  |5                              |
+|click; |//button[text()='Export']|xpath|
+|wait;  |5                              |
+**!
+
+!** Verifying the data in export file
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|script|ExcelQuery                                                                                                    |
+|$count=|getCountQuery;|$filename|select * from "Sla" where "Vehicle Type" = 'v$unique' and "Depot REF ID" = 'r$unique'|
+
+!|Script   |common                              |
+|check     |checkIfStringAreEqual;|$count|1|true|
+|$tresult2=|checkIfStringAreEqual;|$count|1     |
+**!
+
+!** Uploading the SLA Contract without max arrival SLA
+!|script|common                  |
+|$rand1=|getRandomNumber;|100|999|
+|$rand2=|getRandomNumber;|100|999|
+|$rand3=|getRandomNumber;|100|999|
+|$rand4=|getRandomNumber;|100|999|
+|$rand5=|getRandomNumber;|1  |9  |
+
+!define Movement {Primary}
+!define row {Vehicle Type,Movement,Depot REF ID,Acceptance cost,Assignment cost,Arrival Cost,Rejection Cost,Grace Period,Max Arrival SLA(%)}
+!define column {${vehicle_name},${Movement},${depot_reference_id},$rand1,$rand2,$rand3,$rand4,$rand5,}
+
+!|Script    |Common                                        |
+|$excelpath=|getPath;|testAttachment/n$unique.xlsx|fullpath|
+
+!|Script  |Excel                      |
+|newSheet;|${row}|${column}|$excelpath|
+
+!|script                   |ui                                                              |
+|navigateToUrl;            |${surl}/mdm/sla                                                 |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|wait;                     |5                                                               |
+*!
+
+!** Search the depot and click Export in SLA 
+!|script       |ui                                                                                                            |
+|navigateToUrl;|${surl}/mdm/sla                                                                                               |
+|sendKeys;     |//input[@placeholder='Search by depot Name']|xpath                                              |${depot_name}|
+|mouseHover;   |//span[contains(text(),'d2')]               |xpath                                                            |
+|check         |isElementPresent;                           |//div[@role='tooltip']//div[text()='${depot_name}']|xpath  |true |
+|$tresult3=    |isElementPresent;                           |//div[@role='tooltip']//div[text()='${depot_name}']|xpath        |
+
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+
+!|Script|Ui                             |
+|wait;  |5                              |
+|click; |//button[text()='Export']|xpath|
+|wait;  |5                              |
+**!
+
+!** Verifying the data in export file
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|script|ExcelQuery                                                                                                    |
+|$count=|getCountQuery;|$filename|select * from "Sla" where "Vehicle Type" = 'v$unique' and "Depot REF ID" = 'r$unique'|
+
+!|Script   |common                              |
+|check     |checkIfStringAreEqual;|$count|1|true|
+|$tresult4=|checkIfStringAreEqual;|$count|1     |
+**!
+
+!**> Validating the test results
+!|Script  |Common                                                                    |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+*!

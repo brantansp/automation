@@ -1,0 +1,416 @@
+---
+Help: Dedicated Truck Master Add and Edit using Bulk Upload and UI
+Suites: pg
+Test
+---
+!**> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$invoicedate= |dateCalculation;|dd-MM-yyyy |2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-2|
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-1|
+
+!|Script       |Common                                        |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer-!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Data creation
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {dc$unique}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RG$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script  |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!**> Vehicle Creation 1
+!define vehicle_name {v$unique}
+!define cft {1048}
+!define kg {1200}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Vehicle Creation 2
+!define vehicle_name {v2$unique}
+!define cft {2000}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+**!
+
+!**> Dedicated Truck Add in UI
+!define dedicatedtrucksource {R$unique}
+!define depot_ref_id {R$unique}
+!define transporter_ref_id {tr$unique}
+!define vehicle_type {v$unique}
+!define min_guarantee {112233}
+!define no_of_trips {5}
+!define per_km_rate {12}
+
+!|Script                     |Ui                                                                                                                                 |
+|navigateToUrl;              |${surl}/mdm/dedicatedtrucks                                                                                                        |
+|click;                      |//li/button[text()='Add']                                   |xpath                                                                 |
+|sendKeys;                   |//input[@placeholder='Enter the dedicated truck source']    |xpath                                         |${dedicatedtrucksource}|
+|sendKeys;                   |//input[@placeholder='Enter the depot reference id']        |xpath                                         |${depot_ref_id}        |
+|sendKeys;                   |//input[@placeholder='Enter the transporter reference id']  |xpath                                         |${transporter_ref_id}  |
+|sendKeys;                   |//input[@placeholder='Enter the short form of vehicle type']|xpath                                         |${vehicle_type}        |
+|sendKeys;                   |//input[@placeholder='Enter the mimimum guarantee']         |xpath                                         |${min_guarantee}       |
+|sendKeys;                   |//input[@placeholder='Enter the number of trips']           |xpath                                         |${no_of_trips}         |
+|sendKeys;                   |//input[@placeholder='Enter per km rate']                   |xpath                                         |${per_km_rate}         |
+|click;                      |//li[contains(text(),'Save')]                               |xpath                                                                 |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span              |xpath                                         |30                     |
+|$successMessage=            |getElementAttribute;                                        |//h3[text()='Success']/following-sibling::span|xpath    |innerText    |
+
+!|Script   |common                                                   |
+|check     |checkIfStringAreEqual;|$successMessage|Record Added!|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage|Record Added!     |
+
+!** Verify added record
+!|Script                     |Ui                                                                                                                           |
+|clearValue;                 |//input[@placeholder='Search by Source']|xpath                                                                               |
+|sendKeys;                   |//input[@placeholder='Search by Source']|xpath                                                       |${dedicatedtrucksource}|
+|waitForElementToBeDisplayed;|//span[contains(text(),'R$unique')]     |xpath                                                       |10                     |
+|check                       |isElementPresent;                       |//span[contains(text(),'R$unique')]                         |xpath       |true      |
+|wait;                       |2                                                                                                                            |
+|click;                      |//a[contains(text(),'Edit')]            |xpath                                                                               |
+|$sourcevalue=               |getValue;                               |//input[@placeholder='Enter the dedicated truck source']    |xpath                  |
+|$depotvalue=                |getValue;                               |//input[@placeholder='Enter the depot reference id']        |xpath                  |
+|$transporterrefvalue=       |getValue;                               |//input[@placeholder='Enter the transporter reference id']  |xpath                  |
+|$vehiclevalue=              |getValue;                               |//input[@placeholder='Enter the short form of vehicle type']|xpath                  |
+|$minguarantee=              |getValue;                               |//input[@placeholder='Enter the mimimum guarantee']         |xpath                  |
+|$tripsvalue=                |getValue;                               |//input[@placeholder='Enter the number of trips']           |xpath                  |
+|$perkmratevalue=            |getValue;                               |//input[@placeholder='Enter per km rate']                   |xpath                  |
+
+!|Script   |common                                                                  |
+|check     |checkIfStringAreEqual;|$sourcevalue        |${dedicatedtrucksource}|true|
+|$tresult2=|checkIfStringAreEqual;|$sourcevalue        |${dedicatedtrucksource}     |
+|check     |checkIfStringAreEqual;|$depotvalue         |${depot_ref_id}        |true|
+|$tresult3=|checkIfStringAreEqual;|$depotvalue         |${depot_ref_id}             |
+|check     |checkIfStringAreEqual;|$transporterrefvalue|${transporter_ref_id}  |true|
+|$tresult4=|checkIfStringAreEqual;|$transporterrefvalue|${transporter_ref_id}       |
+|check     |checkIfStringAreEqual;|$vehiclevalue       |${vehicle_type}        |true|
+|$tresult5=|checkIfStringAreEqual;|$vehiclevalue       |${vehicle_type}             |
+|check     |checkIfStringAreEqual;|$minguarantee       |${min_guarantee}       |true|
+|$tresult6=|checkIfStringAreEqual;|$minguarantee       |${min_guarantee}            |
+|check     |checkIfStringAreEqual;|$tripsvalue         |${no_of_trips}         |true|
+|$tresult7=|checkIfStringAreEqual;|$tripsvalue         |${no_of_trips}              |
+|check     |checkIfStringAreEqual;|$perkmratevalue     |${per_km_rate}         |true|
+|$tresult8=|checkIfStringAreEqual;|$perkmratevalue     |${per_km_rate}              |
+*!
+
+!** Validating results
+!|Script        |Common                                                                                                            |
+|$add_ui_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,true|
+**!
+**!
+
+!**> Dedicated Truck Edit in UI
+!define dedicatedtrucksource {R$unique}
+!define newtrucksource {Q$unique}
+!define min_guarantee {12345}
+!define no_of_trips {6}
+!define per_km_rate {10}
+
+!|Script                     |Ui                                                                                                                                                                    |
+|navigateToUrl;              |${surl}/mdm/dedicatedtrucks                                                                                                                                           |
+|clearValue;                 |//input[@placeholder='Search by Source']                |xpath                                                                                                        |
+|sendKeys;                   |//input[@placeholder='Search by Source']                |xpath                                                                                |${dedicatedtrucksource}|
+|waitForElementToBeDisplayed;|//span[contains(text(),'R$unique')]                     |xpath                                                                                |10                     |
+|check                       |isElementPresent;                                       |//span[contains(text(),'R$unique')]                                                  |xpath    |true         |
+|wait;                       |2                                                                                                                                                                     |
+|click;                      |//a[contains(text(),'Edit')]                            |xpath                                                                                                        |
+|clearAndSend;               |//input[@placeholder='Enter the dedicated truck source']|xpath                                                                                |${newtrucksource}      |
+|check                       |isElementPresent;                                       |//input[@placeholder='Enter the depot reference id' and @disabled='disabled']        |xpath    |true         |
+|check                       |isElementPresent;                                       |//input[@placeholder='Enter the transporter reference id' and @disabled='disabled']  |xpath    |true         |
+|check                       |isElementPresent;                                       |//input[@placeholder='Enter the short form of vehicle type' and @disabled='disabled']|xpath    |true         |
+|clearAndSend;               |//input[@placeholder='Enter the mimimum guarantee']     |xpath                                                                                |${min_guarantee}       |
+|clearAndSend;               |//input[@placeholder='Enter the number of trips']       |xpath                                                                                |${no_of_trips}         |
+|clearAndSend;               |//input[@placeholder='Enter per km rate']               |xpath                                                                                |${per_km_rate}         |
+|click;                      |//li[contains(text(),'Update')]                         |xpath                                                                                                        |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span          |xpath                                                                                |30                     |
+|$successMessage=            |getElementAttribute;                                    |//h3[text()='Success']/following-sibling::span                                       |xpath    |innerText    |
+
+!|Script   |common                                                     |
+|check     |checkIfStringAreEqual;|$successMessage|Record Updated!|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage|Record Updated!     |
+
+!** Verify updated record in ui
+!|Script                     |Ui                                                                                                                 |
+|clearValue;                 |//input[@placeholder='Search by Source']|xpath                                                                     |
+|sendKeys;                   |//input[@placeholder='Search by Source']|xpath                                                   |${newtrucksource}|
+|waitForElementToBeDisplayed;|//span[contains(text(),'Q$unique')]     |xpath                                                   |10               |
+|check                       |isElementPresent;                       |//span[contains(text(),'Q$unique')]                     |xpath    |true   |
+|$tresult2=                  |isElementPresent;                       |//span[contains(text(),'Q$unique')]                     |xpath            |
+|click;                      |//a[contains(text(),'Edit')]            |xpath                                                                     |
+|$sourcevalue=               |getValue;                               |//input[@placeholder='Enter the dedicated truck source']|xpath            |
+|$minguarantee=              |getValue;                               |//input[@placeholder='Enter the mimimum guarantee']     |xpath            |
+|$tripsvalue=                |getValue;                               |//input[@placeholder='Enter the number of trips']       |xpath            |
+|$perkmratevalue=            |getValue;                               |//input[@placeholder='Enter per km rate']               |xpath            |
+
+!|Script   |common                                                       |
+|check     |checkIfStringAreEqual;|$sourcevalue   |${newtrucksource}|true|
+|$tresult3=|checkIfStringAreEqual;|$sourcevalue   |${newtrucksource}     |
+|check     |checkIfStringAreEqual;|$minguarantee  |${min_guarantee} |true|
+|$tresult4=|checkIfStringAreEqual;|$minguarantee  |${min_guarantee}      |
+|check     |checkIfStringAreEqual;|$tripsvalue    |${no_of_trips}   |true|
+|$tresult5=|checkIfStringAreEqual;|$tripsvalue    |${no_of_trips}        |
+|check     |checkIfStringAreEqual;|$perkmratevalue|${per_km_rate}   |true|
+|$tresult6=|checkIfStringAreEqual;|$perkmratevalue|${per_km_rate}        |
+*!
+
+!** Validating results
+!|Script         |Common                                                                                        |
+|$edit_ui_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,true|
+**!
+**!
+
+!**> Dedicated Truck Add through bulk upload
+!define dedicatedtrucksource {S$unique}
+!define depot_ref_id {R$unique}
+!define transporter_ref_id {tr$unique}
+!define vehicle_type {v2$unique}
+!define min_guarantee {145}
+!define no_of_trips {2}
+!define per_km_rate {45}
+
+!define row {Source,Depot Ref ID,Transporter Ref ID,Vehicle Type,Minimum Guarantee Amount,No of Trips,Per km Rate}
+!define column {${dedicatedtrucksource},${depot_ref_id},${transporter_ref_id},${vehicle_type},${min_guarantee},${no_of_trips},${per_km_rate}}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonDedicatedTruckBulkUpload
+
+!|Script                     |Ui                                                                                                           |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span|xpath                                         |30             |
+|$successMessage=            |getElementAttribute;                          |//h3[text()='Success']/following-sibling::span|xpath|innerText|
+
+!|Script   |common                                                                               |
+|check     |checkIfStringAreEqual;|$successMessage|1 Uploaded and 0 Invalid records out of 1|true|
+|$tresult3=|checkIfStringAreEqual;|$successMessage|1 Uploaded and 0 Invalid records out of 1     |
+
+!** Verify bulk upload record in ui
+!|Script                     |Ui                                                                                                                                     |
+|clearValue;                 |//input[@placeholder='Search by Source']          |xpath                                                                               |
+|sendKeys;                   |//input[@placeholder='Search by Source']          |xpath                                                       |${dedicatedtrucksource}|
+|waitForElementToBeDisplayed;|//span[contains(text(),'${dedicatedtrucksource}')]|xpath                                                       |10                     |
+|check                       |isElementPresent;                                 |//span[contains(text(),'${dedicatedtrucksource}')]          |xpath       |true      |
+|wait;                       |2                                                                                                                                      |
+|click;                      |//a[contains(text(),'Edit')]                      |xpath                                                                               |
+|$sourcevalue=               |getValue;                                         |//input[@placeholder='Enter the dedicated truck source']    |xpath                  |
+|$depotvalue=                |getValue;                                         |//input[@placeholder='Enter the depot reference id']        |xpath                  |
+|$transporterrefvalue=       |getValue;                                         |//input[@placeholder='Enter the transporter reference id']  |xpath                  |
+|$vehiclevalue=              |getValue;                                         |//input[@placeholder='Enter the short form of vehicle type']|xpath                  |
+|$minguarantee=              |getValue;                                         |//input[@placeholder='Enter the mimimum guarantee']         |xpath                  |
+|$tripsvalue=                |getValue;                                         |//input[@placeholder='Enter the number of trips']           |xpath                  |
+|$perkmratevalue=            |getValue;                                         |//input[@placeholder='Enter per km rate']                   |xpath                  |
+
+!|Script   |common                                                                  |
+|check     |checkIfStringAreEqual;|$sourcevalue        |${dedicatedtrucksource}|true|
+|$tresult2=|checkIfStringAreEqual;|$sourcevalue        |${dedicatedtrucksource}     |
+|check     |checkIfStringAreEqual;|$depotvalue         |${depot_ref_id}        |true|
+|$tresult3=|checkIfStringAreEqual;|$depotvalue         |${depot_ref_id}             |
+|check     |checkIfStringAreEqual;|$transporterrefvalue|${transporter_ref_id}  |true|
+|$tresult4=|checkIfStringAreEqual;|$transporterrefvalue|${transporter_ref_id}       |
+|check     |checkIfStringAreEqual;|$vehiclevalue       |${vehicle_type}        |true|
+|$tresult5=|checkIfStringAreEqual;|$vehiclevalue       |${vehicle_type}             |
+|check     |checkIfStringAreEqual;|$minguarantee       |${min_guarantee}       |true|
+|$tresult6=|checkIfStringAreEqual;|$minguarantee       |${min_guarantee}            |
+|check     |checkIfStringAreEqual;|$tripsvalue         |${no_of_trips}         |true|
+|$tresult7=|checkIfStringAreEqual;|$tripsvalue         |${no_of_trips}              |
+|check     |checkIfStringAreEqual;|$perkmratevalue     |${per_km_rate}         |true|
+|$tresult8=|checkIfStringAreEqual;|$perkmratevalue     |${per_km_rate}              |
+*!
+
+!** Validating results
+!|Script          |Common                                                                                                            |
+|$bulk_add_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,true|
+**!
+**!
+
+!**> Dedicated Truck Update through bulk upload
+!define dedicatedtrucksource {C$unique}
+!define min_guarantee {157}
+!define no_of_trips {22}
+!define per_km_rate {15}
+
+!define row {Source,Depot Ref ID,Transporter Ref ID,Vehicle Type,Minimum Guarantee Amount,No of Trips,Per km Rate}
+!define column {${dedicatedtrucksource},${depot_ref_id},${transporter_ref_id},${vehicle_type},${min_guarantee},${no_of_trips},${per_km_rate}}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonDedicatedTruckBulkUpload
+
+!|Script                     |Ui                                                                                                           |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span|xpath                                         |30             |
+|$successMessage=            |getElementAttribute;                          |//h3[text()='Success']/following-sibling::span|xpath|innerText|
+
+!|Script   |common                                                                               |
+|check     |checkIfStringAreEqual;|$successMessage|1 Uploaded and 0 Invalid records out of 1|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage|1 Uploaded and 0 Invalid records out of 1     |
+
+!** Verify bulk upload record in ui
+!|Script                     |Ui                                                                                                                                                              |
+|clearValue;                 |//input[@placeholder='Search by Source']          |xpath                                                                                                        |
+|sendKeys;                   |//input[@placeholder='Search by Source']          |xpath                                                                                |${dedicatedtrucksource}|
+|waitForElementToBeDisplayed;|//span[contains(text(),'${dedicatedtrucksource}')]|xpath                                                                                |10                     |
+|check                       |isElementPresent;                                 |//span[contains(text(),'${dedicatedtrucksource}')]                                   |xpath       |true      |
+|wait;                       |2                                                                                                                                                               |
+|click;                      |//a[contains(text(),'Edit')]                      |xpath                                                                                                        |
+|check                       |isElementPresent;                                 |//input[@placeholder='Enter the depot reference id' and @disabled='disabled']        |xpath       |true      |
+|check                       |isElementPresent;                                 |//input[@placeholder='Enter the transporter reference id' and @disabled='disabled']  |xpath       |true      |
+|check                       |isElementPresent;                                 |//input[@placeholder='Enter the short form of vehicle type' and @disabled='disabled']|xpath       |true      |
+|$sourcevalue=               |getValue;                                         |//input[@placeholder='Enter the dedicated truck source']                             |xpath                  |
+|$minguarantee=              |getValue;                                         |//input[@placeholder='Enter the mimimum guarantee']                                  |xpath                  |
+|$tripsvalue=                |getValue;                                         |//input[@placeholder='Enter the number of trips']                                    |xpath                  |
+|$perkmratevalue=            |getValue;                                         |//input[@placeholder='Enter per km rate']                                            |xpath                  |
+
+!|Script   |common                                                             |
+|check     |checkIfStringAreEqual;|$sourcevalue   |${dedicatedtrucksource}|true|
+|$tresult2=|checkIfStringAreEqual;|$sourcevalue   |${dedicatedtrucksource}     |
+|check     |checkIfStringAreEqual;|$minguarantee  |${min_guarantee}       |true|
+|$tresult3=|checkIfStringAreEqual;|$minguarantee  |${min_guarantee}            |
+|check     |checkIfStringAreEqual;|$tripsvalue    |${no_of_trips}         |true|
+|$tresult4=|checkIfStringAreEqual;|$tripsvalue    |${no_of_trips}              |
+|check     |checkIfStringAreEqual;|$perkmratevalue|${per_km_rate}         |true|
+|$tresult5=|checkIfStringAreEqual;|$perkmratevalue|${per_km_rate}              |
+*!
+
+!** Validating results
+!|Script             |Common                                                                              |
+|$bulk_update_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|
+**!
+**!
+
+!**> Dedicated Truck invalid bulk upload
+!define dedicatedtrucksource {D$unique}
+!define depot_ref_id {R$unique}
+!define transporter_ref_id {tr$unique}
+!define vehicle_type {v$unique}
+!define min_guarantee {112233}
+!define no_of_trips {5}
+!define per_km_rate {12}
+
+!define row {Source,Depot Ref ID,Transporter Ref ID,Vehicle Type,Minimum Guarantee Amount,No of Trips,Per km Rate}
+!define column {${dedicatedtrucksource},R3$unique,${transporter_ref_id},${vehicle_type},${min_guarantee},${no_of_trips},${per_km_rate}|${dedicatedtrucksource},${depot_ref_id},T1$unique,${vehicle_type},${min_guarantee},${no_of_trips},${per_km_rate}|${dedicatedtrucksource},${depot_ref_id},${transporter_ref_id},V5$unique,${min_guarantee},${no_of_trips},${per_km_rate}}
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonDedicatedTruckBulkUpload
+
+!|Script                     |Ui                                                                                                           |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span|xpath                                         |30             |
+|$successMessage=            |getElementAttribute;                          |//h3[text()='Success']/following-sibling::span|xpath|innerText|
+|check                       |isElementPresent;                             |//button[contains(text(), 'Rejected List')]   |xpath|true     |
+
+!|Script   |common                                                                               |
+|check     |checkIfStringAreEqual;|$successMessage|0 Uploaded and 3 Invalid records out of 3|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage|0 Uploaded and 3 Invalid records out of 3     |
+
+!** Verifying the invalid data rejection list
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+
+!|Script|Ui                                               |
+|click; |//button[contains(text(), 'Rejected List')]|xpath|
+|wait;  |10                                               |
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|script  |ExcelQuery                                                                                                         |
+|$count=  |getCountQuery;|$filename|select * from "Dedicated Trucks" where "Source" = '${dedicatedtrucksource}'               |
+|$reason1=|selectQuery;  |$filename|select * from "Dedicated Trucks" where "Depot Ref ID" = 'R3$unique'      |Rejection Reason|
+|$reason2=|selectQuery;  |$filename|select * from "Dedicated Trucks" where "Transporter Ref ID" = 'T1$unique'|Rejection Reason|
+|$reason3=|selectQuery;  |$filename|select * from "Dedicated Trucks" where "Vehicle Type" = 'V5$unique'      |Rejection Reason|
+
+!|Script   |common                                                           |
+|check     |checkIfStringAreEqual;|$count  |3                           |true|
+|$tresult2=|checkIfStringAreEqual;|$count  |3                                |
+|check     |checkIfStringAreEqual;|$reason1|[Invalid Depot Ref ID]      |true|
+|$tresult3=|checkIfStringAreEqual;|$reason1|[Invalid Depot Ref ID]           |
+|check     |checkIfStringAreEqual;|$reason2|[Invalid Transporter Ref ID]|true|
+|$tresult4=|checkIfStringAreEqual;|$reason2|[Invalid Transporter Ref ID]     |
+|check     |checkIfStringAreEqual;|$reason3|[Invalid Vehicle Type]      |true|
+|$tresult5=|checkIfStringAreEqual;|$reason3|[Invalid Vehicle Type]           |
+
+!|Script              |Common                                                                              |
+|$invalid_bulk_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|
+**!
+**!
+
+!** Validating results
+!|Script  |Common                                                                                                                     |
+|$tresult=|checkIfStringAreEqualInArray;|$add_ui_result,$edit_ui_result,$bulk_add_result,$bulk_update_result,$invalid_bulk_result,true|
+**!

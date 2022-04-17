@@ -1,0 +1,7 @@
+!|Script                     |Ui                                                                                                                                                          |
+|click;                      |//span[text()='Search']                                               |xpath                                                                                |
+|clearAndSend;               |//input[@placeholder='Enter indent id']                               |xpath                                                                 |${search_text}|
+|wait;                       |3                                                                                                                                                           |
+|click;                      |//button[text()='Search']                                             |xpath                                                                                |
+|waitForElementToBeDisplayed;|(//div[contains(@class,'list-row') or contains(@class,'card-row')])[1]|xpath                                                                 |10            |
+|check                       |isElementPresent;                                                     |(//div[contains(@class,'list-row') or contains(@class,'card-row')])[1]|xpath  |true  |

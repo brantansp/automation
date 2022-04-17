@@ -1,0 +1,11 @@
+---
+Test
+---
+!|Script                 |Http                                      |
+|addHeader;              |Authorization |bearer $stoken             |
+|setBaseUrl;             |${surl}/api/dedicatedtruck/               |
+|$dedicated_truck_master=|getResponse;  |Application/Json|post|$data|
+|check                   |getStatusCode;|200                        |
+
+!|Script              |json                                             |
+|$dedicated_master_id=|getValueFromJSON;|$dedicated_truck_master|data.id|

@@ -1,0 +1,16 @@
+---
+Help: Common Depot Bulk Upload in DM
+---
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+!|Script                |Excel                      |
+|newSheetDynamicColumns;|${row}|${column}|$excelpath|
+
+!|Script                     |Ui                                                                                                                 |
+|navigateToUrl;              |${surl}/mdm/depots                                                                                                 |
+|click;                      |.btn.btn-secondary.el-dropdown-selfdefine           |cssselector                                                   |
+|sendKeys;                   |.upload-material                                    |cssselector                                   |$excelpath     |
+|waitForElementToDisappear;  |//div[@class='spinner spinner--stretch']            |xpath                                         |30             |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[contains(text(),'Success')]|xpath                                         |30             |
+|$successMessage=            |getElementAttribute;                                |//h3[text()='Success']/following-sibling::span|xpath|innerText|

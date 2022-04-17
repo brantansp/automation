@@ -1,0 +1,67 @@
+---
+Test
+---
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Kovur}
+!define city {Nellore}
+!define state {Andhra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {1234567890}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define customer_site {Customer Site}
+
+
+!include -c .FrontPage.Pando.Common.CommonConsigneeCreation
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {1234567890}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.Common.CommonTransporterCreation
+**!
+
+
+!** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,Chennai,Nellore,965 CFT,100,TR$unique,T$unique,1,1000,per_trip,01-Jan-2019,31-Dec-2019,100,1,D}
+
+!include -c .FrontPage.Pando.Common.CommonRateMatrix
+
+**!
+
+!** Menu Navigation - Indent Navigation
+!|Script|Ui|
+|navigateToUrl;|${surl}/indents|
+|click;|//button[contains(text(),'Add')]|xpath|
+**!
+
+!** Creating Indent 
+!include -c .FrontPage.Pando.Common.CommonIndentCreation
+**!
+
+
+!** Notification
+!|Script|Common|
+|$data1=|stringConcatenation;|$data|last|
+|$order_no=|getSubStringByString;|$data1|Indent created with number|last|
+|$order_no=|getTrim;|$order_no|
+
+!|Script|Mail|
+|wait;|5|
+|mailConfig;|pandotransporter@outlook.com|test_123|
+|check|searchEmail;|New order has been created by Shipper|$order_no|true|
+|deleteMessage;|
+**!

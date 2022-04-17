@@ -1,0 +1,42 @@
+---
+Help: Materials ERP
+Test
+---
+!** Unique values assignment
+!|Script|Common|
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!define rejection_name  {Materials}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+
+!** ERP  Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+
+!| Script | Http |
+| setBaseUrl; | ${surl}/api/login |
+| getResponse; | Application/Json | put | {"data":{"email":"${username}","password":"${password}"}} |
+| $token= | getHeader; | x-auth-token |
+| addHeader; | Authorization | bearer $token |
+| setBaseUrl; | ${surl}/api/erp/material |
+|$mdata=| getResponse; | Application/Json | post | {"data":           [{"code":"${material_code}","name":"${material_name}","bu":"BELTS","division":"B1","piece_box":"","box_length":"0.000","box_width":"0.000","box_height":"0.000","box_weight":"100.000"}]}|
+| check | getStatusCode; | 204|
+*!
+
+
+!|Script|Common|
+|$result=|getResultOfCalculation;|$count|+|1|
+
+
+!** Validating Rejection list
+!define rejection_name  {Materials}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+**!
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.ValidateRejections
+
+
+!define tname {TC-168}
+ 

@@ -1,0 +1,12 @@
+---
+Help: Use to add GST for the Transporter
+Test
+---
+!|Script     |Http                                                                                                                           |
+|setBaseUrl; |${turl}/api/login                                                                                                              |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}                                  |
+|$token=     |getHeader;      |x-auth-token                                                                                                  |
+|addHeader;  |Authorization   |bearer $token                                                                                                 |
+|setBaseUrl; |${turl}/api/transporter/gst                                                                                                    |
+|$response=  |getResponse;    |Application/Json|put|{"data":[{"state":"${gst_state}","number":"${gst_percentage}","ref_id":"${gst_ref_id}"}]}|
+|$status=    |getStatusCode;                                                                                                                 |

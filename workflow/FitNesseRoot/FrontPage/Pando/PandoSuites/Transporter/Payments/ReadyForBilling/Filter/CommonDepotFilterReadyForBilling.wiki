@@ -1,0 +1,8 @@
+!|Script                        |Ui                                                                                 |
+|navigateToUrl;                 |${turl}/v2/payments                                                                |
+|click;                         |//button[@class='el-button el-button--default']                          |xpath    |
+|click;                         |(//input[@placeholder='Select'])[3]                                      |xpath    |
+|click;                         |//span[text()='${depot_name}']                                           |xpath    |
+|click;                         |//button[text()='APPLY']                                                 |xpath    |
+|refreshForElementToBeDisplayed;|//div[contains(@class,'card-row row') or contains(@class,'paymentempty')]|xpath|5|5|
+|waitForElementToBeDisplayed;   |//div[contains(@class,'card-row row') or contains(@class,'paymentempty')]|xpath|30 |

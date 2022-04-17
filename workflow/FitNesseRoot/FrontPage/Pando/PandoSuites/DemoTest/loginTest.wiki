@@ -1,0 +1,17 @@
+---
+Help: LoginTest
+---
+!5 Sequential Argument Processing Function Call
+
+#!include  .FrontPage.Pando.PandoSuites.DemoTest.login
+#!include  .FrontPage.Pando.PandoSuites.DemoTest.logout
+
+
+!5 Interposing Function Call
+
+!|script          |login                                                                  |
+|Launch           |${browser} |Browser To Test|${remoteURL}                               |
+|Login Application|${surl}    |With Username  |${username}  |And Password   |${password}  |
+|check            |Verify User|Automation     |Has Logged In|User Automation has logged In|
+|show             |get default depot name                                                 |
+|logout the application                                                                   |

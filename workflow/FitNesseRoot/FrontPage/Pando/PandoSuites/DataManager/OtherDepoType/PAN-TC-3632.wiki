@@ -1,0 +1,36 @@
+---
+Help: Add Return Depot
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Egmore}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|script                     |Ui                                                                                |
+|navigateToUrl;              |${surl}/mdm/consignees                                                            |
+|waitForElementToBeDisplayed;|//span[contains(text(),'c$unique')]|xpath                              |20        |
+|check                       |isElementPresent;                  |//span[contains(text(),'c$unique')]|xpath|true|
+|$tresult=                   |isElementPresent;                  |//span[contains(text(),'c$unique')]|xpath     |
+
+**!
+
+
+ 
+
+

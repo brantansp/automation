@@ -1,0 +1,64 @@
+---
+Help: Add State-wise GSTN from Transporter
+Suites: tprofile1
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!* Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!** Transporter login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+!include -c  .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!** Adding the State-wise GSTN
+
+!define gstn_state {Tamil Nadu}
+!define gstn_value {12}
+!define gstn_ref_id {r$unique}
+
+!|script                     |ui                                                                                                                                                      |
+|navigateToUrl;              |${turl}/profile                                                                                                                                         |
+|click;                      |//li[normalize-space(text())='Basic Information']                                          |xpath                                                       |
+|scrollToView;               |(//a[normalize-space(text())='Add'])[2]                                                    |xpath                                                       |
+|click;                      |(//a[normalize-space(text())='Add'])[2]                                                    |xpath                                                       |
+|click;                      |//input[@placeholder='Select']                                                             |xpath                                                       |
+|scrollToView;               |//span[text()='${gstn_state}']/..                                                          |xpath                                                       |
+|click;                      |//span[text()='${gstn_state}']/..                                                          |xpath                                                       |
+|sendKeys;                   |(//div[@class='dropdown-section']//input)[2]                                               |xpath                                        |${gstn_value} |
+|sendKeys;                   |(//div[@class='dropdown-section']//input)[3]                                               |xpath                                        |${gstn_ref_id}|
+|click;                      |//div[normalize-space(text())='STATE-WISE GSTN']/..//button[normalize-space(text())='SAVE']|xpath                                                       |
+|waitForElementToBeDisplayed;|//div[@class='el-notification success right']                                              |xpath                                        |5             |
+|check                       |isElementPresent;                                                                          |//div[@class='el-notification success right']|xpath  |true  |
+|$tresult=                   |isElementPresent;                                                                          |//div[@class='el-notification success right']|xpath         |
+|waitForElementToDisappear;  |//div[@class='el-notification success right']                                              |xpath                                        |5             |
+*!
+
+!** Logging out Transporter
+!|script       |ui                                          |
+|navigateToUrl;|${turl}                                     |
+|click;        |//li[@class='app-side-menu']          |xpath|
+|click;        |//a[normalize-space(text())='LOG OUT']|xpath|
+*!

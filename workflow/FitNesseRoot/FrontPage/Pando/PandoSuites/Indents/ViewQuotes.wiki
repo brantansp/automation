@@ -1,0 +1,7 @@
+---
+Help: Indent Quotes UI Validation
+Suite
+Suites: indent2
+---
+!1 Test suite for View Quotes
+!contents -R2 -g -p -f -h

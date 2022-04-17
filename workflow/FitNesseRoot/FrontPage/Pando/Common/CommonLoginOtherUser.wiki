@@ -1,0 +1,10 @@
+---
+Static
+---
+!|Script                     |Ui                                                                                     |
+|navigateToUrl;              |${surl}/login                                                                          |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                             |xpath|20              |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input|xpath|${user_name}    |
+|sendSecuredKeys;            |//label[contains(text(),'Password:')]//preceding-sibling::input |xpath|${user_password}|
+|click;                      |//button[@class='primary-btn']                                  |xpath                 |
+|waitForElementToBeDisplayed;|//main[@class='container-fluid main-content']                   |xpath|20              |

@@ -1,0 +1,31 @@
+---
+Help: Ensure the search count is exactly matched or not
+Test
+---
+!** Unique values assignment
+!|Script  |Common                                 |
+|$unique= |getCurrentDateTimeStamp;|yMMddHHmmss   |
+|$srandom=|getRandomString;        |5|ALPHANUMERIC|
+**!
+
+!define row {Consignee Name,Reference Id,Display Reference Name,Contact Name,Mobile Number,Email,Address,City,State,Postal Code,Region,Customer Type,Category,Group}
+!define column1 {cbulk1$unique,consignee1 $unique refrence,,consignee1 $unique,123,pandoconsigneee+1$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,South,Customer site,C,}
+!define column2 {cbulk2$unique,consignee2 $unique refrence,,consignee2 $unique,12891,pandoconsigneee+2$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,South,Customer site,C,}
+!define column3 {cbulk3$unique,consignee3 $unique refrence,,consignee3 $unique,12892,pandoconsigneee+3$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,South,Shipper site,C,}
+!define column4 {cbulk4$unique,consignee4 $unique refrence,,consignee4 $unique,12893,pandoconsigneee+4$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,South,Customer site,C,}
+!define column5 {cbulk5$unique,consignee5 $unique refrence,,consignee5 $unique,12894,pandoconsigneee+5$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,South,Shipper site,C,}
+
+!** Uploading Consignee via Bulk Upload
+!include .FrontPage.Pando.PandoSuites.DataManager.ConsigneeUploadInBulk
+**!
+
+!** Search Consignee
+!define search_count {5}
+!define search_value {$unique}
+!define search_text {Enter Reference Id}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.ConsigneeSearch.CommonConsigneeSearch
+
+!|script  |common                                            |
+|$tresult=|checkIfStringAreEqual;|${search_count}|$totalCount|
+*!

@@ -1,0 +1,9 @@
+---
+Help: Contains script to disable rate matrix column
+---
+!|script    |ui                                                                                                                                                                                              |
+|click;     |//span[@class='popover-icon']                                                   |xpath                                                                                                          |
+|$isChecked=|getElementAttribute;                                                            |//li//span[normalize-space(text())='${column_name}']/..//preceding-sibling::input           |xpath|checked     |
+|clickJS;   |//li//span[normalize-space(text())='${column_name}']/..//preceding-sibling::span|xpath                                                                                                          |
+|click;     |//span[@class='popover-icon']                                                   |xpath                                                                                                          |
+|check      |isElementPresentNoReporting;                                                    |//div[contains(@class,'grid-header')]//child::span[normalize-space(text())='${column_name}']|xpath|${visiblity}|

@@ -1,0 +1,7 @@
+!|Script  |Ui                                                           |
+|click;   |//span[text()='Search']                 |xpath               |
+|click;   |//input[@placeholder='Enter Other Info']|xpath               |
+|click;   |//span[text()='${search_using}']        |xpath               |
+|sendKeys;|//input[@placeholder='Enter Other Info']|xpath|${search_text}|
+|click;   |//button[text()='Search']               |xpath               |
+|wait;    |2                                                            |

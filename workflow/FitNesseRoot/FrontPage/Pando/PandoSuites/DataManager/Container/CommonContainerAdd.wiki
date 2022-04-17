@@ -1,0 +1,27 @@
+---
+Help: Contains the script to add new Container
+---
+!** Xpath for Container
+
+!|Script       |Ui                                                                                  |
+|navigateToUrl;|${surl}/mdm/container                                                               |
+|click;        |//button[contains(text(),'Add')]                       |xpath                       |
+|sendKeys;     |//input[@placeholder='Enter Name here']                |xpath|${container_name}     |
+|sendKeys;     |//input[@placeholder='Enter Reference Id here']        |xpath|${container_refid}    |
+|sendKeys;     |//input[@placeholder='Enter Capacity CFT here']        |xpath|${capacity_cft}       |
+|sendKeys;     |(//input[@placeholder='Select'])[2]                    |xpath|${vehicle_name}       |
+|click;        |//span[text()='v$unique']                              |xpath                       |
+|sendKeys;     |//input[@placeholder='Enter Tare weight(KG) here']     |xpath|${tare_weight}        |
+|sendKeys;     |//input[@placeholder='Enter Max gross weight(KG) here']|xpath|${gross_weight}       |
+|sendKeys;     |//input[@placeholder='Enter MDMMAX_PAYLOAD_KG here']   |xpath|${max_payload}        |
+|sendKeys;     |(//input[@placeholder='Enter Width (FT) here'] )[1]    |xpath|${door_opening_width} |
+|sendKeys;     |(//input[@placeholder='Enter Height (FT) here'] )[1]   |xpath|${door_opening_height}|
+|sendKeys;     |(//input[@placeholder='Enter Length (FT) here'] )[1]   |xpath|${exterior_length}    |
+|sendKeys;     |(//input[@placeholder='Enter Width (FT) here'] )[2]    |xpath|${exterior_width}     |
+|sendKeys;     |(//input[@placeholder='Enter Height (FT) here'] )[2]   |xpath|${exterior_height}    |
+|sendKeys;     |(//input[@placeholder='Enter Length (FT) here'] )[2]   |xpath|${interior_length}    |
+|sendKeys;     |(//input[@placeholder='Enter Width (FT) here'] )[3]    |xpath|${interior_width}     |
+|sendKeys;     |(//input[@placeholder='Enter Height (FT) here'] )[3]   |xpath|${interior_height}    |
+|click;        |//span[contains(text(),'Save')]                        |xpath                       |
+
+**!

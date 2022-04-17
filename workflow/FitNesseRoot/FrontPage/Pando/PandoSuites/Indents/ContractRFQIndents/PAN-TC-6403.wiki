@@ -1,0 +1,142 @@
+---
+Help: Ensure RFQ Bids Expiry Time can be alter in Client and Depot level
+Suites: indent1
+Test
+---
+!**> Unique values assignment
+!|Script |Common                                |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss  |
+|$num=   |getRandomNumber;        |100000|999999|
+**!
+
+!**> Data
+TRANSPORTERS
+fast movers - jamal@fastmovers.in | 181169 
+avd movers- sanjay@arvind.in | 256692
+
+SHIPPER - Firozpur Depot | find01
+CUSTOMER - BBK Electronics | bbk
+
+db.depot_configuration.find({"depot_id":ObjectId("60d43236f8cefa0051cf5d56")}) - firozpur depot
+	"contract_indent_rfq" : {
+		"bid_expiry" : 60000
+	}
+    
+db.client_configurations.find({"client_id" : ObjectId("5dca5a7619412301719092cb")}) - client
+	"auto_switch_transporter_on_non_placement" : {
+		"is_enabled_for_secondary" : false
+	},
+*!
+
+!**> Uploading Rate Matrix for transporter 1
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,find01,bbk,965 CFT,100,aavid,Arvind Transporters,1,5000,per_trip,01-Jan-2019,31-Dec-2030,100,1,D|Point,find01,bbk,965 CFT,100,fast,Fast movers,1,5200,per_trip,01-Jan-2019,31-Dec-2030,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!**> Admin SLA Setting
+!|Script            |DateUtil                   |
+|$indentCutoffHour= |dateCalculation;|minute|H|2|
+|$indentCutoffMin=  |dateCalculation;|minute|m|2|
+|$arrivalCutoffHour=|dateCalculation;|minute|H|3|
+|$arrivalCutoffMin= |dateCalculation;|minute|m|3|
+
+!define Movement {Secondary}
+!define vehicle_movement {1}
+!define depot_id {60d43236f8cefa0051cf5d56}
+
+!|script|common                                                                                                                                                                                                                                   |
+|$data= |getTrim;|{"data":{"depot_ids":["${depot_id}"],"movement":${vehicle_movement},"sla_configurations":[{"sla_type":2,"hours":$indentCutoffHour,"mins":$indentCutoffMin},{"sla_type":1,"hours":$arrivalCutoffHour,"mins":$arrivalCutoffMin}]}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Settings.AdminSlaSettingAPI
+*!
+
+!**> Indent Creation
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {Firozpur Depot}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|script        |ui                                                                                        |
+|$old_indent_id=|getText;|((//div[@class='order-row']//div[contains(@class,'order-id')])[1]//span)[3]|xpath|
+
+!|Script|Common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+|$data= |getTrim;|{"data":{"order_type":0,"transporter_id":"60d448c36b4b130051a02a38","vehicle_type_id":"60d44a166b4b130051a02a63","sources":[{"type":1,"location_id":"60d43236f8cefa0051cf5d56","gate_id":"60d43275aa621f00512a7d9d","vehicle_requirement_date":"2021-06-24T09:10:09.595Z","loader_available":false,"add_to_invoice":false}],"destinations":[{"type":2,"location_id":"60d447cde526290051f27615","source_location_id":"60d43236f8cefa0051cf5d56","source_gate_id":"60d43275aa621f00512a7d9d","sold_to_id":"60d447cde526290051f27615","unloader_available":false,"add_to_invoice":false}],"no_of_vehicles":1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+
+!|script            |DateUtil                         |
+|$indentCreatedTime=|dateCalculation;|minute|hh:mm:a|0|
+**!
+
+!**> Waiting for the SLA to be Breached
+!|script|ui |
+|wait;  |180|
+*!
+
+!**> Validating Breach and Re-Indent button
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {Firozpur Depot}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|script            |ui                                                                                                                                    |
+|$created_indent_id=|getText;         |((//div[@class='order-row']//div[contains(@class,'order-id')])[1]//span)[3]                              |xpath     |
+|$transporter_name= |getText;         |((//div[@class='order-row']//div[contains(@class,'order-vendor')])[1]//span)[3]                          |xpath     |
+|check              |isElementPresent;|(//div[@class='order-row']//div[contains(@class,'action')])[1]//span[normalize-space(text())='Re-indent']|xpath|true|
+
+!|script   |common                                                          |
+|check     |checkIfStringAreNotEqual;|$created_indent_id|$old_indent_id|true|
+|$tresult1=|checkIfStringAreEqual;   |$transporter_name |Avd movers         |
+*!
+
+!**> Reindent to another transporter
+!|Script|Common                                                                                                                       |
+|$data= |getTrim;|{"data":{"loading_date":"2021-06-24T11:18:05.000Z","transporter_ids":["60d449196b4b130051a02a4e"],"freight_unit":1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqSendBidRequest
+*!
+
+!** Checking if the RFQ is sent to the transporter
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|script                     |ui                                                                                                                                                                                                                                                                                  |
+|click;                      |//span[normalize-space(text())='$order_id']/ancestor::div[@class='order-row']//div[starts-with(@class,'action')]//span[normalize-space(text())='Quotes']|xpath                                                                                                                      |
+|waitForElementToBeDisplayed;|//div[contains(@style,'absolute')]//div[@class='popover-primary-body']                                                                                  |xpath                                                                                                           |15        |
+|mouseHover;                 |//div[contains(@style,'absolute')]//div[@class='popover-primary-body']//span[normalize-space(text())='Fast movers']                                     |xpath                                                                                                                      |
+|check                       |isElementDisplayed;                                                                                                                                     |//div[@role='tooltip' and contains(@style,'absolute')]/div[normalize-space(text())='Transporter yet to respond']|xpath|true|
+|click;                      |//div[contains(@style,'absolute')]//h3[text()='Transporter Quotes']/..//span[@class='remove-icon']                                                      |xpath                                                                                                                      |
+*!
+
+!**> Waiting for the BID auto expire
+!|script|ui|
+|wait;  |60|
+*!
+
+!** Checking if Bid is expired as per the configured time (i.e 1 minute)
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|script                     |ui                                                                                                                                                                                                                                                                   |
+|click;                      |//span[normalize-space(text())='$order_id']/ancestor::div[@class='order-row']//div[starts-with(@class,'action')]//span[normalize-space(text())='Quotes']|xpath                                                                                                       |
+|waitForElementToBeDisplayed;|//div[contains(@style,'absolute')]//div[@class='popover-primary-body']                                                                                  |xpath                                                                                            |15        |
+|mouseHover;                 |//div[contains(@style,'absolute')]//div[@class='popover-primary-body']//span[normalize-space(text())='Fast movers']                                     |xpath                                                                                                       |
+|check                       |isElementDisplayed;                                                                                                                                     |//div[@role='tooltip' and contains(@style,'absolute')]/div[normalize-space(text())='Bid Expired']|xpath|true|
+|$tresult2=                  |isElementDisplayed;                                                                                                                                     |//div[@role='tooltip' and contains(@style,'absolute')]/div[normalize-space(text())='Bid Expired']|xpath     |
+|click;                      |//div[contains(@style,'absolute')]//h3[text()='Transporter Quotes']/..//span[@class='remove-icon']                                                      |xpath                                                                                                       |
+*!
+
+!**> Validating test result
+!|Script  |common                                    |
+|$tresult=|checkIfStringAreEqual;|$tresult1|$tresult2|
+*!

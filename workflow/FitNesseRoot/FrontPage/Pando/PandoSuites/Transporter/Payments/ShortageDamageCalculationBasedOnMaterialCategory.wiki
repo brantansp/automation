@@ -1,0 +1,6 @@
+---
+Suite
+Suites: srf
+---
+!1 Test suite for shortage,damage,CD calculation depends on material category
+!contents -R2 -g -p -f -h

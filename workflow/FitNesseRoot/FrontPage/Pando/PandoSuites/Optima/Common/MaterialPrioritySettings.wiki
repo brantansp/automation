@@ -1,0 +1,15 @@
+!|Script        |Ui                                                                                        |
+|navigateToUrl; |${surl}/optima/settings                                                                   |
+|click;         |//a[contains(.,'Material Priority')]                     |xpath                           |
+|click;         |//input[@placeholder='Select Depot']                     |xpath                           |
+|click;         |//span[contains(text(),'${depo}')]                       |xpath                           |
+|click;         |//div[contains(text(),'Movement')]/following-sibling::div|xpath                           |
+|click;         |//li[contains(.,'${movement_type}')]                     |xpath                           |
+|wait;          |5                                                                                         |
+|$material_data=|getText;                                                 |//div[@class='admin-card']|xpath|
+
+!|Script              |Common                                                         |
+|$material_data_count=|getStringLength;      |$material_data                          |
+|check                |checkIfStringAreEqual;|$material_data_count|5             |true|
+|check                |checkIfStringExistsIn;|MT                  |$material_data|true|
+|check                |checkIfStringExistsIn;|GT                  |$material_data|true|

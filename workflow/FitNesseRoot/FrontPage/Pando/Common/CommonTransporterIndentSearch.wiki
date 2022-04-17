@@ -1,0 +1,6 @@
+!|script       |ui                                                                                                                                               |
+|navigateToUrl;|${turl}/indents                                                                                                                                  |
+|click;        |//input[@placeholder='Select Depot']                |xpath                                                                                       |
+|sendKeys;     |//ul[@class='depotfilter']//following-sibling::input|xpath                                                                           |${depot_name}|
+|click;        |//span[normalize-space(text())='${depot_name}']       |xpath                                                                                       |
+|sendKeys;     |//input[@placeholder='Search by Indent ID']         |xpath                                                                           |$order_id  |

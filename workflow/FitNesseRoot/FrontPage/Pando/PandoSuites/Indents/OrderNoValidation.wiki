@@ -1,0 +1,4 @@
+!|Script|Ui|
+|wait;|3|
+|check|isElementPresent;|//span[contains(text(),'t$unique')]|xpath|true|
+|$tresult=|isElementPresent;|//span[contains(text(),'t$unique')]|xpath|

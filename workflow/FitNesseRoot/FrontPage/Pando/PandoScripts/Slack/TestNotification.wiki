@@ -1,0 +1,5 @@
+!include -c .FrontPage.Pando.Common.Import
+
+!|Script|slack|
+|notifyStatus;|notify|
+|$data=|notification;|TC-100|TC-100|

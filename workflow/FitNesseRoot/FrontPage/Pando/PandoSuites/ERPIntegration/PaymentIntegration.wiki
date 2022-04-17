@@ -1,0 +1,5 @@
+---
+Suite
+---
+!1 Test suite Payment Integration
+!contents -R2 -g -p -f -h

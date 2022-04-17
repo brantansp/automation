@@ -1,0 +1,8 @@
+---
+Test
+---
+!define surl {https://jnj-auto.pandostaging.in}
+!define username {pandojnjauto@outlook.com}
+!define password {test@1234}
+!define shipper_client_id {5f5f2047debfe50f9fa45063}
+

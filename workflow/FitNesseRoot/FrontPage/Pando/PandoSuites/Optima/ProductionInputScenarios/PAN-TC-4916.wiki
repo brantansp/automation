@@ -1,0 +1,17 @@
+---
+Help: SCN9_For Consignee 'd231' one truck should be assigned
+Test
+---
+!|script       |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!|script       |CsvQuery                                                                                                                      |
+|getConnection;|$fileLocation|,                                                                                                               |
+|$tresult=     |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE File LIKE 'scn9_%' AND Consignee = 'd231:'|noOfOccurrences|
+|closeConnection;                                                                                                                             |
+
+!|script  |common                                  |
+|check    |checkIfStringAreEqual;|$tresult|1|true|
+|$tresult=|checkIfStringAreEqual;|$tresult|1     |
+
+ 

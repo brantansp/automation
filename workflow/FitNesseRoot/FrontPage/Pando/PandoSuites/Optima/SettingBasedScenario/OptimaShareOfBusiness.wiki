@@ -1,0 +1,13 @@
+---
+Help: Contains test cases for optima share of business
+Suite
+---
+!1 Test suite Optima share of Business
+
+!|comment                                                                                          |
+|1.|optima_sob : true|sob_based_on_Veh_type : true |TSD vehtype not empty|Orders based on ratio    |
+|2.|optima_sob : true|sob_based_on_Veh_type : true |TSD vehtype is empty |Orders not based on ratio|
+|3.|optima_sob : true|sob_based_on_Veh_type : false|TSD vehtype not empty|Orders not based on ratio|
+|4.|optima_sob : true|sob_based_on_Veh_type : false|TSD vehtype is empty |Orders based on ratio    |
+
+!contents -R2 -g -p -f -h

@@ -1,0 +1,93 @@
+---
+Help: max arrival sla Upload check in UI
+Suites: srf
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!**> Vehicle Creation 
+!define vehicle_name {v$unique}
+!define cft {600}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!** Uploading the SLA Contract with max arrival SLA
+!|script|common                  |
+|$rand1=|getRandomNumber;|100|999|
+|$rand2=|getRandomNumber;|100|999|
+|$rand3=|getRandomNumber;|100|999|
+|$rand4=|getRandomNumber;|100|999|
+|$rand5=|getRandomNumber;|1  |9  |
+
+!define Movement {Primary}
+!define row {Vehicle Type,Movement,Depot REF ID,Acceptance cost,Assignment cost,Arrival Cost,Rejection Cost,Grace Period,Max Arrival SLA(%)}
+!define column {${vehicle_name},${Movement},${depot_reference_id},$rand1,$rand2,$rand3,$rand4,$rand5,60}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+!|Script  |Excel                      |
+|newSheet;|${row}|${column}|$excelpath|
+
+!|script                     |ui                                                                                                             |
+|navigateToUrl;              |${surl}/mdm/sla                                                                                                |
+|click;                      |.btn.btn-secondary.el-dropdown-selfdefine                                               |cssselector           |
+|sendKeys;                   |.upload-material                                                                        |cssselector|$excelpath|
+|waitForElementToDisappear;  |//div[@class='spinner spinner--stretch']                                                |xpath      |30        |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[contains(text(),'Success')]                                    |xpath      |30        |
+|waitForElementToBeDisplayed;|//div[@role='alert']//span[contains(text(),'1 Uploaded and 0 Invalid records out of 1')]|xpath      |30        |
+*!
+
+!** Verify sla in UI after uploading
+!**> Disabling Acceptance Column
+!define column_name {Acceptance}
+!define visiblity {false}
+
+!|script       |ui             |
+|navigateToUrl;|${surl}/mdm/sla|
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+**!
+
+!**> Enabling Max arrival SLA Column
+!define column_name {Max Arrival SLA (%)}
+!define visiblity {true}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+**!
+
+!|Script   |Ui                                                                                                       |
+|sendKeys; |//input[@placeholder='Search by depot Name']|xpath                                            |d$unique  |
+|wait;     |3                                                                                                        |
+|check     |isElementPresent;                           |//span[normalize-space(text())='${vehicle_name}']|xpath|true|
+|$tresult1=|isElementPresent;                           |//span[normalize-space(text())='${vehicle_name}']|xpath     |
+|check     |isElementPresent;                           |//span[contains(text(),'60')]                    |xpath|true|
+|$tresult2=|isElementPresent;                           |//span[contains(text(),'60')]                    |xpath     |
+**!
+
+!**> Validating the test results
+!|Script  |Common                                                |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,true|
+*!

@@ -1,0 +1,7 @@
+---
+Help: Calculating Detention loading calculation
+Suite
+Suites: oldpay4
+---
+!1 Test suite for Detention loading calculation for multiple days
+!contents -R2 -g -p -f -h

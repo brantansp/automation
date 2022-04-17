@@ -1,0 +1,28 @@
+---
+Help: SCN21_Ensure that correct case rate is picked for the consignee125036
+Test
+---
+!5 SCN21_Ensure that correct case rate is picked for the consignee125036
+
+!5 https://gopando.atlassian.net/browse/PAN-2661
+
+!5 https://github.com/pandocorp/optima-v2/pull/55
+
+!5 In this scenario case rate calculation for
+!5 consignee 125036 should be 29.4* 150 (rate*qty = 4410) (621th contract)
+!5 but it is being calculated as 19 * 150 (rate * qty =2850) (117th contract).
+!5 The case_rate 19 actually belongs to the contract of another consignee 135249.
+
+!|Script   |Common                                                             |
+|$jsonpath=|getPath;|download/scn21_PAN_2661_caseRateIssue_output.json|fullpath|
+
+!|script       |QueryOptimaOutput                |
+|getParsedJson;|$jsonpath                        |
+|$allCosts=    |getAllCostsForAnConsignee;|125036|
+
+!|script  |common                                   |
+|$tresult=|checkIfStringExistsIn;|2850    |$allCosts|
+|$tresult=|checkIfStringAreEqual;|$tresult|false    |
+|check    |checkIfStringAreEqual;|$tresult|true|true|
+
+ 

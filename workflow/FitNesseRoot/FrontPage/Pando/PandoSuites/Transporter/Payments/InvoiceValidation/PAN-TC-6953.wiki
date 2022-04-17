@@ -1,0 +1,456 @@
+---
+Help: Transporter GSTIN state validation while creating an invoice
+Suites: dm2
+Test
+---
+!***> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-4|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-3|
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0 |
+
+!|Script       |Common                                         |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer -!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer -!|
+|$rdate=       |stringConcatenation;|$rdate       |!- $timer -!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=       |utcConversion;|$rdate       |
+
+!|Script        |DateUtil                                    |
+|$expected_date=|dateCalculation;|yyyy/MM/dd        |0       |
+|$expected_date=|utcConversion;  |$expected_date !- $timer -!|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!***> Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {1}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!**> Transporter Creation via ERP API with Transporter GSTIN
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!define gst_number {GST$unique}
+!define gst_type {FCM}
+!define gst_percentage {10}
+!define gstinstate1 {Assam}
+!define gstin1 {12}
+!define gstinstate2 {Meghalaya}
+!define gstin2 {45}
+!define id {$oid}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":[{"name": "${transporter_name}","reference_number": "${transporter_ref_id}","address": "${address}, ","city": "${city}","state": "${state}","pincode": "${pincode}","contact_name": "${manager_name}","contact_mobile": "${manager_mobile}","contact_email": "${manager_email}","gst_number": "${gst_number}","pan_number": "${pancard}","gst_type": "${gst_type}","percentage": "${gst_percentage}","transporter_gst_states": "${gstinstate1}","transporter_gst_numbers": "${gstin1}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.TransporterCreationDynamicERPAPI
+
+!|script    |MongoDB                                                                                              |
+|wait;      |2                                                                                                    |
+|initialize;|${connection}           |${database}                                                                 |
+|$json=     |getValuesFromCollection;|transporter_user|email_id|pandotransporter$unique@outlook.com|transporter_id|
+
+!|script         |json                         |
+|$transporter_id=|getValueFromJSON;|$json|${id}|
+
+!|script             |common                        |
+|$transporter_name=  |getTrim;|${transporter_name}  |
+|$transporter_ref_id=|getTrim;|${transporter_ref_id}|
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {PTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!***> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!***> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,${gate_ref_id},$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,2000,per_trip,01-Jan-$year,31-Dec-2030,100,1,}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!**> Indent creation and move to delivered status
+!***> Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|script     |common            |
+|$indent_id1=|getTrim;|$order_id|
+*!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!**> Update LR for Consignee 1
+!define consignee_id {$consignee_id_1}
+!define lr_number {l1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!**> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {cases}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {1000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!**> ERP Upload for Consignee 1
+!|script|ui|
+|wait;  |60|
+
+!|script|common                                                                                                                                                                                                                                                                                                                            |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"INV-$unique","material_code":"mc$unique","no_of_shortage":"1","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"7","no_of_carton_damage":"0","release_date":"$rdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+**!
+
+!**> Transporter login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+**!
+
+!**> Enabling Lorry Receipt for indent
+!define indent_id {$order_id}
+!define tusername {${transporter_email}}
+!define tpassword {${transporter_password}}
+
+!|script|common                                                                                                                                                        |
+|$data= |getTrim;|{"data":[{"destination_id":"${destination_location_id}","source_location_id":"${location_id}","lr_number":"${lr_number}","document_available":true}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.TransporterAPI.LorryReceiptAPI
+**!
+
+!*> Ready for billing page
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!include -c .FrontPage.Pando.Common.CommonPDFUploadInReadyForBilling
+*!
+
+!** Verify added GSTIN state while generating Invoice 
+!define invoice_number {ic$unique}
+!define gstn_no {gst$unique}
+!define remarks {remarks$unique}
+
+!|script      |Ui                                                                                                                      |
+|click;       |//button[text()='Create Invoice']   |xpath                                                                              |
+|click;       |//button[contains(text(),'Summary')]|xpath                                                                              |
+|$actualstate=|getText;                            |//div[text()='Service provider state']/parent::div/following-sibling::div/div|xpath|
+
+!|script             |common                                                 |
+|check               |checkIfStringAreEqual;|$actualstate|${gstinstate1}|true|
+|$singlestate_result=|checkIfStringAreEqual;|$actualstate|${gstinstate1}     |
+**!
+
+!** Add new state to transporter and verify state in generate invoice
+!**> Transporter Creation via ERP API with Transporter GSTIN
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!define gst_number {GST$unique}
+!define gst_type {FCM}
+!define gst_percentage {10}
+!define gstinstate1 {Assam}
+!define gstin1 {12}
+!define gstinstate2 {Meghalaya}
+!define gstin2 {45}
+!define id {$oid}
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":[{"name": "${transporter_name}","reference_number": "${transporter_ref_id}","address": "${address}, ","city": "${city}","state": "${state}","pincode": "${pincode}","contact_name": "${manager_name}","contact_mobile": "${manager_mobile}","contact_email": "${manager_email}","gst_number": "${gst_number}","pan_number": "${pancard}","gst_type": "${gst_type}","percentage": "${gst_percentage}","transporter_gst_states": "${gstinstate2}","transporter_gst_numbers": "${gstin2}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.TransporterCreationDynamicERPAPI
+**!
+!define gstinnew {gst$unique}
+
+!|script       |Ui                                                                                                                                  |
+|navigateToUrl;|${turl}/v2/payments?depot=${depot_name}                                                                                             |
+|refreshForElementToBeDisplayed;|(//div[contains(@class,'list-row') or contains(@class,'card-row row')])[1]|xpath|5|2|
+|click;        |//span[@class='el-checkbox__inner']                                          |xpath                                                 |
+|click;        |//button[text()='Create Invoice']                                            |xpath                                                 |
+|refresh;                                                                                                                                           |
+|wait;         |2                                                                                                                                   |
+|click;        |//button[contains(text(),'Summary')]                                         |xpath                                                 |
+|click;        |//div[text()='Service provider state']/parent::div/following-sibling::div/div|xpath                                                 |
+|check         |isElementPresent;                                                            |//span[text()='${gstinstate1}']           |xpath |true|
+|$tresult1=    |isElementPresent;                                                            |//span[text()='${gstinstate1}']           |xpath      |
+|check         |isElementPresent;                                                            |//span[text()='${gstinstate2}']           |xpath |true|
+|$tresult2=    |isElementPresent;                                                            |//span[text()='${gstinstate2}']           |xpath      |
+|click;        |//span[text()='${gstinstate1}']                                              |xpath                                                 |
+|$gstntext1=   |getValue;                                                                    |//input[@placeholder='Enter GSTIN Number']|xpath      |
+|click;        |//div[text()='Service provider state']/parent::div/following-sibling::div/div|xpath                                                 |
+|click;        |//span[text()='${gstinstate2}']                                              |xpath                                                 |
+|$gstntext2=   |getValue;                                                                    |//input[@placeholder='Enter GSTIN Number']|xpath      |
+|clearAndSend; |//input[@placeholder='Enter GSTIN Number']                                   |xpath                                     |${gstinnew}|
+
+!|script                |common                                                                    |
+|check                  |checkIfStringAreEqual;       |$gstntext1       |${gstin1}      |true      |
+|$tresult3=             |checkIfStringAreEqual;       |$gstntext1       |${gstin1}                 |
+|check                  |checkIfStringAreEqual;       |$gstntext2       |${gstin2}      |true      |
+|$tresult4=             |checkIfStringAreEqual;       |$gstntext2       |${gstin2}                 |
+|$multiplestates_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+**!
+
+!** Add a state in transporter profile and verify in invoice summary
+!define gstinstate3 {Kerala}
+!define gstin3 {gstKerala123456}
+
+!* Adding state in transporter profile
+!|script                     |ui                                                                   |
+|navigateToUrl;              |${turl}/profile                                                      |
+|waitForElementToBeDisplayed;|//div[contains(@class,'profile-name')]   |xpath|20                   |
+|scrollToView;               |(//a[contains(text(),'Add')])[2]         |xpath                      |
+|click;                      |(//a[contains(text(),'Add')])[2]         |xpath                      |
+|click;                      |((//div[@class='tablerow'])[3]//input)[2]|xpath                      |
+|wait;                       |2                                                                    |
+|sendKeys;                   |((//div[@class='tablerow'])[3]//input)[2]|xpath|${gstinstate3}       |
+|click;                      |(//li/span[text()='${gstinstate3}'])[3]  |xpath                      |
+|sendKeys;                   |((//div[@class='tablerow'])[3]//input)[3]|xpath|${gstin3}            |
+|sendKeys;                   |((//div[@class='tablerow'])[3]//input)[4]|xpath|${transporter_ref_id}|
+|click;                      |(//button[contains(text(),'SAVE')])[3]   |xpath                      |
+|waitForElementToBeDisplayed;|//p[contains(text(),'GSTIN saved')]      |xpath|5                    |
+**!
+
+!** Verifying invoice summary
+!|script                     |Ui                                                                                                                                            |
+|navigateToUrl;              |${turl}/v2/payments?depot=${depot_name}                                                                                                       |
+|wait;                       |3                                                                                                                                             |
+|click;                      |//span[@class='el-checkbox__inner']                                          |xpath                                                           |
+|click;                      |//button[text()='Create Invoice']                                            |xpath                                                           |
+|refresh;                                                                                                                                                                   |
+|click;                      |//button[contains(text(),'Summary')]                                         |xpath                                                           |
+|sendKeys;                   |//input[@placeholder='Enter Invoice Number']                                 |xpath                                         |${invoice_number}|
+|click;                      |//div[text()='Service provider state']/parent::div/following-sibling::div/div|xpath                                                           |
+|check                       |isElementPresent;                                                            |//span[text()='${gstinstate1}']               |xpath |true      |
+|$tresult1=                  |isElementPresent;                                                            |//span[text()='${gstinstate1}']               |xpath            |
+|check                       |isElementPresent;                                                            |//span[text()='${gstinstate2}']               |xpath |true      |
+|$tresult2=                  |isElementPresent;                                                            |//span[text()='${gstinstate2}']               |xpath            |
+|check                       |isElementPresent;                                                            |//span[text()='${gstinstate3}']               |xpath |true      |
+|$tresult3=                  |isElementPresent;                                                            |//span[text()='${gstinstate3}']               |xpath            |
+|click;                      |//span[text()='${gstinstate1}']                                              |xpath                                                           |
+|$gstntext1=                 |getValue;                                                                    |//input[@placeholder='Enter GSTIN Number']    |xpath            |
+|click;                      |//div[text()='Service provider state']/parent::div/following-sibling::div/div|xpath                                                           |
+|click;                      |//span[text()='${gstinstate2}']                                              |xpath                                                           |
+|$gstntext2=                 |getValue;                                                                    |//input[@placeholder='Enter GSTIN Number']    |xpath            |
+|click;                      |//div[text()='Service provider state']/parent::div/following-sibling::div/div|xpath                                                           |
+|click;                      |//span[text()='${gstinstate3}']                                              |xpath                                                           |
+|clearAndSend;               |//input[@placeholder='Enter GSTIN Number']                                   |xpath                                         |${gstin3}        |
+|wait;                       |2                                                                                                                                             |
+|$gstntext3=                 |getValue;                                                                    |//input[@placeholder='Enter GSTIN Number']    |xpath            |
+|sendKeys;                   |//textarea                                                                   |xpath                                         |remarks $unique  |
+|click;                      |//button[contains(text(),'Generate Invoice')]                                |xpath                                                           |
+|click;                      |//button/span[normalize-space(text())='YES'] |xpath                                                                               |
+|waitUntilElementDisplayed;|//h3[text()='Success']                                                       |xpath                                         |30               |
+|$successMessage=            |getElementAttribute;                                                         |//h3[text()='Success']/following-sibling::span|xpath |innerText |
+
+!|script                   |common                                                                                        |
+|check                     |checkIfStringAreEqual;       |$gstntext1             |${gstin1}             |true             |
+|$tresult4=                |checkIfStringAreEqual;       |$gstntext1             |${gstin1}                               |
+|check                     |checkIfStringAreEqual;       |$gstntext2             |${gstin2}             |true             |
+|$tresult5=                |checkIfStringAreEqual;       |$gstntext2             |${gstin2}                               |
+|check                     |checkIfStringAreEqual;       |$gstntext3             |${gstin3}             |true             |
+|$tresult6=                |checkIfStringAreEqual;       |$gstntext3             |${gstin3}                               |
+|$multiplestates_tp_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,true|
+**!
+
+!**> Invoice Filter
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!|Script|Ui                                                  |
+|click; |//span[contains(text(),'${transporter_name}')]|xpath|
+|wait;  |3                                                   |
+|click; |//a[text()='Mail Invoice and Annexure']       |xpath|
+**!
+
+!**> Validating Mail and reading PDF Content
+!|Script                        |Ui                                                                       |
+|wait;                          |5                                                                        |
+|navigateToUrl;                 |${mail_url}/email?page=0&size=60                                         |
+|refreshForElementToBeDisplayed;|//table[@class='striped responsive-table']        |xpath      |5    |    |
+|click;                         |//td[text()='${username}']/following-sibling::td/a|xpath                 |
+|waitForElementToBeDisplayed;   |//span[@class='card-title']/i[text()='email']     |xpath      |10        |
+|$invoice_url=                  |getElementAttribute;                              |(//td/a)[1]|xpath|href|
+|$annex_1_url=                  |getElementAttribute;                              |(//td/a)[2]|xpath|href|
+|$annex_2_url=                  |getElementAttribute;                              |(//td/a)[3]|xpath|href|
+*!
+
+!** Validating Annex 2 page in shipper side
+!|Script       |Ui          |
+|navigateToUrl;|$invoice_url|
+|wait;         |10          |
+
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|script       |FileUtil                         |
+|$filename=    |getLastModifiedFile|$downloadPath|
+|$invoice_data=|readPdfFile;       |$filename    |
+*!
+
+!** Validating Details for Shipper side annexure
+!|Script        |Common                                                            |
+|check          |checkIfStringExistsIn;       |${invoice_number}|$invoice_data|true|
+|$tresult1=     |checkIfStringExistsIn;       |${invoice_number}|$invoice_data     |
+|check          |checkIfStringExistsIn;       |${gstinstate3}   |$invoice_data|true|
+|$tresult2=     |checkIfStringExistsIn;       |${gstinstate3}   |$invoice_data     |
+|check          |checkIfStringExistsIn;       |${gstin3}        |$invoice_data|true|
+|$tresult3=     |checkIfStringExistsIn;       |${gstin3}        |$invoice_data     |
+|$invoiceresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,true  |
+*!
+
+!** Validating test result
+!|script  |common                                                                                                                     |
+|check    |checkIfStringAreEqualInArray;|$singlestate_result,$multiplestates_result,$multiplestates_tp_result,$invoiceresult,true|true|
+|$tresult=|checkIfStringAreEqualInArray;|$singlestate_result,$multiplestates_result,$multiplestates_tp_result,$invoiceresult,true     |
+*!

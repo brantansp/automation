@@ -1,0 +1,14 @@
+!|Script                     |Ui                                                                                         |
+|navigateToUrl;              |${surl}/optima/settings                                                                    |
+|click;                      |//input[@placeholder='Select Depot']                                 |xpath                |
+|sendKeys;                   |//div[normalize-space(text())='Depot']/..//input                     |xpath|${depo}        |
+|click;                      |//span[contains(text(),'${depo}')]                                   |xpath                |
+|click;                      |//div[contains(text(),'Movement')]/following-sibling::div            |xpath                |
+|click;                      |//li[contains(.,'${movement_type}')]                                 |xpath                |
+|clearValueWA;               |//div[contains(text(),'Max Pick ups')]//following-sibling::div/input |xpath                |
+|clearValueWA;               |//div[contains(text(),'Max Drop offs')]//following-sibling::div/input|xpath                |
+|wait;                       |3                                                                                          |
+|sendKeys;                   |//div[contains(text(),'Max Pick ups')]//following-sibling::div/input |xpath|${max_pick_up} |
+|sendKeys;                   |//div[contains(text(),'Max Drop offs')]//following-sibling::div/input|xpath|${max_drop_off}|
+|click;                      |//button[contains(.,'SAVE') or contains(.,'Save')]                                         |xpath                |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']/following-sibling::span[text()='Optima settings updated']            |xpath|30              |

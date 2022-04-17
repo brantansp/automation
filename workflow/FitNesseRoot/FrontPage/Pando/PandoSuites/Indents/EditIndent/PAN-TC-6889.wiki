@@ -1,0 +1,238 @@
+---
+Help: Adding new Consignee in Indent - Email and Address Field non-mandatory
+Suites: siemens
+Test
+---
+!***> Unique values assignment
+
+!| Script  |Common                                       |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$cGroup=  |getRandomString;        |5        |ALPHAUPPER|
+|$vno_1=   |getRandomNumber;        |20       |76        |
+|$vno_2=   |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=   |getRandomNumber;        |1000     |9999      |
+|$currDate=|getCurrentDateTimeStamp |iso                 |
+|$year=    |getSubString;           |$unique  |0   |4    |
+|$today=   |getSubString;           |$currDate|0   |10   |
+|$num=     |getRandomNumber;        |100000   |999999    |
+
+!| Script      |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |0 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |0 |
+
+!| Script      |Common                                          |
+|$truckindate= |stringConcatenation;|$truckindate |!- 10:00:00-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- 00:00:00-!|
+|$rdate=       |stringConcatenation;|$rdate       |!- 10:00:00-!|
+
+!| Script               |DateUtil                      |
+|$loadingDate=          |utcConversion;  |$loadingDate |
+|$truckindate=          |utcConversion;  |$truckindate |
+|$truckoutdate=         |utcConversion;  |$truckoutdate|
+|$invoice_filter_date=  |dateCalculation;|yyyy-MM-dd |0|
+|$voucher_filter_todate=|dateCalculation;|yyyy-MM-dd |1|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","generate_lr":true,"users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Gate Manager Creation
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation
+
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {rt$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+*!
+
+!**> Purchase order creation
+!define ponumber {po$unique}
+!define plnumber {pl$unique}
+!define anumber {a$unique}
+
+!define row {Purchase Order Number,Purchase Order Line Item Number,Account Assignment Number,Net Value,Balance value,Transporter Ref ID,Depot Ref ID}
+!define column {${ponumber},${plnumber},${anumber},10000,5000,${transporter_ref_id},${depot_reference_id}}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonPOupload
+**!
+
+!** Creating Indent 
+!define type {Outbound}
+!define source_location {${depot_name}}
+!define destination_location {${consignee_name}}
+!define gate_id {rt$unique}
+!define switch_depo {Consignee} 
+!define switch_type {2}
+!define delivery_type {FTL}
+
+!**> Source depot selection
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentDepotSelection
+**!
+
+!** Select loader toggle button
+!|Script         |ui                                                                                                           |
+|click;          |//label[text()='Loaders']/..//div|xpath                                                                      |
+|check           |isElementPresent;                |//label[text()='Loaders']/..//div[contains(@class,'is-checked')]|xpath|true|
+|$loadersresult1=|isElementPresent;                |//label[text()='Loaders']/..//div[contains(@class,'is-checked')]|xpath     |
+**!
+
+!** Add consignee in Indent page
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define newcity {Kochi}
+!define newstate {Kerala}
+!define newregion {north}
+!define newpincode {678908}
+
+!|Script                     |Ui                                                                                                  |
+|click;                      |//div[@class='el-select select-default']        |xpath                                              |
+|click;                      |//span[contains(text(),'${gate_id}')]           |xpath                                              |
+|click;                      |//div[@class='add-block']                       |xpath                                              |
+|wait;                       |2                                                                                                   |
+|click;                      |//div[text()='${switch_depo}']                  |xpath                                              |
+|waitForElementToBeDisplayed;|//span[contains(text(),'Consignee')]            |xpath                          |20                 |
+|click;                      |//span[contains(text(),'Consignee')]            |xpath                                              |
+|waitForElementToBeDisplayed;|//h4[contains(text(),'New Consignee')]          |xpath                          |20                 |
+|sendKeys;                   |//input[@placeholder='Enter Consignee Name']    |xpath                          |${consignee_name}  |
+|sendKeys;                   |//input[@placeholder='Enter Ref id']            |xpath                          |${consignee_ref_id}|
+|sendKeys;                   |//input[@placeholder='Enter city name']         |xpath                          |${newcity}         |
+|sendKeys;                   |//input[@placeholder='Enter state name']        |xpath                          |${newstate}        |
+|sendKeys;                   |//input[@placeholder='Enter Region']            |xpath                          |${newregion}       |
+|sendKeys;                   |//input[@placeholder='Enter Pin code']          |xpath                          |${newpincode}      |
+|click;                      |//span[contains(text(),'Add')]                  |xpath                                              |
+|click;                      |//span[contains(text(),'Switch to Open Indent')]|xpath                                              |
+|waitForElementToBeDisplayed;|//h3[text()='Success']                          |xpath                          |20                 |
+|$successmessage=            |getText;                                        |//h3[text()='Success']/..//span|xpath              |
+**!
+
+!** Checking that new consignee is pre-selected
+!|Script|Ui                                                                                                                                                                                  |
+|check  |isElementPresent;   |//div[@id='pane-2']//span[normalize-space(text())='${destination_location}']/ancestor::td/preceding-sibling::td//span[contains(@class,'is-checked')]|xpath|true|
+|wait;  |5                                                                                                                                                                                   |
+|click; |//span[text()='Add']|xpath                                                                                                                                                          |
+|wait;  |2                                                                                                                                                                                   |
+
+!| Script   |Common                                                                   |
+|check      |checkIfStringAreEqual;|$successmessage|Consignee added successfully!|true|
+|$addresult=|checkIfStringAreEqual;|$successmessage|Consignee added successfully!     |
+**!
+
+!**> Selecting types
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentCreationSelectTypesInUI
+**!
+
+!**> Getting Order id
+!|Script|Ui                                                      |
+|$data= |getText;|//span[contains(text(),'Indent created')]|xpath|
+|wait;  |3                                                       |
+
+!|Script   |Common                                                      |
+|$data1=   |stringConcatenation; |$data |last                           |
+|$order_id=|getSubStringByString;|$data1|Indent created with number|last|
+|$order_id=|getTrim;             |$order_id                             |
+**!
+**!
+
+!*> Filter depot
+!define depot_selection {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!|Script|ui                                                              |
+|check  |isElementPresent;|//div[contains(text(),'Indented')] |xpath|true|
+|check  |isElementPresent;|//span[contains(text(),'t$unique')]|xpath|true|
+**!
+
+!** Validate loaders in indent details page
+!|Script         |ui                                                                                   |
+|click;          |//span[contains(text(),'t$unique')]|xpath                                            |
+|check           |isElementPresent;                  |//p[contains(text(),'Loaders')]/strong|xpath|true|
+|$loadersresult2=|isElementPresent;                  |//p[contains(text(),'Loaders')]/strong|xpath     |
+|$loadersvalue=  |getText;                           |//p[contains(text(),'Loaders')]/strong|xpath     |
+
+!| Script        |Common                                       |
+|check           |checkIfStringAreEqual;|$loadersvalue|Yes|true|
+|$loadersresult3=|checkIfStringAreEqual;|$loadersvalue|Yes     |
+*!
+
+!**> Verify edited consignee in data manager in UI
+!|Script       |Ui                                                                                                              |
+|navigateToUrl;|${surl}/mdm/consignees                                                                                          |
+|sendKeys;     |//input[@placeholder='Search by Consignee Name, Ref id']|xpath                                       |c$unique  |
+|check         |isElementPresent;                                       |//span[contains(text(),'${consignee_name}')]|xpath|true|
+|$dmresult=    |isElementPresent;                                       |//span[contains(text(),'${consignee_name}')]|xpath     |
+**!
+
+!*> Validating test results
+!|script  |common                                                                                                |
+|$tresult=|checkIfStringAreEqualInArray|$addresult,$dmresult,$loadersresult1,$loadersresult2,$loadersresult3,true|
+**!

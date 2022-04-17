@@ -1,0 +1,12 @@
+---
+Help: Used to select the destination Depot/Consignee
+---
+!|Script                     |Ui                                                                                                                                                               |
+|click;                      |//section[@class='el-drawer__body']//h6[@class='pointer']                                                                                |xpath                  |
+|wait;                       |2                                                                                                                                                                |
+|click;                      |//div[normalize-space(text())='${destination}']                                                                                          |xpath                  |
+|waitForElementToDisappear;  |//div[@class='status-msg']//img                                                                                                          |xpath|20               |
+|sendKeys;                   |(//span[normalize-space(text())='Select destination']/../following-sibling::div//input)[${dest_value}]                                   |xpath|${destdepot_name}|
+|waitForElementToBeClickable;|(//tr[contains(@class,'row')])[${dest_value}]//span[normalize-space(text())='${destdepot_name}']/ancestor::td/preceding-sibling::td//span|xpath|20               |
+|click;                      |(//tr[contains(@class,'row')])[${dest_value}]//span[normalize-space(text())='${destdepot_name}']/ancestor::td/preceding-sibling::td//span|xpath                  |
+|wait;                       |2                                                                                                                                                                |

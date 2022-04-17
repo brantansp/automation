@@ -1,0 +1,9 @@
+!|Script                     |Ui                                                                                                                                                                               |
+|click;                      |//div[@class='add-block']                                                                                                                                    |xpath              |
+|waitForElementToBeDisplayed;|(//section//div[contains(@class,'table-striped')])[1]                                                                                                        |xpath|10           |
+|sendKeys;                   |//section[@class='el-drawer__body']//input[@type='text']                                                                                                     |xpath|${depot_name}|
+|waitForElementToDisappear;  |//div[@class='status-msg']//img                                                                                                                              |xpath|20           |
+|waitForElementToBeDisplayed;|(//section//div[contains(@class,'table-striped')])[1]                                                                                                        |xpath|10           |
+|click;                      |//div[contains(@class,'scrolling-none')]//tr[contains(@class,'row')]//span[normalize-space(text())='${depot_name}']/ancestor::td/preceding-sibling::td//label|xpath              |
+|wait;                       |3                                                                                                                                                                                |
+|click;                      |//span[text()='Add']                                                                                                                                         |xpath              |

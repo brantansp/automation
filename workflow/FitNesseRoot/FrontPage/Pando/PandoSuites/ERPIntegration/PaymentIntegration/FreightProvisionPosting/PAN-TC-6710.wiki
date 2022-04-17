@@ -1,0 +1,449 @@
+---
+Help: Check freight provision payload for secondary open indent at dispatched status
+Suites: oel4
+Test
+---
+!5 ${RUNNING_PAGE_NAME} Check freight provision payload for secondary open indent at dispatched status
+
+!***> Unique values assignment
+!|Script  |Common                                     |
+|$unique= |getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=   |getRandomNumber;        |20     |76        |
+|$num2=   |getRandomNumber;        |1000   |9999      |
+|$rand1=  |getRandomString;        |2      |ALPHAUPPER|
+|$year=   |getSubString;           |$unique|0    |4   |
+|$indate= |getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$indate2=|getCurrentDateTimeStamp;|yyyy-MM-dd        |
+|$vno_1=  |getRandomNumber;        |20     |76        |
+|$vno_2=  |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3=  |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-4|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |0 |
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0 |
+
+!|Script       |Common                                         |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer -!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer -!|
+|$rdate=       |stringConcatenation;|$rdate       |!- $timer -!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=       |utcConversion;|$rdate       |
+
+!|Script        |DateUtil                                    |
+|$expected_date=|dateCalculation;|yyyy/MM/dd        |0       |
+|$expected_date=|utcConversion;  |$expected_date !- $timer -!|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!***> Material Creation 1
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!**> Upload Loading and Unloading charges
+!define Vehicle_Type {REGP}
+!define Movement {Secondary}
+!define Depot_Ref_Id {cmaildep}
+!define Loading_Cost {100}
+!define Unloading_Cost {120}
+!define ODA_Cost {100}
+!define unit {per_trip}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.LoadingAndUnloadingSearch.CommonLUUpload
+
+!define Vehicle_Type {REGP}
+!define Movement {Secondary}
+!define Depot_Ref_Id {dmaildep}
+!define Loading_Cost {100}
+!define Unloading_Cost {120}
+!define ODA_Cost {100}
+!define unit {per_trip}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.LoadingAndUnloadingSearch.CommonLUUpload
+*!
+
+!***> Indent Creation
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":{"order_type":1,"transporter_id":"6140afc859f8de004b7f2a31","vehicle_type_id":"5e9d6b57c011b5004bd7554b","sources":[{"type":1,"location_id":"5eb0213c7d52d700514e1913","gate_id":"5eb0227f3039060051876899","vehicle_requirement_date":"2021-11-08T02:38:41.089Z","loader_available":false,"add_to_invoice":false},{"type":1,"location_id":"5eb0213c7d52d700514e1913","gate_id":"5eb022c3303906005187689a","vehicle_requirement_date":"2021-11-08T02:38:41.090Z","loader_available":false,"add_to_invoice":false}],"destinations":[{"type":2,"location_id":"5fa3db454735f3004dd36c7c","source_location_id":"5eb0213c7d52d700514e1913","source_gate_id":"5eb0227f3039060051876899","sold_to_id":"5fa3db454735f3004dd36c7c","unloader_available":false,"add_to_invoice":false,"expected_delivery_at":""},{"type":2,"location_id":"618881f3406019004d787291","source_location_id":"5eb0213c7d52d700514e1913","source_gate_id":"5eb0227f3039060051876899","sold_to_id":"618881f3406019004d787291","unloader_available":false,"add_to_invoice":false,"expected_delivery_at":""},{"type":2,"location_id":"5fa3db454735f3004dd36c7c","source_location_id":"5eb0213c7d52d700514e1913","source_gate_id":"5eb022c3303906005187689a","sold_to_id":"5fa3db454735f3004dd36c7c","unloader_available":false,"add_to_invoice":false,"expected_delivery_at":""},{"type":2,"location_id":"618881f3406019004d787292","source_location_id":"5eb0213c7d52d700514e1913","source_gate_id":"5eb022c3303906005187689a","sold_to_id":"618881f3406019004d787292","unloader_available":false,"add_to_invoice":false,"expected_delivery_at":""}],"no_of_vehicles":1,"freight_rate":10.5,"freight_unit":6,"rfq":false}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+
+!|script     |common            |
+|$indent_id1=|getTrim;|$order_id|
+*!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!**> Update LR for Consignee
+!|script|common                                                                                                                                                                              |
+|$data= |getTrim;|{"data":[{"destination_id":"5fa3db454735f3004dd36c7c","source_location_id":"5eb0213c7d52d700514e1913","lr_number":"lr1$num2","source_gate_id":"5eb0227f3039060051876899"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateDynamicAPI
+
+!|script|common                                                                                                                                                                              |
+|$data= |getTrim;|{"data":[{"destination_id":"5fa3db454735f3004dd36c7c","source_location_id":"5eb0213c7d52d700514e1913","lr_number":"lr2$num2","source_gate_id":"5eb022c3303906005187689a"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateDynamicAPI
+
+!|script|common                                                                                                                                                                              |
+|$data= |getTrim;|{"data":[{"destination_id":"618881f3406019004d787291","source_location_id":"5eb0213c7d52d700514e1913","lr_number":"lr3$num2","source_gate_id":"5eb0227f3039060051876899"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateDynamicAPI
+
+!|script|common                                                                                                                                                                              |
+|$data= |getTrim;|{"data":[{"destination_id":"618881f3406019004d787291","source_location_id":"5eb0213c7d52d700514e1913","lr_number":"lr4$num2","source_gate_id":"5eb022c3303906005187689a"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateDynamicAPI
+
+!|script|common                                                                                                                                                                              |
+|$data= |getTrim;|{"data":[{"destination_id":"618881f3406019004d787292","source_location_id":"5eb0213c7d52d700514e1913","lr_number":"lr5$num2","source_gate_id":"5eb022c3303906005187689a"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateDynamicAPI
+**!
+
+!***> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {cases}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {PRIMARY}
+!define invoice_amount {9000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"cmaildep","gate_ref_id":"cmailgate1","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"DDHS","sold_to":"DDHS","type":"${type}","invoice_number":"S$num","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":"000001"},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"cmaildep","gate_ref_id":"cmailgate2","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"DDH4","sold_to":"DDH4","type":"${type}","invoice_number":"S$num","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":"000002"},{"indent_no":"$order_id","delivery_number":"D3$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"cmaildep","gate_ref_id":"cmailgate1","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"DDHS","sold_to":"DDHS","type":"${type}","invoice_number":"S$num","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":"000003"},{"indent_no":"$order_id","delivery_number":"D4$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"cmaildep","gate_ref_id":"cmailgate2","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"DDH3","sold_to":"DDH3","type":"${type}","invoice_number":"S$num","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":"000004"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+
+!|script|ui|
+|wait;  |15|
+**!
+
+!** Validating the Freight provision payload sent to ERP (On Dispatched)
+!|Script                         |MongoDBQuery                                                                                             |
+|getMongoConnection;             |${connection}                                |db_pando_testing                                           |
+|$Freight_provision_1=           |getFreightProvisionPayload;                  |$order_id                                                  |
+|$totalNoOfModifiedPickListSent1=|getTotalNoOfFreightProvisionPayloadSent;     |$order_id                                                  |
+|check                           |getValuesFromFreightProvisionPayload;        |movement_type     |1                                       |
+|check                           |getValuesFromFreightProvisionPayload;        |transporter_code  |HWL                                     |
+|check                           |getValuesFromFreightProvisionPayload;        |transporter_name  |Highway Logistics                       |
+|check                           |getValuesFromFreightProvisionPayload;        |indent_number     |$order_id                               |
+|check                           |getValuesFromFreightProvisionPayload;        |total_indent_value|4200                                    |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|material_invoice_number|S$num    |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|material_code          |mc$unique|
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|consignee_code         |DDHS     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|total_freight_provision|1050     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|line_item_number       |000001   |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|oda_freight_charge     |0.00     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|fixed_charge           |0.00     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|additional_point_charge|0.00     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|miscellaneous_charge   |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|loading_charge         |0.00     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|unloading_charge       |0.00     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|lr_charge              |0.00     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000001|freight_charge         |1050.00  |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|material_invoice_number|S$num    |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|material_code          |mc$unique|
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|consignee_code         |DDH4     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|total_freight_provision|1050     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|line_item_number       |000002   |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|oda_freight_charge     |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|fixed_charge           |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|additional_point_charge|0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|miscellaneous_charge   |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|loading_charge         |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|unloading_charge       |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|lr_charge              |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000002|freight_charge         |1050     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000003|material_invoice_number|S$num    |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000003|material_code          |mc$unique|
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000003|consignee_code         |DDHS     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000003|total_freight_provision|1050     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000003|line_item_number       |000003   |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000003|oda_freight_charge     |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000003|fixed_charge           |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000003|additional_point_charge|0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000003|miscellaneous_charge   |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000003|loading_charge         |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000003|unloading_charge       |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000003|lr_charge              |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000003|freight_charge         |1050     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000004|material_invoice_number|S$num    |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000004|material_code          |mc$unique|
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000004|consignee_code         |DDH3     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000004|total_freight_provision|1050     |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000004|line_item_number       |000004   |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000004|oda_freight_charge     |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000004|fixed_charge           |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000004|additional_point_charge|0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000004|miscellaneous_charge   |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000004|loading_charge         |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000004|unloading_charge       |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000004|lr_charge              |0        |
+|check                           |getMaterialValuesFromFreightProvisionPayload;|line_item_number  |000004|freight_charge         |1050     |
+
+!|script   |common                                                        |
+|check     |comparisonResult;|$totalNoOfModifiedPickListSent1|equal|1|true|
+|$tresult1=|comparisonResult;|$totalNoOfModifiedPickListSent1|equal|1     |
+*!
+
+!***> ERP Upload for Consignee 
+!define invoice_number {S$num}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"DDHS","sold_to":"DDHS","material_invoice_number":"${invoice_number}","material_code":"mc$unique","no_of_shortage":"0","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate"},{"indent_number":"$order_id","ship_to":"DDH4","sold_to":"DDH4","material_invoice_number":"${invoice_number}","material_code":"mc$unique","no_of_shortage":"0","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate"},{"indent_number":"$order_id","ship_to":"DDH3","sold_to":"DDH3","material_invoice_number":"${invoice_number}","material_code":"mc$unique","no_of_shortage":"0","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!**> Transporter Login
+!define transporter_email {pandoautooelhwlt@gmail.com}
+!define transporter_password {836461}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!**> Validating in Ready for billing page without Tax Invoice
+!* Ready for billing page
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+
+!|script                     |Ui                                                                                                                                            |
+|navigateToUrl;              |${turl}/v2/payments?depot=${depot_name}                                                                                                       |
+|refreshForElementToBeDisplayed;|(//div[contains(@class,'list-row') or contains(@class,'card-row row')])[1]|xpath|5|2|
+|click;                      |//span[normalize-space(text())='Update']                                                                                                      |xpath           |
+|sendKeys;                   |(//input[@class='el-upload__input'])[1]                                                                                      |xpath|${lr_copy}|
+|sendKeys;                   |(//input[@class='el-upload__input'])[2]                                                                                      |xpath|${lr_copy}|
+|sendKeys;                   |(//input[@class='el-upload__input'])[3]                                                                                      |xpath|${lr_copy}|
+|click;                      |//div[@class='formfooter']//button//span[normalize-space(text())='Update']                                                                    |xpath           |
+|wait;                       |5                                                                                                                                             |
+|sendKeys;                   |(//input[@class='el-upload__input'])[1]                                                                                      |xpath|${lr_copy}|
+|sendKeys;                   |(//input[@class='el-upload__input'])[2]                                                                                      |xpath|${lr_copy}|
+|sendKeys;                   |(//input[@class='el-upload__input'])[3]                                                                                      |xpath|${lr_copy}|
+|click;                      |//div[@class='formfooter']//button//span[normalize-space(text())='Update']                                                                    |xpath           |
+|wait;                       |5                                                                                                                                             |
+|click;                      |//div[contains(@class,'close-sidebar')]                                                                                      |xpath           |
+|waitForElementToBeDisplayed;|//div[starts-with(@class,'card-row row')]                                                                                    |xpath|15        |
+|clickJS;                    |//span[normalize-space(text())='$order_id']/ancestor::div[contains(@class,'card-row row')]//span[@class='el-checkbox__inner']|xpath           |
+|click;                      |//button[text()='Create Invoice']                                                                                            |xpath           |
+*!
+
+!***> Invoice Page
+!define invoice_number {S$num}
+!define gstin_number {$unique}
+!define provider_state {Assam}
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceGeneration
+*!
+*!
+
+!***> Approving Invoice in Shipper
+!define depot_name {Chennai Mail Depot}
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceCheck
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceApprove
+*!
+
+!** Validating the Invoice sent
+!|Script              |MongoDBQuery                                                                                                  |
+|getMongoConnection;  |${connection}                               |db_pando_testing                                                 |
+|$total_invoice_sent1=|getTotalNoOfStrategy1InvoicePostingSent;    |${invoice_number}                                                |
+|$erp_invoice_details=|getStrategy1InvoicePostingPayload;          |${invoice_number}                                                |
+|check                |getValuesFromInvoicePayload;                |transporter_code|HWL                                             |
+|check                |getValuesFromInvoicePayload;                |invoice_number  |${invoice_number}                               |
+|check                |getValuesFromInvoicePayload;                |invoice_total   |4200                                            |
+|check                |getValuesFromInvoicePayload;                |invoice_date    |$indate2                                        |
+|check                |getValuesFromInvoicePayload;                |tax_code        |1                                               |
+|check                |getValuesFromInvoicePayload;                |tax_type        |2                                               |
+|check                |getValuesFromInvoicePayload;                |tax_percentage  |4                                               |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|indent_id              |$order_id        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|order_reference        |$order_id        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|movement               |1                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|material_invoice_number|${invoice_number}|
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|sku                    |mc$unique        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|source_ref_id          |cmaildep         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|gate_ref_id            |cmailgate1       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|destination            |Ghaziabad        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|destination_ref_id     |DDHS             |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|quantity               |100              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|weight                 |480              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|volume                 |450              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|invoice_value_freight  |1050             |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|invoice_value_detention|0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|invoice_value_defect   |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|consignee_category     |                 |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|line_item_number       |000001           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|oda_freight_charge     |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|fixed_charge           |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|additional_point_charge|0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|miscellaneous_charge   |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|loading_charge         |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|unloading_charge       |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|lr_charge              |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|sla_delay              |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|transit_delay          |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|penalty                |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|shortage               |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|damage                 |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|carton_damage          |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|debit_adjustment       |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|extra_km_charge        |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|base_freight_charge    |1050             |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|weight_unit            |kg               |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|quantity_unit          |cases            |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000001|volume_unit            |cft              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|indent_id              |$order_id        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|order_reference        |$order_id        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|movement               |1                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|material_invoice_number|${invoice_number}|
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|sku                    |mc$unique        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|source                 |Chennai          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|source_ref_id          |cmaildep         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|gate_ref_id            |cmailgate2       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|destination            |Lucknow          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|destination_ref_id     |DDH4             |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|quantity               |100              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|weight                 |480              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|volume                 |450              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|invoice_value_freight  |1050             |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|invoice_value_detention|0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|invoice_value_defect   |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|consignee_category     |                 |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|line_item_number       |000002           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|oda_freight_charge     |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|fixed_charge           |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|additional_point_charge|0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|miscellaneous_charge   |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|loading_charge         |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|unloading_charge       |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|lr_charge              |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|sla_delay              |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|transit_delay          |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|penalty                |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|shortage               |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|damage                 |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|carton_damage          |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|debit_adjustment       |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|extra_km_charge        |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|base_freight_charge    |1050             |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|weight_unit            |kg               |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|quantity_unit          |cases            |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000002|volume_unit            |cft              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|indent_id              |$order_id        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|order_reference        |$order_id        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|movement               |1                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|material_invoice_number|${invoice_number}|
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|sku                    |mc$unique        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|source                 |Chennai          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|source_ref_id          |cmaildep         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|gate_ref_id            |cmailgate1       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|destination            |Ghaziabad        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|destination_ref_id     |DDHS             |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|quantity               |100              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|weight                 |480              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|volume                 |450              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|invoice_value_freight  |1050             |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|invoice_value_detention|0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|invoice_value_defect   |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|consignee_category     |                 |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|line_item_number       |000003           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|oda_freight_charge     |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|fixed_charge           |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|additional_point_charge|0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|miscellaneous_charge   |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|loading_charge         |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|unloading_charge       |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|lr_charge              |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|sla_delay              |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|transit_delay          |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|penalty                |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|shortage               |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|damage                 |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|carton_damage          |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|debit_adjustment       |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|extra_km_charge        |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|base_freight_charge    |1050             |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|weight_unit            |kg               |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|quantity_unit          |cases            |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000003|volume_unit            |cft              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|indent_id              |$order_id        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|order_reference        |$order_id        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|movement               |1                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|material_invoice_number|${invoice_number}|
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|sku                    |mc$unique        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|source                 |Chennai          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|source_ref_id          |cmaildep         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|gate_ref_id            |cmailgate2       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|destination            |Ghaziabad        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|destination_ref_id     |DDH3             |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|quantity               |100              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|weight                 |480              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|volume                 |450              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|invoice_value_freight  |1050             |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|invoice_value_detention|0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|invoice_value_defect   |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|consignee_category     |                 |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|line_item_number       |000004           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|oda_freight_charge     |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|fixed_charge           |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|additional_point_charge|0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|miscellaneous_charge   |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|loading_charge         |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|unloading_charge       |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|lr_charge              |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|sla_delay              |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|transit_delay          |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|penalty                |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|shortage               |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|damage                 |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|carton_damage          |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|debit_adjustment       |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|extra_km_charge        |0                |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|base_freight_charge    |1050             |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|weight_unit            |kg               |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|quantity_unit          |cases            |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|line_item_number|000004|volume_unit            |cft              |
+
+|Script          |Common                                                                  |
+|$schemaFilePath=|getPath;|data/schemafiles/strategy1_invoice_posting_schema.json|fullpath|
+
+!|script|json                                                           |
+|check  |validateJsonDocument;|$schemaFilePath|$erp_invoice_details|true|
+
+!|script   |common                                             |
+|check     |comparisonResult;|$total_invoice_sent1|equal|1|true|
+|$tresult2=|comparisonResult;|$total_invoice_sent1|equal|1     |
+*!
+
+!***> Validating test result
+!|Script  |Common                                                |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,true|
+*!

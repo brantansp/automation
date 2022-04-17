@@ -1,0 +1,17 @@
+!|Script                     |Ui                                                                               |
+|navigateToUrl;              |${surl}/indent/$order_id/0/edit                                                  |
+|waitForElementToBeDisplayed;|//div[@class='add-block']                               |xpath|30                |
+|click;                      |//div[@class='add-block']                               |xpath                   |
+|click;                      |//input[@placeholder='Search by Depot Name, City or ID']|xpath                   |
+|sendHumanKeys;              |//input[@placeholder='Search by Depot Name, City or ID']|xpath|${olddropoffdepot}|
+|wait;                       |3                                                                                |
+|click;                      |(//span[@class='el-checkbox__inner'])[1]                |xpath                   |
+|wait;                       |3                                                                                |
+|click;                      |//input[@placeholder='Search by Depot Name, City or ID']|xpath                   |
+|clearValue;                 |//input[@placeholder='Search by Depot Name, City or ID']|xpath                   |
+|sendHumanKeys;              |//input[@placeholder='Search by Depot Name, City or ID']|xpath|${newdropoffdepot}|
+|wait;                       |3                                                                                |
+|click;                      |(//span[@class='el-checkbox__inner'])[1]                |xpath                   |
+|wait;                       |3                                                                                |
+|click;                      |//span[text()='Add']                                    |xpath                   |
+|wait;                       |3                                                                                |

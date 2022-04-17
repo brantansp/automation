@@ -1,0 +1,61 @@
+---
+Help: CRUD - Add Users from Transporter profile
+Suites: tprofile1
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!* Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!** Transporter login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+!include -c  .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!** Adding User to the Transporter from Transporter profile
+!define user_name {U $unique}
+!define user_email {pandotransporter$unique@gmail.com}
+!define user_mobile {123}
+
+!|script                   |ui                                                                                                                |
+|navigateToUrl;            |${turl}/profile                                                                                                   |
+|click;                    |//li[normalize-space(text())='Users']        |xpath                                                               |
+|wait;                     |3                                                                                                                 |
+|click;                    |//a[normalize-space(text())='Add']           |xpath                                                               |
+|sendKeys;                 |//input[@placeholder='name']                 |xpath                                        |user $unique          |
+|sendKeys;                 |//input[@placeholder='email']                |xpath                                        |pando$unique@gmail.com|
+|sendKeys;                 |//input[@placeholder='mobile']               |xpath                                        |0989564567            |
+|click;                    |//button[@value='save']                      |xpath                                                               |
+|check                     |isElementPresent;                            |//div[@class='el-notification success right']|xpath      |true      |
+|$tresult=                 |isElementPresent;                            |//div[@class='el-notification success right']|xpath                 |
+|waitForElementToDisappear;|//div[@class='el-notification success right']|xpath                                        |5                     |
+**!
+
+!** Logging out Transporter
+!include -c  .FrontPage.Pando.Common.TransporterLogout
+*!
+
+!*** Update result
+ 
+*!

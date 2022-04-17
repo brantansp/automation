@@ -1,0 +1,40 @@
+---
+Help: Transporter Manual Upload
+Test
+---
+!** Getting rejection Count
+!define rejection_name  {Transporters}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+*!
+
+!** Uploading Consignee Bulk Upload
+!define row {Transporter Name*,Reference ID*,Manager,Representative Mobile,Representative Email*,Address,City,State,Postal Code,Gst type(FCM/RCM)*,Percentage*,GST State,GSTIN,GST Reference ID,Credit Period,MSME,PAN Number,Status}
+!define column1 {tbulk1$unique,t1$unique refrence,t1 $unique,123,pandotransporter+1$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,,20,Tamil Nadu,10,123456789012}
+!define column2 {tbulk2$unique,t2$unique refrence,t2 $unique,12891,pandotransporter+2$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,,20,Tamil Nadu,10,123456789012}
+!define column3 {tbulk3$unique,t3$unique refrence,t3 $unique,12892,pandotransporter+3$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,,20,Tamil Nadu,10,123456789012}
+!define column4 {tbulk4$unique,t4$unique refrence,t4 $unique,12893,pandotransporter+4$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,,20,Tamil Nadu,10,123456789012}
+!define column5 {tbulk5$unique,t5$unique refrence,t5 $unique,12894,pandotransporter+5$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,,20,Tamil Nadu,10,123456789012}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+!|Script       |Excel                                                                   |
+|multiNewSheet;|${row}|${column1}|${column2}|${column3}|${column4}|${column5}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/transporter                                         |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+
+!|Script |Common                            |
+|$result=|getResultOfCalculation;|$count|+|5|
+**!
+
+!** Validating Rejection list
+!define rejection_name  {Transporters}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.ValidateRejections
+**!

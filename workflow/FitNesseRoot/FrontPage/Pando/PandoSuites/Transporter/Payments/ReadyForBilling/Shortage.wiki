@@ -1,0 +1,7 @@
+---
+Help: shortage payments calculations
+Suite
+Suites: pay1
+---
+!1 Test suite for shortage payments
+!contents -R2 -g -p -f -h

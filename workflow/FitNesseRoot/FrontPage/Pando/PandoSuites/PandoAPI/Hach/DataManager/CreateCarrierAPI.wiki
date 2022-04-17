@@ -1,0 +1,15 @@
+---
+Help: Contains Carrier API
+Suites: hach
+Test
+---
+!|Script    |Http                                      |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|https://pack.stockone.in/api/v1/carrier/  |
+|$carrier=  |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|200                        |
+
+!|Script              |json                                        |
+|$carrier_code=       |getValueFromJSONByType;|$carrier|code  |int |
+|$carrier_service=    |getValueFromJSON;      |$carrier|service    |
+|$carrier_description=|getValueFromJSON;      |$carrier|description|

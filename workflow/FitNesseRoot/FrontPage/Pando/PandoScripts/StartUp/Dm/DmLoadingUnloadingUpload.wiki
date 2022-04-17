@@ -1,0 +1,12 @@
+---
+Test
+---
+!|Script    |Common                                                                  |
+|$excelpath=|getPath;|optimaAttachment/DM_bulk_loading_unloading_upload.xlsx|fullpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${login_url}/mdm/detentions                                     |
+|wait;                     |5                                                               |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |

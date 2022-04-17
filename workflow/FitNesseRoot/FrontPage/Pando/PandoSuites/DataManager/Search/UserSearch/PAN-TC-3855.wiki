@@ -1,0 +1,40 @@
+---
+Help: Invalid username
+Test
+---
+!*** Unique value assignment
+!| script|common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$num=   |getRandomNumber;        |100  |999  |
+*!
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {depot_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!** User creation 
+!define role_id {$retrieve_key_value}
+!define user_name {AB$unique}
+!define user_number {123}
+!define user_email {pandoautomation+$unique@gmail.com}
+!define status {1}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** User search
+!define search_value {A$unique}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonUserNameSearch
+*!
+
+!** Validating result
+!|script   |ui                                                                                                              |
+|check     |isElementNotPresent;|//div[@class='card-row card-row-show']//span[contains(text(),'${search_value}')]|xpath|true|
+|$tresult1=|isElementNotPresent;|//div[@class='card-row card-row-show']//span[contains(text(),'${search_value}')]|xpath     |
+
+!|Script  |Common                               |
+|$tresult=|checkIfStringAreEqual;|$tresult1|true|
+*!

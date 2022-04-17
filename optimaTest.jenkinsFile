@@ -1,0 +1,255 @@
+
+//Assinging variable
+jobName = env.JOB_NAME
+build   = env.BUILD_NUMBER
+buildno = build.toInteger()
+status  = ""
+slack_error = 0
+link = ""
+notification = "good"
+jobStatus    = 0
+client       = params.CLIENT
+username     = params.USERNAME
+notify       = params.NOTIFICATION
+runid        = params.RUNID
+
+node('automation_label') { //Node where autoscaling occur
+
+ sh '$(aws ecr get-login --no-include-email --region ap-south-1)' //login to image
+ 
+ //Image name where Optima V2 is build
+ docker.image('669650451927.dkr.ecr.ap-south-1.amazonaws.com/pando-optima:optima-test').inside {
+ 
+	//try-catch block
+	 try {
+        //The checkout stage is used to switch between branches.
+          //If it is a pullrequest job, then the appropriate configurations are made
+          //Else, that branch is checked out.
+          stage('Checkout') {
+          
+               //checking out latest branch deployed in optima staging
+               CRUMB = sh(script:"curl -u 'common@pando.ai:119ea560608a3b365c80e1540d25742f66' -s 'http://ci.gopando.in/crumbIssuer/api/xml?xpath=concat(//crumbRequestField,\":\",//crumb)'", returnStdout:true).trim()
+               echo CRUMB
+               BuildNo = sh(script:"curl -u 'common@pando.ai:119ea560608a3b365c80e1540d25742f66' -H '$CRUMB' -X POST 'http://ci.gopando.in/view/Optima/job/Optima_Slave_Azure_Deployment/job/optima-slave-image-staging-azure/lastBuild/api/xml?xpath=concat(//value,/value)'", returnStdout:true).trim()
+               echo BuildNo
+               BranchName = sh(script:"curl -u 'common@pando.ai:119ea560608a3b365c80e1540d25742f66' -H '$CRUMB' -X POST 'http://ci.gopando.in/view/Optima/job/optima-v2-FDP/'$BuildNo'/api/xml?xpath=concat(//value,/value)'", returnStdout:true).trim()
+               echo BranchName
+               
+               checkout([$class: 'GitSCM', branches: [[name: BranchName]], doGenerateSubmoduleConfigurations: false,
+                         extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '30a3a50f-826d-4349-bfb9-e3b9208ac50e',url: 'https://github.com/pandocorp/optima-v2.git']]])   
+
+          }
+             
+          //The build stage is used to setup and update all the dependent files and packages
+          stage('Compile') {
+
+             sh  """#!/bin/bash
+			        mvn -Dmaven.javadoc.skip=true clean install
+                """
+                status = "Sources compiled"
+          }
+          
+          //This stage will clear the input & Output folder and Download the input.json files from s3 bucket
+           stage('Data Setting - S3download') { 
+               
+               sh  """#!/bin/bash
+			        rm -rf optima/solution/input/*
+			        rm -rf optima/solution/output/*
+                """
+            
+            s3Download bucket: 'optima-bulk-test-input', file: "/var/lib/jenkins/workspace/$jobName/optima/solution/input/test", force: true, path: 'input-json/'
+                
+                sh  """#!/bin/bash
+			        cd optima/solution/input/test/input-json
+			        mv * ../
+			        cd ..
+			        rmdir input-json
+			        cd /
+                """
+          }
+          
+           //Runs the junit test viamaven command
+           stage("Test") {
+               sh  """#!/bin/bash
+			        mvn -Dmaven.javadoc.skip=true -Dtest=OptimaTestSuite#testSummary test
+                """
+                
+                //timeout(time: 180, unit: 'SECONDS') {
+			     //   error 'Job taken longer than expected'
+                // }
+           }
+           
+           //Export the result to s3 output folder build-wise
+           stage('Exporting Result - S3upload') {      
+            
+               s3Upload acl: 'PublicRead', bucket: 'optima-bulk-test-output', file: "/var/lib/jenkins/workspace/$jobName/optima/solution/input/test/", path: "$buildno/"
+               s3Upload acl: 'PublicRead', bucket: 'optima-bulk-test-output', file: "/var/lib/jenkins/workspace/$jobName/optima/solution/output", path: "$buildno/output/"
+                
+          }
+    
+      }
+
+      //In case there are any errors in the above stages, this catch block will display an error message
+      catch (e) {
+
+          echo 'Issue ' + e
+          slack_error = 1
+          status = "Issue with Compile :(" + e
+          sh 'exit 1'
+
+      } finally {
+
+        //Finally all the reports are published to the user
+         stage('Status') {
+          echo status
+              
+         link = "http://ci.gopando.in/blue/organizations/jenkins/Optima-Test-API/detail/Optima-Test-API/${env.BUILD_NUMBER}/pipeline"
+              
+           if(slack_error == 1) {
+		   slackSend channel: "#automation-status",color: "danger", message: "Job ${env.JOB_NAME} ${env.BUILD_NUMBER} containing production input Failed (<$link|Open>)"
+		   } else{
+		   //slackSend channel: "#automation-status",color: "good", message: "Job for ${env.JOB_NAME} ${env.BUILD_NUMBER} containing production input was passed (<$link|Open>)"
+		   }
+         }
+      }
+   }  
+   
+   //Image where the fitnesse test project is build
+   docker.image("669650451927.dkr.ecr.ap-south-1.amazonaws.com/pando-fitnesse:c96").inside('--privileged') {
+   
+     try {
+          // stage to checkout the latest project
+          stage('Checkout') {
+          
+               checkout([$class: 'GitSCM', branches: [[name: params.TESTBRANCH]], doGenerateSubmoduleConfigurations: false,
+                         extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: '30a3a50f-826d-4349-bfb9-e3b9208ac50e',url: 'https://github.com/pandocorp/automation.git']]])
+           }
+           
+          //stage to print the version of chrome and chromedriver
+          stage('Version') {
+              sh  """#!/bin/bash
+					chromedriver -v
+					google-chrome-stable --version
+			      """
+          }
+          
+          //Modifing userdata
+          stage('Data Settings') {
+	            
+	            
+		              sh  """#!/bin/bash
+							cd  workflow/FitNesseRoot/GlobalSettings
+		                    rpl build_no_x  ${env.BUILD_NUMBER} CommonVariables.wiki
+							rpl build_job_x ${env.JOB_NAME} CommonVariables.wiki
+							rpl cfeatures $client CommonVariables.wiki
+					      """           
+	              
+	           
+	           //Notify
+	           if(notify.equals("yes")) {	           
+	                sh  """#!/bin/bash
+							cd  workflow/FitNesseRoot/GlobalSettings
+							rpl notxxx  notify CommonVariables.wiki
+					      """
+	           }
+	           
+	           //Updating testlink status
+	                sh  """#!/bin/bash
+							cd  workflow/FitNesseRoot/GlobalSettings
+							rpl testRun_id $runid CommonVariables.wiki
+							rpl no_testlink yes Testlink.wiki
+							rpl 0  4 ExtendReport.wiki
+					    """
+					      
+			//Downloading the summary.csv file from s3 and setting it to download folder	      
+		    s3Download bucket: 'optima-bulk-test-output', file: "/var/lib/jenkins/workspace/$jobName/workflow/download", force: true, path: "$buildno/"
+		      
+		      //cleaning the download folder
+		       sh  """#!/bin/bash
+			        cd /var/lib/jenkins/workspace/$jobName/workflow/download/$buildno
+			        cd output
+			        for subdir in *; 
+			        do mv \$subdir/Optima_output_file.json \${subdir}_output.json; 
+			        done;
+			        mv *_output.json ../../
+			        cd ..
+			        mv summary.csv ../
+			        cd ..
+			        rm -rf $buildno
+			        cd /
+                """
+	      }
+	      
+	      //The build stage is used to setup and update all the dependent files and packages
+          stage('Build') {
+
+			sh 'sudo -- sh -c "echo tmpfs      /dev/shm      tmpfs   defaults,size=2g   0   0  >> /etc/fstab"'
+            sh 'sudo mount -o remount /dev/shm'
+            sh 'df -k | grep shm'
+
+
+             sh  """#!/bin/bash
+					cd  commonlibrary
+					mvn -Dmaven.javadoc.skip=true install
+			 """
+
+			 sh  """#!/bin/bash
+					cd  workflow
+					mkdir testAttachment
+					rm -rf screen/*.png
+					rm -rf fitnesse-*.xml
+					rm -rf er/report.html
+			 """
+
+          }
+          
+          //The test stage is used to run the required tests for the pipeline job
+          stage('Test') {
+            def jlist = ["OptimaTestCaseRun"]; 
+                if(jlist.contains(jobName)) {
+                    testcase = params.TESTCASE
+					sh """#!/bin/bash
+				          cd workflow
+				          mvn -Dmaven.javadoc.skip=true -Pfitnesse test -Dfitnesse.command='-c $testcase?suite&format=xml&includehtml' -Dfitnesse.result='fitnesse-data-result.xml'
+				        """
+				  } else {
+                    tag_name = params.TAG
+				    sh """#!/bin/bash
+				          cd workflow
+						  mvn -Dmaven.javadoc.skip=true -Pfitnesse test -Dfitnesse.command='-c FrontPage.Pando?suite&suiteFilter=$tag_name&format=xml&includehtml' -Dfitnesse.result='fitnesse-data-result.xml'
+				        """
+				  }
+		  }
+         
+     } catch(e) {
+             echo 'Issue ' + e
+          currentBuild.result = 'FAILED'
+          notification = "danger"
+          sh 'exit 1'         
+                     
+     } finally {
+          
+          stage('Publish Reports') {
+              //Final Result
+              step([$class: 'FitnesseResultsRecorder',fitnessePathToXmlResultsIn: 'workflow/fitnesse-data-result.xml'])
+              
+              //publishHTML([alwaysLinkToLastBuild: true, keepAll: true, reportDir: 'workflow/er', reportFiles: 'report.html', reportName: 'Report'])
+              
+        
+               if(currentBuild.result == 'UNSTABLE') {
+	             notification = "warning"
+	           }
+
+	           if(!jobName.contains("Phase") && notification !='good') {
+	               slackSend color:"$notification", channel: "#automation-status", message: "Automation Completed - ${env.JOB_NAME} (<${env.BUILD_URL}|Open>)"
+	           }
+	           
+	           publishHTML([allowMissing: true,alwaysLinkToLastBuild: true, keepAll: true, reportDir: 'workflow/er', reportFiles: 'report.html', reportName: 'Report'])
+	           
+	           manager.addHtmlBadge("<a href='https://pando.freshrelease.com/PANDO/tcm/test-runs/6049/test-cases' target='blank'>TestRun</a>");
+			   manager.createSummary("http://ci.gopando.in/static/243b2051/images/48x48/search.png").appendText("<a href='https://s3.console.aws.amazon.com/s3/buckets/optima-bulk-test-output/${env.BUILD_NUMBER}/' target='_blank'>Consolidated Summary link</a>", false)
+	    }  
+      }
+   }
+}
+

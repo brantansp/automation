@@ -1,0 +1,9 @@
+---
+Help: Contains script to search indent
+---
+!|Script                        |Ui                                                                                                                                                        |
+|click;                         |//span[text()='Search']                                                                                                              |xpath               |
+|sendHumanKeys;                 |//input[@placeholder='Enter Indent ID' or @placeholder='Enter indent id']                                                            |xpath|${search_text}|
+|click;                         |//button[text()='Search']                                                                                                            |xpath               |
+|wait;                          |2                                                                                                                                                         |
+|refreshForElementToBeDisplayed;|//div[contains(@class,'order-item row') or contains(@class,'grid-list-row') or contains(@class,'card-row') or @class='no-order-data']|xpath|2      |5     |

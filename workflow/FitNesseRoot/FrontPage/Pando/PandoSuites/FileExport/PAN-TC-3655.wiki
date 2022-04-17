@@ -1,0 +1,23 @@
+---
+Help: DM Detention Downloading excel sent via mail
+Suites: export1
+Test
+---
+!** Exporting detention
+!|script                     |ui                                                                         |
+|navigateToUrl;              |${surl}\mdm\detentions                                                     |
+|waitForElementToBeDisplayed;|//input[@placeholder='Search by Truck type']                 |xpath|30     |
+|sendHumanKeys;              |//input[@placeholder='Search by Truck type']                 |xpath|965 MRT|
+|waitForElementToBeDisplayed;|//div[@class='card-row card-row-show dowble-row']            |xpath|60     |
+|waitForElementToDisappear;  |//*[contains(@class,'loading') or contains(@class,'spinner')]|xpath|60     |
+|click;                      |//button[text()='Export']                                    |xpath        |
+|wait;                       |60                                                                         |
+*!
+
+!** Verifying the File download
+!|script               |common                                             |
+|$downloadPath=        |getPath;              |download |fullpath          |
+|check                 |checkIfFileDownloaded;|detention|$downloadPath|true|
+|$tresult=             |checkIfFileDownloaded;|detention|$downloadPath     |
+|cleanFilesInDirectory;|$downloadPath                                      |
+*!

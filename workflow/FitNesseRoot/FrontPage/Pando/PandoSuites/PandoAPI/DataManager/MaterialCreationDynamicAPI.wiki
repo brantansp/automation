@@ -1,0 +1,12 @@
+---
+Help: Contains script to create materials dynamically
+Test
+---
+!|Script    |Http                                      |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/material/                     |
+|$material= |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|${expected_status_code}    |
+
+!|Script      |json                               |
+|$material_id=|getValueFromJSON;|$material|data.id|

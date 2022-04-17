@@ -1,0 +1,24 @@
+---
+Help: Ensure Trip is displayed for all the statuses when in All status filter
+Test
+---
+!** Filter for the Status Started
+
+!define filter_type {Status}
+!define filter_value {ALL STATUS}
+
+!include -c .FrontPage.Pando.PandoSuites.LetsTransporter.CommonTripFilter
+
+*!
+
+!** Verifying the Search result
+
+!|script  |ui                                                    |
+|check    |isElementPresent;|//span[text()='$trip_id']|xpath|true|
+|$tresult=|isElementPresent;|//span[text()='$trip_id']|xpath     |
+
+*!
+
+!**> Update result
+!include .FrontPage.Pando.Common.CommonResultImage
+*!

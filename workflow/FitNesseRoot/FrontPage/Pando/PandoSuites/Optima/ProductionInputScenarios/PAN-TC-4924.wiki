@@ -1,0 +1,29 @@
+---
+Help: SCN17_Ensure dropped material CLU36WEB-ORISLIMT is in rejection
+Test
+---
+!5 SCN17_Ensure dropped material CLU36WEB-ORISLIMT is in rejection
+
+!5 https://gopando.atlassian.net/browse/PAN-2387
+
+!5 https://github.com/pandocorp/optima-v2/pull/48
+
+!|Script   |Common                                              |
+|$jsonpath=|getPath;|download/scn17_PAN2387_output.json|fullpath|
+
+!|script                 |QueryOptimaOutput                                          |
+|getParsedJson;          |$jsonpath                                                  |
+|$isDeliveryInRejections=|isDeliveryInRejections;       |8010452075                  |
+|$weightRejected=        |getMaterialWeightInRejections;|8010452075|CLU36WEB-ORISLIMT|
+|$volumeRejected=        |getMaterialVolumeInRejections;|8010452075|CLU36WEB-ORISLIMT|
+
+!|script   |common                                                           |
+|check     |checkIfStringAreEqual;       |$isDeliveryInRejections|true  |true|
+|$tresult1=|checkIfStringAreEqual;       |$isDeliveryInRejections|true       |
+|check     |checkIfStringAreEqual;       |$weightRejected        |1407.0|true|
+|$tresult2=|checkIfStringAreEqual;       |$weightRejected        |1407.0     |
+|check     |checkIfStringAreEqual;       |$volumeRejected        |14.07 |true|
+|$tresult3=|checkIfStringAreEqual;       |$volumeRejected        |14.07      |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3      |
+
+ 

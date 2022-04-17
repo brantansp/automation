@@ -1,0 +1,6 @@
+---
+Help: Contains Admin related settings
+Suite
+---
+!1 Test suite Admin
+!contents -R2 -g -p -f -h

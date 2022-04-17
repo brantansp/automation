@@ -1,0 +1,8 @@
+---
+Help: Use to Create Materials
+---
+!|script        |ui                                                                   |
+|navigateToUrl; |${surl}/mdm/materials                                                |
+|sendHumanKeys; |//input[@placeholder='Search by Material Code']|xpath|${search_value}|
+|sendControlKey;|//input[@placeholder='Search by Material Code']|xpath|ENTER          |
+|wait;          |3                                                                    |

@@ -1,0 +1,495 @@
+---
+Help: To verify whether Pallet field is mandated when pallet mandatory flag is true in configuration and verify CRUD operations in UI, bulk upload and ERP upload.
+Suites: pg
+Test
+---
+!5 Configuration : "is_material_pallet_mandatory": true
+
+!**> Unique values assignment
+!|script |common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Materials - DM UI
+!**> Material Creation through UI
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!|Script       |Ui                                                                                                            |
+|navigateToUrl;|${surl}/mdm/materials                                                                                         |
+|click;        |//div/ul/li/button[text()='Add']                                   |xpath                                     |
+|sendKeys;     |//input[@placeholder='Enter Material Code']                        |xpath                    |${material_code}|
+|sendKeys;     |//input[@placeholder='Enter Name']                                 |xpath                    |${material_name}|
+|sendKeys;     |//input[@placeholder='Enter Length']                               |xpath                    |15              |
+|sendKeys;     |//input[@placeholder='Enter Width']                                |xpath                    |20              |
+|sendKeys;     |//input[@placeholder='Enter Height']                               |xpath                    |25              |
+|sendKeys;     |//input[@placeholder='Enter Weight']                               |xpath                    |30              |
+|sendKeys;     |//label[normalize-space(text())='Volume']//following-sibling::input|xpath                    |1               |
+|sendKeys;     |//label[contains(text(),'Business Unit')]/following-sibling::input |xpath                    |10              |
+|sendKeys;     |//label[contains(text(),'PCE Per Box')]/following-sibling::input   |xpath                    |20              |
+|click;        |//ul[@class='action-list']/li[contains(text(),'Save')]             |xpath                                     |
+|check         |isElementPresent;                                                  |//div[@class='error-msg']|xpath   |true   |
+|$adderror1=   |getText;                                                           |//div[@class='error-msg']|xpath           |
+
+!|Script                     |Ui                                                                                                              |
+|sendKeys;                   |//label[contains(text(),'Pallets')]/following-sibling::input|xpath                                   |0         |
+|sendKeys;                   |//input[@placeholder='Enter Brand']                         |xpath                                   |P&G       |
+|sendKeys;                   |//input[@placeholder='Enter Sub Brand']                     |xpath                                   |P&G       |
+|click;                      |//ul[@class='action-list']/li[contains(text(),'Save')]      |xpath                                              |
+|waitForElementToBeDisplayed;|//h3[contains(text(),'Error')]                              |xpath                                   |10        |
+|$adderror2=                 |getText;                                                    |//h3[contains(text(),'Error')]/../span  |xpath     |
+|sendKeys;                   |//label[contains(text(),'Pallets')]/following-sibling::input|xpath                                   |20        |
+|click;                      |//ul[@class='action-list']/li[contains(text(),'Save')]      |xpath                                              |
+|waitForElementToBeDisplayed;|//h3[contains(text(),'Success')]                            |xpath                                   |10        |
+|$success=                   |getText;                                                    |//h3[contains(text(),'Success')]/../span|xpath     |
+|check                       |isElementPresent;                                           |//span[contains(text(),'m$unique')]     |xpath|true|
+|$ui_result1=                |isElementPresent;                                           |//span[contains(text(),'m$unique')]     |xpath     |
+
+!| Script    |Common                                                                                     |
+|check       |checkIfStringAreEqual;|$adderror1|Pallet is required                                  |true|
+|$ui_result2=|checkIfStringAreEqual;|$adderror1|Pallet is required                                       |
+|check       |checkIfStringAreEqual;|$adderror2|pallets must be a positive number - Validation error|true|
+|$ui_result3=|checkIfStringAreEqual;|$adderror2|pallets must be a positive number - Validation error     |
+|check       |checkIfStringAreEqual;|$success  |Record Added!                                       |true|
+|$ui_result4=|checkIfStringAreEqual;|$success  |Record Added!                                            |
+**!
+
+!**> Update material through UI
+
+!|Script                     |Ui                                                                                                                                                      |
+|navigateToUrl;              |${surl}/mdm/materials                                                                                                                                   |
+|waitForElementToBeDisplayed;|//span[contains(text(),'m$unique')]                                                  |xpath                                                       |30   |
+|click;                      |//span[contains(text(),'m$unique')]/ancestor::div[@class='card-row card-row-show']//a|xpath                                                             |
+|$palletvalue=               |getValue;                                                                            |//label[contains(text(),'Pallets')]/following-sibling::input|xpath|
+|$brandvalue=                |getValue;                                                                            |//input[@placeholder='Enter Brand']                         |xpath|
+|$subbrandvalue=             |getValue;                                                                            |//input[@placeholder='Enter Sub Brand']                     |xpath|
+|clearAndSend;               |//label[contains(text(),'Pallets')]/following-sibling::input                         |xpath                                                       |0    |
+|click;                      |//ul[@class='action-list']/li[contains(text(),'Update')]                             |xpath                                                             |
+|waitForElementToBeDisplayed;|//h3[contains(text(),'Error')]                                                       |xpath                                                       |10   |
+|$updateerror1=              |getText;                                                                             |//h3[contains(text(),'Error')]/../span                      |xpath|
+|clearAndSend;               |//label[contains(text(),'Pallets')]/following-sibling::input                         |xpath                                                       |2.678|
+|click;                      |//ul[@class='action-list']/li[contains(text(),'Update')]                             |xpath                                                             |
+|waitForElementToBeDisplayed;|//h3[contains(text(),'Success')]                                                     |xpath                                                       |10   |
+|$success=                   |getText;                                                                             |//h3[contains(text(),'Success')]/../span                    |xpath|
+
+!| Script    |Common                                                                                                                                        |
+|check       |checkIfStringAreEqual;       |$updateerror1               |pallets must be a positive number - Validation error             |true             |
+|$ui_result5=|checkIfStringAreEqual;       |$updateerror1               |pallets must be a positive number - Validation error                               |
+|check       |checkIfStringAreEqual;       |$success                    |Record Updated!                                                  |true             |
+|$ui_result6=|checkIfStringAreEqual;       |$success                    |Record Updated!                                                                    |
+|check       |checkIfStringAreEqual;       |$palletvalue                |20                                                               |true             |
+|$ui_result7=|checkIfStringAreEqual;       |$palletvalue                |20                                                                                 |
+|check       |checkIfStringAreEqual;       |$brandvalue                 |P&G                                                              |true             |
+|$ui_result8=|checkIfStringAreEqual;       |$brandvalue                 |P&G                                                                                |
+|check       |checkIfStringAreEqual;       |$subbrandvalue              |P&G                                                              |true             |
+|$ui_result9=|checkIfStringAreEqual;       |$subbrandvalue              |P&G                                                                                |
+|$ui_result= |checkIfStringAreEqualInArray;|$ui_result1,$ui_result2,$ui_result3,$ui_result4,$ui_result5,$ui_result6,$ui_result7,$ui_result8,$ui_result9,true|
+**!
+**!
+
+!** Materials - Bulk upload
+!**> Adding Materials through Bulk upload
+!define row {Code*,Name*,BU,Piece per Box*,Length(cm)*,Width(cm)*,Height (cm)*,Weight (kg)*,Volume (CFT),Division,GST Exempt (Yes/No),Category,Pallets,Brand,Sub Brand,Thickness,Load Sequence,Can Telescope (Yes/No),Volume Per Piece (Liter)}
+!define column1 {mc1$unique,m1$unique,10,1,10,20,5,15,10,1,No,,P&G,Olay|mc2$unique,m2$unique,10,1,10,20,5,15,10,1,No,,45,PG,Gilette|mc3$unique,m3$unique,10,1,10,20,5,15,10,1,No,,0,P&G,Hersheys|mc4$unique,m4$unique,10,1,10,20,5,15,10,1,No,,0.87,P&G,biscuits}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+!|Script                |Excel                       |
+|newSheetDynamicColumns;|${row}|${column1}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/materials                                           |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|wait;                     |5                                                               |
+
+!|Script                     |Ui                                                                                                                                                            |
+|navigateToUrl;              |${surl}/mdm/materials                                                                                                                                         |
+|waitForElementToBeDisplayed;|//span[contains(text(),'m$unique')]                                                   |xpath                                                       |30        |
+|check                       |isElementPresent;                                                                     |//span[contains(text(),'m2$unique')]                        |xpath|true|
+|$bulkupload_result1=        |isElementPresent;                                                                     |//span[contains(text(),'m2$unique')]                        |xpath     |
+|check                       |isElementPresent;                                                                     |//span[contains(text(),'m4$unique')]                        |xpath|true|
+|$bulkupload_result2=        |isElementPresent;                                                                     |//span[contains(text(),'m4$unique')]                        |xpath     |
+|click;                      |//span[contains(text(),'m2$unique')]/ancestor::div[@class='card-row card-row-show']//a|xpath                                                                  |
+|$palletvalue=               |getValue;                                                                             |//label[contains(text(),'Pallets')]/following-sibling::input|xpath     |
+|$brandvalue=                |getValue;                                                                             |//input[@placeholder='Enter Brand']                         |xpath     |
+|$subbrandvalue=             |getValue;                                                                             |//input[@placeholder='Enter Sub Brand']                     |xpath     |
+
+!| Script            |Common                                            |
+|check               |checkIfStringAreEqual;|$palletvalue  |45     |true|
+|$bulkupload_result3=|checkIfStringAreEqual;|$palletvalue  |45          |
+|check               |checkIfStringAreEqual;|$brandvalue   |PG     |true|
+|$bulkupload_result4=|checkIfStringAreEqual;|$brandvalue   |PG          |
+|check               |checkIfStringAreEqual;|$subbrandvalue|Gilette|true|
+|$bulkupload_result5=|checkIfStringAreEqual;|$subbrandvalue|Gilette     |
+**!
+
+!**> Download Rejection list
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|Script                     |Ui                                                                             |
+|navigateToUrl;              |${surl}/mdm/rejection                                                          |
+|waitForElementToBeDisplayed;|//div[contains(text(),'Materials')]//following-sibling::div           |xpath|20|
+|click;                      |//div[contains(text(),'Materials')]/parent::div/following-sibling::div|xpath   |
+|wait;                       |10                                                                             |
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+**!
+
+!**> Verify Rejection list
+!|script  |ExcelQuery                                                                                       |
+|$count1= |getCountQuery;|$filename|select * from "Pando Rejections" where "Name*" = 'm1$unique'            |
+|$count2= |getCountQuery;|$filename|select * from "Pando Rejections" where "Name*" = 'm3$unique'            |
+|$reason1=|selectQuery;  |$filename|select Reason from "Pando Rejections" where "Name*" = 'm1$unique'|Reason|
+|$reason2=|selectQuery;  |$filename|select Reason from "Pando Rejections" where "Name*" = 'm3$unique'|Reason|
+
+!|Script                |common                                                                                                                                                                                      |
+|check                  |checkIfStringAreEqualInArray;|$count1,$count2,1                                  |true                                                                                                      |
+|$rejectionresult1=     |checkIfStringAreEqualInArray;|$count1,$count2,1                                                                                                                                             |
+|check                  |checkIfStringAreEqual;       |$reason1                                           |[pallets must be a number]                                          |true                                 |
+|$rejectionresult2=     |checkIfStringAreEqual;       |$reason1                                           |[pallets must be a number]                                                                                |
+|check                  |checkIfStringAreEqual;       |$reason2                                           |[pallets must be a positive number]                                 |true                                 |
+|$rejectionresult3=     |checkIfStringAreEqual;       |$reason2                                           |[pallets must be a positive number]                                                                       |
+|$add_bulkupload_result=|checkIfStringAreEqualInArray;|$bulkupload_result1,$bulkupload_result2,$bulkupload_result3,$bulkupload_result4,$bulkupload_result5,$rejectionresult1,$rejectionresult2,$rejectionresult3,true|
+**!
+
+!**> Updating Materials through Bulk upload
+!define row {Code*,Name*,BU,Piece per Box*,Length(cm)*,Width(cm)*,Height (cm)*,Weight (kg)*,Volume (CFT),Division,GST Exempt (Yes/No),Category,Pallets,Brand,Sub Brand,Thickness,Load Sequence,Can Telescope (Yes/No),Volume Per Piece (Liter)}
+!define column1 {mc$unique,m$unique,10,1,10,20,5,15,10,1,No,,5.87,PG,Ariel|mc2$unique,m2$unique,10,1,10,20,5,15,10,1,No,,P&G,Gilette|mc4$unique,m4$unique,10,1,10,20,5,15,10,1,No,,0,P&G,Olay}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+!|Script                |Excel                       |
+|newSheetDynamicColumns;|${row}|${column1}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/materials                                           |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|wait;                     |5                                                               |
+
+!|Script                     |Ui                                                                                                                                                           |
+|navigateToUrl;              |${surl}/mdm/materials                                                                                                                                        |
+|waitForElementToBeDisplayed;|//span[contains(text(),'m$unique')]                                                  |xpath                                                       |30        |
+|check                       |isElementPresent;                                                                    |//span[contains(text(),'m$unique')]                         |xpath|true|
+|$update_bulkupload_result1= |isElementPresent;                                                                    |//span[contains(text(),'m$unique')]                         |xpath     |
+|click;                      |//span[contains(text(),'m$unique')]/ancestor::div[@class='card-row card-row-show']//a|xpath                                                                  |
+|$palletvalue=               |getValue;                                                                            |//label[contains(text(),'Pallets')]/following-sibling::input|xpath     |
+|$brandvalue=                |getValue;                                                                            |//input[@placeholder='Enter Brand']                         |xpath     |
+|$subbrandvalue=             |getValue;                                                                            |//input[@placeholder='Enter Sub Brand']                     |xpath     |
+
+!| Script                   |Common                                          |
+|check                      |checkIfStringAreEqual;|$palletvalue  |5.87 |true|
+|$update_bulkupload_result2=|checkIfStringAreEqual;|$palletvalue  |5.87      |
+|check                      |checkIfStringAreEqual;|$brandvalue   |PG   |true|
+|$update_bulkupload_result3=|checkIfStringAreEqual;|$brandvalue   |PG        |
+|check                      |checkIfStringAreEqual;|$subbrandvalue|Ariel|true|
+|$update_bulkupload_result4=|checkIfStringAreEqual;|$subbrandvalue|Ariel     |
+**!
+
+!**> Download Rejection list
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|Script                     |Ui                                                                             |
+|navigateToUrl;              |${surl}/mdm/rejection                                                          |
+|waitForElementToBeDisplayed;|//div[contains(text(),'Materials')]//following-sibling::div           |xpath|20|
+|click;                      |//div[contains(text(),'Materials')]/parent::div/following-sibling::div|xpath   |
+|wait;                       |10                                                                             |
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+**!
+
+!**> Verify Rejection list
+!|script  |ExcelQuery                                                                                       |
+|$count1= |getCountQuery;|$filename|select * from "Pando Rejections" where "Name*" = 'm2$unique'            |
+|$count2= |getCountQuery;|$filename|select * from "Pando Rejections" where "Name*" = 'm4$unique'            |
+|$reason1=|selectQuery;  |$filename|select Reason from "Pando Rejections" where "Name*" = 'm2$unique'|Reason|
+|$reason2=|selectQuery;  |$filename|select Reason from "Pando Rejections" where "Name*" = 'm4$unique'|Reason|
+
+!|Script                   |common                                                                                                                                                                                              |
+|check                     |checkIfStringAreEqualInArray;|$count1,$count2,1                                    |true                                                                                                            |
+|$rejectionresult1=        |checkIfStringAreEqualInArray;|$count1,$count2,1                                                                                                                                                     |
+|check                     |checkIfStringAreEqual;       |$reason1                                             |[pallets must be a number]                                             |true                                    |
+|$rejectionresult2=        |checkIfStringAreEqual;       |$reason1                                             |[pallets must be a number]                                                                                      |
+|check                     |checkIfStringAreEqual;       |$reason2                                             |[pallets must be a positive number]                                    |true                                    |
+|$rejectionresult3=        |checkIfStringAreEqual;       |$reason2                                             |[pallets must be a positive number]                                                                             |
+|$update_bulkupload_result=|checkIfStringAreEqualInArray;|$update_bulkupload_result1,$update_bulkupload_result2,$update_bulkupload_result3,$update_bulkupload_result4,$rejectionresult1,$rejectionresult2,$rejectionresult3,true|
+**!
+
+!|Script            |common                                                                             |
+|$bulkupload_result=|checkIfStringAreEqualInArray;|$add_bulkupload_result,$update_bulkupload_result,true|
+**!
+
+!** Materials - ERP API
+!**> Material Creation via ERP API
+!define material_name {m5$unique}
+!define material_code {mc5$unique}
+!define business_unit {Kg}
+!define piece_per_box {100}
+!define box_width {50}
+!define box_length {40}
+!define box_height {60}
+!define box_weight {20}
+!define box_volume {30}
+!define pallets {}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":[{"name":"${material_name}","code":"${material_code}","bu":"${business_unit}","piece_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","division":"D","pallets":"","gst_exempt":false,"brand":"","sub_brand":"","box_volume":"","category":""},{"name":"m6$unique","code":"mc6$unique","bu":"${business_unit}","piece_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","division":"D","pallets":"0","gst_exempt":false,"brand":"","sub_brand":"","box_volume":"","category":""},{"name":"m7$unique","code":"mc7$unique","bu":"${business_unit}","piece_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","division":"D","pallets":"0.66","gst_exempt":false,"brand":"","sub_brand":"","box_volume":"","category":""},{"name":"m8$unique","code":"mc8$unique","bu":"${business_unit}","piece_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","division":"D","pallets":"8","gst_exempt":false,"brand":"","sub_brand":"","box_volume":"","category":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.CommonERPAPI.CommonMaterialCreationERPAPI
+
+!|Script            |Ui                                                               |
+|navigateToUrl;     |${surl}/mdm/materials                                            |
+|check              |isElementPresent;|//span[contains(text(),'m7$unique')]|xpath|true|
+|$erpupload_result1=|isElementPresent;|//span[contains(text(),'m7$unique')]|xpath     |
+|check              |isElementPresent;|//span[contains(text(),'m8$unique')]|xpath|true|
+|$erpupload_result2=|isElementPresent;|//span[contains(text(),'m8$unique')]|xpath     |
+**!
+
+!**> Download Rejection list
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|Script                     |Ui                                                                             |
+|navigateToUrl;              |${surl}/mdm/rejection                                                          |
+|waitForElementToBeDisplayed;|//div[contains(text(),'Materials')]//following-sibling::div           |xpath|20|
+|click;                      |//div[contains(text(),'Materials')]/parent::div/following-sibling::div|xpath   |
+|wait;                       |10                                                                             |
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+**!
+
+!**> Verify Rejection list
+!|script  |ExcelQuery                                                                                       |
+|$count1= |getCountQuery;|$filename|select * from "Pando Rejections" where "Name*" = 'm5$unique'            |
+|$count2= |getCountQuery;|$filename|select * from "Pando Rejections" where "Name*" = 'm6$unique'            |
+|$reason1=|selectQuery;  |$filename|select Reason from "Pando Rejections" where "Name*" = 'm5$unique'|Reason|
+|$reason2=|selectQuery;  |$filename|select Reason from "Pando Rejections" where "Name*" = 'm6$unique'|Reason|
+
+!|Script           |common                                                                                                                        |
+|check             |checkIfStringAreEqualInArray;|$count1,$count2,1             |true                                                             |
+|$rejectionresult1=|checkIfStringAreEqualInArray;|$count1,$count2,1                                                                               |
+|check             |checkIfStringAreEqual;       |$reason1                      |[pallets must be a number]                      |true            |
+|$rejectionresult2=|checkIfStringAreEqual;       |$reason1                      |[pallets must be a number]                                       |
+|check             |checkIfStringAreEqual;       |$reason2                      |[pallets must be a positive number]             |true            |
+|$rejectionresult3=|checkIfStringAreEqual;       |$reason2                      |[pallets must be a positive number]                              |
+|$add_erp_result=  |checkIfStringAreEqualInArray;|$erpupload_result1,$erpupload_result2,$rejectionresult1,$rejectionresult2,$rejectionresult3,true|
+**!
+
+!**> Updating Material via ERP API
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|$data= |getTrim;|{"data":[{"name":"m7$unique","code":"mc7$unique","bu":"${business_unit}","piece_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","division":"D","pallets":"","box_volume":"","gst_exempt":false,"brand":"","sub_brand":"","category":""},{"name":"m8$unique","code":"mc8$unique","bu":"${business_unit}","piece_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","division":"D","pallets":"0","box_volume":"","gst_exempt":false,"brand":"","sub_brand":"","category":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.CommonERPAPI.CommonMaterialCreationERPAPI
+
+**!
+
+!**> Download Rejection list
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|Script                     |Ui                                                                             |
+|navigateToUrl;              |${surl}/mdm/rejection                                                          |
+|waitForElementToBeDisplayed;|//div[contains(text(),'Materials')]//following-sibling::div           |xpath|20|
+|click;                      |//div[contains(text(),'Materials')]/parent::div/following-sibling::div|xpath   |
+|wait;                       |10                                                                             |
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+**!
+
+!**> Verify Rejection list
+!|script  |ExcelQuery                                                                                       |
+|$count1= |getCountQuery;|$filename|select * from "Pando Rejections" where "Name*" = 'm7$unique'            |
+|$count2= |getCountQuery;|$filename|select * from "Pando Rejections" where "Name*" = 'm8$unique'            |
+|$reason1=|selectQuery;  |$filename|select Reason from "Pando Rejections" where "Name*" = 'm7$unique'|Reason|
+|$reason2=|selectQuery;  |$filename|select Reason from "Pando Rejections" where "Name*" = 'm8$unique'|Reason|
+
+!|Script            |common                                                                                  |
+|check              |checkIfStringAreEqualInArray;|$count1,$count2,1|true                                    |
+|$rejectionresult1= |checkIfStringAreEqualInArray;|$count1,$count2,1                                         |
+|check              |checkIfStringAreEqual;       |$reason1         |[pallets must be a number]         |true|
+|$rejectionresult2= |checkIfStringAreEqual;       |$reason1         |[pallets must be a number]              |
+|check              |checkIfStringAreEqual;       |$reason2         |[pallets must be a positive number]|true|
+|$rejectionresult3= |checkIfStringAreEqual;       |$reason2         |[pallets must be a positive number]     |
+|$update_erp_result=|checkIfStringAreEqualInArray;|$rejectionresult1,$rejectionresult2,$rejectionresult3,true|
+**!
+
+!|Script     |common                                                               |
+|$erp_result=|checkIfStringAreEqualInArray;|$add_erp_result,$update_erp_result,true|
+**!
+
+!** Materials - API
+!**> Material Creation through API
+!define material_name {m9$unique}
+!define material_code {mc9$unique}
+!define pallets {0.99}
+!define brand {P&G}
+!define sub_brand {P&G}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                  |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"${pallets}","brand":"${brand}","sub_brand":"${sub_brand}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+
+!|Script        |Ui                                                                                                                                                            |
+|navigateToUrl; |${surl}/mdm/materials                                                                                                                                         |
+|check          |isElementPresent;                                                                     |//span[contains(text(),'m9$unique')]                        |xpath|true|
+|$api_result1=  |isElementPresent;                                                                     |//span[contains(text(),'m9$unique')]                        |xpath     |
+|click;         |//span[contains(text(),'m9$unique')]/ancestor::div[@class='card-row card-row-show']//a|xpath                                                                  |
+|$palletvalue=  |getValue;                                                                             |//label[contains(text(),'Pallets')]/following-sibling::input|xpath     |
+|$brandvalue=   |getValue;                                                                             |//input[@placeholder='Enter Brand']                         |xpath     |
+|$subbrandvalue=|getValue;                                                                             |//input[@placeholder='Enter Sub Brand']                     |xpath     |
+
+!| Script     |Common                                         |
+|check        |checkIfStringAreEqual;|$palletvalue  |0.99|true|
+|$api_value_1=|checkIfStringAreEqual;|$palletvalue  |0.99     |
+|check        |checkIfStringAreEqual;|$brandvalue   |P&G |true|
+|$api_value_2=|checkIfStringAreEqual;|$brandvalue   |P&G      |
+|check        |checkIfStringAreEqual;|$subbrandvalue|P&G |true|
+|$api_value_3=|checkIfStringAreEqual;|$subbrandvalue|P&G      |
+
+!define material_name {m10$unique}
+!define material_code {m10$unique}
+!define pallets {45}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"${pallets}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+
+!|Script       |Ui                                                                |
+|navigateToUrl;|${surl}/mdm/materials                                             |
+|check         |isElementPresent;|//span[contains(text(),'m10$unique')]|xpath|true|
+|$api_result2= |isElementPresent;|//span[contains(text(),'m10$unique')]|xpath     |
+
+
+!define material_name {m11$unique}
+!define material_code {m11$unique}
+!define pallets {}
+!define expected_status_code {400}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"${pallets}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+
+!|Script     |Common                                           |
+|$response1= |getSubStringByString;|$material |{"errors":[{|}]}|
+|$apierror_1=|getSubStringByString;|$response1|"message":" |"  |
+
+!define material_name {m12$unique}
+!define material_code {m12$unique}
+!define pallets {0}
+!define expected_status_code {400}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"${pallets}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+
+!|Script     |Common                                           |
+|$response2= |getSubStringByString;|$material |{"errors":[{|}]}|
+|$apierror_2=|getSubStringByString;|$response2|"message":" |"  |
+
+!|Script         |common                                                                                                                       |
+|check           |checkIfStringAreEqual;       |$apierror_1               |pallets must be a number                        |true               |
+|$api_result3=   |checkIfStringAreEqual;       |$apierror_1               |pallets must be a number                                            |
+|check           |checkIfStringAreEqual;       |$apierror_2               |pallets must be a positive number               |true               |
+|$api_result4=   |checkIfStringAreEqual;       |$apierror_2               |pallets must be a positive number                                   |
+|$add_api_result=|checkIfStringAreEqualInArray;|$api_result1,$api_result2,$api_result3,$api_result4,$api_value_1,$api_value_2,$api_value_3,true|
+**!
+
+!**> Update material through API
+!define material_name {m9$unique}
+!define material_code {mc9$unique}
+!define pallets {}
+!define expected_status_code {400}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"${pallets}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+
+!|Script     |Common                                           |
+|$response1= |getSubStringByString;|$material |{"errors":[{|}]}|
+|$apierror_1=|getSubStringByString;|$response1|"message":" |"  |
+
+!define material_name {m9$unique}
+!define material_code {mc9$unique}
+!define pallets {0}
+!define expected_status_code {400}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                    |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"${pallets}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+
+!|Script     |Common                                           |
+|$response2= |getSubStringByString;|$material |{"errors":[{|}]}|
+|$apierror_2=|getSubStringByString;|$response2|"message":" |"  |
+
+!|Script            |common                                                                          |
+|check              |checkIfStringAreEqual;       |$apierror_1|pallets must be a number         |true|
+|$api_result1=      |checkIfStringAreEqual;       |$apierror_1|pallets must be a number              |
+|check              |checkIfStringAreEqual;       |$apierror_2|pallets must be a positive number|true|
+|$api_result2=      |checkIfStringAreEqual;       |$apierror_2|pallets must be a positive number     |
+|$update_api_result=|checkIfStringAreEqualInArray;|$api_result1,$api_result2,true                    |
+**!
+
+!|Script     |common                                                               |
+|$api_result=|checkIfStringAreEqualInArray;|$add_api_result,$update_api_result,true|
+**!
+
+!**> Searching the created material and Click export in materials for single record
+!|Script       |Ui                                                                                            |
+|navigateToUrl;|${surl}/mdm/materials                                                                         |
+|sendKeys;     |//input[@placeholder='Search by Material Code']|xpath                              |mc$unique |
+|check         |isElementPresent;                              |//span[contains(text(),'m$unique')]|xpath|true|
+|$export_1=    |isElementPresent;                              |//span[contains(text(),'m$unique')]|xpath     |
+
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+
+!|Script|Ui                             |
+|wait;  |5                              |
+|click; |//button[text()='Export']|xpath|
+|wait;  |5                              |
+**!
+
+!**> Verifying the data in export file
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|script  |ExcelQuery                                                                             |
+|$count=  |getCountQuery;|$filename|select * from "Material" where "Code*" = 'mc$unique'          |
+|$reason1=|selectQuery;  |$filename|select * from "Material" where "Code*" = 'mc$unique'|Brand    |
+|$reason2=|selectQuery;  |$filename|select * from "Material" where "Code*" = 'mc$unique'|Sub Brand|
+
+!|Script   |common                                      |
+|check     |checkIfStringAreEqual;|$count  |1      |true|
+|$export_2=|checkIfStringAreEqual;|$count  |1           |
+|check     |checkIfStringAreEqual;|$reason1|[PG]   |true|
+|$export_3=|checkIfStringAreEqual;|$reason1|[PG]        |
+|check     |checkIfStringAreEqual;|$reason2|[Ariel]|true|
+|$export_4=|checkIfStringAreEqual;|$reason2|[Ariel]     |
+
+!|Script        |Common                                                                    |
+|$export_result=|checkIfStringAreEqualInArray;|$export_1,$export_2,$export_3,$export_4,true|
+**!
+
+!**> Validating results
+!|Script  |common                                                                                                             |
+|$tresult=|checkIfStringAreEqualInArray;|$ui_result,$ui_result2,$bulkupload_result,$erp_result,$api_result,$export_result,true|
+**!

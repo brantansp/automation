@@ -1,0 +1,32 @@
+---
+Help: Depot can be searchable using Search by Depot Ref id in search field
+Test
+---
+!** Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!** Search by DEPO Name
+!define search_value {r$unique}
+!define search_count {1}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Search.DepoSearch.CommonDepoSearch
+**!
+
+!|script|common |
+|$tresult=|checkIfStringAreEqual; | $totalCount | 1 |
+
+ 
+
+

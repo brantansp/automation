@@ -1,0 +1,14 @@
+---
+Help: To submit OTP through consignee app for EPOD
+Test
+---
+!|Script      |Http                                                                                         |
+|wait;        |5                                                                                            |
+|setBaseUrl;  |${curl}/api/login                                                                            |
+|getResponse; |Application/Json|put             |{"data":{"email":"${cusername}","password":"${cpassword}"}}|
+|$token=      |getHeader;      |x-auth-token                                                                |
+|addHeader;   |Authorization   |bearer $token                                                               |
+|setBaseUrl;  |${curl}/api/order/$order_id/$consignee_id/otp/$otp                                           |
+|$grnresponse=|getResponse;    |Application/Json|put                            |                           |
+|check        |getStatusCode;  |200                                                                         |
+|wait;        |2                                                                                            |

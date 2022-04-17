@@ -1,0 +1,23 @@
+!** Source Selection
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonOpenIndentSourceDepotSelection
+**!
+
+!** Consignee selection with open indent
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentConsigneeSelection
+**!
+
+!** Selecting types
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentSelectTypeswithBasefreightInUI
+**!
+
+!** Getting Order id
+
+!|Script|Ui                                                      |
+|$data= |getText;|//span[contains(text(),'Indent created')]|xpath|
+|wait;  |3                                                       |
+
+!|Script   |Common                                                      |
+|$data1=   |stringConcatenation; |$data |last                           |
+|$order_id=|getSubStringByString;|$data1|Indent created with number|last|
+|$order_id=|getTrim;             |$order_id                             |
+**!

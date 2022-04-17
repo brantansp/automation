@@ -1,0 +1,85 @@
+---
+Help: Add New user and login with new user
+Suites: dm2
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Add user
+!define consignee_name {Automation $unique}
+!define role {Accountant}
+!define user_number {0123456789}
+!define user_email {pandoautomation+$unique@gmail.com}
+!define status {1}
+
+!|Script         |Ui                                                                                                                                                                         |
+|navigateToUrl;  |${surl}/mdm/users                                                                                                                                                          |
+|click;          |//div/ul/li/button[text()='Add']                                                                |xpath                                                                     |
+|sendKeys;       |//input[@placeholder='Enter User Name']                                                         |xpath                                                   |${consignee_name}|
+|click;          |//label[contains(text(),'Role')]/following-sibling::div[@class='dropdown-section']/div/div/input|xpath                                                                     |
+|click;          |//ul/li/span[contains(text(),'${role}')]                                                        |xpath                                                                     |
+|sendKeys;       |//input[@type='number']                                                                         |xpath                                                   |${user_number}   |
+|sendKeys;       |//div[@class='col-md-2']/input[@type='text']                                                    |xpath                                                   |${user_email}    |
+|check           |isElementPresent;                                                                               |//label[text()='User Permissions']                      |xpath    |true   |
+|$add_defaultval=|getValue;                                                                                       |//label[text()='User Permissions']/..//input            |xpath            |
+|click;          |//label[text()='User Permissions']/..//input                                                    |xpath                                                                     |
+|click;          |//span[text()='INBOUND']                                                                        |xpath                                                                     |
+|click;          |//ul[@class='action-list']/li[contains(text(),'Save')]                                          |xpath                                                                     |
+|check           |isElementPresent;                                                                               |//div[contains(@class,'el-message el-message--success')]|xpath    |true   |
+**!
+
+!** filter user
+!|Script            |Ui                                                                                                                     |
+|sendKeys;          |//input[@placeholder='Search by user name']             |xpath                                       |${consignee_name}|
+|wait;              |2                                                                                                                      |
+|click;             |//a[contains(text(),'Edit')]                            |xpath                                                         |
+|$edit_selectedval1=|getValue;                                               |//label[text()='User Permissions']/..//input|xpath            |
+|click;             |//label[text()='User Permissions']/..//input            |xpath                                                         |
+|click;             |//span[text()='OUTBOUND']                               |xpath                                                         |
+|click;             |//ul[@class='action-list']/li[contains(text(),'Update')]|xpath                                                         |
+|wait;              |2                                                                                                                      |
+|click;             |//a[contains(text(),'Edit')]                            |xpath                                                         |
+|$edit_selectedval2=|getValue;                                               |//label[text()='User Permissions']/..//input|xpath            |
+|click;             |//label[text()='User Permissions']/..//input            |xpath                                                         |
+|click;             |//span[text()='BOTH']                                   |xpath                                                         |
+|click;             |//ul[@class='action-list']/li[contains(text(),'Update')]|xpath                                                         |
+|wait;              |2                                                                                                                      |
+|click;             |//a[contains(text(),'Edit')]                            |xpath                                                         |
+|$edit_selectedval3=|getValue;                                               |//label[text()='User Permissions']/..//input|xpath            |
+|click;             |//label[text()='User Permissions']/..//input            |xpath                                                         |
+|click;             |//span[text()='INBOUND']                                |xpath                                                         |
+|click;             |//ul[@class='action-list']/li[contains(text(),'Update')]|xpath                                                         |
+|wait;              |2                                                                                                                      |
+|click;             |//a[contains(text(),'Edit')]                            |xpath                                                         |
+|$edit_selectedval4=|getValue;                                               |//label[text()='User Permissions']/..//input|xpath            |
+
+!|Script   |common                                            |
+|$tresult1=|checkIfStringAreEqual;|$add_defaultval   |BOTH    |
+|$tresult2=|checkIfStringAreEqual;|$edit_selectedval1|INBOUND |
+|$tresult3=|checkIfStringAreEqual;|$edit_selectedval2|OUTBOUND|
+|$tresult4=|checkIfStringAreEqual;|$edit_selectedval3|BOTH    |
+|$tresult5=|checkIfStringAreEqual;|$edit_selectedval4|INBOUND |
+**!
+
+
+!** Logout
+!|Script|Ui                                   |
+|click; |//span[@class='pointer']       |xpath|
+|click; |//a[contains(text(),'LOG OUT')]|xpath|
+|wait;  |3                                    |
+**!
+
+!** Login using the new user
+!|Script     |Common                |
+|$user_email=|getTrim;|${user_email}|
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Users.CommonResetLogin
+**!
+
+!** Validating Test case
+!|Script  |Common                                                                                       |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult,$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|
+*!

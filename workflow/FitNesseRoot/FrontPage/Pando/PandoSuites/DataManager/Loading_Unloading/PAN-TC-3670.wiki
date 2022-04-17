@@ -1,0 +1,121 @@
+---
+Help: Verify export button in loading/unloading
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!**> Vehicle creation
+!define row {Vehicle Name*,CFT*,KG*,Vehicle Type*,Length (cm),Breadth (cm),Height (cm),Description,Mode}
+!define column {f$unique,600,1000,FTL,100,200,300,vehicle}
+!define file_name {v_$unique}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonVehicleBulkUpload
+**!
+
+!**> Adding Loading/unloading for added depot
+!define Vehicle_Type {f$unique}
+!define Movement {PRIMARY}
+!define Depot_Ref_Id {r$unique}
+!define Loading_Cost {100}
+!define Unloading_Cost {200}
+!define ODA_Cost {300}
+!define unit {Per Trip}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.LoadingAndUnloadingSearch.CommonLUUpload
+**!
+
+!** Click export in loading/unloading
+!|Script                     |Ui                                                                                                           |
+|navigateToUrl;              |${surl}/mdm/loading                                                                                          |
+|wait;                       |10                                                                                                           |
+|click;                      |//button[text()='Export']                     |xpath                                                         |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span|xpath                                         |30             |
+|$successMessage=            |getElementAttribute;                          |//h3[text()='Success']/following-sibling::span|xpath|innerText|
+
+!|Script   |common                                                                                                     |
+|check     |checkIfStringAreEqual;|$successMessage|You will receive the requested data via email in a few minutes!|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage|You will receive the requested data via email in a few minutes!     |
+**!
+
+!** Checking email and downloading the file sent to email
+!|Script                     |Ui                                                                 |
+|wait;                       |5                                                                  |
+|navigateToUrl;              |${mail_url}/email?page=0&size=60                                   |
+|waitForElementToBeDisplayed;|//table[@class='striped responsive-table']        |xpath|30        |
+|click;                      |//td[text()='${username}']/following-sibling::td/a|xpath           |
+|waitForElementToBeDisplayed;|//span[@class='card-title']/i[text()='email']     |xpath|10        |
+|$link_url=                  |getElementAttribute;                              |//p/a|xpath|href|
+**!
+
+!** Validating Excel sheet Report
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+
+!|Script       |Ui       |
+|navigateToUrl;|$link_url|
+|wait;         |20       |
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|script|ExcelQuery                                                                      |
+|$count=|getCountQuery;|$filename|select * from "Loading" where "Depot Name" = 'd$unique'|
+
+!|Script   |common                              |
+|check     |checkIfStringAreEqual;|$count|1|true|
+|$tresult2=|checkIfStringAreEqual;|$count|1     |
+
+
+!** Searching the created depot and Click export in unloading/unloading for single record
+!|Script       |Ui                                                                                                       |
+|navigateToUrl;|${surl}/mdm/loading                                                                                      |
+|sendKeys;     |//input[@placeholder='Search by Depot Name']|xpath                                         |${depot_name}|
+|mouseHover;   |//span[contains(text(),'d2')]               |xpath                                                       |
+|check         |isElementPresent;                           |//div[@role='tooltip']//div[text()='d$unique']|xpath  |true |
+|$tresult3=    |isElementPresent;                           |//div[@role='tooltip']//div[text()='d$unique']|xpath        |
+
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+
+!|Script|Ui                             |
+|wait;  |5                              |
+|click; |//button[text()='Export']|xpath|
+|wait;  |5                              |
+**!
+
+!** Verifying the data in export file
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|script|ExcelQuery                                                                                |
+|$count=|getCountQuery;|$filename|select * from "loading Unloading" where "Depot Name" = 'd$unique'|
+
+!|Script   |common                              |
+|check     |checkIfStringAreEqual;|$count|1|true|
+|$tresult4=|checkIfStringAreEqual;|$count|1     |
+
+
+!|Script  |Common                                                                    |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+**!

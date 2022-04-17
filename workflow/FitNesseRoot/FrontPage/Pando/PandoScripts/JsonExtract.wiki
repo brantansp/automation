@@ -1,0 +1,30 @@
+---
+Test
+---
+!|Script              |Ui                                                                                                                  |
+|$testCaseDescription=|getTestCaseDescription;|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME}                                                   |
+|startTestCase;       |${RUNNING_PAGE_NAME}   |${extent_tag}|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME} : $testCaseDescription|${log_to_elk}|
+
+!|Script        |Http                                                                                                                                                                         |
+|setBaseUrl;    |https://qtmcloud.qmetry.com/rest/api/latest/testcycles/PAN-TR-4?fields=key                                                                                                   |
+|addHeader;     |apiKey      |1a7cb954f5239ab0ccebf0ebf950f5d4e759de3c246932f9d3f658e9737730a4d26668d7ec755c0d8adfc0f7824c03bbd351041444c89e80f78e4644fd418d837a83270ed568ce2b936271ef24eaa6d4|
+|$data_cycle_id=|getResponse;|Application/Json                                               |get                                              |                                              |
+
+!|Script   |json                                    |
+|$cycle_id=|getValueFromJSON;|$data_cycle_id|data.id|
+
+!|Script            |Http                                                                                                                                                                         |
+|setBaseUrl;        |https://qtmcloud.qmetry.com/rest/api/latest/testcycles/$cycle_id/testcases/search/?fields=key&maxResults=1&sort=key%3Aasc&startAt=0                                          |
+|addHeader;         |apiKey      |1a7cb954f5239ab0ccebf0ebf950f5d4e759de3c246932f9d3f658e9737730a4d26668d7ec755c0d8adfc0f7824c03bbd351041444c89e80f78e4644fd418d837a83270ed568ce2b936271ef24eaa6d4|
+|$data_execution_id=|getResponse;|Application/Json                                    |post                                   |{"filter":{"key":"PAN-TC-2073"}}                                   |
+
+!|Script        |json                                                                               |
+|$execution_ids=|getArrayValueFromJSON; |$data_execution_id|data                                    |
+|$execution_id= |getValueFromJSONByType;|$execution_ids    |[0].testCaseExecutionId|int             |
+|$tid=          |getValueFromJSONByType;|$execution_ids    |[0].id                 |java.lang.String|
+
+
+!|Script    |Http                                                                                                                                                                         |
+|setBaseUrl;|https://qtmcloud.qmetry.com/rest/api/latest/testcycles/$cycle_id/testcase-executions/$execution_id                                                                           |
+|addHeader; |apiKey      |1a7cb954f5239ab0ccebf0ebf950f5d4e759de3c246932f9d3f658e9737730a4d26668d7ec755c0d8adfc0f7824c03bbd351041444c89e80f78e4644fd418d837a83270ed568ce2b936271ef24eaa6d4|
+|$tresult=  |getResponse;|Application/Json                                      |put                                     |{"executionResultId":26338}                                     |

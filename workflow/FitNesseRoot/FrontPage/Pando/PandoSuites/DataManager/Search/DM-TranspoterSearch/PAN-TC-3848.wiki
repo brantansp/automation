@@ -1,0 +1,35 @@
+---
+Help: DM Transporter search by Full Transporter Name
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Transporter Creation
+!define transporter_name {ts $unique}
+!define transporter_ref_id {trs$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {T$unique}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!** Transporter search
+!define search_field {Enter Transporter Name}
+!define search_text {${transporter_name}}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonTransporterSearchInDataManager
+**!
+
+!** Verify the Transporter search result
+!define search_text {$transporter_name}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonVerifySearch
+*!

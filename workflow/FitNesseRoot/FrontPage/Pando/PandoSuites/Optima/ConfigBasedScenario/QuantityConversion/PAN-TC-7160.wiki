@@ -1,0 +1,652 @@
+---
+Help: Delivery Picklist - Pieces should be converted to Cases if the configuration is enabled
+Suites: optjnj
+Test
+---
+!5 Description : ${RUNNING_PAGE_NAME} : Delivery Picklist - Pieces should be converted to Cases if the configuration is enabled
+
+!5 Expected : Pieces and Liters should be converted to cases when config is enabled.
+
+!5 Config : {"optima_configuration" : "quantity_conversion" : {
+!5 				"is_enabled" : true,
+!5 				"conversion_type" : "PIECES_TO_BOXES"}
+!5          }
+
+!5 Use_fractional_quantity setting True
+
+!***> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+
+!|Script  |DateUtil                      |
+|$thisday=|dateCalculation;|dd MMM yyyy|0|
+*!
+
+!***> Depot Optima Setting
+!define depo {Team S&S - Tepla CDC}
+!define movement {1}
+!define movement_type {Secondary}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split":1,"split_factor":0,"ftl_certify":false,"algorithm":4,"distance_deviation":200,"degree_of_deviation":45,"optima_type":1,"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":1,"volume":1},"material_categories":["MT"],"mode":0,"max_pickup_points":2,"max_drop_points":2,"drop_off_rule":[],"optima_for_ptl":false,"ptl_club_gates":false,"pickup_threshold":{"weight":5000,"volume":400},"floor_one":{"weight":3000,"volume":363},"floor_two":{"weight":90,"volume":90},"limited_truck_count":false,"hybrid_split":true,"material_fractional_quantity":true,"ptl_contracts":0,"telescopic_threshold":{"weight":0,"volume":0}},"depot_ids":["61bb72a49e079c00497eed9f"],"movement":1}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!***> Uploading Rate Matrix
+!define erp_gate_id_api_1 {rq1$unique}
+!define transit_days {3}
+!define ratec {1000}
+!define rtrip {per_trip}
+!define mrate {10000}
+!define mfactor {1}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {point,5250,137053,32FT 15MT,1000,773248,Loadshare Networks Private Limited,${transit_days},${mrate},${rtrip},01-Jan-2021,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!** Delete the Line item from Depot via API
+!|script|common                           |
+|$depot=|getTrim;|61bb72a49e079c00497eed9f|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DiscardLineItemOptimaAPI
+**!
+
+!** Delivery Picklist API 
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getJsonTrim;|{"data":[{"quantity_unit":"ltr","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D1","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"lt","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D2","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"liter","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D3","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"litre","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D4","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"litres","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D5","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"ltrs","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D6","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"liters","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D7","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"kg","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D8","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"kgs","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D9","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"pce","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D10","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"no","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D11","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"pcs","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D12","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"each","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D13","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"ea","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D14","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"c/s","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D15","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"s/o","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D16","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"cs","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D17","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"box","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D18","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"boxes","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D19","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"pkg","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D20","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"mt","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D21","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"pkgs","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D22","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"cases","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D23","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"case","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D24","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"nos","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D25","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"bags","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D26","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"kar","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D27","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"ctn","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D28","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"st","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D29","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"pc","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D30","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"},{"quantity_unit":"PC","pickup_reference_number":"5250","quantity":"10.5","weight":0,"type":"Secondary","material_code":"WIP","division":"ASE","volume":0,"sold_to":"137053","ship_to":"137053","line_item":"","weight_unit":"KG","volume_unit":"CFT","delivery_number":"D31","category":"mt","date":"2021-03-16","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":"","category_priority":"mt","stn":"0"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DeliveryPicklistAPI
+**!
+
+!**> Setting delivery number restriction client configuration to false to allow static deliverynumber optimization
+!|script                   |MongoDB                                                                         |
+|initialize;               |${connection}|${database}                                                       |
+|updateClientConfiguration;|${surl}      |optima_configuration.delivery_number_restrictions.is_enabled|false|
+*!
+
+!*** Validating Line Item in UI
+!define depot {Team S&S - Tepla CDC}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimisingDeliveryPicklist
+
+!|script  |ui                                                                   |
+|check    |isElementPresent;|//span[normalize-space(text())='137053']|xpath|true|
+|$tresult=|isElementPresent;|//span[normalize-space(text())='137053']|xpath     |
+**!
+
+!**> Setting delivery number restriction client configuration to true to not allow static deliverynumber optimization
+!|script                   |MongoDB                                                                        |
+|initialize;               |${connection}|${database}                                                      |
+|updateClientConfiguration;|${surl}      |optima_configuration.delivery_number_restrictions.is_enabled|true|
+*!
+
+!** Downloading the session Export file and check for cost
+!|Script|Ui                                         |
+|click; |//button[contains(text(),'SESSION')] |xpath|
+|click; |//a[normalize-space(text())='EXPORT']|xpath|
+|wait;  |8                                          |
+
+!** Get last modified Filename
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+**!
+
+!|script    |ExcelQuery                                                                                        |
+|$count=    |getCountQuery;|$filename|select * from "Materials List"                                           |
+|$d1_qts=   |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D1' |Quantity|
+|$d1_qunit= |selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D1'      |Bun     |
+|$d1_wt=    |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D1'   |Weight  |
+|$d1_vl=    |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D1'   |Volume  |
+|$d2_qts=   |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D2' |Quantity|
+|$d2_qunit= |selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D2'      |Bun     |
+|$d2_wt=    |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D2'   |Weight  |
+|$d2_vl=    |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D2'   |Volume  |
+|$d3_qts=   |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D3' |Quantity|
+|$d3_qunit= |selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D3'      |Bun     |
+|$d3_wt=    |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D3'   |Weight  |
+|$d3_vl=    |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D3'   |Volume  |
+|$d4_qts=   |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D4' |Quantity|
+|$d4_qunit= |selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D4'      |Bun     |
+|$d4_wt=    |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D4'   |Weight  |
+|$d4_vl=    |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D4'   |Volume  |
+|$d5_qts=   |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D5' |Quantity|
+|$d5_qunit= |selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D5'      |Bun     |
+|$d5_wt=    |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D5'   |Weight  |
+|$d5_vl=    |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D5'   |Volume  |
+|$d6_qts=   |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D6' |Quantity|
+|$d6_qunit= |selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D6'      |Bun     |
+|$d6_wt=    |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D6'   |Weight  |
+|$d6_vl=    |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D6'   |Volume  |
+|$d7_qts=   |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D7' |Quantity|
+|$d7_qunit= |selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D7'      |Bun     |
+|$d7_wt=    |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D7'   |Weight  |
+|$d7_vl=    |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D7'   |Volume  |
+|$d8_qts=   |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D8' |Quantity|
+|$d8_qunit= |selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D8'      |Bun     |
+|$d8_wt=    |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D8'   |Weight  |
+|$d8_vl=    |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D8'   |Volume  |
+|$d9_qts=   |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D9' |Quantity|
+|$d9_qunit= |selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D9'      |Bun     |
+|$d9_wt=    |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D9'   |Weight  |
+|$d9_vl=    |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D9'   |Volume  |
+|$d10_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D10'|Quantity|
+|$d10_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D10'     |Bun     |
+|$d10_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D10'  |Weight  |
+|$d10_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D10'  |Volume  |
+|$d11_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D11'|Quantity|
+|$d11_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D11'     |Bun     |
+|$d11_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D11'  |Weight  |
+|$d11_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D11'  |Volume  |
+|$d12_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D12'|Quantity|
+|$d12_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D12'     |Bun     |
+|$d12_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D12'  |Weight  |
+|$d12_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D12'  |Volume  |
+|$d13_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D13'|Quantity|
+|$d13_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D13'     |Bun     |
+|$d13_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D13'  |Weight  |
+|$d13_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D13'  |Volume  |
+|$d14_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D14'|Quantity|
+|$d14_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D14'     |Bun     |
+|$d14_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D14'  |Weight  |
+|$d14_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D14'  |Volume  |
+|$d15_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D15'|Quantity|
+|$d15_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D15'     |Bun     |
+|$d15_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D15'  |Weight  |
+|$d15_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D15'  |Volume  |
+|$d16_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D16'|Quantity|
+|$d16_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D16'     |Bun     |
+|$d16_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D16'  |Weight  |
+|$d16_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D16'  |Volume  |
+|$d17_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D17'|Quantity|
+|$d17_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D17'     |Bun     |
+|$d17_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D17'  |Weight  |
+|$d17_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D17'  |Volume  |
+|$d18_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D18'|Quantity|
+|$d18_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D18'     |Bun     |
+|$d18_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D18'  |Weight  |
+|$d18_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D18'  |Volume  |
+|$d19_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D19'|Quantity|
+|$d19_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D19'     |Bun     |
+|$d19_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D19'  |Weight  |
+|$d19_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D19'  |Volume  |
+|$d20_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D20'|Quantity|
+|$d20_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D20'     |Bun     |
+|$d20_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D20'  |Weight  |
+|$d20_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D20'  |Volume  |
+|$d21_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D21'|Quantity|
+|$d21_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D21'     |Bun     |
+|$d21_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D21'  |Weight  |
+|$d21_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D21'  |Volume  |
+|$d22_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D22'|Quantity|
+|$d22_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D22'     |Bun     |
+|$d22_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D22'  |Weight  |
+|$d22_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D22'  |Volume  |
+|$d23_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D23'|Quantity|
+|$d23_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D23'     |Bun     |
+|$d23_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D23'  |Weight  |
+|$d23_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D23'  |Volume  |
+|$d24_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D24'|Quantity|
+|$d24_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D24'     |Bun     |
+|$d24_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D24'  |Weight  |
+|$d24_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D24'  |Volume  |
+|$d25_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D25'|Quantity|
+|$d25_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D25'     |Bun     |
+|$d25_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D25'  |Weight  |
+|$d25_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D25'  |Volume  |
+|$d26_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D26'|Quantity|
+|$d26_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D26'     |Bun     |
+|$d26_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D26'  |Weight  |
+|$d26_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D26'  |Volume  |
+|$d27_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D27'|Quantity|
+|$d27_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D27'     |Bun     |
+|$d27_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D27'  |Weight  |
+|$d27_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D27'  |Volume  |
+|$d28_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D28'|Quantity|
+|$d28_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D28'     |Bun     |
+|$d28_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D28'  |Weight  |
+|$d28_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D28'  |Volume  |
+|$d29_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D29'|Quantity|
+|$d29_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D29'     |Bun     |
+|$d29_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D29'  |Weight  |
+|$d29_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D29'  |Volume  |
+|$d30_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D30'|Quantity|
+|$d30_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D30'     |Bun     |
+|$d30_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D30'  |Weight  |
+|$d30_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D30'  |Volume  |
+|$d31_qts=  |selectQuery;  |$filename|select Quantity from "Materials List" where "Deliver No" = 'D31'|Quantity|
+|$d31_qunit=|selectQuery;  |$filename|select Bun from "Materials List" where "Deliver No" = 'D31'     |Bun     |
+|$d31_wt=   |selectQuery;  |$filename|select Weight from "Materials List" where "Deliver No" = 'D31'  |Weight  |
+|$d31_vl=   |selectQuery;  |$filename|select Volume from "Materials List" where "Deliver No" = 'D31'  |Volume  |
+
+!|Script|Common                                          |
+|check  |checkIfStringAreEqual;|$count    |31       |true|
+|check  |checkIfStringAreEqual;|$d1_qts   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d1_qunit |[cases]  |true|
+|check  |checkIfStringAreEqual;|$d1_wt    |[105]    |true|
+|check  |checkIfStringAreEqual;|$d1_vl    |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d2_qts   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d2_qunit |[cases]  |true|
+|check  |checkIfStringAreEqual;|$d2_wt    |[105]    |true|
+|check  |checkIfStringAreEqual;|$d2_vl    |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d3_qts   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d3_qunit |[cases]  |true|
+|check  |checkIfStringAreEqual;|$d3_wt    |[105]    |true|
+|check  |checkIfStringAreEqual;|$d3_vl    |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d4_qts   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d4_qunit |[cases]  |true|
+|check  |checkIfStringAreEqual;|$d4_wt    |[105]    |true|
+|check  |checkIfStringAreEqual;|$d4_vl    |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d5_qts   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d5_qunit |[cases]  |true|
+|check  |checkIfStringAreEqual;|$d5_wt    |[105]    |true|
+|check  |checkIfStringAreEqual;|$d5_vl    |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d6_qts   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d6_qunit |[cases]  |true|
+|check  |checkIfStringAreEqual;|$d6_wt    |[105]    |true|
+|check  |checkIfStringAreEqual;|$d6_vl    |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d7_qts   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d7_qunit |[cases]  |true|
+|check  |checkIfStringAreEqual;|$d7_wt    |[105]    |true|
+|check  |checkIfStringAreEqual;|$d7_vl    |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d8_qts   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d8_qunit |[cases]  |true|
+|check  |checkIfStringAreEqual;|$d8_wt    |[105]    |true|
+|check  |checkIfStringAreEqual;|$d8_vl    |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d9_qts   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d9_qunit |[cases]  |true|
+|check  |checkIfStringAreEqual;|$d9_wt    |[105]    |true|
+|check  |checkIfStringAreEqual;|$d9_vl    |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d10_qts  |[1.05]   |true|
+|check  |checkIfStringAreEqual;|$d10_qunit|[cases]  |true|
+|check  |checkIfStringAreEqual;|$d10_wt   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d10_vl   |[0.03675]|true|
+|check  |checkIfStringAreEqual;|$d11_qts  |[1.05]   |true|
+|check  |checkIfStringAreEqual;|$d11_qunit|[cases]  |true|
+|check  |checkIfStringAreEqual;|$d11_wt   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d11_vl   |[0.03675]|true|
+|check  |checkIfStringAreEqual;|$d12_qts  |[1.05]   |true|
+|check  |checkIfStringAreEqual;|$d12_qunit|[cases]  |true|
+|check  |checkIfStringAreEqual;|$d12_wt   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d12_vl   |[0.03675]|true|
+|check  |checkIfStringAreEqual;|$d13_qts  |[1.05]   |true|
+|check  |checkIfStringAreEqual;|$d13_qunit|[cases]  |true|
+|check  |checkIfStringAreEqual;|$d13_wt   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d13_vl   |[0.03675]|true|
+|check  |checkIfStringAreEqual;|$d14_qts  |[1.05]   |true|
+|check  |checkIfStringAreEqual;|$d14_qunit|[cases]  |true|
+|check  |checkIfStringAreEqual;|$d14_wt   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d14_vl   |[0.03675]|true|
+|check  |checkIfStringAreEqual;|$d15_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d15_qunit|[c/s]    |true|
+|check  |checkIfStringAreEqual;|$d15_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d15_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d16_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d16_qunit|[s/o]    |true|
+|check  |checkIfStringAreEqual;|$d16_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d16_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d17_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d17_qunit|[cs]     |true|
+|check  |checkIfStringAreEqual;|$d17_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d17_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d18_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d18_qunit|[box]    |true|
+|check  |checkIfStringAreEqual;|$d18_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d18_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d19_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d19_qunit|[boxes]  |true|
+|check  |checkIfStringAreEqual;|$d19_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d19_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d20_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d20_qunit|[pkg]    |true|
+|check  |checkIfStringAreEqual;|$d20_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d20_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d21_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d21_qunit|[mt]     |true|
+|check  |checkIfStringAreEqual;|$d21_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d21_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d22_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d22_qunit|[pkgs]   |true|
+|check  |checkIfStringAreEqual;|$d22_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d22_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d23_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d23_qunit|[cases]  |true|
+|check  |checkIfStringAreEqual;|$d23_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d23_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d24_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d24_qunit|[case]   |true|
+|check  |checkIfStringAreEqual;|$d24_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d24_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d25_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d25_qunit|[nos]    |true|
+|check  |checkIfStringAreEqual;|$d25_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d25_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d26_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d26_qunit|[bags]   |true|
+|check  |checkIfStringAreEqual;|$d26_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d26_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d27_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d27_qunit|[kar]    |true|
+|check  |checkIfStringAreEqual;|$d27_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d27_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d28_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d28_qunit|[ctn]    |true|
+|check  |checkIfStringAreEqual;|$d28_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d28_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d29_qts  |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d29_qunit|[st]     |true|
+|check  |checkIfStringAreEqual;|$d29_wt   |[105]    |true|
+|check  |checkIfStringAreEqual;|$d29_vl   |[0.3675] |true|
+|check  |checkIfStringAreEqual;|$d30_qts  |[1.05]   |true|
+|check  |checkIfStringAreEqual;|$d30_qunit|[cases]  |true|
+|check  |checkIfStringAreEqual;|$d30_wt   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d30_vl   |[0.03675]|true|
+|check  |checkIfStringAreEqual;|$d31_qts  |[1.05]   |true|
+|check  |checkIfStringAreEqual;|$d31_qunit|[cases]  |true|
+|check  |checkIfStringAreEqual;|$d31_wt   |[10.5]   |true|
+|check  |checkIfStringAreEqual;|$d31_vl   |[0.03675]|true|
+*!
+
+!** Validate Indent
+!|Script|Ui                                                                   |
+|click; |//input[@type='checkbox']/../span                              |xpath|
+|click; |//button[contains(text(),'Indent')]                            |xpath|
+|click; |//div[@class='el-message-box']//span[contains(text(),'Create')]|xpath|
+|wait;  |10                                                                   |
+
+!define depot_selection  {Team S&S - Tepla CDC}
+
+!|Script       |Ui                                                                                                   |
+|navigateToUrl;|${surl}/indents                                                                                      |
+|click;        |//button[@class='el-button el-button--default']|xpath                                                |
+|click;        |(//div[@class='slideleft_menu']//input)[1]     |xpath                                                |
+|sendKeys;     |(//div[@class='slideleft_menu']//input)[1]     |xpath                             |${depot_selection}|
+|click;        |//span[text()='${depot_selection}']            |xpath                                                |
+|wait;         |2                                                                                                    |
+|click;        |//button[text()='APPLY']                       |xpath                                                |
+|$order_id=    |getText;                                       |(//div[@class='order-row']/div)[1]|xpath             |
+
+!|script   |common                            |
+|$order_id=|replaceString;|$order_id|$thisday||
+|$order_id=|replaceString;|$order_id|\n      ||
+*!
+
+!** Validating that indent created with the quantity unit converted values only
+!|script                     |ui                                                                 |
+|navigateToUrl;              |${surl}/indents/$order_id/details/0                                |
+|waitForElementToBeDisplayed;|//div[@class='card-right']                                |xpath|10|
+|click;                      |//span[normalize-space(text())='DOWNLOAD']/../self::button|xpath   |
+|wait;                       |10                                                                 |
+
+!** Get last modified Filename
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+**!
+
+!|script    |ExcelQuery                                                                                                           |
+|$count=    |getCountQuery;|$filename|select * from "Materials"                                                                   |
+|$d1_qts=   |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D1'        |Quantity     |
+|$d1_qunit= |selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D1' |Quantity Unit|
+|$d1_wt=    |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D1'          |Weight       |
+|$d1_vl=    |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D1'          |Volume       |
+|$d2_qts=   |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D2'        |Quantity     |
+|$d2_qunit= |selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D2' |Quantity Unit|
+|$d2_wt=    |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D2'          |Weight       |
+|$d2_vl=    |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D2'          |Volume       |
+|$d3_qts=   |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D3'        |Quantity     |
+|$d3_qunit= |selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D3' |Quantity Unit|
+|$d3_wt=    |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D3'          |Weight       |
+|$d3_vl=    |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D3'          |Volume       |
+|$d4_qts=   |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D4'        |Quantity     |
+|$d4_qunit= |selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D4' |Quantity Unit|
+|$d4_wt=    |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D4'          |Weight       |
+|$d4_vl=    |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D4'          |Volume       |
+|$d5_qts=   |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D5'        |Quantity     |
+|$d5_qunit= |selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D5' |Quantity Unit|
+|$d5_wt=    |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D5'          |Weight       |
+|$d5_vl=    |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D5'          |Volume       |
+|$d6_qts=   |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D6'        |Quantity     |
+|$d6_qunit= |selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D6' |Quantity Unit|
+|$d6_wt=    |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D6'          |Weight       |
+|$d6_vl=    |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D6'          |Volume       |
+|$d7_qts=   |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D7'        |Quantity     |
+|$d7_qunit= |selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D7' |Quantity Unit|
+|$d7_wt=    |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D7'          |Weight       |
+|$d7_vl=    |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D7'          |Volume       |
+|$d8_qts=   |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D8'        |Quantity     |
+|$d8_qunit= |selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D8' |Quantity Unit|
+|$d8_wt=    |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D8'          |Weight       |
+|$d8_vl=    |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D8'          |Volume       |
+|$d9_qts=   |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D9'        |Quantity     |
+|$d9_qunit= |selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D9' |Quantity Unit|
+|$d9_wt=    |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D9'          |Weight       |
+|$d9_vl=    |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D9'          |Volume       |
+|$d10_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D10'       |Quantity     |
+|$d10_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D10'|Quantity Unit|
+|$d10_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D10'         |Weight       |
+|$d10_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D10'         |Volume       |
+|$d11_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D11'       |Quantity     |
+|$d11_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D11'|Quantity Unit|
+|$d11_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D11'         |Weight       |
+|$d11_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D11'         |Volume       |
+|$d12_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D12'       |Quantity     |
+|$d12_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D12'|Quantity Unit|
+|$d12_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D12'         |Weight       |
+|$d12_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D12'         |Volume       |
+|$d13_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D13'       |Quantity     |
+|$d13_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D13'|Quantity Unit|
+|$d13_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D13'         |Weight       |
+|$d13_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D13'         |Volume       |
+|$d14_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D14'       |Quantity     |
+|$d14_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D14'|Quantity Unit|
+|$d14_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D14'         |Weight       |
+|$d14_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D14'         |Volume       |
+|$d15_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D15'       |Quantity     |
+|$d15_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D15'|Quantity Unit|
+|$d15_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D15'         |Weight       |
+|$d15_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D15'         |Volume       |
+|$d16_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D16'       |Quantity     |
+|$d16_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D16'|Quantity Unit|
+|$d16_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D16'         |Weight       |
+|$d16_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D16'         |Volume       |
+|$d17_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D17'       |Quantity     |
+|$d17_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D17'|Quantity Unit|
+|$d17_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D17'         |Weight       |
+|$d17_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D17'         |Volume       |
+|$d18_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D18'       |Quantity     |
+|$d18_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D18'|Quantity Unit|
+|$d18_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D18'         |Weight       |
+|$d18_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D18'         |Volume       |
+|$d19_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D19'       |Quantity     |
+|$d19_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D19'|Quantity Unit|
+|$d19_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D19'         |Weight       |
+|$d19_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D19'         |Volume       |
+|$d20_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D20'       |Quantity     |
+|$d20_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D20'|Quantity Unit|
+|$d20_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D20'         |Weight       |
+|$d20_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D20'         |Volume       |
+|$d21_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D21'       |Quantity     |
+|$d21_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D21'|Quantity Unit|
+|$d21_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D21'         |Weight       |
+|$d21_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D21'         |Volume       |
+|$d22_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D22'       |Quantity     |
+|$d22_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D22'|Quantity Unit|
+|$d22_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D22'         |Weight       |
+|$d22_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D22'         |Volume       |
+|$d23_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D23'       |Quantity     |
+|$d23_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D23'|Quantity Unit|
+|$d23_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D23'         |Weight       |
+|$d23_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D23'         |Volume       |
+|$d24_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D24'       |Quantity     |
+|$d24_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D24'|Quantity Unit|
+|$d24_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D24'         |Weight       |
+|$d24_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D24'         |Volume       |
+|$d25_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D25'       |Quantity     |
+|$d25_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D25'|Quantity Unit|
+|$d25_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D25'         |Weight       |
+|$d25_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D25'         |Volume       |
+|$d26_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D26'       |Quantity     |
+|$d26_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D26'|Quantity Unit|
+|$d26_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D26'         |Weight       |
+|$d26_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D26'         |Volume       |
+|$d27_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D27'       |Quantity     |
+|$d27_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D27'|Quantity Unit|
+|$d27_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D27'         |Weight       |
+|$d27_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D27'         |Volume       |
+|$d28_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D28'       |Quantity     |
+|$d28_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D28'|Quantity Unit|
+|$d28_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D28'         |Weight       |
+|$d28_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D28'         |Volume       |
+|$d29_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D29'       |Quantity     |
+|$d29_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D29'|Quantity Unit|
+|$d29_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D29'         |Weight       |
+|$d29_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D29'         |Volume       |
+|$d30_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D30'       |Quantity     |
+|$d30_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D30'|Quantity Unit|
+|$d30_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D30'         |Weight       |
+|$d30_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D30'         |Volume       |
+|$d31_qts=  |selectQuery;  |$filename|select Quantity from "Materials" where "Material Unique Number" = 'D31'       |Quantity     |
+|$d31_qunit=|selectQuery;  |$filename|select "Quantity Unit" from "Materials" where "Material Unique Number" = 'D31'|Quantity Unit|
+|$d31_wt=   |selectQuery;  |$filename|select Weight from "Materials" where "Material Unique Number" = 'D31'         |Weight       |
+|$d31_vl=   |selectQuery;  |$filename|select Volume from "Materials" where "Material Unique Number" = 'D31'         |Volume       |
+
+!|Script  |Common                                          |
+|check    |checkIfStringAreEqual;|$count    |31       |true|
+|$tresult=|checkIfStringAreEqual;|$count    |31            |
+|check    |checkIfStringAreEqual;|$d1_qts   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d1_qunit |[cases]  |true|
+|check    |checkIfStringAreEqual;|$d1_wt    |[105]    |true|
+|check    |checkIfStringAreEqual;|$d1_vl    |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d2_qts   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d2_qunit |[cases]  |true|
+|check    |checkIfStringAreEqual;|$d2_wt    |[105]    |true|
+|check    |checkIfStringAreEqual;|$d2_vl    |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d3_qts   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d3_qunit |[cases]  |true|
+|check    |checkIfStringAreEqual;|$d3_wt    |[105]    |true|
+|check    |checkIfStringAreEqual;|$d3_vl    |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d4_qts   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d4_qunit |[cases]  |true|
+|check    |checkIfStringAreEqual;|$d4_wt    |[105]    |true|
+|check    |checkIfStringAreEqual;|$d4_vl    |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d5_qts   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d5_qunit |[cases]  |true|
+|check    |checkIfStringAreEqual;|$d5_wt    |[105]    |true|
+|check    |checkIfStringAreEqual;|$d5_vl    |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d6_qts   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d6_qunit |[cases]  |true|
+|check    |checkIfStringAreEqual;|$d6_wt    |[105]    |true|
+|check    |checkIfStringAreEqual;|$d6_vl    |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d7_qts   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d7_qunit |[cases]  |true|
+|check    |checkIfStringAreEqual;|$d7_wt    |[105]    |true|
+|check    |checkIfStringAreEqual;|$d7_vl    |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d8_qts   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d8_qunit |[cases]  |true|
+|check    |checkIfStringAreEqual;|$d8_wt    |[105]    |true|
+|check    |checkIfStringAreEqual;|$d8_vl    |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d9_qts   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d9_qunit |[cases]  |true|
+|check    |checkIfStringAreEqual;|$d9_wt    |[105]    |true|
+|check    |checkIfStringAreEqual;|$d9_vl    |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d10_qts  |[1.05]   |true|
+|check    |checkIfStringAreEqual;|$d10_qunit|[cases]  |true|
+|check    |checkIfStringAreEqual;|$d10_wt   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d10_vl   |[0.03675]|true|
+|check    |checkIfStringAreEqual;|$d11_qts  |[1.05]   |true|
+|check    |checkIfStringAreEqual;|$d11_qunit|[cases]  |true|
+|check    |checkIfStringAreEqual;|$d11_wt   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d11_vl   |[0.03675]|true|
+|check    |checkIfStringAreEqual;|$d12_qts  |[1.05]   |true|
+|check    |checkIfStringAreEqual;|$d12_qunit|[cases]  |true|
+|check    |checkIfStringAreEqual;|$d12_wt   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d12_vl   |[0.03675]|true|
+|check    |checkIfStringAreEqual;|$d13_qts  |[1.05]   |true|
+|check    |checkIfStringAreEqual;|$d13_qunit|[cases]  |true|
+|check    |checkIfStringAreEqual;|$d13_wt   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d13_vl   |[0.03675]|true|
+|check    |checkIfStringAreEqual;|$d14_qts  |[1.05]   |true|
+|check    |checkIfStringAreEqual;|$d14_qunit|[cases]  |true|
+|check    |checkIfStringAreEqual;|$d14_wt   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d14_vl   |[0.03675]|true|
+|check    |checkIfStringAreEqual;|$d15_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d15_qunit|[c/s]    |true|
+|check    |checkIfStringAreEqual;|$d15_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d15_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d16_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d16_qunit|[s/o]    |true|
+|check    |checkIfStringAreEqual;|$d16_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d16_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d17_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d17_qunit|[cs]     |true|
+|check    |checkIfStringAreEqual;|$d17_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d17_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d18_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d18_qunit|[box]    |true|
+|check    |checkIfStringAreEqual;|$d18_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d18_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d19_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d19_qunit|[boxes]  |true|
+|check    |checkIfStringAreEqual;|$d19_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d19_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d20_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d20_qunit|[pkg]    |true|
+|check    |checkIfStringAreEqual;|$d20_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d20_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d21_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d21_qunit|[mt]     |true|
+|check    |checkIfStringAreEqual;|$d21_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d21_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d22_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d22_qunit|[pkgs]   |true|
+|check    |checkIfStringAreEqual;|$d22_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d22_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d23_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d23_qunit|[cases]  |true|
+|check    |checkIfStringAreEqual;|$d23_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d23_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d24_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d24_qunit|[case]   |true|
+|check    |checkIfStringAreEqual;|$d24_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d24_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d25_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d25_qunit|[nos]    |true|
+|check    |checkIfStringAreEqual;|$d25_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d25_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d26_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d26_qunit|[bags]   |true|
+|check    |checkIfStringAreEqual;|$d26_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d26_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d27_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d27_qunit|[kar]    |true|
+|check    |checkIfStringAreEqual;|$d27_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d27_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d28_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d28_qunit|[ctn]    |true|
+|check    |checkIfStringAreEqual;|$d28_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d28_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d29_qts  |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d29_qunit|[st]     |true|
+|check    |checkIfStringAreEqual;|$d29_wt   |[105]    |true|
+|check    |checkIfStringAreEqual;|$d29_vl   |[0.3675] |true|
+|check    |checkIfStringAreEqual;|$d30_qts  |[1.05]   |true|
+|check    |checkIfStringAreEqual;|$d30_qunit|[cases]  |true|
+|check    |checkIfStringAreEqual;|$d30_wt   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d30_vl   |[0.03675]|true|
+|check    |checkIfStringAreEqual;|$d31_qts  |[1.05]   |true|
+|check    |checkIfStringAreEqual;|$d31_qunit|[cases]  |true|
+|check    |checkIfStringAreEqual;|$d31_wt   |[10.5]   |true|
+|check    |checkIfStringAreEqual;|$d31_vl   |[0.03675]|true|
+*!
+
+!** Retrieving the Job ID using API
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.RetrieveOptimaJobIDAPI
+*!

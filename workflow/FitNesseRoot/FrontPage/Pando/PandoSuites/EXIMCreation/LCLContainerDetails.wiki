@@ -1,0 +1,6 @@
+---
+Help: Used to select the LCL container details
+---
+!|Script  |Ui                                                                                                                                        |
+|sendKeys;|//li//label[normalize-space(text())='Weight(KG)']/following-sibling::div//input[contains(@placeholder,'Enter weight')] |xpath|${weight_kg}|
+|sendKeys;|//li//label[normalize-space(text())='Volume(CBM)']/following-sibling::div//input[contains(@placeholder,'Enter volume')]|xpath|${volume_kg}|

@@ -1,0 +1,6 @@
+---
+Help: Contains consignee application related API
+Suite
+---
+!1 Test suite Consignee API
+!contents -R2 -g -p -f -h

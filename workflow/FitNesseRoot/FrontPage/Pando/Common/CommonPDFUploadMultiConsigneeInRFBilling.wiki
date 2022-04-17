@@ -1,0 +1,12 @@
+!|script       |Ui                                                      |
+|navigateToUrl;|${turl}/v2/payments?depot=${depot_name}                 |
+|refreshForElementToBeDisplayed;|(//div[contains(@class,'list-row') or contains(@class,'card-row row')])[1]|xpath|5|2|
+|click;        |//span[normalize-space(text())='Update']                |xpath           |
+|sendKeys;     |(//input[@class='el-upload__input'])[1]|xpath|${lr_copy}|
+|sendKeys;     |(//input[@class='el-upload__input'])[2]|xpath|${lr_copy}|
+|sendKeys;     |(//input[@class='el-upload__input'])[3]|xpath|${lr_copy}|
+|click;        |//div[@class='formfooter']//button//span[normalize-space(text())='Update']               |xpath           |
+|wait;         |5                                                       |
+|refresh;                                                               |
+|click;        |//span[@class='el-checkbox__inner']    |xpath           |
+|click;        |//button[text()='Create Invoice']      |xpath           |

@@ -1,0 +1,12 @@
+---
+Help: Contains script to pass payload data as variable
+Test
+---
+!|Script    |Http                                      |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/consignee/                    |
+|$consignee=|getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|200                        |
+
+!|Script       |json                                |
+|$consignee_id=|getValueFromJSON;|$consignee|data.id|

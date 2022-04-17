@@ -1,0 +1,124 @@
+---
+Help: Ensure that two order suggested when distance between drop is more than city distance limit
+Test
+---
+!5 Description : PD-3748 : Ensure that two order suggested when distance between drop is more than city distance limit
+
+!5 Expected : 135589 and 130650 are 10 KM away in same City - Combine as order
+
+!5 Expected : (135589 & 130650) and 129603 are 20 KM away in same City - Not Combine as order
+
+!5 Expected : (130600 & 130630) are 50 KM away from city - Not Combine as order
+
+!***> Unique values assignment
+!|Script          |Common                                       |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$currDate=       |getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique  |0   |4    |
+|$detention_group=|getRandomString;        |4        |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000   |999999    |
+|$today=          |getSubString;           |$currDate|0   |10   |
+|$pincode1=       |getRandomNumber;        |111001   |999999    |
+|$pincode2=       |getRandomNumber;        |111001   |999999    |
+|$vno_1=          |getRandomNumber;        |20       |76        |
+|$vno_2=          |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=          |getRandomNumber;        |1000     |9999      |
+
+!|Script       |DateUtil                      |
+|$today=       |dateCalculation;|yyyy-MM-dd |0|
+|$invoicedate= |dateCalculation;|yyyy-MM-dd |5|
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0|
+|$thisday=     |dateCalculation;|dd MMM yyyy|0|
+|$invoice_date=|dateCalculation;|dd-MMM-yyyy|5|
+
+!| Script     |Common                                      |
+|$rdate=      |stringConcatenation;   |$rdate|!- 10:00:00-!|
+|$loadingDate=|getCurrentDateTimeStamp|iso                 |
+*!
+
+!***> Depot Optima Setting
+!define depo {Parekh Chennai CFA}
+!define depot_name {Parekh Chennai CFA}
+!define depot_id {5fdf2d82a485000052445541}
+!define movement {1}
+!define movement_type {Secondary}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split":3,"split_factor":0,"ftl_certify":false,"algorithm":4,"distance_deviation":100,"degree_of_deviation":50,"optima_type":1,"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":1,"volume":1},"material_categories":["MT","GT"],"mode":0,"max_pickup_points":5,"fitment":0,"max_drop_points":5,"drop_off_rule":[{"city":"Mumbai","max_drops":5,"distance_deviation":20},{"city":"Vellore","max_drops":5,"distance_deviation":50},{"city":"Cochin","max_drops":3,"distance_deviation":30}],"optima_for_ptl":false,"ptl_club_gates":false,"pickup_threshold":{"weight":5000,"volume":400},"floor_one":{"weight":3000,"volume":363},"floor_two":{"weight":90,"volume":90},"limited_truck_count":false,"hybrid_split":false,"material_fractional_quantity":false,"ptl_contracts":0,"telescopic_threshold":{"weight":0,"volume":0}},"depot_ids":["${depot_id}"],"movement":1}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!**> Material Creation two (GST Exempt false)
+!define material_name {m1$unique}
+!define material_code {mc1$unique}
+!define category {20B}
+!define box_weight {250}
+!define box_volume {50}
+
+!|script|common                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"${category}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!***> Uploading Rate Matrix
+!define erp_gate_id_api_1 {rq1$unique}
+!define transit_days {1}
+!define ratec {1000}
+!define rtrip {per_trip}
+!define mrate {10000}
+!define mfactor {1}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {point,5340,135589,32FT 15MT,${transit_days},773248,Loadshare Networks Private Limited,${transit_days},4300,per trip,01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|point,5340,129603,32FT 15MT,${transit_days},773248,Loadshare Networks Private Limited,${transit_days},4300,per trip,01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|point,5340,130600,32FT 15MT,${transit_days},773248,Loadshare Networks Private Limited,${transit_days},4300,per trip,01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|point,5340,130630,32FT 15MT,${transit_days},773248,Loadshare Networks Private Limited,${transit_days},4300,per trip,01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|point,5340,130650,32FT 15MT,${transit_days},773248,Loadshare Networks Private Limited,${transit_days},4300,per trip,01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!**> Delete the Line item from Depot via API
+!|script|common              |
+|$depot=|getTrim;|${depot_id}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DiscardLineItemOptimaAPI
+**!
+
+!***> Optima uploading Material and Optimizing
+!define invoice_value {25000}
+!define mrp {20000}
+
+!define row {Sales Doc./Delivery Number/Material Invoice Number,Material Code,Order Quantity,Quantity Unit,Weight,Weight Unit,Volume,Volume Unit,Pickup Ref Id,Customer/Ship To Ref Id,Sold To Ref Id,Category,Sub Category	,Date(YYYY-MM-DD),STN,Material Category,Category Priority,Invoice Date(YYYY-MM-DD),Invoice Value,Transporter Reference Id,MRP}
+!define column {D1$num,mc1$unique,10,NOS,2900,kg,400,cft,5340,129603,129603,,,$today,,,,$invoicedate,${invoice_value},,${mrp}|D1$num,mc1$unique,10,NOS,2900,kg,400,cft,5340,135589,135589,,,$today,,,,$invoicedate,${invoice_value},,${mrp}|D1$num,mc1$unique,10,NOS,2900,kg,400,cft,5340,130600,130600,,,$today,,,,$invoicedate,${invoice_value},,${mrp}|D1$num,mc1$unique,10,NOS,2900,kg,400,cft,5340,130630,130630,,,$today,,,,$invoicedate,${invoice_value},,${mrp}|D1$num,mc1$unique,10,NOS,2900,kg,400,cft,5340,130650,130650,,,$today,,,,$invoicedate,${invoice_value},,${mrp}}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+!|Script                |Excel                      |
+|newSheetDynamicColumns;|${row}|${column}|$excelpath|
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimaMaterialUpload
+
+!|Script|Common                                                                              |
+|check  |checkIfStringExistsIn;|5 Valid materials and 0 Invalid materials out of 5|$data|true|
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimizeAndFilter
+*!
+
+!** Validating the optima output for orders
+!|Script   |Ui                                                                                                                                            |
+|check     |getCountOfElements; |//div[@class='card-row card-row-show']                                                                        |xpath|3   |
+|check     |isElementPresent;   |//span[contains(text(),'130600')]//ancestor::div[contains(@class,'row-show')]//span[contains(text(),'130630')]|xpath|true|
+|$tresult1=|isElementPresent;   |//span[contains(text(),'130600')]//ancestor::div[contains(@class,'row-show')]//span[contains(text(),'130630')]|xpath     |
+|check     |isElementPresent;   |//span[contains(text(),'135589')]//ancestor::div[contains(@class,'row-show')]//span[contains(text(),'130650')]|xpath|true|
+|$tresult2=|isElementPresent;   |//span[contains(text(),'135589')]//ancestor::div[contains(@class,'row-show')]//span[contains(text(),'130650')]|xpath     |
+|check     |isElementNotPresent;|//span[contains(text(),'129603')]//ancestor::wrappercontainer//following-sibling::wrappercontainer            |xpath|true|
+|$tresult3=|isElementNotPresent;|//span[contains(text(),'129603')]//ancestor::wrappercontainer//following-sibling::wrappercontainer            |xpath     |
+|wait;     |3                                                                                                                                             |
+
+!|Script  |Common                                                          |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,true|
+**!
+
+!** Retrieving the Job ID using API
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.RetrieveOptimaJobIDAPI
+*!

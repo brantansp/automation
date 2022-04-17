@@ -1,0 +1,21 @@
+#!|Script     |Common                                                                      |
+#|$screenPath=|getPath;|FitNesseRoot/files/screen/${RUNNING_PAGE_NAME}_${build_no}|fullpath|
+
+#!|Script        |Ui         |
+#|takeScreenshot;|$screenPath|
+
+#${test_screenshot}
+
+!** Update Result
+!|Script            |qmetry                                 |
+|initializeDatabase;|${connection}     |${testing_database} |
+|initializeQmetry;  |${qmetry_base_url}|${user_access_token}|
+#|$data=             |updateTestcase;   |${test_cycle}|${RUNNING_PAGE_NAME}|$tresult|$unique|${surl}|${extent_tag}|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME}|$testCaseDescription|
+**!
+
+
+!** Slack notification
+!|Script      |slack                                                              |
+|notifyStatus;|${notify}                                                          |
+|$data=       |slackNotification;|${RUNNING_PAGE_NAME}|${test_screenshot}|$tresult|
+**!

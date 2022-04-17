@@ -1,0 +1,25 @@
+!|Script|Ui|
+|navigateToUrl;|${surl}/indents|
+|click;|//button[contains(text(),'Add')]|xpath|
+|click;|//div[@class='category dropdown-section']|xpath|
+|click;|//span[text()='CONTRACT']|xpath|
+|click;|//ul/li[contains(text(),' Consignee')]|xpath|
+|click;|//a[contains(text(),'Secondary')]|xpath|
+|sendKeys;|//input[@placeholder='Search by Consignee details']|xpath|${consignee_name}|
+|waitForElementToBeDisplayed;|.table|cssselector|5|
+|click;|//input[@type='checkbox']|xpath|
+|click;|.btn.primary-button|cssselector|
+|wait;|5|
+|click;|//ul/li[contains(text(),' Consignee')]|xpath|
+|click;|//a[contains(text(),'Secondary')]|xpath|
+|sendKeys;|//input[@placeholder='Search by Consignee details']|xpath|${consignee_name_1}|
+|waitForElementToBeDisplayed;|.table|cssselector|5|
+|click;|//span[contains(text(),'${consignee_name_1}')]/ancestor::div[@class='table']//div[@class='checkbox-section']//input|xpath|
+|click;|.btn.primary-button|cssselector|
+|wait;|5|
+|click;|//li/div[contains(text(),'TRANSPORTER')]/following-sibling::div//input|xpath|
+|sendKeys;|//li/div[contains(text(),'TRANSPORTER')]/following-sibling::div//input|xpath|${transporter_name}|
+|click;|//span[contains(text(),'${transporter_name}')]|xpath|
+|click;|//button[contains(text(),'Indent')]|xpath|
+|check|isElementPresent;|.el-notification__icon.el-icon-success|cssselector|true|
+|$data=|getText;|.el-notification__content|cssselector|

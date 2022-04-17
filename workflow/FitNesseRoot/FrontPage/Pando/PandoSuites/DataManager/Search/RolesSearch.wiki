@@ -1,0 +1,6 @@
+---
+Help: Search module for Role
+Suite
+---
+!1 Test suite for roles
+!contents -R2 -g -p -f -h

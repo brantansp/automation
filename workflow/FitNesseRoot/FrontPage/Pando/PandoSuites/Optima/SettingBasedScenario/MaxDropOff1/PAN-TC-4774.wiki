@@ -1,0 +1,75 @@
+---
+Help: max drop off 1
+Test
+---
+!** Depot Optima Setting
+!define depo {Chennai Depot}
+!define movement_type {Secondary}
+!define split_factor {5}
+!define max_split {2}
+!define algorithm_mode {Default}
+!define angle {30}
+!define optima_type {2D}
+!define mode {0}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.RouteSettingCS
+
+!define max_pick_up {1}
+!define max_drop_off {1}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.RouteSetting
+
+!define option {(//span[@class='el-radio__inner'])[1]}
+!define weight {1}
+!define volume {1}
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.VehicalsSetting
+*!
+
+!** Uploading the Material and Optimizing
+#!define surl {https://optima-auto.pandostaging.in}
+!define depo {Chennai Depot}
+!define items {3}
+!define mcount {4}
+!define mcount1 {4}
+!define movement_type {Secondary}
+
+!|Script    |Common                                                |
+|$excelpath=|getPath;|optimaAttachment/max_drop_off_1.xlsx|fullpath|
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.CommonOptimaRun
+*!
+
+!** Validating the Line item
+#|check|getText;|//span[@class='cfamount']|xpath|${items}|
+!|Script|Ui                                                                                                                                                           |
+|check  |getCountOfElements;|//span[contains(text(),'IN01')]                                                                                                  |xpath|3|
+|check  |getText;           |(//span[contains(text(),'Consignee 4')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[2]|xpath  |!-1500
+25%-!|
+|check    |isElementPresent;|(//span[contains(text(),'Consignee 4')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[5]//span[contains(text(),'Z009')]|xpath|true|
+|$volume1=|getText;         |(//span[contains(text(),'Consignee 4')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[3]                               |xpath     |
+|check    |getText;         |(//span[contains(text(),'Consignee 5')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[2]                               |xpath     |!-1500
+25%-!|
+|check    |isElementPresent;|(//span[contains(text(),'Consignee 5')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[5]//span[contains(text(),'Z009')]|xpath|true|
+|$volume2=|getText;         |(//span[contains(text(),'Consignee 5')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[3]                               |xpath     |
+|check    |getText;         |(//span[contains(text(),'Consignee 3')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[2]                               |xpath     |!-3000
+50%-!|
+|check    |isElementPresent;|(//span[contains(text(),'Consignee 3')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[5]//span[contains(text(),'Z009')]|xpath|true|
+|$volume3=|getText;         |(//span[contains(text(),'Consignee 3')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[3]                               |xpath     |
+
+|Script    |Common                                  |
+|check     |checkIfStringExistsIn;|210|$volume1|true|
+|$tresult1=|checkIfStringExistsIn;|210|$volume1     |
+|check     |checkIfStringExistsIn;|210|$volume2|true|
+|$tresult2=|checkIfStringExistsIn;|210|$volume2     |
+|check     |checkIfStringExistsIn;|420|$volume3|true|
+|$tresult3=|checkIfStringExistsIn;|420|$volume3     |
+*!
+
+!** Validating Test Result
+!|Script  |Common                                                     |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3|
+*!
+
+!** Retrieving the Job ID
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.CommonTenantId
+*!

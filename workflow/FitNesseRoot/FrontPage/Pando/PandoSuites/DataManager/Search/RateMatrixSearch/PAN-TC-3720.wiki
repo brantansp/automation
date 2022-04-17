@@ -1,0 +1,34 @@
+---
+Help: DM RateMatrix Search based on invalid Transporter Name
+Test
+---
+!** Unique value assignment
+!| Script|Common                              |
+|$num=   |getRandomNumber;        |10   |100  |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+*!
+!*** Adding a Transporter using API
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!define search_field {Enter Transporter Name}
+!define search_value {${transporter_name}}
+!** Searching for the added Transporter in Rate Matrix
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.RateMatrixSearch.RateMatrixSearchCommon
+*!
+
+!*** verifying the search result for No records
+!| script |ui                                                    |
+|check    |isElementPresent;|//div[@class='emptytext']|xpath|true|
+|$tresult=|isElementPresent;|//div[@class='emptytext']|xpath     |
+*!

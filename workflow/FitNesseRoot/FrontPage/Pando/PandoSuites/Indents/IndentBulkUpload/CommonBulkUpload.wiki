@@ -1,0 +1,6 @@
+!|Script                   |Ui                                                       |
+|navigateToUrl;            |${surl}/indents                                          |
+|wait;                     |3                                                        |
+|sendKeys;                 |//input[@id='file']                     |xpath|$excelpath|
+|wait;                     |3                                                        |
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch']|xpath|60        |

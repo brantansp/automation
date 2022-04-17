@@ -1,0 +1,229 @@
+---
+Help: Update Material invoice submitting for a multi drop case using Delivery Number - Secondary
+Suites: cummins
+Test
+---
+!*> Unique values assignment
+!|Script      |DateUtil                      |
+|$loadingDate=|dateCalculation;|yyyy/MM/dd|0 |
+|$rdate=      |dateCalculation;|yyyy/MM/dd|-1|
+|$loadingDate=|utcConversion;  |$loadingDate |
+
+!|Script |Common                                        |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss          |
+|$num1=  |getRandomNumber;        |20     |76           |
+|$num2=  |getRandomNumber;        |1000   |9999         |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER   |
+|$year=  |getSubString;           |$unique|0     |4     |
+|$rdate= |stringConcatenation;    |$rdate |!- 10:00:00-!|
+*!
+
+!**> Data creation for Secondary movement
+!***> Consignee 1 Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+*!
+
+!***> Consignee 2 Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr2$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+*!
+
+!***> Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!define credit_period {20}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","credit_period":"${credit_period}","reference_id":"${transporter_ref_id}","status":${transporter_status},"country":"India","generate_lr":true,"users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Depot Creation with two gates
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!***> Gate Manager Creation
+!***> User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate1 Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+*!
+
+!***> Gate2 Creation
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {RQ2$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+*!
+
+!**> Material Creation 
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!**> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Approved By,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,BDR Charge,BDR Label,Exclude,Trip Count}
+!define column {City,${depot_city},city$unique,${vehicle_name},100,${transporter_ref_id},${transporter_name},1,6000,per_trip,01-Jan-$year,31-Dec-2030,100,1,System User,,}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+***!
+
+!** Indent Creation through bulk indent API
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+|$data= |getTrim;|{ "data": [ { "indent_type": "CONTRACT", "transporter_reference_id": "tr$unique", "vehicle_type": "v$unique", "delivery_type": "FTL", "vehicle_requirement_date": "$rdate", "shipment_number": "ship$unique", "drop_off": [ { "pick_up": "RQ1$unique", "pick_up_type": "DEPOT", "ship_to_type": "CONSIGNEE", "ship_to": "cr1$unique", "sold_to": "cr1$unique", "materials": [ { "delivery_number": "$unique", "material_code": "mc$unique", "category": "GT", "division": "ST", "mrp": "100", "weight": { "value": "80", "unit": "KG" }, "volume": { "value": "20", "unit": "CFT" }, "quantity": { "value": "45", "unit": "NOS" }, "invoice_number": "", "invoice_amount": "", "invoice_date": "" } ] },{ "pick_up": "RQ2$unique", "pick_up_type": "DEPOT", "ship_to_type": "CONSIGNEE", "ship_to": "cr2$unique", "sold_to": "cr2$unique", "materials": [ { "delivery_number": "$unique", "material_code": "mc$unique", "category": "GT", "division": "ST", "mrp": "100", "weight": { "value": "80", "unit": "KG" }, "volume": { "value": "20", "unit": "CFT" }, "quantity": { "value": "45", "unit": "NOS" }, "invoice_number": "", "invoice_amount": "", "invoice_date": "" } ] } ] } ] }|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationBulkThroughAPI
+*!
+
+!**> Filtering indent
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {${depot_name}}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|script    |ui                                                                                                                                                                     |
+|check      |isElementPresent;                                                   |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|$tresult1= |isElementPresent;                                                   |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath     |
+|mouseHover;|(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                                             |
+|$order_id= |getText;                                                            |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)                    |xpath     |
+*!
+
+!** Adding vehicle number
+!define vechicle_number {TN $num1 $rand1 $num2}
+!define driver_name {d$unique}
+!define phone_number {1234567890}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!|Script|Ui|
+|refresh;  |
+
+!* Uploading material invoice with package
+!|Script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{ "data": [ { "indent_no": "", "action": "ADD", "delivery_number": "$unique", "mrp_price": "100", "material_code": "mc$unique", "gate_ref_id": "RQ1$unique", "division": "ST", "quantity": "45", "quantity_unit": "NOS", "weight": "80", "weight_unit": "KG", "volume": "20", "volume_unit": "CFT", "ship_to": "cr1$unique", "sold_to": "cr1$unique", "type": "SECONDARY", "invoice_number": "INV001", "invoice_amount": "100100", "invoice_date": "2022/02/01 12:45:00", "material_type": "", "ewaybill_number": "", "category": "", "material_taxable_amount": "", "cgst_rate": "", "hsn_code": "", "sgst_rate": "", "igst_rate": "", "cgst_amount": "", "sgst_amount": "", "igst_amount": "", "ext_ref_id": "", "package_detail": [ { "package_id": "123462", "package_ref_id": "pack68", "quantity": "45", "quantity_unit": "NOS", "weight": "80", "weight_unit": "KG", "volume": "20", "volume_unit": "CFT" } ] },{ "indent_no": "", "action": "ADD", "delivery_number": "$unique", "mrp_price": "100", "material_code": "mc$unique", "gate_ref_id": "RQ2$unique", "division": "ST", "quantity": "45", "quantity_unit": "NOS", "weight": "80", "weight_unit": "KG", "volume": "20", "volume_unit": "CFT", "ship_to": "cr2$unique", "sold_to": "cr2$unique", "type": "SECONDARY", "invoice_number": "INV002", "invoice_amount": "100100", "invoice_date": "2022/02/01 12:45:00", "material_type": "", "ewaybill_number": "", "category": "", "material_taxable_amount": "", "cgst_rate": "", "hsn_code": "", "sgst_rate": "", "igst_rate": "", "cgst_amount": "", "sgst_amount": "", "igst_amount": "", "ext_ref_id": "", "package_detail": [ { "package_id": "123462", "package_ref_id": "pack69", "quantity": "45", "quantity_unit": "NOS", "weight": "80", "weight_unit": "KG", "volume": "20", "volume_unit": "CFT" } ] } ] }|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceWithPackageAPI
+*!
+
+!* Validating test result
+!|Script                     |Ui                                                                                 |
+|click;                      |//span[contains(text(),'Document')]   |xpath                                       |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]|xpath                                 |30   |
+|click;                      |//span[contains(text(),'pack68')]     |xpath                                       |
+|$tresult1=                  |isElementPresent;                     |(//span[contains(text(),'INV001')])[1]|xpath|
+|click;                      |(//div[@class='list-top'])[2]         |xpath                                       |
+|click;                      |//span[contains(text(),'pack69')]     |xpath                                       |
+|$tresult2=                  |isElementPresent;                     |(//span[contains(text(),'INV002')])[1]|xpath|
+
+!|Script  |common                                                |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,true|
+|check    |checkIfStringAreEqual;       |$tresult  |true  |true  |
+*!

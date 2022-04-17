@@ -1,0 +1,11 @@
+---
+Help: Use to Filter Indent based on Depot
+---
+!|Script                     |Ui                                                                  |
+|click;                      |//button[@class='el-button el-button--default']|xpath               |
+|click;                      |(//div[@class='slideleft_menu']//input)[1]     |xpath               |
+|sendKeys;                   |(//div[@class='slideleft_menu']//input)[1]     |xpath|${search_text}|
+|click;                      |//li/span[text()='${search_text}']             |xpath               |
+|wait;                       |2                                                                   |
+|click;                      |//button[text()='APPLY']                       |xpath               |
+|waitForElementToBeDisplayed;|//div[@class='order-list-wrapper']             |xpath|30            |

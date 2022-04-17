@@ -1,0 +1,143 @@
+---
+Help: Indents Bulk Upload for Primary Movement - FTL
+Test
+---
+!** Unique values assignment
+!|Script|DateUtil|
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd|-1|
+|$rdate=|dateCalculation;|yyyy/MM/dd|0|
+|$loadingDate=|getCurrentDateTimeStamp|iso|
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2|
+|$pickupDate=|dateCalculation;|dd-MM-yyyy|0|
+|$indate=  |getCurrentDateTimeStamp;|yyyy/MM/dd|
+
+
+!|Script|Common|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer -!|
+|$rdate=|stringConcatenation;|$rdate|!- $timer -!|
+
+!|Script|DateUtil|
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=|utcConversion;|$rdate|
+**!
+
+!** Source Depot Creation
+
+!define depot_name {src$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {s$unique}
+!define depot_region {South}
+!define depot_short_code {s$num}
+!define depot_reference_id {s$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {SG1$unique}
+!define g_user_email {pandoindent+1$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script|common|
+|$location_id=|getTrim;| $depot|
+|$source_gate_id=|getTrim;| $gate_id|
+
+*!
+
+!*** Destination Depot Creation
+
+!define depot_name {dest$unique}
+!define depot_state {Hariyana}
+!define depot_city {d$unique}
+!define depot_region {South}
+!define depot_short_code {d$num}
+!define depot_reference_id {dr$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {DG1$unique}
+!define g_user_email {pandoindent+2$unique@gmail.com}
+
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script|common|
+|$destination_location_id=|getTrim;| $depot|
+|$destination_gate_location_id=|getTrim;| $gate_id|
+*!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!** Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!*** Vehicle Creation
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,s$unique,d$unique,${vehicle_name},100,${transporter_ref_id},${transporter_name},1,5000,per_trip,01-Jan-2019,$contractDate,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!** Uploading indent
+!define row1 {ORDER NO,DELIVERY TYPE,TRANSPORTER REFID,VEHICLE TYPE,PICKUP POINT TYPE,PICKUP POINT,VEHICLE REQUIREMENT DATE,SHIP TO TYPE,SHIP TO,SOLD TO,NO OF VEHICLE(S),DELIVERY NUMBER}
+!define column1 {1,FTL,${transporter_ref_id},${vehicle_name},depot,SG1$unique,$pickupDate,depot,DG1$unique,DG1$unique,1,}
+
+!|Script    |Common                                         |
+|$excelpath=|getPath;|testAttachment/i_$unique.xlsx|fullpath|
+
+
+!|Script  |Excel                        |
+|newSheet;|${row1}|${column1}|$excelpath|
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBulkUpload.CommonBulkUpload
+**!
+
+!** Switching to Other Depo
+!define depot_selection {src$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+**!
+
+!** Validating Indent ID
+!|Script|Ui|
+|check|isElementPresent;| //span[contains(text(),'t$unique')]| xpath|true|
+|check|getCountOfElements;| //div[@class='order-row']| xpath|1|
+|$count=|getCountOfElements;| //div[@class='order-row']| xpath|
+
+!|Script|Common|
+|$tresult=|checkIfStringAreEqual; | 1 | $count |
+**!

@@ -1,0 +1,763 @@
+---
+Help: E2E - Wallet approval flow SDLC for Secondary movement (Generated To Approved)
+Suites: pg
+Test
+---
+!** Configuration
+!5 Add WH manager role in roles in mongoDB
+!5 Enable wallet_approve_at_generated and view_wallet_settings in Nimbus
+!5 Add the roleid in wallet configuration under client configuration
+**!
+
+!** Test Coverage
+!5 1. Create multipickup-multidrop direct dispatched indent
+!5 2. Submit EPOD through consignee app for both consignees with S/D/CD
+!5 3. Check Email notifications in WH manger, transporter and shipper, check status as "Generated"
+!5 4. Go to WH Manager of source depot and check wallet -> Approve Shortage and check status as "Accepted"
+!5 5. Go to Transporter, raise dispute for Carton Damage -> Reject it in WH Manager (check mail notification)
+!5 6. Check status as "under review" for carton damage and approve in shipper - superadmin 
+!5 7. Raise dispute in Transporter for Damage and approve it directly in shipper - superadmin
+!5 8. Check status of S/D/CD is "Accepted"
+!5 9. Move the status to "Settled"
+**!
+
+!**> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$invoicedate= |dateCalculation;|dd-MM-yyyy |2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-2|
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-1|
+
+!|Script       |Common                                        |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer-!|
+
+!|Script       |DateUtil                                     |
+|$loadingDate= |utcConversion;                 |$loadingDate |
+|$truckindate= |utcConversion;                 |$truckindate |
+|$truckoutdate=|utcConversion;                 |$truckoutdate|
+|$thisday=     |dateCalculation;               |dd      |0   |
+|$nMinus1day=  |getNPreviousDateInCurrentMonth;|$thisday|-1|0|
+|$nMinus3day=  |getNPreviousDateInCurrentMonth;|$thisday|-3|1|
+|$nMinus5day=  |getNPreviousDateInCurrentMonth;|$thisday|-5|1|
+|$nMinus4day=  |getNPreviousDateInCurrentMonth;|$thisday|-4|1|
+|$today=       |getNPreviousDateInCurrentMonth;|$thisday|0 |1|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Data Creation
+!**> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {dc$unique}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!**> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!**> Gate Creation 1
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RG1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script    |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Gate Creation 2
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {RG2$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script    |json                                |
+|$gate_id_2=|getValueFromJSON;|$depotResp|data.id|
+*!
+**!
+
+!**> Creating new wh manager 1 and mapping to source depot
+!** Create new user wh manager 1
+!define role_type {wh_manager}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+
+!define user_name {Autowh1 $unique}
+!define user_number {123}
+!define user_email {testwh$unique@test.in}
+!define role_id {$retrieve_key_value}
+!define status {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+**!
+
+!** Mapping New User to Source Depo 
+!define new_user {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserDepotMappingToExistingAPI
+**!
+**!
+
+!**> Adding newly created depot to the client config for Freight bill
+!|Script                              |MongoDB                                      |
+|initialize;                          |${connection}|${database}                    |
+|wait;                                |2                                            |
+|addToFreightBillClientConfiguration; |${surl}      |category4|depots   |$depot     |
+|updateFreightBillClientConfiguration;|${surl}      |category1|start_day|$nMinus3day|
+|updateFreightBillClientConfiguration;|${surl}      |category1|end_day  |$today     |
+|updateFreightBillClientConfiguration;|${surl}      |category2|start_day|$nMinus5day|
+|updateFreightBillClientConfiguration;|${surl}      |category2|end_day  |$nMinus4day|
+|updateFreightBillClientConfiguration;|${surl}      |category3|start_day|$nMinus5day|
+|updateFreightBillClientConfiguration;|${surl}      |category3|end_day  |$today     |
+*!
+
+!**> Consignee Creation 1
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Egmore}
+!define city {cc$unique}
+!define state {Madya Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+**!
+
+!**> Consignee Creation 2
+!define consignee_name {c2$unique}
+!define consignee_ref_id {cr2$unique}
+!define address {Egmore}
+!define city {cc$unique}
+!define state {Madya Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+2$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_2=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_2=|getTrim;|${consignee_ref_id}|
+**!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Purchase order creation
+!define ponumber {po$unique}
+!define netvalue {10000}
+!define balvalue {5000}
+!define legalentity1 {le1$unique}
+!define legalentity2 {le2$unique}
+!define validfrom {2021-01-01}
+!define validto {2025-12-31}
+
+!define row {Purchase Order Number,Purchase Order Net Value,Purchase Order Balance value,Transporter Ref ID,Legal Entity,Valid From(YYYY-MM-DD),Valid To(YYYY-MM-DD)}
+!define column {${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity1},${validfrom},${validto}|${ponumber},${netvalue},${balvalue},${transporter_ref_id},${legalentity2},${validfrom},${validto}}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonPOupload
+**!
+
+!**> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {2048}
+!define kg {12000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Material Creation 1
+!define material_name {m1$unique}
+!define material_code {mc1$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"5"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!**> Material Creation 2
+!define material_name {m2$unique}
+!define material_code {mc2$unique}
+
+!|script|common                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"name":"${material_name}","code":"${material_code}","business_unit":"${business_unit}","piece_per_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","box_volume":"${box_volume}","category":"PC$unique","pallets":"1"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationDynamicAPI
+**!
+
+!**> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,dc$unique,cc$unique,v$unique,700,$transporter_ref_id,$transporter_name,1,3000.50,per ton,01-Jan-$year,31-Dec-2030,100,1,U,,100,1,per_kg,100,150,,,0-250,600,15,22,,}
+
+!include -c  .FrontPage.Pando.Common.RateMatrix
+*!
+**!
+
+!**> Direct Dispatch Indent creation
+!define delivery_number {d1$unique}
+!define mrp_price {1000}
+!define material_code1 {mc1$unique}
+!define material_code2 {mc2$unique}
+!define depot_ref_id {R$unique}
+!define gate_ref_id1 {RG1$unique}
+!define gate_ref_id2 {RG2$unique}
+!define division {${legalentity1}}
+!define quantity {100}
+!define quantity_unit {NOS}
+!define weight {10000}
+!define weight_unit {KG}
+!define volume {1024}
+!define volume_unit {CFT}
+!define ship_to_1 {cr1$unique}
+!define sold_to_1 {cr1$unique}
+!define ship_to_2 {cr2$unique}
+!define sold_to_2 {cr2$unique}
+!define type {Secondary}
+!define shipment_number {s1$unique}
+!define invoice_number {INV1$unique}
+!define invoice_amount {10000}
+!define category {20a}
+!define lr_number1 {lr1$unique}
+!define lr_number2 {lr2$unique}
+!define invoice_date {$invoicedate}
+!define transporter {tr$unique}
+!define vehicle_type {v$unique}
+!define vehicle_number {TN $vno_1 $vno_2 $vno_3}
+
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"d1$unique","mrp_price":"${mrp_price}","material_code":"${material_code1}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id1}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to_1}","sold_to":"${sold_to_1}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number1}","truck_out":""},{"delivery_number":"d1$unique","mrp_price":"${mrp_price}","material_code":"${material_code2}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id2}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to_2}","sold_to":"${sold_to_2}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number2}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+*!
+
+!**> Verify indent for depot 1 and move it to delivered
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {d$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|script                     |ui                                                                                                                                                                                        |
+|refresh;                                                                                                                                                                                                               |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                                                                                  |30        |
+|check                       |isElementPresent;                                                                      |//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|mouseHover;                 |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]                   |xpath                                                                                             |
+|$order_id=                  |getText;                                                                               |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)                    |xpath     |
+
+!**> EPOD submission through Consignee APP
+!define consignee_id {$consignee_id_1}
+!define cusername {pandoconsignee+1$unique@gmail.com}
+!define cpassword {12345}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GetMaterialThroughConsigneeMobileAppAPI
+
+!|Script|Common                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":{"materials":[{"id":"$material_ref_id","leakage_count":"0","damage_count":"1","excess_count":"0","shortage_count":"2","carton_damage_count":"3","comment":"","shortage_charge":"120","damage_charge":"507.56","carton_damage_charge":"305.67"}],"packages":[]}}|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GRNSubmissionThroughConsigneeMobileApp
+
+!define consignee_id {$consignee_id_2}
+!define cusername {pandoconsignee+2$unique@gmail.com}
+!define cpassword {12345}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GetMaterialThroughConsigneeMobileAppAPI
+
+!|Script|Common                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":{"materials":[{"id":"$material_ref_id","leakage_count":"0","damage_count":"1","excess_count":"0","shortage_count":"5","carton_damage_count":"6","comment":"","shortage_charge":"720","damage_charge":"407.56","carton_damage_charge":"335.67"}],"packages":[]}}|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GRNSubmissionThroughConsigneeMobileApp
+
+!**> Verify EPOD submission
+!|Script                     |Ui                                                                                                                                                          |
+|click;                      |//span[text()='Document']             |xpath                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]|xpath                                                                                              |30               |
+|$epodstatus_column=         |getHeaderColumnNumber;                |//div[@class='el-table__header-wrapper']//div[@class='cell']                                       |xpath|EPOD status|
+|$material_row_number=       |getHeaderColumnNumber;                |//div[contains(@class,'scrolling')]//span[contains(text(),'kg')]                                   |xpath|10000 kg   |
+|$epodstatus=                |getText;                              |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+
+!|Script|Common                                           |
+|check  |checkIfStringAreEqual;|$epodstatus|Submitted|true|
+**!
+**!
+
+!**> LR Upload in shipper
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!|Script  |Ui                                                                                              |
+|sendKeys;|//input[@class='el-upload__input']     |xpath                                        |$pdfpath  |
+|check    |isElementPresent;                      |//span[@class='el-upload-list__item-preview']|xpath|true|
+|sendKeys;|(//input[@class='el-upload__input'])[2]|xpath                                        |$pdfpath  |
+|check    |isElementPresent;                      |//span[@class='el-upload-list__item-preview']|xpath|true|
+**!
+
+!**> Marking Indent as delivered
+!define consignee_id_1 {$consignee_id_1}
+!define consignee_id_2 {$consignee_id_2}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                                                                                                                       |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id_1}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"},{"destination_id":"${consignee_id_2}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+
+!|script                     |ui                                                                                                                                    |
+|navigateToUrl;              |${surl}/indents                                                                                                                       |
+|refresh;                                                                                                                                                           |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='t$unique']//ancestor::div[contains(@class,'order-row')]|xpath                              |30        |
+|check                       |isElementPresent;                                                                      |//div[contains(text(),'Delivered')]|xpath|true|
+*!
+**!
+
+!**> Verify GENERATED Email Notification sent to shipper
+!define email {pandopgauto@gmail.com}
+!define mail_subject {Debit entry worth INR 641.34 from $order_id requested by P&G-Auto}
+!include .FrontPage.Pando.Common.RetrieveNotificationMailWithReason
+
+!define mail_subject {Debit entry worth INR 840 from $order_id requested by P&G-Auto}
+!include .FrontPage.Pando.Common.RetrieveNotificationMailWithReason
+
+!define mail_subject {Debit entry worth INR 915.12 from $order_id requested by P&G-Auto}
+!include .FrontPage.Pando.Common.RetrieveNotificationMailWithReason
+**!
+
+!**> Verify GENERATED Email Notification sent to Transporter
+!define email {pandotransporter@outlook.com}
+!define mail_subject {Debit entry worth INR 641.34 from $order_id requested by P&G-Auto}
+!include .FrontPage.Pando.Common.RetrieveNotificationMailWithReason
+
+!define mail_subject {Debit entry worth INR 840 from $order_id requested by P&G-Auto}
+!include .FrontPage.Pando.Common.RetrieveNotificationMailWithReason
+
+!define mail_subject {Debit entry worth INR 915.12 from $order_id requested by P&G-Auto}
+!include .FrontPage.Pando.Common.RetrieveNotificationMailWithReason
+**!
+
+!**> Verify GENERATED Email Notification sent to WH Manager
+!define email {testwh$unique@test.in}
+!define mail_subject {Debit entry worth INR 641.34 from $order_id requested by P&G-Auto}
+!include .FrontPage.Pando.Common.RetrieveNotificationMailWithReason
+
+!define mail_subject {Debit entry worth INR 840 from $order_id requested by P&G-Auto}
+!include .FrontPage.Pando.Common.RetrieveNotificationMailWithReason
+
+!define mail_subject {Debit entry worth INR 915.12 from $order_id requested by P&G-Auto}
+!include .FrontPage.Pando.Common.RetrieveNotificationMailWithReason
+**!
+
+!**> Login as WH manager
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!include -c .FrontPage.Pando.Common.ShipperLogout
+
+!|script     |common                       |
+|$user_email=|getTrim|testwh$unique@test.in|
+
+!define login_url {${surl}}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Users.CommonResetLogin
+**!
+
+!**> Validating Wallet amount and status in WH manager
+!define search_text {$order_id}
+
+!define status_name_wallet {Select All}
+!define reason_wallet_1 {Shortage}
+!define reason_wallet_2 {Damage}
+!define reason_wallet_3 {Carton Damage}
+!define transporter_name {t$unique}
+!define multiple_reasons {!-//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_1}!-']|//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_2}!-']|//div[contains(@class,'multiselect--active')]//li//span[contains(@class,'multiselect__option')]/span[text()='-!${reason_wallet_3}!-']-!}
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                         |
+|navigateToUrl;              |${surl}/v2/wallet                                                                                                                                                                                                                                                                          |
+|refresh;                                                                                                                                                                                                                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row') or @class='emptytext']|xpath                                                                                                                                                                                                             |10        |
+|check                       |getCountOfElements;                                          |//div[contains(@class,'grid-list-row')]                                                                                                                                                                           |xpath|3   |
+|check                       |isElementPresent;                                            |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']                                                                               |xpath|true|
+|check                       |isElementPresent;                                            |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']                                                                               |xpath|true|
+|check                       |isElementPresent;                                            |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']                                                                               |xpath|true|
+|$shortageamt1=              |getText;                                                     |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[1]|xpath     |
+|$shortageamt2=              |getText;                                                     |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[2]|xpath     |
+|$shortageamt3=              |getText;                                                     |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[3]|xpath     |
+|$damageamt1=                |getText;                                                     |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[1]|xpath     |
+|$damageamt2=                |getText;                                                     |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[2]|xpath     |
+|$damageamt3=                |getText;                                                     |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[3]|xpath     |
+|$cartondamageamt1=          |getText;                                                     |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[1]|xpath     |
+|$cartondamageamt2=          |getText;                                                     |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[2]|xpath     |
+|$cartondamageamt3=          |getText;                                                     |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[3]|xpath     |
+|$shortagestatus=            |getText;                                                     |(//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']/../../preceding-sibling::div)[3]//p                                          |xpath     |
+|$damagestatus=              |getText;                                                     |(//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']/../../preceding-sibling::div)[3]//p                                          |xpath     |
+|$cartondamagestatus=        |getText;                                                     |(//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']/../../preceding-sibling::div)[3]//p                                          |xpath     |
+
+!|script                        |common                                                                                                                                                       |
+|$tresult1=                     |checkIfStringAreEqual;       |$shortageamt1                                                  |System: 840.00                                                 |
+|$tresult2=                     |checkIfStringAreEqual;       |$shortageamt2                                                  |Shipper: 840.00                                                |
+|$tresult3=                     |checkIfStringAreEqual;       |$shortageamt3                                                  |Transporter: 840.00                                            |
+|$tresult4=                     |checkIfStringAreEqual;       |$cartondamageamt1                                              |System: 641.34                                                 |
+|$tresult5=                     |checkIfStringAreEqual;       |$cartondamageamt2                                              |Shipper: 641.34                                                |
+|$tresult6=                     |checkIfStringAreEqual;       |$cartondamageamt3                                              |Transporter: 641.34                                            |
+|$tresult7=                     |checkIfStringAreEqual;       |$damageamt1                                                    |System: 915.12                                                 |
+|$tresult8=                     |checkIfStringAreEqual;       |$damageamt2                                                    |Shipper: 915.12                                                |
+|$tresult9=                     |checkIfStringAreEqual;       |$damageamt3                                                    |Transporter: 915.12                                            |
+|$tresult10=                    |checkIfStringAreEqual;       |$shortagestatus                                                |GENERATED                                                      |
+|$tresult11=                    |checkIfStringAreEqual;       |$damagestatus                                                  |GENERATED                                                      |
+|$tresult12=                    |checkIfStringAreEqual;       |$cartondamagestatus                                            |GENERATED                                                      |
+|$walletamount_whmanager_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,$tresult11,$tresult12,true|
+**!
+
+!**> Approve SHORTAGE in WH manager and verify status as ACCEPTED
+!5 Changing the shipper shortage amount to 345
+!define updated_shortage {345}
+!define shortage_comment {shortage updated}
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                                                                        |
+|click;                      |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']|xpath                                                                                                                                                                                                                                 |
+|waitForElementToBeDisplayed;|//*[@class='el-drawer__body']                                                                                                      |xpath                                                                                                                                                                                                             |10                 |
+|click;                      |//div[contains(text(),'c1$unique')]                                                                                                |xpath                                                                                                                                                                                                                                 |
+|clearAndSend;               |//div[contains(@class,'cell')]//input                                                                                              |xpath                                                                                                                                                                                                             |${updated_shortage}|
+|wait;                       |2                                                                                                                                                                                                                                                                                                                                                                         |
+|scrollToView;               |//div[@placeholder='Add a comment']                                                                                                |xpath                                                                                                                                                                                                                                 |
+|sendKeys;                   |//div[@placeholder='Add a comment']                                                                                                |xpath                                                                                                                                                                                                             |${shortage_comment}|
+|click;                      |//span[text()='Add']                                                                                                               |xpath                                                                                                                                                                                                                                 |
+|$comment_user=              |getText;                                                                                                                           |(//div[@class='comments-sec']//span[2])[1]                                                                                                                                                                        |xpath              |
+|click;                      |//span[text()='ACCEPT']                                                                                                            |xpath                                                                                                                                                                                                                                 |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']                                                                                         |xpath                                                                                                                                                                                                             |30                 |
+|$successMessage=            |getElementAttribute;                                                                                                               |//div[@role='alert']//h3[text()='Success']/following-sibling::span                                                                                                                                                |xpath  |innerText  |
+|$updated_shortageamt=       |getText;                                                                                                                           |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[2]|xpath              |
+|$shortagestatus=            |getText;                                                                                                                           |(//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']/../../preceding-sibling::div)[3]//p                                          |xpath              |
+
+!|Script                        |common                                                                           |
+|$unique_lowercase=             |getTrim;                     |$unique                                            |
+|check                          |checkIfStringAreEqual;       |$successMessage     |Wallet Accepted          |true|
+|$tresult1=                     |checkIfStringAreEqual;       |$successMessage     |Wallet Accepted               |
+|check                          |checkIfStringAreEqual;       |$updated_shortageamt|Shipper: 1065.00         |true|
+|$tresult2=                     |checkIfStringAreEqual;       |$updated_shortageamt|Shipper: 1065.00              |
+|check                          |checkIfStringAreEqual;       |$comment_user       |Autowh1 $unique_lowercase|true|
+|$tresult3=                     |checkIfStringAreEqual;       |$comment_user       |Autowh1 $unique_lowercase     |
+|check                          |checkIfStringAreEqual;       |$shortagestatus     |ACCEPTED                 |true|
+|$tresult4=                     |checkIfStringAreEqual;       |$shortagestatus     |ACCEPTED                      |
+|$walletaccept_whmanager_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true       |
+**!
+
+!**> Raise DISPUTE for CARTON DAMAGE in Transporter and verify status as DISPUTED
+
+!**> Transporter login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+**!
+
+!define updated_cartondamage {128}
+!define cd_comment {Carton Damage updated}
+
+!|Script                     |Ui                                                                    |
+|navigateToUrl;              |${turl}/v2/wallet                                                     |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row') or @class='emptytext']|xpath|10|
+|click;                      |//span[normalize-space(text())='Filter']                     |xpath   |
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletFilterDepotFragment
+
+!|Script|Ui                            |
+|click; |//button[text()='APPLY']|xpath|
+|wait;  |5                             |
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                                                                           |
+|waitForElementToBeDisplayed;|//div[@class='card-row row']                                                                                                       |xpath                                                                                                                                                                                                            |15                     |
+|$shortagestatus=            |getText;                                                                                                                           |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']/../../preceding-sibling::div//span[contains(@class,'status')]                |xpath                  |
+|$damagestatus=              |getText;                                                                                                                           |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']/../../preceding-sibling::div//span[contains(@class,'status')]                |xpath                  |
+|$cartondamagestatus=        |getText;                                                                                                                           |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']/../../preceding-sibling::div//span[contains(@class,'status')]                |xpath                  |
+|click;                      |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']|xpath                                                                                                                                                                                                                                    |
+|waitForElementToBeDisplayed;|//*[@class='el-drawer__body']                                                                                                      |xpath                                                                                                                                                                                                            |10                     |
+|click;                      |//div[contains(text(),'c1$unique')]                                                                                                |xpath                                                                                                                                                                                                                                    |
+|clearAndSend;               |//div[contains(@class,'cell')]//input                                                                                              |xpath                                                                                                                                                                                                            |${updated_cartondamage}|
+|wait;                       |2                                                                                                                                                                                                                                                                                                                                                                            |
+|scrollToView;               |//div[@placeholder='Add a comment']                                                                                                |xpath                                                                                                                                                                                                                                    |
+|sendKeys;                   |//div[@placeholder='Add a comment']                                                                                                |xpath                                                                                                                                                                                                            |${cd_comment}          |
+|click;                      |//span[text()='Add']                                                                                                               |xpath                                                                                                                                                                                                                                    |
+|$comment_user=              |getText;                                                                                                                           |(//div[@class='comments-sec']//span[2])[1]                                                                                                                                                                       |xpath                  |
+|click;                      |//span[text()='Submit']                                                                                                            |xpath                                                                                                                                                                                                                                    |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']                                                                                         |xpath                                                                                                                                                                                                            |30                     |
+|$successMessage=            |getElementAttribute;                                                                                                               |//div[@role='alert']//h3[text()='Success']/following-sibling::span                                                                                                                                               |xpath    |innerText    |
+|$updated_cdamt=             |getText;                                                                                                                           |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span//small[3]|xpath                  |
+|$updatedcartondamagestatus= |getText;                                                                                                                           |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']/../../preceding-sibling::div//span[contains(@class,'status')]                |xpath                  |
+
+!|Script                           |common                                                                                                  |
+|check                             |checkIfStringAreEqual;       |$successMessage                |Waller Disputed Successfully     |true    |
+|$tresult1=                        |checkIfStringAreEqual;       |$successMessage                |Waller Disputed Successfully              |
+|check                             |checkIfStringAreEqual;       |$updated_cdamt                 |Transporter: 463.67              |true    |
+|$tresult2=                        |checkIfStringAreEqual;       |$updated_cdamt                 |Transporter: 463.67                       |
+|check                             |checkIfStringAreEqual;       |$comment_user                  |Manager $unique_lowercase        |true    |
+|$tresult3=                        |checkIfStringAreEqual;       |$comment_user                  |Manager $unique_lowercase                 |
+|check                             |checkIfStringAreEqual;       |$shortagestatus                |ACCEPTED                         |true    |
+|$tresult4=                        |checkIfStringAreEqual;       |$shortagestatus                |ACCEPTED                                  |
+|check                             |checkIfStringAreEqual;       |$damagestatus                  |GENERATED                        |true    |
+|$tresult5=                        |checkIfStringAreEqual;       |$damagestatus                  |GENERATED                                 |
+|check                             |checkIfStringAreEqual;       |$cartondamagestatus            |GENERATED                        |true    |
+|$tresult6=                        |checkIfStringAreEqual;       |$cartondamagestatus            |GENERATED                                 |
+|check                             |checkIfStringAreEqual;       |$updatedcartondamagestatus     |DISPUTED                         |true    |
+|$tresult7=                        |checkIfStringAreEqual;       |$updatedcartondamagestatus     |DISPUTED                                  |
+|$walletdispute_transporter_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,true|
+**!
+
+!**> Verify DISPUTED Email Notification 
+!**  Email Notification sent to shipper
+!define email {pandopgauto@gmail.com}
+!define mail_subject {Carton Damage debit entry against $order_id has been disputed by t$unique}
+!include .FrontPage.Pando.Common.RetrieveNotificationMailWithReason
+**!
+
+!** Email Notification sent to Transporter
+!define email {pandotransporter@outlook.com}
+!define mail_subject {Carton Damage debit entry against $order_id has been disputed by t$unique}
+!include .FrontPage.Pando.Common.RetrieveNotificationMailWithReason
+**!
+
+!** Email Notification sent to WH Manager
+!define email {testwh$unique@test.in}
+!define mail_subject {Carton Damage debit entry against $order_id has been disputed by t$unique}
+
+!include .FrontPage.Pando.Common.RetrieveNotificationMailWithReason
+**!
+**!
+
+!**> Reject CARTON DAMAGE - DISPUTE in WH Manager
+!define reject_comment {Dispute Rejected}
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                                                                      |
+|navigateToUrl;              |${surl}/v2/wallet                                                                                                                                                                                                                                                                                                                                                       |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row') or @class='emptytext']                                                                      |xpath                                                                                                                                                                                                             |10               |
+|click;                      |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']|xpath                                                                                                                                                                                                                               |
+|waitForElementToBeDisplayed;|//*[@class='el-drawer__body']                                                                                                      |xpath                                                                                                                                                                                                             |30               |
+|click;                      |//div[contains(text(),'c1$unique')]                                                                                                |xpath                                                                                                                                                                                                                               |
+|wait;                       |2                                                                                                                                                                                                                                                                                                                                                                       |
+|click;                      |//span[contains(text(),'mc1$unique')]                                                                                              |xpath                                                                                                                                                                                                                               |
+|scrollToView;               |//div[@placeholder='Add a comment']                                                                                                |xpath                                                                                                                                                                                                                               |
+|sendKeys;                   |//div[@placeholder='Add a comment']                                                                                                |xpath                                                                                                                                                                                                             |${reject_comment}|
+|click;                      |//span[text()='Add']                                                                                                               |xpath                                                                                                                                                                                                                               |
+|$comment_user=              |getText;                                                                                                                           |(//div[@class='comments-sec']//span[2])[2]                                                                                                                                                                        |xpath            |
+|click;                      |//span[text()='REJECT']                                                                                                            |xpath                                                                                                                                                                                                                               |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']                                                                                         |xpath                                                                                                                                                                                                             |30               |
+|$successMessage=            |getElementAttribute;                                                                                                               |//div[@role='alert']//h3[text()='Success']/following-sibling::span                                                                                                                                                |xpath |innerText |
+|$updated_cdamt=             |getText;                                                                                                                           |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[3]|xpath            |
+|$updatedcartondamagestatus= |getText;                                                                                                                           |(//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']/../../preceding-sibling::div)[3]//p                                          |xpath            |
+
+!|Script                        |common                                                                                 |
+|$unique_lowercase=             |lowerCase;                   |$unique                                                  |
+|check                          |checkIfStringAreEqual;       |$successMessage           |Wallet Rejected          |true|
+|$tresult1=                     |checkIfStringAreEqual;       |$successMessage           |Wallet Rejected               |
+|check                          |checkIfStringAreEqual;       |$comment_user             |Autowh1 $unique_lowercase|true|
+|$tresult2=                     |checkIfStringAreEqual;       |$comment_user             |Autowh1 $unique_lowercase     |
+|check                          |checkIfStringAreEqual;       |$updatedcartondamagestatus|UNDER REVIEW             |true|
+|$tresult3=                     |checkIfStringAreEqual;       |$updatedcartondamagestatus|UNDER REVIEW                  |
+|check                          |checkIfStringAreEqual;       |$updated_cdamt            |Transporter: 463.67      |true|
+|$tresult4=                     |checkIfStringAreEqual;       |$updated_cdamt            |Transporter: 463.67           |
+|$walletreject_whmanager_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true             |
+**!
+
+!**> Verify UNDER REVIEW and approve it in Shipper (super admin)
+!include -c .FrontPage.Pando.Common.ShipperLogout
+
+!|Script                     |Ui                                                                                                                                                     |
+|navigateToUrl;              |${login_url}/login                                                                                                                                     |
+|waitForElementToBeDisplayed;|(//img[@class='img-responsive'])[1]                                                                                                  |xpath|20         |
+|sendKeys;                   |//label[contains(text(),'User name:')]//preceding-sibling::input                                                                     |xpath|${username}|
+|sendKeys;                   |//label[contains(text(),'Password:')]//preceding-sibling::input                                                                      |xpath|${password}|
+|click;                      |//button[@class='primary-btn']                                                                                                       |xpath            |
+|waitForElementToBeDisplayed;|//div[contains(@class,'order-item row') or contains(@class,'grid-list-row') or contains(@class,'card-row') or @class='no-order-data']|xpath|20         |
+
+!|Script                     |Ui                                                                    |
+|navigateToUrl;              |${surl}/v2/wallet                                                     |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row') or @class='emptytext']|xpath|10|
+|click;                      |//span[normalize-space(text())='Filter']                     |xpath   |
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletFilterDepotFragment
+
+!|Script|Ui                            |
+|click; |//button[text()='APPLY']|xpath|
+|wait;  |5                             |
+
+!define search_text {$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!define accept_comment {Dispute Accepted}
+!define superadmin {pg-auto}
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                                                                      |
+|click;                      |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']|xpath                                                                                                                                                                                                                               |
+|waitForElementToBeDisplayed;|//*[@class='el-drawer__body']                                                                                                      |xpath                                                                                                                                                                                                             |30               |
+|click;                      |//div[contains(text(),'c1$unique')]                                                                                                |xpath                                                                                                                                                                                                                               |
+|wait;                       |2                                                                                                                                                                                                                                                                                                                                                                       |
+|click;                      |//span[contains(text(),'mc1$unique')]                                                                                              |xpath                                                                                                                                                                                                                               |
+|wait;                       |2                                                                                                                                                                                                                                                                                                                                                                       |
+|check                       |isElementDisplayed;                                                                                                                |//*[contains(text(),'Manager $unique_lowercase')]/../parent::div/..//p[text()='${cd_comment}']                                                                                                                    |xpath |true      |
+|check                       |isElementDisplayed;                                                                                                                |//*[contains(text(),'Autowh1 $unique_lowercase')]/../parent::div/..//p[text()='${reject_comment}']                                                                                                                |xpath |true      |
+|scrollToView;               |//div[@placeholder='Add a comment']                                                                                                |xpath                                                                                                                                                                                                                               |
+|sendKeys;                   |//div[@placeholder='Add a comment']                                                                                                |xpath                                                                                                                                                                                                             |${accept_comment}|
+|click;                      |//span[text()='Add']                                                                                                               |xpath                                                                                                                                                                                                                               |
+|$comment_user=              |getText;                                                                                                                           |(//div[@class='comments-sec']//span[2])[3]                                                                                                                                                                        |xpath            |
+|wait;                       |2                                                                                                                                                                                                                                                                                                                                                                       |
+|click;                      |//span[text()='ACCEPT']                                                                                                            |xpath                                                                                                                                                                                                                               |
+|check                       |isElementDisplayed;                                                                                                                |//p[text()='You have not changed the wallet amount. Please confirm if you DO NOT want to consider transporter’s dispute.']                                                                                        |xpath |true      |
+|$tresult1=                  |isElementDisplayed;                                                                                                                |//p[text()='You have not changed the wallet amount. Please confirm if you DO NOT want to consider transporter’s dispute.']                                                                                        |xpath            |
+|click;                      |//*[contains(text(),'OK')]                                                                                                         |xpath                                                                                                                                                                                                                               |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']                                                                                         |xpath                                                                                                                                                                                                             |30               |
+|$successMessage=            |getElementAttribute;                                                                                                               |//div[@role='alert']//h3[text()='Success']/following-sibling::span                                                                                                                                                |xpath |innerText |
+|$updated_cdamt=             |getText;                                                                                                                           |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span/p/small[3]|xpath            |
+|$updatedcartondamagestatus= |getText;                                                                                                                           |(//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']/../../preceding-sibling::div)[3]//p                                          |xpath            |
+
+!|Script                         |common                                                                              |
+|$unique_lowercase=              |lowerCase;                   |$unique                                               |
+|check                           |checkIfStringAreEqual;       |$successMessage            |Wallet Accepted     |true |
+|$tresult2=                      |checkIfStringAreEqual;       |$successMessage            |Wallet Accepted           |
+|check                           |checkIfStringAreEqual;       |$comment_user              |${superadmin}       |true |
+|$tresult3=                      |checkIfStringAreEqual;       |$comment_user              |${superadmin}             |
+|check                           |checkIfStringAreEqual;       |$updatedcartondamagestatus |ACCEPTED            |true |
+|$tresult4=                      |checkIfStringAreEqual;       |$updatedcartondamagestatus |ACCEPTED                  |
+|check                           |checkIfStringAreEqual;       |$updated_cdamt             |Transporter: 463.67 |true |
+|$tresult5=                      |checkIfStringAreEqual;       |$updated_cdamt             |Transporter: 463.67       |
+|$walletaccept_superadmin_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|
+**!
+
+!**> Approve DAMAGE in Superadmin and verify status as ACCEPTED
+!define accept_comment {Charges Accepted}
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                            |
+|refresh;                                                                                                                                                                                                                                                                                                                                                   |
+|click;                      |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']|xpath                                                                                                                                                                                     |
+|waitForElementToBeDisplayed;|//*[@class='el-drawer__body']                                                                                                      |xpath                                                                                                                                                                   |30               |
+|click;                      |//div[contains(text(),'c1$unique')]                                                                                                |xpath                                                                                                                                                                                     |
+|wait;                       |2                                                                                                                                                                                                                                                                                                                             |
+|click;                      |//span[contains(text(),'mc1$unique')]                                                                                              |xpath                                                                                                                                                                                     |
+|scrollToView;               |//div[@placeholder='Add a comment']                                                                                                |xpath                                                                                                                                                                                     |
+|sendKeys;                   |//div[@placeholder='Add a comment']                                                                                                |xpath                                                                                                                                                                   |${accept_comment}|
+|click;                      |//span[text()='Add']                                                                                                               |xpath                                                                                                                                                                                     |
+|$comment_user=              |getText;                                                                                                                           |(//div[@class='comments-sec']//span[2])[1]                                                                                                                              |xpath            |
+|wait;                       |2                                                                                                                                                                                                                                                                                                                             |
+|click;                      |//span[text()='ACCEPT']                                                                                                            |xpath                                                                                                                                                                                     |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']                                                                                         |xpath                                                                                                                                                                   |30               |
+|$successMessage=            |getElementAttribute;                                                                                                               |//div[@role='alert']//h3[text()='Success']/following-sibling::span                                                                                                      |xpath |innerText |
+|$updateddamagestatus=       |getText;                                                                                                                           |(//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']/../../preceding-sibling::div)[3]//p|xpath            |
+
+!|Script                     |common                                                                 |
+|check                       |checkIfStringAreEqual;       |$successMessage     |Wallet Accepted|true|
+|$tresult1=                  |checkIfStringAreEqual;       |$successMessage     |Wallet Accepted     |
+|check                       |checkIfStringAreEqual;       |$comment_user       |${superadmin}  |true|
+|$tresult2=                  |checkIfStringAreEqual;       |$comment_user       |${superadmin}       |
+|check                       |checkIfStringAreEqual;       |$updateddamagestatus|ACCEPTED       |true|
+|$tresult3=                  |checkIfStringAreEqual;       |$updateddamagestatus|ACCEPTED            |
+|$walletaccept_damage_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,true       |
+**!
+
+!**> Move the status to SETTLED
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                                                                                          |
+|refresh;                                                                                                                                                                                                                                                                                                                                                                                                                 |
+|click;                      |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']/../../preceding-sibling::div//span[@class='el-checkbox__inner']|xpath                                                                                                                                                                                   |
+|click;                      |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']/../../preceding-sibling::div//span[@class='el-checkbox__inner']|xpath                                                                                                                                                                                   |
+|click;                      |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']/../../preceding-sibling::div//span[@class='el-checkbox__inner']|xpath                                                                                                                                                                                   |
+|click;                      |//button[text()='Settled']                                                                                                                                                                         |xpath                                                                                                                                                                                   |
+|check                       |isElementDisplayed;                                                                                                                                                                                |//*[contains(text(),'Are you sure you want to settle the wallet entry?')]                                                                                               |xpath|true     |
+|click;                      |//span[contains(text(),'Yes')]                                                                                                                                                                     |xpath                                                                                                                                                                                   |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']                                                                                                                                                         |xpath                                                                                                                                                                   |30             |
+|$successMessage=            |getElementAttribute;                                                                                                                                                                               |//div[@role='alert']//h3[text()='Success']/following-sibling::span                                                                                                      |xpath|innerText|
+|$shortagestatus=            |getText;                                                                                                                                                                                           |(//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']/../../preceding-sibling::div)[3]//p|xpath          |
+|$damagestatus=              |getText;                                                                                                                                                                                           |(//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_2}']/../../preceding-sibling::div)[3]//p|xpath          |
+|$cartondamagestatus=        |getText;                                                                                                                                                                                           |(//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_3}']/../../preceding-sibling::div)[3]//p|xpath          |
+
+!|Script         |common                                                                    |
+|check           |checkIfStringAreEqual;       |$successMessage      |Marked Settled  |true |
+|$tresult1=      |checkIfStringAreEqual;       |$successMessage      |Marked Settled        |
+|check           |checkIfStringAreEqual;       |$shortagestatus      |SETTLED         |true |
+|$tresult2=      |checkIfStringAreEqual;       |$shortagestatus      |SETTLED               |
+|check           |checkIfStringAreEqual;       |$damagestatus        |SETTLED         |true |
+|$tresult3=      |checkIfStringAreEqual;       |$damagestatus        |SETTLED               |
+|check           |checkIfStringAreEqual;       |$cartondamagestatus  |SETTLED         |true |
+|$tresult4=      |checkIfStringAreEqual;       |$cartondamagestatus  |SETTLED               |
+|$settled_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+**!
+
+!**> Validating test result
+!|Script  |Common                                                                                                                                                                                                                                       |
+|$tresult=|checkIfStringAreEqualInArray;|$walletamount_whmanager_result,$walletaccept_whmanager_result,$walletdispute_transporter_result,$walletreject_whmanager_result,$walletaccept_superadmin_result,$walletaccept_damage_result,$settled_result,true|
+**!

@@ -1,0 +1,35 @@
+---
+Help: startup
+---
+!include -c .FrontPage.Pando.Common.Import
+
+!|Script              |Ui                                                                                                                  |
+|$testCaseDescription=|getTestCaseDescription;|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME}                                                   |
+|startTestCase;       |${RUNNING_PAGE_NAME}   |${extent_tag}|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME} : $testCaseDescription|${log_to_elk}|
+
+!|script  |common        |
+|$tresult=|getTrim;|false|
+
+!define login_url {${surl}}
+!include -c .FrontPage.Pando.Common.Login
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.LoginAPI.ShipperLoginViaAPI
+
+!define transporter_email {pandopayment@gmail.com}
+!define transporter_password {655554}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+
+
+!** Assign value to transporter id
+!|Script             |Common                            |
+|$transporter_id=    |getTrim()|5d42c3b734f9785b1ac71886|
+|$transporter_ref_id=|getTrim()|pandopay001             |
+|$transporter_name=  |getTrim()|Pando Payment           |
+**!
+
+!**> Setting Admin setting to default
+!|script|common                                                                                                                                                          |
+|$data= |getTrim;|{"insurance_threshold":0,"shortage":{"value":2,"factor":0.7},"damage":{"value":3,"factor":0.9},"carton_damage":{"value":1,"factor":43.76},"movement":1}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.AdminSettings.ShortageDamageSettingAPI
+**!

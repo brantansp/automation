@@ -1,0 +1,40 @@
+---
+Help: Consignee Manual Upload
+Test
+---
+!define rejection_name  {Consignees}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+
+!** Uploading Consignee Bulk Upload
+!define row {Consignee Name,Reference Id,Display Reference Name,Contact Name,Mobile Number,Email,Address,City,State,Postal Code,Region,Customer Type,Category,Group}
+!define column1 {,consignee1 $unique refrence,,consignee1 $unique,123,pandoconsigneee+1$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,South,Customer site,hign,}
+!define column2 {cbulk2$unique,consignee2 $unique refrence,,consignee2 $unique,12891,pandoconsigneee+2$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,,South,Customer site,hign,}
+!define column3 {cbulk3$unique,consignee3 $unique refrence,,consignee3 $unique,12892,pandoconsigneee+3$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,South,Shipper site,hign,}
+!define column4 {cbulk4$unique,consignee4 $unique refrence,,consignee4 $unique,12893,pandoconsigneee+4$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,South,Customer site,hign,}
+!define column5 {cbulk5$unique,,,consignee5 $unique,12894,pandoconsigneee+5$unique@gmail.com,Ashok Nager,Chennai,Tamil Nadu,600083,South,Shipper site,hign,}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+
+!|Script       |Excel                                                                   |
+|multiNewSheet;|${row}|${column1}|${column2}|${column3}|${column4}|${column5}|$excelpath|
+
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/consignees                                          |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+
+!|Script |Common                            |
+|$result=|getResultOfCalculation;|$count|+|3|
+
+**!
+
+!** Validating Rejection list
+!define rejection_name  {Consignees}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.CheckCountInRejections
+**!
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Rejections.ValidateRejections

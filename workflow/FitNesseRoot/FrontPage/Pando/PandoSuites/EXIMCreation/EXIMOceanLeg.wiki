@@ -1,0 +1,10 @@
+---
+Help: Used to select the Ocean leg Destination Port
+---
+!|Script       |Ui                                                                                                               |
+|click;        |//label[contains(text(),'Port of Loading')]/following-sibling::div//span//i               |xpath                 |
+|sendHumanKeys;|//label[contains(text(),'Port of Loading')]/following-sibling::div//input                 |xpath|${srcport_name} |
+|click;        |//div[contains(@style,'fixed')]//div//li//span[normalize-space(text())='${srcport_name}'] |xpath                 |
+|click;        |//label[contains(text(),'Port of Discharge')]/following-sibling::div//span//i             |xpath                 |
+|sendHumanKeys;|//label[contains(text(),'Port of Discharge')]/following-sibling::div//input               |xpath|${destport_name}|
+|click;        |//div[contains(@style,'fixed')]//div//li//span[normalize-space(text())='${destport_name}']|xpath                 |

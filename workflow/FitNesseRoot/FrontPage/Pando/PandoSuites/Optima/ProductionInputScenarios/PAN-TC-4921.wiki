@@ -1,0 +1,19 @@
+---
+Help: SCN14_Ensure pointcharge calculations are not calculated when consignee combine false
+Test
+---
+!5 SCN14_Ensure pointcharge calculations are not calculated when consignee combine false
+
+!|script       |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!|script       |CsvQuery                                                             |
+|getConnection;|$fileLocation|,                                                      |
+|$tresult=     |executeQuery;|SELECT Rate FROM summary WHERE File LIKE 'scn14_%'|Rate|
+|closeConnection;                                                                    |
+
+!|script  |common                                        |
+|check    |checkIfStringAreEqual;|$tresult|1950.0, 1950.0|true|
+|$tresult=|checkIfStringAreEqual;|$tresult|1950.0, 1950.0     |
+
+ 

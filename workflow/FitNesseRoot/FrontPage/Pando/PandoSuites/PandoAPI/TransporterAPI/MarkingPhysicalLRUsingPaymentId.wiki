@@ -1,0 +1,7 @@
+---
+Test
+---
+!| Script   |Http                                    |
+|addHeader; |Authorization|bearer $token             |
+|setBaseUrl;|${turl}/api/payment/$payment_id/document|
+|$response= |getResponse; |Application/Json|put|$data|

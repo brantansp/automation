@@ -1,0 +1,13 @@
+---
+Help: Contains script for Shipper Voucher Search and Filter
+---
+!|script       |ui                                                                                                    |
+|navigateToUrl;|${surl}/invoices                                                                                      |
+|click;        |//ul[@class='inlinelist']//input[@class='el-input__inner']                       |xpath               |
+|click;        |//li/span[text()='Voucher']                                                      |xpath               |
+|click;        |//span[@class='search-trigger']                                                  |xpath               |
+|click;        |//div[text()='Filter By Status']/..//li[normalize-space(text())='${filter_text}']|xpath               |
+|click;        |//span[@class='search-trigger']                                                  |xpath               |
+|click;        |//div[text()='Search By']/..//li[normalize-space(text())='${search_by}']         |xpath               |
+|sendKeys;     |//div[normalize-space(text())='Invoice Number']//ancestor::li//input             |xpath|${search_text}|
+|wait;         |3                                                                                                     |

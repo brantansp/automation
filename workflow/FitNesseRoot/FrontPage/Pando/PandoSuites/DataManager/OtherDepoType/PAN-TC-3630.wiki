@@ -1,0 +1,45 @@
+---
+Help: Add Vendor Depots
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Consignee Creation
+!define depo_name {vd$unique}
+!define depo_ref_id {vdr$unique}
+!define address {Vendor Address}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600033}
+!define gst_in {gs$unique}
+!define phone {9047637908}
+!define short_code {VDSH}
+!define email {pandooelauto+vd$unique@outlook.com}
+!define region {South}
+!define site {Customer Site}
+
+!|Script       |Ui                                                                                                                          |
+|navigateToUrl;|${surl}/mdm/vendor-depots                                                                                                   |
+|click;        |//div/ul/li/button[text()='Add']                                                                       |xpath               |
+|sendKeys;     |//input[@placeholder='Enter Depot Name']                                                               |xpath|${depo_name}  |
+|sendKeys;     |//input[@placeholder='Enter Address']                                                                  |xpath|${address}    |
+|sendKeys;     |//input[@placeholder='Enter city name']                                                                |xpath|${city}       |
+|sendKeys;     |//input[@placeholder='Enter state']                                                                    |xpath|${state}      |
+|sendKeys;     |//input[@placeholder='Enter Pin code']                                                                 |xpath|${pincode}    |
+|click;        |//label[contains(text(),'Region')]/following-sibling::div[@class='searchdropdown font-bold']/div       |xpath               |
+|click;        |//div[contains(text(),'South')]                                                                        |xpath               |
+|sendKeys;     |//input[@placeholder='Enter GST IN']                                                                   |xpath|${gst_in}     |
+|sendKeys;     |//input[@placeholder='Enter Phone Number']                                                             |xpath|${phone}      |
+|click;        |//label[contains(text(),'DELIVERY TYPE')]/following-sibling::div[@class='searchdropdown font-bold']/div|xpath               |
+|click;        |//div[contains(text(),'${site}')]                                                                      |xpath               |
+|sendKeys;     |//input[@placeholder='Enter Short Code']                                                               |xpath|${short_code} |
+|sendKeys;     |//input[@placeholder='Enter Ref id']                                                                   |xpath|${depo_ref_id}|
+|click;        |//ul[@class='action-list']/li[contains(text(),'Save')]                                                 |xpath               |
+
+!|Script  |Ui                                                                    |
+|check    |isElementPresent;|//span[contains(text(),'${depo_ref_id}')]|xpath|true|
+|$tresult=|isElementPresent;|//span[contains(text(),'${depo_ref_id}')]|xpath     |
+**!

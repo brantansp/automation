@@ -1,0 +1,73 @@
+---
+Help: Contains test cases for searching combination of Valid_from and Source in Rate Matrix
+Test
+---
+!** Unique value assignment
+!| Script  |Common                              |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss|
+|$currDate=|getCurrentDateTimeStamp |default    |
+|$year=    |getSubString;           |$unique|0|4|
+|$num=     |getRandomNumber;        |100    |999|
+*!
+
+!** Adding a Vehicle using API
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!*** Adding a Transporter using API
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,N$unique,Chennai,${vehicle_name},100,${transporter_ref_id},${transporter_name},1,1000,per_trip,01-Jan-$year,31-Dec-2030,100,1,}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!define search_field {Enter Transporter Name}
+!define search_value {${transporter_name}}
+!** Searching for the added Transporter in Rate Matrix
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.RateMatrixSearch.RateMatrixSearchCommon
+*!
+
+!** Rate Matrix Filter and Search
+!|Script       |Ui                     |
+|navigateToUrl;|${surl}/mdm/rate-matrix|
+
+!define filter_by {Valid From}
+!define search_text {$year-01-01}
+
+!include .FrontPage.Pando.Common.CommonSearch
+
+#!define filter_by {Source}
+#!define search_text {N$unique}
+
+#!include .FrontPage.Pando.Common.CommonSearch
+*!
+
+!*** verifying the search result for Rate Matrix record
+!define search_value {${transporter_name}}
+!define search_count {1} 
+
+!|script  |ui                                                                                                                                                               |
+|check    |isElementPresent;  |//div[contains(@class,'grid-list-row') or contains(@class,'card-row-show')]//span[contains(text(),'$transporter_name')]|xpath|true           |
+|check    |getCountOfElements;|//div[contains(@class,'grid-list-row') or contains(@class,'card-row-show')]                                            |xpath|${search_count}|
+|$tresult=|isElementPresent;  |//div[contains(@class,'grid-list-row') or contains(@class,'card-row-show')]//span[contains(text(),'$transporter_name')]|xpath                |
+*!

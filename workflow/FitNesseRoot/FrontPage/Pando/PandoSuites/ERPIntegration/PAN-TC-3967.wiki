@@ -1,0 +1,66 @@
+---
+Help: Update Transporter ERP
+Suites: erp1
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!*** ERP Transporter Creation one
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!| Script    |Http                                                                                                                                                                                                                                                                                                                                                                                    |
+|setBaseUrl; |${surl}/api/login                                                                                                                                                                                                                                                                                                                                                                       |
+|getResponse;|Application/Json|put |{"data":{"email":"${username}","password":"${password}"}}                                                                                                                                                                                                                                                                                                         |
+|$token=     |getHeader;      |x-auth-token                                                                                                                                                                                                                                                                                                                                                           |
+|addHeader;  |Authorization   |bearer $token                                                                                                                                                                                                                                                                                                                                                          |
+|setBaseUrl; |${surl}/api/erp/transporter                                                                                                                                                                                                                                                                                                                                                             |
+|getResponse;|Application/Json|post|{"data":[{"name":"${transporter_name}","reference_number":"${transporter_ref_id}","address":"${address}","city":"${city}","state":"${state}","pincode":"${pincode}","contact_name":"${manager_name}","contact_mobile":${manager_mobile},"contact_email":"${manager_email}","gst_number":"GST$unique","pan_number":"${pancard}","gst_type":"FCM","percentage":12}]}|
+|check       |getStatusCode;  |204                                                                                                                                                                                                                                                                                                                                                                    |
+*!
+
+!*** ERP Transporter Creation two
+!define transporter_name {t1$unique}
+!define address {Benz circle}
+!define city {Vijayawada}
+!define state {Andra Pradesh}
+!define pincode {520083}
+!define pancard {AUYPD23324L}
+
+!| Script    |Http                                                                                                                                                                                                                                                                                                                                                                                     |
+|setBaseUrl; |${surl}/api/login                                                                                                                                                                                                                                                                                                                                                                        |
+|getResponse;|Application/Json|put |{"data":{"email":"${username}","password":"${password}"}}                                                                                                                                                                                                                                                                                                          |
+|$token=     |getHeader;      |x-auth-token                                                                                                                                                                                                                                                                                                                                                            |
+|addHeader;  |Authorization   |bearer $token                                                                                                                                                                                                                                                                                                                                                           |
+|setBaseUrl; |${surl}/api/erp/transporter                                                                                                                                                                                                                                                                                                                                                              |
+|getResponse;|Application/Json|post|{"data":[{"name":"${transporter_name}","reference_number":"${transporter_ref_id}","address":"${address}","city":"${city}","state":"${state}","pincode":"${pincode}","contact_name":"${manager_name}","contact_mobile":${manager_mobile},"contact_email":"${manager_email}","gst_number":"GST1$unique","pan_number":"${pancard}","gst_type":"FCM","percentage":12}]}|
+|check       |getStatusCode;  |204                                                                                                                                                                                                                                                                                                                                                                     |
+*!
+
+!*** Validating in UI
+!|Script       |Ui                     |
+|wait;         |10                     |
+|navigateToUrl;|${surl}/mdm/transporter|
+
+!define filter_by {Transporter Name}
+!define search_text {${transporter_name}}
+
+!include .FrontPage.Pando.Common.CommonTransporterSearch
+
+!|Script  |Ui                                                                            |
+|check    |isElementPresent;   |//span[contains(text(),'${transporter_name}')]|xpath|true|
+|check    |isElementPresent;   |//span[contains(text(),'${city}')]            |xpath|true|
+|check    |isElementNotPresent;|//span[contains(text(),'t$unique')]           |xpath|true|
+|$tresult=|isElementPresent;   |//span[contains(text(),'${transporter_name}')]|xpath     |
+**!

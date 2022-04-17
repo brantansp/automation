@@ -1,0 +1,22 @@
+!** Source Selection
+!include .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonOpenIndentSourceDepotSelection
+**!
+
+!** Destination Selection
+!include .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentDepotAsDestinationSelection
+**!
+
+!* Selecting Types
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentCreationSelectTypesInUI
+*!
+
+!** Getting Order id
+!|Script|Ui                                                      |
+|$data= |getText;|//span[contains(text(),'Indent created')]|xpath|
+|wait;  |3                                                       |
+
+!|Script   |Common                                                      |
+|$data1=   |stringConcatenation; |$data |last                           |
+|$order_id=|getSubStringByString;|$data1|Indent created with number|last|
+|$order_id=|getTrim;             |$order_id                             |
+**!

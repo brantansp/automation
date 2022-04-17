@@ -1,0 +1,350 @@
+---
+Help: Shortage or Damage greater than freight rate added to wallet with paid status
+Suites: maricov1
+Test
+---
+!5 ${RUNNING_PAGE_NAME} Shortage or Damage greater than freight rate added to wallet with paid status
+
+Freight Rate is 2000
+Shortage - 10 * 100 (Material MRP) = 1000
+Damage - 100 * 10 (Material invoice 1000/Quantity 10) = 1000
+Carton Damage - 10 * 30 (Fixed price 30) = 300
+Total 2300 > Freight rate 2000, So the amount be in Wallet with reconciled since insurance threshold is 0. And no entry in Ready for billing.
+
+!***> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-4|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-3|
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0 |
+
+!|Script       |Common                                         |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer -!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer -!|
+|$rdate=       |stringConcatenation;|$rdate       |!- $timer -!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=       |utcConversion;|$rdate       |
+
+!|Script        |DateUtil                                    |
+|$expected_date=|dateCalculation;|yyyy/MM/dd        |0       |
+|$expected_date=|utcConversion;  |$expected_date !- $timer -!|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!***> Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {1}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!***> Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {PTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!***> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Material Creation 1
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!**> Enable Admin setting to default
+!|script|common                                                                                                                                                   |
+|$data= |getTrim;|{"insurance_threshold":0,"shortage":{"value":2,"factor":1},"damage":{"value":3,"factor":1},"carton_damage":{"value":1,"factor":30},"movement":1}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.AdminSettings.ShortageDamageSettingAPI
+**!
+
+!***> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,BDR Charge,BDR Label,Exclude,Trip Count}
+!define column {Point,${gate_ref_id},$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,2000,per_trip,01-Jan-$year,31-Dec-2030,100,1,}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!***> Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+
+!|script     |common            |
+|$indent_id1=|getTrim;|$order_id|
+*!
+
+!**> Enable Admin setting
+!define movement {Secondary}
+!define amount_type {INR}
+!define threshold_amount {3000}
+!define type1 {Shortage}
+!define s_value {Material MRP}
+!define s_factor {1}
+!define type2 {Damage}
+!define d_value {Material Invoice}
+!define d_factor {1}
+!define type3 {Carton Damage}
+!define cd_value {Fixed Price}
+!define cd_factor {30}
+
+!|script|common                                                                                                                                                                     |
+|$data= |getTrim;|{"insurance_threshold":${threshold_amount},"shortage":{"value":2,"factor":1},"damage":{"value":3,"factor":1},"carton_damage":{"value":1,"factor":30},"movement":4}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.AdminSettings.ShortageDamageSettingAPI
+**!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {1234567890}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!**> Update LR for Consignee 1
+!define consignee_id {$consignee_id_1}
+!define lr_number {l1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!**> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {cases}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {1000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!**> ERP Upload for Consignee 1
+!|script|common                                                                                                                                                                                                                                                                                                                                |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"INV-$unique","material_code":"mc$unique","no_of_shortage":"10","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"100","no_of_carton_damage":"10","release_date":"$rdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!**> Transporter login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+**!
+
+!*> Check that the entry is not available in Ready for billing page
+!|script       |Ui                                            |
+|navigateToUrl;|${turl}/v2/payments?depot=${depot_name}       |
+|click;        |//span[normalize-space(text())='Filter']|xpath|
+|click;        |//button[text()='APPLY']                |xpath|
+
+!|script                     |ui                                                                                                                          |
+|waitForElementToBeDisplayed;|//div[contains(@class,'page-filter')]//span[normalize-space(text())='${depot_name}']|xpath                       |8         |
+|check                       |isElementPresent;                                                                   |//div[@class='paymentempty']|xpath|true|
+|$tresult1=                  |isElementPresent;                                                                   |//div[@class='paymentempty']|xpath     |
+*!
+
+!** Check if the entry is available in Invoices with PAID status
+!include -c .FrontPage.Pando.Common.CommonTransporterInvoiceFilter
+
+!|Script    |Ui                                                                                                                                                                                                                      |
+|check      |isElementPresent;                                                                                     |//div[contains(@class,'card-row')]//span[contains(@class,'status') and normalize-space(text())='Paid']|xpath|true|
+|$tresult2= |isElementPresent;                                                                                     |//div[contains(@class,'card-row')]//span[contains(@class,'status') and normalize-space(text())='Paid']|xpath     |
+|check      |isElementPresent;                                                                                     |(//div[contains(@class,'card-row')]//span[normalize-space(text())='0'])[1]                            |xpath|true|
+|mouseHover;|//div[contains(@class,'card-row')]//span[contains(@class,'tooltip')]                                  |xpath                                                                                                            |
+|$inv_no=   |getText;                                                                                              |(//div[@role='tooltip' and contains(@style,'absolute')]//div)[1]                                      |xpath     |
+|click;     |//div[contains(@class,'card-row')]//span[contains(@class,'status') and normalize-space(text())='Paid']|xpath                                                                                                            |
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody|xpath                                                                                                                                                                                                                              |10                 |
+|$FreightHeaderNo=           |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                    |xpath|Freight      |
+|$shortagetHeaderNo=         |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                    |xpath|Shortage     |
+|$damageHeaderNo=            |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                    |xpath|Damage       |
+|$cartondamageHeaderNo=      |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                    |xpath|Carton Damage|
+|$totalHeaderNo=             |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                                    |xpath|Total        |
+|$consignee1_row_number=     |getHeaderColumnNumber;                                                    |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//div[@class='tabletitle']/span)[1]                                                                                     |xpath|$order_id    |
+|$freight_shipper_main=      |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$FreightHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']     |xpath              |
+|$shortage_shipper_main=     |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$shortagetHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']   |xpath              |
+|$damage_shipper_main=       |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$damageHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']      |xpath              |
+|$cartondamage_shipper_main= |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$cartondamageHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']|xpath              |
+|$total_shipper_main=        |getText;                                                                  |(//div[@class='el-table__header-wrapper']//following-sibling::div[contains(@class,'el-table__fixed-right')]//div[contains(@class,'body-wrapper')]//tr)[$consignee1_row_number]//td[$totalHeaderNo]//div[@class='totalvalue']       |xpath              |
+
+!|Script   |Common                                                                    |
+|check     |checkIfStringAreEqual;|$freight_shipper_main     |2000               |true|
+|check     |checkIfStringAreEqual;|$shortage_shipper_main    |1000               |true|
+|check     |checkIfStringAreEqual;|$damage_shipper_main      |1000               |true|
+|check     |checkIfStringAreEqual;|$cartondamage_shipper_main|300                |true|
+|check     |checkIfStringAreEqual;|$total_shipper_main       |0                  |true|
+|check     |checkIfStringAreEqual;|$inv_no                   |RECONCILE-$order_id|true|
+|$tresult3=|checkIfStringAreEqual;|$inv_no                   |RECONCILE-$order_id     |
+*!
+
+!** Check if the entry is available in Wallet with Reconciled status
+!define wallet_reason {Reconciled}
+!define wallet_amount {300.00}
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.WalletValidationTransporter
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row') or contains(@class,'card-row row') or @class='emptytext']|xpath                                                                                                                                                                                                                 |15        |
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]                                                                                                                                                                                     |xpath|true|
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']                                                                                           |xpath|true|
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']//parent::span//parent::div//following-sibling::div//*[contains(text(),'${wallet_amount}')]|xpath|true|
+|$tresult4=                  |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']//parent::span//parent::div//following-sibling::div//*[contains(text(),'${wallet_amount}')]|xpath     |
+*!
+
+!** Validate invoice in shipper with PAID status
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!|script   |ui                                                                                                                                 |
+|check     |isElementPresent;|//div[contains(@class,'card-row')]//span[contains(@class,'status') and normalize-space(text())='Paid']|xpath|true|
+|$tresult5=|isElementPresent;|//div[contains(@class,'card-row')]//span[contains(@class,'status') and normalize-space(text())='Paid']|xpath     |
+|check     |isElementPresent;|(//div[contains(@class,'card-row')]//span[normalize-space(text())='0'])[1]                            |xpath|true|
+**!
+
+!* Validate wallet in Shipper with RECONCILED status
+!include -c .FrontPage.Pando.Common.ShipperWalletFilter
+
+!define search_text {$order_id}
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletIndentSearch
+
+!define reason_wallet_1 {Reconciled}
+
+!|Script        |Ui                                                                                                                                                                                                                                    |
+|check          |getCountOfElements;|//div[contains(@class,'list-row') or contains(@class,'card-row')]                                                                                                                                      |xpath|1   |
+|check          |isElementPresent;  |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']                                                                    |xpath|true|
+|$tresult6=     |isElementPresent;  |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']                                                                    |xpath     |
+|$reconciledamt=|getText;           |//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='${reason_wallet_1}']//ancestor::div[contains(@class,'col')]//following-sibling::div/span|xpath     |
+
+!|script   |common                                      |
+|$tresult7=|checkIfStringAreEqual;|$reconciledamt|300.00|
+*!
+
+!**> Validating the Result
+!|Script  |Common                                                                                                  |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,true|
+*!

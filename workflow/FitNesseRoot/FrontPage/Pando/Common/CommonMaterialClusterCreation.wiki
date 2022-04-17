@@ -1,0 +1,22 @@
+---
+Help: Contains Common Material Cluster Creation
+---
+!|Script                     |Ui                                                                                                                             |
+|navigateToUrl;              |${surl}/mdm/materialcategories                                                                                                 |
+|click;                      |//button[normalize-space()='Add']                                                        |xpath                                |
+|sendKeys;                   |//input[@placeholder='Enter Material Category Name']                                     |xpath|${material_category_name}      |
+|sendKeys;                   |//input[@placeholder='Enter Cluster']                                                    |xpath|${material_cluster_name}       |
+|sendKeys;                   |//input[@placeholder='Enter Stacking Norms']                                             |xpath|${cluster_stacking_norms}      |
+|click;                      |//label[text()='Positioning Constraints']/..//input                                      |xpath                                |
+|click;                      |(//div[@class='el-scrollbar'])[last()]//span[text()='${cluster_positioning_constraints}']|xpath                                |
+|click;                      |//label[text()='Shortage Unit']/..//input                                                |xpath                                |
+|click;                      |(//div[@class='el-scrollbar'])[last()]//span[text()='${cluster_shortage_unit}']          |xpath                                |
+|click;                      |//label[text()='Damage Unit']/..//input                                                  |xpath                                |
+|click;                      |(//div[@class='el-scrollbar'])[last()]//span[text()='${cluster_damage_unit}']            |xpath                                |
+|click;                      |//label[text()='Carton Damage Unit']/..//input                                           |xpath                                |
+|click;                      |(//div[@class='el-scrollbar'])[last()]//span[text()='${cluster_carton_damage_unit}']     |xpath                                |
+|sendKeys;                   |//input[@placeholder='Enter Carton Damage factor']                                       |xpath|${cluster_carton_damage_factor}|
+|click;                      |//label[text()='Carton Damage Type']/..//input                                           |xpath                                |
+|click;                      |(//div[@class='el-scrollbar'])[last()]//span[text()='${cluster_carton_damage_type}']     |xpath                                |
+|click;                      |//ul/li[normalize-space(text())='Save']                                                  |xpath                                |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span                                           |xpath|5                              |

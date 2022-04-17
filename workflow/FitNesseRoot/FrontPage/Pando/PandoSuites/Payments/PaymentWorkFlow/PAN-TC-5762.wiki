@@ -1,0 +1,181 @@
+---
+Help: Payment workflow with damage - COVERED IN PAN-TC-5528
+Suites: onhold
+Test
+---
+!5 COVERED IN http://localhost:4000/FrontPage.Pando.PandoSuites.Payments.Transporter.Damage.PAN-TC-5528. Putting this onhold
+
+!** Unique values assignment
+!|Script       |DateUtil                               |
+|$unique=      |getCurrentDateTimeStamp;|yMMddHHmmss   |
+|$truckoutdate=|dateCalculation;        |yyyy/MM/dd |-2|
+|$rdate=       |dateCalculation;        |yyyy/MM/dd |-1|
+|$indate=      |getCurrentDateTimeStamp;|yyyy/MM/dd    |
+|$loadingDate= |getCurrentDateTimeStamp |iso           |
+|$contractDate=|dateCalculation;        |dd-MMM-yyyy|2 |
+
+!|Script       |Common                                          |
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- 10:00:00-!|
+|$rdate=       |stringConcatenation;|$rdate       |!- 11:00:00-!|
+**!
+!** Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Krishnan nager}
+!define city {Chittor}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** New Detention upload
+!define row {Vehicle Type,Movement,Depot REF ID,Loading cost,Unloading cost,ODA cost,Unit}
+!define column {965 CFT,secondary,CHN1,1000,0,0,trip}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.CommonLoadingUnloadingBulkUpload
+**!
+
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {5c750bce6e2ae92e2d5bc5f8}
+!define location_id {5c74edf0c8d634115eaf23bd}
+!define gate_id {5c74edf083f399115e3eaa55}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define unloader_available {false}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define expected_delivery_at {$expected_date}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationAPI
+**!
+
+!** validating and Assinging The Truck
+!define vechicle_number {tn 09 AT 9013}
+!define driver_name  {pay driver}
+!define phone_number  {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+**!
+
+!** Create Material invoice 
+!define mrp_price {1000}
+!define quantity1 {10}
+!define quantity_unit {cases}
+!define weight {400}
+!define weight_unit {KG}
+!define volume {1000}
+!define volume_unit {CFT}
+!define type {PRIMARY}
+!define invoice_amount {20000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialsInvoiceERPAPI
+**!
+
+!** EPOD Calculation
+!define no_of_shortage {0}
+!define no_of_leakage {0}
+!define mrp {${mrp_price}}
+!define no_of_excess {0}
+!define no_of_damage {2}
+!define no_of_carton_damage {0}
+!define release_date {$rdate}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodSingleIndentErpAPI
+**!
+
+!** Physical LR update
+!include -c .FrontPage.Pando.PandoSuites.Payments.TranspoterSetting
+**!
+
+
+!define calculation_total {12000}
+!define amount_without_tax {39000.00}
+!define discount {3900.00}
+!define amount_tax {3510.00}
+!define final_amount {38610.00}
+
+!** Get Values and assert it on transporter side
+!|Script|Ui                                                                                |
+|$data1=|getValue;              |//td[contains(@class,'el-table_1_column_14')]//input|xpath|
+|$data2=|getText;               |//div[@class='titleprimary']                        |xpath|
+|click; |//button[text()='Next']|xpath                                                     |
+|$data3=|getText;               |(//div[@class='col content-list-total'])[2]         |xpath|
+|$data4=|getText;               |//div[@class='col-4 colfloat content-list-total']   |xpath|
+|$data5=|getText;               |(//div[@class='col content-list-total'])[3]         |xpath|
+
+
+!|Script  |Ui                                                           |
+|click;   |(//input[@placeholder='Select'])[1]          |xpath          |
+|click;   |//span[text()='Andhra Pradesh']              |xpath          |
+|sendKeys;|//input[@placeholder='Enter GSTN']           |xpath|G$unique |
+|sendKeys;|//input[@placeholder='Invoice No']           |xpath|IN$unique|
+|click;   |//button[contains(text(),'Generate Invoice')]|xpath          |
+
+
+!|Script   |Common                                                                         |
+|$tresult1=|checkIfStringAreEqual;       |$data1      |${calculation_total}                |
+|check     |checkIfStringAreEqual;       |$data1      |${calculation_total}      |true     |
+|$tresult2=|checkIfStringAreEqual;       |$data2      |${amount_without_tax}               |
+|check     |checkIfStringAreEqual;       |$data2      |${amount_without_tax}     |true     |
+|$tresult3=|checkIfStringAreEqual;       |$data3      |${discount}                         |
+|check     |checkIfStringAreEqual;       |$data3      |${discount}               |true     |
+|$tresult4=|checkIfStringAreEqual;       |$data4      |${amount_tax}                       |
+|check     |checkIfStringAreEqual;       |$data4      |${amount_tax}             |true     |
+|$tresult5=|checkIfStringAreEqual;       |$data5      |${final_amount}                     |
+|check     |checkIfStringAreEqual;       |$data5      |${final_amount}           |true     |
+|$tresult6=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5|
+**!
+
+!** checking status of the payments on transporter side
+!|Script                     |Ui                                                                                         |
+|navigateToUrl;              |${turl}/payments                                                                           |
+|click;                      |//span[contains(text(),'Ready for Billing')]|xpath                                         |
+|click;                      |//a[contains(text(),'Invoices')]            |xpath                                         |
+|click;                      |//div[@class='filter-status']//span         |xpath                                         |
+|click;                      |//a[contains(text(),'PENDING')]             |xpath                                         |
+|waitForElementToBeDisplayed;|//div[contains(text(),'IN$unique')]         |xpath                              |30        |
+|check                       |isElementPresent;                           |//div[contains(text(),'IN$unique')]|xpath|true|
+**!
+
+!** Checking status of the payments from shipper side
+!|Script       |Ui                                                                  |
+|navigateToUrl;|${surl}/invoices                                                    |
+|click;        |//div[@class='order-wrapper']//input[@class='el-input__inner']|xpath|
+|click;        |//span[contains(text(),'Non Clean Invoices')]                 |xpath|
+|click;        |//a[contains(text(),'IN$unique')]                             |xpath|
+|click;        |//a[contains(text(),'Next')]                                  |xpath|
+**!
+
+!** Approve bills
+!|Script                     |Ui                                                                                                                                      |
+|waitForElementToBeDisplayed;|//div[@class='col content-list-total']                              |xpath                                      |30                     |
+|$data1=                     |getText;                                                            |(//div[@class='col content-list-total'])[2]|xpath                  |
+|$data2=                     |getText;                                                            |(//div[@class='col content-list-total'])[3]|xpath                  |
+|$data3=                     |getText;                                                            |(//div[@class='col content-list-total'])[4]|xpath                  |
+|click;                      |//button[text()='Approve']                                          |xpath                                                              |
+|sendKeys;                   |//div[@class='col-lg-12 no-padding']/textarea                       |xpath                                      |payment success $unique|
+|click;                      |//div[@class='dialog-section']/div/button[contains(text(),'Submit')]|xpath                                                              |
+|check                       |isElementPresent;                                                   |//div[@role='alert']                       |xpath       |true      |
+
+!|Script   |Common                                                               |
+|$tresult1=|checkIfStringAreEqual;       |$data1    |${discount}                 |
+|check     |checkIfStringAreEqual;       |$data1    |${discount}        |true    |
+|$tresult2=|checkIfStringAreEqual;       |$data2    |${amount_tax}               |
+|check     |checkIfStringAreEqual;       |$data2    |${amount_tax}      |true    |
+|$tresult3=|checkIfStringAreEqual;       |$data3    |${final_amount}             |
+|check     |checkIfStringAreEqual;       |$data3    |${final_amount}    |true    |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult6|
+**!
+
+
+ 
+

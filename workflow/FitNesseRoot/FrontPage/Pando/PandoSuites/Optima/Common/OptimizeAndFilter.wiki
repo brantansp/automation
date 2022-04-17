@@ -1,0 +1,9 @@
+---
+Help: Contains script to Manually Optimize  and Filter the depot and movement
+---
+!|Script                     |Ui                                                                                                                       |
+|click;                      |//button[contains(text(),'OPTIMIZE') or contains(text(),'Optimize')]   |xpath                                            |
+|waitForElementToBeInvisible;|//p[contains(text(),'Please wait. We are Optimising')]                 |xpath                                 |30        |
+|click;                      |//*[local-name()='svg' and starts-with(@aria-describedby,'el-tooltip')]|xpath                                            |
+|waitForElementToBeInvisible;|//p[starts-with(text(),'Validating your input')]                       |xpath                                 |30        |
+|check                       |isElementPresent;                                                      |//div[@class='card-row card-row-show']|xpath|true|

@@ -1,0 +1,83 @@
+---
+Help: Rate matrix sample format downloading
+Suites: srf
+Test
+---
+!***> Unique values assignment
+!|Script |Common                                  |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss    |
+|$vno_1= |getRandomNumber;        |20  |76        |
+|$vno_2= |getRandomString;        |2   |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000|9999      |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+*!
+
+!*> Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!* Downloading sample Bulk Upload and uploading rate matrix after filling details in excel sheet
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|Script |Ui                                                                  |
+|click;  |//li[@class='app-side-menu']                                  |xpath|
+|click;  |//a[contains(text(),'DATA MANAGER')]                          |xpath|
+|click;  |(//input[@placeholder="Select"])[1]                           |xpath|
+|clickJS;|//span[contains(text(),'Rate Matrix')]/..                     |xpath|
+|click;  |//button[contains(text(),'Upload')]                           |xpath|
+|click;  |//span[contains(text(),'Bulk Upload')]/../following-sibling::a|xpath|
+|wait;   |8                                                                   |
+
+!|script   |common                                              |
+|$filename=|getPath;|download/contract_bulk_upload.xlsx|fullpath|
+
+!|script             |ExcelQuery                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|insertOrUpdateQuery;|$filename|INSERT INTO "Contract Bulk Uplaod" ("Type*","Source*","Destination*","Vehicle Type*","Distance","Transporter Reference ID*","Transporter Name","Transit Days*","Freight Rate*","Freight Unit*","Valid From*","Valid To*","Minimum Rate","Multiplying Factor","Detention Group","Product Category","Fixed Rate","ODA Rate","Oda Unit","Minimum ODA","Drop Point Charges","Is Dedicated","Truck Count","Approved By") VALUES ('City','Chennai','Mumbai','v$unique MRT','100','tr$unique','t$unique','1','12000','per_trip','01-Jan-2021','31-Dec-2030','100','1','U','PC','550','770','Per trip','400','300','no','0','System User')|
+ 
+!|Script                     |Ui                                                                                                                                                                                   |
+|wait;                       |5                                                                                                                                                                                    |
+|navigateToUrl;              |${surl}/mdm/rate-matrix                                                                                                                                                              |
+|waitForElementToBeDisplayed;|//div[contains(@class,'slideleft_content')]                                            |xpath                                                                              |8        |
+|click;                      |.btn.btn-secondary.el-dropdown-selfdefine                                              |cssselector                                                                                  |
+|sendKeys;                   |.upload-material                                                                       |cssselector                                                                        |$filename|
+|waitForElementToDisappear;  |//div[@class='spinner spinner--stretch']                                               |xpath                                                                              |30       |
+|click;                      |//span[text()='Search']                                                                |xpath                                                                                        |
+|sendKeys;                   |//input[@placeholder='Enter Transporter Name' or @placeholder='Enter transporter Name']|xpath                                                                              |$unique  |
+|click;                      |//button[text()='Search']                                                              |xpath                                                                                        |
+|wait;                       |2                                                                                                                                                                                    |
+|$tresult=                   |isElementPresent;                                                                      |//span[contains(text(),'t$unique')]/ancestor::div[contains(@class,'grid-list-row')]|xpath    |
+*!
+
+!*> Validating test result
+!|Script|common                                   |
+|check  |checkIfStringAreEqual;|$tresult|true|true|
+*!

@@ -1,0 +1,7 @@
+---
+Test
+---
+!|script     |json                                                                  |
+|$loc=       |getKeyIndexFromJSONByKeyAndValueType;|$data    |order_number|$order_id|
+|$data_loc=  |getJSONObjectFromJsonArray;          |$data    |$loc                  |
+|$payment_id=|getValueFromJSON;                    |$data_loc|id                    |

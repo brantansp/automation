@@ -1,0 +1,8 @@
+!|Script                     |Ui                                                                                                |
+|navigateToUrl;              |${surl}/reports                                                                                   |
+|waitForElementToBeDisplayed;|((//div[contains(@class,'page-filter')]//div[@class='flex-item'])[3]//span)[1]|xpath|30           |
+|click;                      |//span[@class='multiselect__single']                                          |xpath              |
+|click;                      |//span[text()='Select All']                                                   |xpath              |
+|click;                      |//span[text()='Select All']                                                   |xpath              |
+|sendKeys;                   |//input[@placeholder='Select depots']                                         |xpath|${depot_name}|
+|click;                      |//span[text()='${depot_name}']                                                |xpath              |

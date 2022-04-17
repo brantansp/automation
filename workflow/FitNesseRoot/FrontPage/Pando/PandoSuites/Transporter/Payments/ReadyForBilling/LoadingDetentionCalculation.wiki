@@ -1,0 +1,7 @@
+---
+Help: Loading Detention calculation on transporter ready for biling
+Suite
+Suites: pay4
+---
+!1 Test suite for Loading Detention Calculation
+!contents -R2 -g -p -f -h

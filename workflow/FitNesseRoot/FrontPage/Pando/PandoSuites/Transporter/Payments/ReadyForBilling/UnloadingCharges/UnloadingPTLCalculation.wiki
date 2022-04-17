@@ -1,0 +1,21 @@
+---
+Help: startup
+---
+!|Script|Common|
+|$order_id=|getTrim;|$order_id|
+
+!|Script |Ui |
+|navigateToUrl; |${turl}/v2/payments |
+|click; |//button[@class='el-button el-button--default'] |xpath |
+|click; |//div[@class='datepickerrange-cancel'] |xpath |
+|click; |(//div[@class='sliderfilter-cardlist'])[2]//input |xpath |
+|click; |//span[text()='${depot_name}'] |xpath |
+|wait;                       |2                                                                       |
+|click; |//button[text()='APPLY'] |xpath |
+|wait;|5|
+
+!|Script|Ui|
+|click;|//span[normalize-space(text())='Update']|xpath|
+|click;|//div[normalize-space(text())='CHARGES']|xpath|
+|click;|//div[text()='d$unique' and @class='el-collapse-item__header']|xpath|
+|$calResult=|getText;|(//span[normalize-space(text())='${pay_calcualtion}']/../parent::div/following-sibling::div)[1]/div   |xpath|

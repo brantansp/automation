@@ -1,0 +1,174 @@
+---
+Help: Verify whether auto cancel is working for primary open indent
+Suites: marico
+Test
+---
+!***> Unique values assignment
+!| Script  |Common                                       |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$cGroup=  |getRandomString;        |5        |ALPHAUPPER|
+|$vno_1=   |getRandomNumber;        |20       |76        |
+|$vno_2=   |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=   |getRandomNumber;        |1000     |9999      |
+|$currDate=|getCurrentDateTimeStamp |iso                 |
+|$year=    |getSubString;           |$unique  |0   |4    |
+|$today=   |getSubString;           |$currDate|0   |10   |
+|$num=     |getRandomNumber;        |100000   |999999    |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Source Depot Creation
+!define depot_name {src$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {s$num}
+!define depot_reference_id {s$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {600001}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {SG1$unique}
+!define g_user_email {pandoindent+1$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script         |common           |
+|$location_id=   |getTrim;|$depot  |
+|$source_gate_id=|getTrim;|$gate_id|
+*!
+
+!***> Destination Depot Creation
+!define depot_name {dest$unique}
+!define depot_state {Goa}
+!define depot_city {Goa}
+!define depot_region {West}
+!define depot_short_code {d$num}
+!define depot_reference_id {dr$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {403001}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {DG1$unique}
+!define g_user_email {pandoindent+2$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script                       |common           |
+|$destination_location_id=     |getTrim;|$depot  |
+|$destination_gate_location_id=|getTrim;|$gate_id|
+*!
+
+!**> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!**> Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Admin SLA Setting
+!|script               |DateUtil                         |
+|$indentCutoffTime=    |dateCalculation;|minute|hh:mm:a|3|
+|$arrivalCutoffTime=   |dateCalculation;|minute|hh:mm:a|4|
+|$indentAutoCancelTime=|dateCalculation;|minute|hh:mm:a|5|
+
+!define depot_id {src$unique}
+!define vehicle_movement {Primary}
+!define indent_cutoff_time {$indentCutoffTime}
+!define indent_auto_cancel_time {$indentAutoCancelTime}
+!define arrivel_cutoff_time {$arrivalCutoffTime}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.CancelIndent.CommonIndentAutoCancelSetting
+*!
+
+!**> Creating Primary - Open Indent 
+!define type {Outbound}
+!define source_location {src$unique}
+!define destination_location {dest$unique}
+!define gate_id {rt$unique}
+!define delivery_type {FTL}
+!define switch_depo {Depot}
+!define switch_type {1}
+!define no_of_vehicle {1}
+!define base_freight {10000}
+!define freight_type {Per Trip}
+
+!** Source Selection
+!include .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonOpenIndentSourceDepotSelection
+**!
+
+!** Destination Selection
+!include .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentDepotAsDestinationSelection
+**!
+
+!** Type Selection
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonIndentCreationSelectTypesWithBaseFreight
+*!
+
+!** Getting Order id
+!|Script|Ui                                                      |
+|$data= |getText;|//span[contains(text(),'Indent created')]|xpath|
+|wait;  |3                                                       |
+
+!|Script   |Common                                                      |
+|$data1=   |stringConcatenation; |$data |last                           |
+|$order_id=|getSubStringByString;|$data1|Indent created with number|last|
+|$order_id=|getTrim;             |$order_id                             |
+**!
+*!
+
+!** Waiting for the SLA to be Breached
+!|script|ui |
+|wait;  |300|
+*!
+
+!** Validating Cancel Status after auto cancellation
+!define depot_selection {src$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!|script               |DateUtil                         |
+|$actualAutoCancelTime=|dateCalculation;|minute|hh:mm:a|0|
+
+!|script   |Ui                                                                                                                                                  |
+|refresh;                                                                                                                                                       |
+|check     |isElementPresent;                                                   |//div[@class='order-status-button' and contains(text(),'Cancelled')]|xpath|true|
+|$tresult1=|isElementPresent;                                                   |//div[@class='order-status-button' and contains(text(),'Cancelled')]|xpath     |
+|click;    |//div[@class='order-status-button' and contains(text(),'Cancelled')]|xpath                                                                          |
+|click;    |//div[text()='Timeline']                                            |xpath                                                                          |
+|check     |isElementPresent;                                                   |//p[text()='Indent auto-cancelled by System!']                      |xpath|true|
+|$tresult2=|isElementPresent;                                                   |//p[text()='Indent auto-cancelled by System!']                      |xpath     |
+**!
+
+!***> Validating the test results
+!|Script  |Common                                                |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,true|
+*!

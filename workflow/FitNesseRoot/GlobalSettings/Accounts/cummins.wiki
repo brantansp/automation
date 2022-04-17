@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://cummins-auto.pandostaging.in}
+!define username {pandocumminsauto@gmail.com}
+!define password {test@1234}
+!define shipper_client_id {61b837c1205c51796e6a3793}

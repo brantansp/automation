@@ -1,0 +1,30 @@
+---
+Help: Ensure All status is default status filter
+Test
+---
+!** Validating the default status filter value
+!define truck_num {TN $vno_1 $vno_2 $vno_3}
+!define filter_type {Status}
+!define filter_value {ALL STATUS}
+
+!|script        |ui                                                                                                         |
+|navigateToUrl; |${turl}/tracking                                                                                           |
+|click;         |//button[@class='el-button el-button--default']|xpath                                                                       |
+|check          |isElementPresent;             |//div[@class='selectedlist']//span[text()='${filter_value}']     |xpath|true|
+|$tresult1=     |isElementPresent;             |//div[@class='selectedlist']//span[text()='${filter_value}']     |xpath     |
+|$default_value=|getValue;                     |//label[text()='${filter_type}']/../following-sibling::div//input|xpath     |
+
+!|script   |common                                                    |
+|check     |checkIfStringAreEqual;|$default_value|${filter_value}|true|
+|$tresult2=|checkIfStringAreEqual;|$default_value|${filter_value}     |
+*!
+
+!** Validating the Test result
+!|Script  |Common                                           |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2|
+
+*!
+
+!**> Update result
+!include .FrontPage.Pando.Common.CommonResultImage
+*!

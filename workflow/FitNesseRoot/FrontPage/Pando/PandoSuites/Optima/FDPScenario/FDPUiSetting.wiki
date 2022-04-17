@@ -1,0 +1,7 @@
+---
+Help: Suite contains test cases for FDP UI setting test cases
+Suite
+Suites: optscn3
+---
+!1 Test suite FDP UI
+!contents -R2 -g -p -f -h

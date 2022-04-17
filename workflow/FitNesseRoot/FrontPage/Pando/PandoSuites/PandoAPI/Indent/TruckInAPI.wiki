@@ -1,0 +1,8 @@
+---
+Test
+---
+!|Script    |Http                                                                                                              |
+|addHeader; |Authorization |bearer $stoken                                                                                     |
+|setBaseUrl;|${surl}/api/order/$order_id/truck_in                                                                              |
+|$report_at=|getResponse;  |Application/Json|put|{"data":{"unique_id":"$unique_truck_assign_id","arrived_at":"$truck_in_date"}}|
+|check      |getStatusCode;|200                                                                                                |

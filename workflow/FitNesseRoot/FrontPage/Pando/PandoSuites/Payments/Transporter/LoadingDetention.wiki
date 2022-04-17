@@ -1,0 +1,6 @@
+---
+Help: All Detention suites runs here
+Suite
+---
+!1 Test suite for all detentions
+!contents -R2 -g -p -f -h

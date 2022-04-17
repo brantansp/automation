@@ -1,0 +1,17 @@
+---
+Help: SCN6_Consignee 8100812 should have two FTL vehicle assigned
+Test
+---
+!5 SCN6_Consignee 8100812 should have two FTL vehicle assigned
+
+!|script       |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!|script       |CsvQuery                                                                                                                                                               |
+|getConnection;|$fileLocation|,                                                                                                                                                        |
+|$tresult1=    |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE File LIKE 'scn6_%' AND Consignee LIKE '%8100812%' AND "Truck Type" NOT LIKE '9999%'|noOfOccurrences|
+|closeConnection;                                                                                                                                                                      |
+
+!|script  |common                                 |
+|check    |checkIfStringAreEqual;|$tresult1|3|true|
+|$tresult=|checkIfStringAreEqual;|$tresult1|3     |

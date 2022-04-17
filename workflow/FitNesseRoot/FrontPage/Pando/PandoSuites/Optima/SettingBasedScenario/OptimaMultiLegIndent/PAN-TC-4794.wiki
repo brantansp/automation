@@ -1,0 +1,569 @@
+---
+Help: Ensure that pitstop indent created when Src & Dest are in different states
+Suites: optscn8
+Test
+---
+!5 ${RUNNING_PAGE_NAME} When the Source has a pitstop added and the destination is in another state then 2 indents should be formed as 1. Src -> Pitstop 2. Pitstop -> Destination
+!5 If invoice details present in deliverypicklist then the modified picklist will not be sent.
+
+!**> Data
+Shipper - Guwahati Plant1
+Pitstop - Pitstop-Guwahati
+Destination - Cuttack Depot
+
+Transporter Details
+pandomaricoauto+load@gmail.com | 171140
+*!
+
+!***> Unique values assignment
+!|Script          |Common                                       |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$currDate=       |getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique  |0   |4    |
+|$detention_group=|getRandomString;        |4        |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000   |999999    |
+|$today=          |getSubString;           |$currDate|0   |10   |
+|$pincode1=       |getRandomNumber;        |111001   |999999    |
+|$pincode2=       |getRandomNumber;        |111001   |999999    |
+|$vno_1=          |getRandomNumber;        |20       |76        |
+|$vno_2=          |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=          |getRandomNumber;        |1000     |9999      |
+|$delivery_num=   |getSubString;           |$unique  |4   |14   |
+|$indate=         |getCurrentDateTimeStamp;|yyyy/MM/dd          |
+
+!|Script       |DateUtil                       |
+|$today=       |dateCalculation;|yyyy-MM-dd |0 |
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0 |
+|$thisday=     |dateCalculation;|dd MMM yyyy|0 |
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-1|
+
+!| Script      |Common                                            |
+|$rdate=       |stringConcatenation;   |$rdate       |!- $timer -!|
+|$loadingDate= |getCurrentDateTimeStamp|iso                       |
+|$truckoutdate=|stringConcatenation;   |$truckoutdate|!- $timer -!|
+
+!|Script       |DateUtil                    |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=       |utcConversion;|$rdate       |
+*!
+
+!***> Depot Optima Setting
+!define depot_name {Guwahati Plant1}
+!define depo {Guwahati Plant1}
+!define max_split {2}
+!define split_factor {5}
+!define ftl_certify {false}
+!define algorithm {3}
+!define distance_deviation {100}
+!define degree_of_deviation {30}
+!define optima_type {1}
+!define weight {1}
+!define volume {1}
+!define mode {0}
+!define max_pickup {2}
+!define fitment {0}
+!define max_dropoff {1}
+!define optima_for_ptl {false}
+!define ptl_club_gates {false}
+!define limited_truck_count {false}
+!define hybrid_split {false}
+!define depot_id {5fa370878afb3d004d7fbbee}
+!define movement {2}
+!define movement_type {Primary}
+!define ptl_contracts {0}
+!define material_category {"MT","GT"}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split": ${max_split},"split_factor": ${split_factor},"ftl_certify": ${ftl_certify},"algorithm": ${algorithm},"distance_deviation":"${distance_deviation}","degree_of_deviation":${degree_of_deviation},"optima_type":${optima_type},"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":${weight},"volume":${volume}},"material_categories":[${material_category}],"mode":${mode},"max_pickup_points":${max_pickup},"fitment":${fitment},"max_drop_points":${max_dropoff},"drop_off_rule":[],"optima_for_ptl":${optima_for_ptl},"ptl_club_gates":${ptl_club_gates},"pickup_threshold": {"weight": 5000,"volume": 400},"floor_one": {"weight": 3000,"volume": 363},"floor_two": {"weight": 90,"volume": 90},"limited_truck_count":${limited_truck_count},"hybrid_split": ${hybrid_split},"ptl_contracts":${ptl_contracts}},"depot_ids":["${depot_id}"],"movement":${movement}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!***> Uploading Rate Matrix
+!define distance {830}
+!define transit_days {1}
+!define ratec {30000}
+!define rtrip {per_trip}
+!define mrate {10000}
+!define mfactor {1}
+!define transporter_name {Loadshare Networks Private Limited}
+!define transporter_ref_id {773248}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,MIL- Guwahati Plant,Cuttack,16 Tonne Truck,${distance},${transporter_ref_id},${transporter_name},${transit_days},30000,per_trip,01-Jan-$year,31-Dec-2030,0,${mfactor},$detention_group,,0,0,Per KG,0,0|
+City,MIL- Guwahati Plant,Guwahati,16 Tonne Truck,${distance},${transporter_ref_id},${transporter_name},${transit_days},30000,per_trip,01-Jan-$year,31-Dec-2030,0,${mfactor},$detention_group,,0,0,Per KG,0,0|
+City,Guwahati,Cuttack,16 Tonne Truck,${distance},${transporter_ref_id},${transporter_name},${transit_days},30000,per_trip,01-Jan-$year,31-Dec-2030,0,${mfactor},$detention_group,,0,0,Per KG,0,0}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!***> Delivery Picklist API 
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"A$delivery_num","material_code":"mat035","depot_ref_id":"PN2C","pickup_reference_number":"PN2C","division":"DIV","quantity":10.00,"quantity_unit":"NOS","weight":7500.00,"weight_unit":"KG","volume":"500.00","volume_unit":"CFT","lr_number":"lr_number","ship_to":"D535","sold_to":"D535","line_item":"","type":"PRIMARY","category":"","category_priority":"","stn":"0","date":"$today","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":""},{"delivery_number":"B$delivery_num","material_code":"mat036","depot_ref_id":"PN2C","pickup_reference_number":"PN2E","division":"DIV","quantity":10.00,"quantity_unit":"NOS","weight":7500.00,"weight_unit":"KG","volume":"500.00","volume_unit":"CFT","lr_number":"lr_number","ship_to":"D535","sold_to":"D535","line_item":"","type":"PRIMARY","category":"","category_priority":"","stn":"0","date":"$today","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DeliveryPicklistAPI
+**!
+
+!***> Delete the Line item from Depot via API
+!|script|common                           |
+|$depot=|getTrim;|5fa370878afb3d004d7fbbee|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DiscardLineItemOptimaAPI
+**!
+
+!***> Validating Line Item in UI and Indenting D1 and D2
+!define depot {Guwahati Plant1}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimisingDeliveryPicklist
+**!
+
+!*** Validating that Indent created for Source Depot to Pitstop Depot
+!define depot_selection  {Guwahati Plant1}
+!define transporter_name {Loadshare}
+
+!|Script       |Ui                                                                                                   |
+|navigateToUrl;|${surl}/indents                                                                                      |
+|click;        |//button[@class='el-button el-button--default']|xpath                                                |
+|click;        |(//div[@class='slideleft_menu']//input)[1]     |xpath                                                |
+|sendKeys;     |(//div[@class='slideleft_menu']//input)[1]     |xpath                             |${depot_selection}|
+|click;        |//span[text()='${depot_selection}']            |xpath                                                |
+|wait;         |2                                                                                                    |
+|click;        |//button[text()='APPLY']                       |xpath                                                |
+|$order_id=    |getText;                                       |(//div[@class='order-row']/div)[1]|xpath             |
+
+!|script                  |common                                                        |
+|$order_id=               |replaceString;        |$order_id|$thisday                |    |
+|$src_to_pitstop_order_id=|replaceString;        |$order_id|\n                      |    |
+|check                    |checkIfStringExistsIn;|OM       |$src_to_pitstop_order_id|true|
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                   |
+|check                       |isElementPresent;                             |//span[contains(text(),'${transporter_name}')]                                                                                                                                                             |xpath|true|
+|click;                      |//span[contains(text(),'${transporter_name}')]|xpath                                                                                                                                                                                                                 |
+|waitForElementToBeDisplayed;|//div[contains(@class,'drawer-header')]       |xpath                                                                                                                                                                                                      |30        |
+|check                       |isElementPresent;                             |//div[text()='MARICO LTD,VAHO PLANT GUWAHATI- I']/../self::div/following-sibling::div//strong[text()='PN2C']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'MLTDG')]|xpath|true|
+|$tresult1=                  |isElementPresent;                             |//div[text()='MARICO LTD,VAHO PLANT GUWAHATI- I']/../self::div/following-sibling::div//strong[text()='PN2C']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'MLTDG')]|xpath     |
+|click;                      |//div[text()='PN2D']                          |xpath                                                                                                                                                                                                                 |
+|check                       |isElementPresent;                             |//div[text()='PN2D']/../self::div/following-sibling::div//strong[text()='PN2E']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'MLTDG')]                             |xpath|true|
+|$tresult2=                  |isElementPresent;                             |//div[text()='PN2D']/../self::div/following-sibling::div//strong[text()='PN2E']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'MLTDG')]                             |xpath     |
+|click;                      |//a[contains(@class,'close')]                 |xpath                                                                                                                                                                                                                 |
+
+!define route {MIL- Guwahati Plant - Guwahati, Guwahati}
+
+!|script                     |ui                                                                                                                                                                                               |
+|click;                      |//span[text()='Document']                                                       |xpath                                                                                                           |
+|waitForElementToBeDisplayed;|//div[@class='card-right']                                                      |xpath                                                                                                |20        |
+|check                       |isElementPresent;                                                               |(//span[contains(text(),'A')]/ancestor::tr[contains(@class,'row')])[1]//span[contains(text(),'PN2C')]|xpath|true|
+|$tresult3=                  |isElementPresent;                                                               |(//span[contains(text(),'A')]/ancestor::tr[contains(@class,'row')])[1]//span[contains(text(),'PN2C')]|xpath     |
+|check                       |isElementPresent;                                                               |(//span[contains(text(),'B')]/ancestor::tr[contains(@class,'row')])[1]//span[contains(text(),'PN2E')]|xpath|true|
+|$tresult4=                  |isElementPresent;                                                               |(//span[contains(text(),'B')]/ancestor::tr[contains(@class,'row')])[1]//span[contains(text(),'PN2E')]|xpath     |
+|mouseHover;                 |//div[contains(@class,'fixed-body')]//child::span[starts-with(text(),'B')]      |xpath                                                                                                           |
+|check                       |isElementPresent;                                                               |//div[@role='tooltip']//div[text()='B$delivery_num']                                                 |xpath|true|
+|$tresult6=                  |isElementPresent;                                                               |//div[@role='tooltip']//div[text()='B$delivery_num']                                                 |xpath     |
+|mouseClick;                 |//div[@class='card-left']                                                       |xpath                                                                                                           |
+|mouseHover;                 |//div[contains(@class,'fixed-body')]//child::span[starts-with(text(),'A')]      |xpath                                                                                                           |
+|check                       |isElementPresent;                                                               |//div[@role='tooltip']//div[text()='A$delivery_num']                                                 |xpath|true|
+|$tresult5=                  |isElementPresent;                                                               |//div[@role='tooltip']//div[text()='A$delivery_num']                                                 |xpath     |
+|navigateBack;                                                                                                                                                                                                                 |
+|mouseHover;                 |((//div[contains(@class,'order-item')])[1]//span[contains(@class,'tooltip')])[1]|xpath                                                                                                           |
+|check                       |isElementPresent;                                                               |//div[@role='tooltip']/div[text()='${route}']                                                        |xpath|true|
+*!
+
+!*** Validating that Indent created for Pitstop Depot to Destination Depot
+!define depot_selection  {Pitstop-Guwahati}
+
+!|Script       |Ui                                                                                                   |
+|navigateToUrl;|${surl}/indents                                                                                      |
+|click;        |//button[@class='el-button el-button--default']|xpath                                                |
+|click;        |(//div[@class='slideleft_menu']//input)[1]     |xpath                                                |
+|sendKeys;     |(//div[@class='slideleft_menu']//input)[1]     |xpath                             |${depot_selection}|
+|click;        |//span[text()='${depot_selection}']            |xpath                                                |
+|wait;         |2                                                                                                    |
+|click;        |//button[text()='APPLY']                       |xpath                                                |
+|$order_id=    |getText;                                       |(//div[@class='order-row']/div)[1]|xpath             |
+
+!|script                   |common                                                                         |
+|$order_id=                |replaceString;        |$order_id                |$thisday                 |    |
+|$pitstop_to_dest_order_id=|replaceString;        |$order_id                |\n                       |    |
+|check                     |checkIfStringExistsIn;|OM                       |$pitstop_to_dest_order_id|true|
+|$src_ref_id=              |getSubStringByString; |$src_to_pitstop_order_id |-                        |-   |
+|$src_order_id=            |replaceString;        |$src_to_pitstop_order_id |$src_ref_id              |    |
+|$pit_ref_id=              |getSubStringByString; |$pitstop_to_dest_order_id|-                        |-   |
+|$pitstop_order_id=        |replaceString;        |$pitstop_to_dest_order_id|$pit_ref_id              |    |
+|check                     |checkIfStringAreEqual;|$src_order_id            |$pitstop_order_id        |true|
+
+!|Script                     |Ui                                                                                                                                                                                                                                                |
+|check                       |isElementPresent;                             |//span[contains(text(),'${transporter_name}')]                                                                                                                                          |xpath|true|
+|click;                      |//span[contains(text(),'${transporter_name}')]|xpath                                                                                                                                                                                              |
+|waitForElementToBeDisplayed;|//div[contains(@class,'drawer-header')]       |xpath                                                                                                                                                                                   |30        |
+|check                       |isElementPresent;                             |//div[text()='Pitstop_Guw-G1']/../self::div/following-sibling::div//strong[text()='MLTDG']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D535')]|xpath|true|
+|$tresult7=                  |isElementPresent;                             |//div[text()='Pitstop_Guw-G1']/../self::div/following-sibling::div//strong[text()='MLTDG']//ancestor::div[contains(@class,'flex')]/following-sibling::div//span[contains(text(),'D535')]|xpath     |
+|click;                      |//a[contains(@class,'close')]                 |xpath                                                                                                                                                                                              |
+
+!define route {Guwahati - Cuttack}
+
+!|script                     |ui                                                                                                                                                                                          |
+|click;                      |//span[text()='Document']                                                 |xpath                                                                                                            |
+|waitForElementToBeDisplayed;|//div[@class='card-right']                                                |xpath                                                                                                 |30        |
+|check                       |isElementPresent;                                                         |(//span[contains(text(),'A')]/ancestor::tr[contains(@class,'row')])[1]//span[contains(text(),'MLTDG')]|xpath|true|
+|$tresult8=                  |isElementPresent;                                                         |(//span[contains(text(),'A')]/ancestor::tr[contains(@class,'row')])[1]//span[contains(text(),'MLTDG')]|xpath     |
+|check                       |isElementPresent;                                                         |(//span[contains(text(),'B')]/ancestor::tr[contains(@class,'row')])[1]//span[contains(text(),'MLTDG')]|xpath|true|
+|$tresult9=                  |isElementPresent;                                                         |(//span[contains(text(),'B')]/ancestor::tr[contains(@class,'row')])[1]//span[contains(text(),'MLTDG')]|xpath     |
+|mouseHover;                 |//div[contains(@class,'fixed-body')]//child::span[starts-with(text(),'B')]|xpath                                                                                                            |
+|check                       |isElementPresent;                                                         |//div[@role='tooltip']//div[text()='B$delivery_num']                                                  |xpath|true|
+|$tresult11=                 |isElementPresent;                                                         |//div[@role='tooltip']//div[text()='B$delivery_num']                                                  |xpath     |
+|mouseClick;                 |//div[@class='card-left']                                                 |xpath                                                                                                            |
+|mouseHover;                 |//div[contains(@class,'fixed-body')]//child::span[starts-with(text(),'A')]|xpath                                                                                                            |
+|check                       |isElementPresent;                                                         |//div[@role='tooltip']//div[text()='A$delivery_num']                                                  |xpath|true|
+|$tresult10=                 |isElementPresent;                                                         |//div[@role='tooltip']//div[text()='A$delivery_num']                                                  |xpath     |
+|navigateBack;                                                                                                                                                                                                            |
+|check                       |isElementPresent;                                                         |//span[normalize-space(text())='${route}']                                                            |xpath|true|
+*!
+
+!***> Validating the Modified picklist
+!|Script              |MongoDBQuery                                                                          |
+|getMongoConnection;  |${connection}                |db_pando_testing                                        |
+|$modified_picklist_1=|getModifiedPicklist;         |$src_to_pitstop_order_id |delivery_number|A$delivery_num|
+|check                |getValueFromModifiedPicklist;|type                     |PRIMARY                       |
+|check                |getValueFromModifiedPicklist;|vehicle_type             |16 Tonne Truck                |
+|check                |getValueFromModifiedPicklist;|indication               |CREATE                        |
+|check                |getValueFromModifiedPicklist;|transporter_code         |773248                        |
+|check                |getValueFromModifiedPicklist;|depot_code               |PN2C                          |
+|check                |getValueFromModifiedPicklist;|pickup_code              |PN2C                          |
+|check                |getValueFromModifiedPicklist;|sku                      |mat035                        |
+|check                |getValueFromModifiedPicklist;|quantity                 |10.00                         |
+|check                |getValueFromModifiedPicklist;|weight                   |7500.00                       |
+|check                |getValueFromModifiedPicklist;|volume                   |500.00                        |
+|check                |getValueFromModifiedPicklist;|category                 |X                             |
+|check                |getValueFromModifiedPicklist;|category_priority        |                              |
+|check                |getValueFromModifiedPicklist;|ship_to                  |MLTDG                         |
+|check                |getValueFromModifiedPicklist;|sold_to                  |MLTDG                         |
+|$modified_picklist_2=|getModifiedPicklist;         |$src_to_pitstop_order_id |delivery_number|B$delivery_num|
+|check                |getValueFromModifiedPicklist;|type                     |PRIMARY                       |
+|check                |getValueFromModifiedPicklist;|vehicle_type             |16 Tonne Truck                |
+|check                |getValueFromModifiedPicklist;|indication               |CREATE                        |
+|check                |getValueFromModifiedPicklist;|transporter_code         |773248                        |
+|check                |getValueFromModifiedPicklist;|depot_code               |PN2C                          |
+|check                |getValueFromModifiedPicklist;|pickup_code              |PN2E                          |
+|check                |getValueFromModifiedPicklist;|sku                      |mat036                        |
+|check                |getValueFromModifiedPicklist;|quantity                 |10.00                         |
+|check                |getValueFromModifiedPicklist;|weight                   |7500.00                       |
+|check                |getValueFromModifiedPicklist;|volume                   |500.00                        |
+|check                |getValueFromModifiedPicklist;|category                 |X                             |
+|check                |getValueFromModifiedPicklist;|category_priority        |                              |
+|check                |getValueFromModifiedPicklist;|ship_to                  |MLTDG                         |
+|check                |getValueFromModifiedPicklist;|sold_to                  |MLTDG                         |
+|$modified_picklist_1=|getModifiedPicklist;         |$pitstop_to_dest_order_id|delivery_number|A$delivery_num|
+|check                |getValueFromModifiedPicklist;|type                     |PRIMARY                       |
+|check                |getValueFromModifiedPicklist;|vehicle_type             |16 Tonne Truck                |
+|check                |getValueFromModifiedPicklist;|indication               |CREATE                        |
+|check                |getValueFromModifiedPicklist;|transporter_code         |773248                        |
+|check                |getValueFromModifiedPicklist;|depot_code               |MLTD                          |
+|check                |getValueFromModifiedPicklist;|pickup_code              |MLTDG                         |
+|check                |getValueFromModifiedPicklist;|sku                      |mat035                        |
+|check                |getValueFromModifiedPicklist;|quantity                 |10.00                         |
+|check                |getValueFromModifiedPicklist;|weight                   |7500.00                       |
+|check                |getValueFromModifiedPicklist;|volume                   |500.00                        |
+|check                |getValueFromModifiedPicklist;|category                 |X                             |
+|check                |getValueFromModifiedPicklist;|category_priority        |                              |
+|check                |getValueFromModifiedPicklist;|ship_to                  |D535                          |
+|check                |getValueFromModifiedPicklist;|sold_to                  |D535                          |
+|$modified_picklist_2=|getModifiedPicklist;         |$pitstop_to_dest_order_id|delivery_number|B$delivery_num|
+|check                |getValueFromModifiedPicklist;|type                     |PRIMARY                       |
+|check                |getValueFromModifiedPicklist;|vehicle_type             |16 Tonne Truck                |
+|check                |getValueFromModifiedPicklist;|indication               |CREATE                        |
+|check                |getValueFromModifiedPicklist;|transporter_code         |773248                        |
+|check                |getValueFromModifiedPicklist;|depot_code               |MLTD                          |
+|check                |getValueFromModifiedPicklist;|pickup_code              |MLTDG                         |
+|check                |getValueFromModifiedPicklist;|sku                      |mat036                        |
+|check                |getValueFromModifiedPicklist;|quantity                 |10.00                         |
+|check                |getValueFromModifiedPicklist;|weight                   |7500.00                       |
+|check                |getValueFromModifiedPicklist;|volume                   |500.00                        |
+|check                |getValueFromModifiedPicklist;|category                 |X                             |
+|check                |getValueFromModifiedPicklist;|category_priority        |                              |
+|check                |getValueFromModifiedPicklist;|ship_to                  |D535                          |
+|check                |getValueFromModifiedPicklist;|sold_to                  |D535                          |
+*!
+
+!**> Validating the Indent in transporter login
+!***> Transporter Login
+!define transporter_email {pandomaricoauto+load@gmail.com}
+!define transporter_password {171140}
+!define tusername {${transporter_email}}
+!define tpassword {${transporter_password}}
+!define filter_type {1}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!**> Checking for the Source depot
+!define search_text {Guwahati Plant1}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonTransporterIndentDepotFilter
+
+!define search_text {$src_to_pitstop_order_id}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.CommonTransporterIndentStatusVerify
+
+!|script|ui                                                                      |
+|click; |//div[contains(@class,'searchterm ')]//i[contains(@class,'close')]|xpath|
+
+!|script|common                                      |
+|check  |checkIfStringAreEqual;|$status|INDENTED|true|
+*!
+
+!**> Checking for the Pitstop depot
+!define search_text {Pitstop-Guwahati}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonTransporterIndentDepotFilter
+
+!define search_text {$pitstop_to_dest_order_id}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.CommonTransporterIndentStatusVerify
+
+!|script|ui                                                                      |
+|click; |//div[contains(@class,'searchterm ')]//i[contains(@class,'close')]|xpath|
+
+!|script|common                                      |
+|check  |checkIfStringAreEqual;|$status|INDENTED|true|
+*!
+
+!**> Checking for the Destination depot
+!define search_text {Cuttack Depot}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonTransporterIndentDepotFilter
+
+!define search_text {$pitstop_to_dest_order_id}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.CommonTransporterIndentStatusVerify
+
+!|script|ui                                                                      |
+|click; |//div[contains(@class,'searchterm ')]//i[contains(@class,'close')]|xpath|
+
+!|script|common                                      |
+|check  |checkIfStringAreEqual;|$status|INDENTED|true|
+*!
+*!
+
+!**> Payment generation for the Source to Pitstop indent
+!***> Adding Truck details
+!|script   |common                           |
+|$order_id=|getTrim;|$src_to_pitstop_order_id|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {1234567890}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!***> Material upload for all consignee
+!define mrp_price {1000}
+!define invoice_amount {2000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"A$delivery_num","mrp_price":"${mrp_price}","material_code":"mat035","depot_ref_id":"PN2C","gate_ref_id":"PN2C","division":"DIV","quantity":"10.00","quantity_unit":"NOS","weight":7500.00,"weight_unit":"KG","volume":"500.00","volume_unit":"CFT","ship_to":"MLTDG","sold_to":"MLTDG","type":"PRIMARY","invoice_number":"INV1-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate"},{"indent_no":"$order_id","delivery_number":"B$delivery_num","mrp_price":"${mrp_price}","material_code":"mat036","depot_ref_id":"PN2C","gate_ref_id":"PN2E","division":"DIV","quantity":10.00,"quantity_unit":"NOS","weight":7500.00,"weight_unit":"KG","volume":"500.00","volume_unit":"CFT","ship_to":"MLTDG","sold_to":"MLTDG","type":"PRIMARY","invoice_number":"INV2-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!***> EPOD Calculation
+!define no_of_shortage {0}
+!define no_of_shortage1 {0}
+!define no_of_shortage2 {0}
+!define no_of_leakage {0}
+!define no_of_leakage1 {0}
+!define no_of_leakage2 {0}
+!define mrp {${mrp_price}}
+!define no_of_excess {0}
+!define no_of_excess1 {0}
+!define no_of_excess2 {0}
+!define no_of_damage {0}
+!define no_of_damage1 {0}
+!define no_of_damage2 {0}
+!define no_of_carton_damage {0}
+!define no_of_carton_damage1 {0}
+!define no_of_carton_damage2 {0}
+!define release_date {$rdate}
+!define release_date1 {$rdate}
+!define release_date2 {$rdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"MLTDG","sold_to":"MLTDG","material_invoice_number":"INV1-$unique","material_code":"mat035","no_of_shortage":"${no_of_shortage1}","no_of_leakage":"${no_of_leakage1}","mrp":"${mrp}","no_of_excess":"${no_of_excess1}","no_of_damage":"${no_of_damage1}","no_of_carton_damage":"${no_of_carton_damage1}","release_date":"${release_date1}"},{"indent_number":"$order_id","ship_to":"MLTDG","sold_to":"MLTDG","material_invoice_number":"INV2-$unique","material_code":"mat036","no_of_shortage":"${no_of_shortage2}","no_of_leakage":"${no_of_leakage2}","mrp":"${mrp}","no_of_excess":"${no_of_excess2}","no_of_damage":"${no_of_damage2}","no_of_carton_damage":"${no_of_carton_damage2}","release_date":"${release_date2}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!***> Click to check physical LR available for source to pitstop indent
+!define depot_name {Guwahati Plant1}
+
+!*> Ready for billing page
+!|script                        |Ui                                                                                  |
+|navigateToUrl;                 |${turl}/v2/payments?depot=${depot_name}                                             |
+|refreshForElementToBeDisplayed;|(//div[contains(@class,'list-row') or contains(@class,'card-row row')])[1]|xpath|5|2|
+|waitForElementToBeDisplayed;   |//div[starts-with(@class,'card-row row')]                                 |xpath|30 |
+|click;                         |//span[normalize-space(text())='Filter']                                  |xpath    |
+|click;                         |//button[text()='APPLY']                                                  |xpath    |
+
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!define filter_by {Enter indent id}
+
+!|script                     |Ui                                                                                                                                                              |
+|click;                      |//div[contains(@class,'card-row row')]//span[normalize-space(text())='Update']                                                                 |xpath           |
+|sendKeys;                   |(//input[@class='el-upload__input'])[1]                                                                                                        |xpath|${lr_copy}|
+|click;                      |//div[@class='formfooter']//button//span[normalize-space(text())='Update']                                                                     |xpath           |
+|wait;                       |5                                                                                                                                                               |
+|click;                      |//div[@class='close-sidebar']                                                                                                                  |xpath           |
+|click;                      |//span[normalize-space(text())='Filter']                                                                                                       |xpath           |
+|click;                      |//button[text()='APPLY']                                                                                                                       |xpath           |
+|waitForElementToBeDisplayed;|//div[starts-with(@class,'card-row row')]                                                                                                      |xpath|30        |
+|click;                      |//span[normalize-space(text())='$src_to_pitstop_order_id']/ancestor::div[contains(@class,'card-row')]//span[contains(@class,'checkbox__input')]|xpath           |
+|click;                      |//button[text()='Create Invoice']                                                                                                              |xpath           |
+*!
+*!
+
+!***> Generate Invoice
+!define invoice_number {inv1$num}
+!define gstin_number {$unique}
+!define provider_state {Assam}
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceGeneration
+*!
+
+!***> Approving Invoice in Shipper
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceCheck
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceApprove
+*!
+*!
+
+!**> Payment generation for the Pitstop to destination indent
+!***> Adding Truck details
+!|script   |common                            |
+|$order_id=|getTrim;|$pitstop_to_dest_order_id|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {1234567890}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!***> Material upload for all consignee
+!define mrp_price {1000}
+!define invoice_amount {2000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"A$delivery_num","mrp_price":"${mrp_price}","material_code":"mat035","depot_ref_id":"MLTD","gate_ref_id":"MLTDG","division":"DIV","quantity":"10.00","quantity_unit":"NOS","weight":7500.00,"weight_unit":"KG","volume":"500.00","volume_unit":"CFT","ship_to":"D535","sold_to":"D535","type":"PRIMARY","invoice_number":"INV1-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate"},{"indent_no":"$order_id","delivery_number":"B$delivery_num","mrp_price":"${mrp_price}","material_code":"mat036","depot_ref_id":"MLTD","gate_ref_id":"MLTDG","division":"DIV","quantity":10.00,"quantity_unit":"NOS","weight":7500.00,"weight_unit":"KG","volume":"500.00","volume_unit":"CFT","ship_to":"D535","sold_to":"D535","type":"PRIMARY","invoice_number":"INV2-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!***> EPOD Calculation
+!define no_of_shortage {0}
+!define no_of_shortage1 {0}
+!define no_of_shortage2 {0}
+!define no_of_leakage {0}
+!define no_of_leakage1 {0}
+!define no_of_leakage2 {0}
+!define mrp {${mrp_price}}
+!define no_of_excess {0}
+!define no_of_excess1 {0}
+!define no_of_excess2 {0}
+!define no_of_damage {0}
+!define no_of_damage1 {0}
+!define no_of_damage2 {0}
+!define no_of_carton_damage {0}
+!define no_of_carton_damage1 {0}
+!define no_of_carton_damage2 {0}
+!define release_date {$rdate}
+!define release_date1 {$rdate}
+!define release_date2 {$rdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"D535","sold_to":"D535","material_invoice_number":"INV1-$unique","material_code":"mat035","no_of_shortage":"${no_of_shortage1}","no_of_leakage":"${no_of_leakage1}","mrp":"${mrp}","no_of_excess":"${no_of_excess1}","no_of_damage":"${no_of_damage1}","no_of_carton_damage":"${no_of_carton_damage1}","release_date":"${release_date1}"},{"indent_number":"$order_id","ship_to":"D535","sold_to":"D535","material_invoice_number":"INV2-$unique","material_code":"mat036","no_of_shortage":"${no_of_shortage2}","no_of_leakage":"${no_of_leakage2}","mrp":"${mrp}","no_of_excess":"${no_of_excess2}","no_of_damage":"${no_of_damage2}","no_of_carton_damage":"${no_of_carton_damage2}","release_date":"${release_date2}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!***> Click to check physical LR available for pitstop to destination indent
+!define depot_name {Pitstop-Guwahati}
+
+!*> Ready for billing page
+!|script                     |Ui                                                                          |
+|navigateToUrl;              |${turl}/v2/payments                                                         |
+|click;                      |//span[normalize-space(text())='Filter']                |xpath              |
+|click;                      |//label[text()='Depot']/../following-sibling::div//input|xpath              |
+|sendKeys;                   |//label[text()='Depot']/../following-sibling::div//input|xpath|${depot_name}|
+|click;                      |//span[text()='${depot_name}']                          |xpath              |
+|wait;                       |2                                                                           |
+|click;                      |//button[text()='APPLY']                                |xpath              |
+|wait;                       |2                                                                           |
+|waitForElementToBeDisplayed;|//div[starts-with(@class,'card-row row')]               |xpath|30           |
+
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!define filter_by {Enter indent id}
+
+!|script                     |Ui                                                                                                                                                               |
+|click;                      |//div[contains(@class,'card-row row')]//span[normalize-space(text())='Update']                                                                  |xpath           |
+|sendKeys;                   |(//input[@class='el-upload__input'])[1]                                                                                                         |xpath|${lr_copy}|
+|click;                      |//div[@class='formfooter']//button//span[normalize-space(text())='Update']                                                                      |xpath           |
+|wait;                       |5                                                                                                                                                                |
+|click;                      |//div[@class='close-sidebar']                                                                                                                   |xpath           |
+|click;                      |//span[normalize-space(text())='Filter']                                                                                                        |xpath           |
+|click;                      |//button[text()='APPLY']                                                                                                                        |xpath           |
+|waitForElementToBeDisplayed;|//div[starts-with(@class,'card-row row')]                                                                                                       |xpath|30        |
+|click;                      |//span[normalize-space(text())='$pitstop_to_dest_order_id']/ancestor::div[contains(@class,'card-row')]//span[contains(@class,'checkbox__input')]|xpath           |
+|click;                      |//button[text()='Create Invoice']                                                                                                               |xpath           |
+*!
+*!
+
+!***> Generate Invoice
+!define invoice_number {inv2$num}
+!define gstin_number {$unique}
+!define provider_state {Assam}
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceGeneration
+*!
+
+!***> Approving Invoice in Shipper
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceCheck
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceApprove
+*!
+*!
+
+!***> Validating test result
+!|Script  |Common                                                                                                                                            |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,$tresult11,true|
+**!
+
+!***> Retrieving the Job ID using API
+!|script|common                           |
+|$depot=|getTrim;|5f76f4c57e91f8004d578206|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.RetrieveOptimaJobIDAPI
+*!

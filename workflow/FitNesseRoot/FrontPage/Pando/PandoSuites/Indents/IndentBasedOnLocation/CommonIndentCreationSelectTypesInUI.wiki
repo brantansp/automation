@@ -1,0 +1,15 @@
+---
+Help: To select vehicle type, delivery type and transporter while creating indent in Ui
+---
+!|Script  |Ui                                                                                       |
+|click;   |//label[text()='Delivery Type']/following-sibling::div//input|xpath                      |
+|click;   |//span[text()='${delivery_type}']                            |xpath                      |
+|click;   |//label[text()='Vehicle type']/following-sibling::div//input |xpath                      |
+|sendKeys;|//label[text()='Vehicle type']/following-sibling::div//input |xpath|${vehicle_name}      |
+|click;   |//span[text()='${vehicle_name}']                             |xpath                      |
+|click;   |//label[text()='Transporter']/following-sibling::div//input  |xpath                      |
+|sendKeys;|//label[text()='Transporter']/following-sibling::div//input  |xpath|${transporter_ref_id}|
+|click;   |//span[contains(text(),'${transporter_ref_id}')]             |xpath                      |
+|wait;    |4                                                                                        |
+|click;   |//span[text()='Indent']                                      |xpath                      |
+|wait;    |3                                                                                        |

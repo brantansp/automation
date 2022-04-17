@@ -1,0 +1,6 @@
+---
+Test
+---
+!define surl {https://qa.pando.in}
+!define username {pandoqatest@gmail.com}
+!define password {pando123}

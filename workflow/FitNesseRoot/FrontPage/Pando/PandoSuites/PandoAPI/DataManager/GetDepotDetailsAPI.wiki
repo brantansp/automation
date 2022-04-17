@@ -1,0 +1,8 @@
+---
+Test
+---
+!|Script       |Http                                |
+|addHeader;    |Authorization |bearer $stoken       |
+|setBaseUrl;   |${surl}/api/depot/${depot_id}       |
+|$depotDetails=|getResponse;  |Application/Json|get||
+|check         |getStatusCode;|200                  |

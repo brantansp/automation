@@ -1,0 +1,24 @@
+---
+Help: Ensure the date filter gets cleared once click event happens on clear button
+Test
+---
+!** Filter setting 
+!|Script|Ui|
+|navigateToUrl;|${turl}/v2/payments|
+|click;|//button[@class='el-button el-button--default']|xpath|
+|click;|//div[@class='datepickerrange-cancel']|xpath|
+|wait;                       |2                                                                       |
+|click;|//button[text()='APPLY']|xpath|
+|click;|//button[@class='el-button el-button--default']|xpath|
+|$result=|getText;|//div[@id='datepicker-trigger']|xpath|
+**!
+
+
+!|Script|Common|
+|$tresult=|checkIfStringAreEqualIgnoreCase;|Start Date - End Date|$result|
+
+
+
+!define tname {TC-1223}
+ 
+

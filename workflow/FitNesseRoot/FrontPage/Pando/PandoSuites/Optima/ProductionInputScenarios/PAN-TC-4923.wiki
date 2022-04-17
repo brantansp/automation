@@ -1,0 +1,23 @@
+---
+Help: SCN16_Ensure consignee 473531 is not dropped in courier mode
+Test
+---
+!5 SCN16_Ensure consignee 473531 is not dropped in courier mode
+
+!| script      |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!| script      |CsvQuery                                                                                                                  |
+|getConnection;|$fileLocation|,                                                                                                           |
+|$nooforders=  |executeQuery;|SELECT COUNT(*) as nooforders FROM summary WHERE File LIKE 'scn16_%' AND Consignee = '473531:'   |nooforders|
+|$totalKg=     |executeQuery;|SELECT "Total Weight" as totalkg FROM summary WHERE File LIKE 'scn16_%' AND Consignee = '473531:'|totalkg   |
+|closeConnection;                                                                                                                         |
+
+!| script  |common                                                |
+|check     |comparisonResult;            |$nooforders|equal|1|true|
+|$tresult1=|comparisonResult;            |$nooforders|equal|1     |
+|check     |checkIfStringAreEqual;     |$totalKg   |36.0 |true  |
+|$tresult2=|checkIfStringAreEqual;     |$totalKg   |36.0        |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2     |
+
+ 

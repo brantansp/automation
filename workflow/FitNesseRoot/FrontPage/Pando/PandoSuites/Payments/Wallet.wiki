@@ -1,0 +1,7 @@
+---
+Help: All Wallet based test cases
+Suite
+Suites: oldpay2
+---
+!1 Test suite for wallet
+!contents -R2 -g -p -f -h

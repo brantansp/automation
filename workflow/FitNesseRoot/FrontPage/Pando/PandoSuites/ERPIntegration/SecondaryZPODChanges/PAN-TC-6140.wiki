@@ -1,0 +1,326 @@
+---
+Help: Secondary POD payload changes for Multi pickup with multi consignee
+Suites: oel3
+Test
+---
+!***> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script            |DateUtil                       |
+|$contractDate=     |dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate=      |dateCalculation;|yyyy/MM/dd |-5|
+|$loadingDate=      |dateCalculation;|yyyy/MM/dd |-4|
+|$loadingDateVerify=|dateCalculation;|yyyy/MM/dd |-4|
+|$truckoutdate=     |dateCalculation;|yyyy/MM/dd |-3|
+|$rdate=            |dateCalculation;|yyyy/MM/dd |0 |
+|$truck_out_date=   |dateCalculation;|yyyy/MM/dd |-3|
+|$expecteddate=     |dateCalculation;|yyyy/MM/dd |-2|
+
+!|Script       |Common                                         |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer -!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer -!|
+|$rdate=       |stringConcatenation;|$rdate       |!- $timer -!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=       |utcConversion;|$rdate       |
+
+!|Script        |DateUtil                                    |
+|$expected_date=|dateCalculation;|yyyy/MM/dd        |0       |
+|$expected_date=|utcConversion;  |$expected_date !- $timer -!|
+|$current_time= |dateCalculation;|HH:mm             |0       |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!***> Consignee Creation one
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1+$unique@gmail.com}
+!define region {South}
+!define site {1}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!***> Consignee Creation two
+!define consignee_name {c2$unique}
+!define consignee_ref_id {cr2$unique}
+!define address {A Nagar}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation1}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+2+$unique@gmail.com}
+!define region {South}
+!define site {1}
+!define group {$cGroup}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_2=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_2=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee2_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!***> Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationSignifyAPI
+*!
+
+!***> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!***> Gate Manager Creation
+!***> User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation one
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+
+!| Script       |common                 |
+|$gate_ref_id_1=|getTrim;|${gate_ref_id}|
+*!
+
+!***> Gate Creation two
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {RQ2$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_2=|getValueFromJSON;|$depotResp|data.id|
+
+!| Script       |common                 |
+|$gate_ref_id_2=|getTrim;|${gate_ref_id}|
+*!
+
+!***> Material Creation 1
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!***> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,$gate_ref_id_1,$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,1000,per_trip,01-Jan-$year,31-Dec-2030,100,1,|Point,$gate_ref_id_2,$consignee_id_ref_2,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,1000,per_trip,01-Jan-$year,31-Dec-2030,100,1,}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!***> Indent Creation
+!|Script|Common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|$data= |getTrim;|{"data":{"order_type":0,"transporter_id":"$transporter_id","vehicle_type_id":"$vehicle_id","sources":[{"type":1,"location_id":"$depot","gate_id":"$gate_id_1","vehicle_requirement_date":"$loadingDate","loader_available":false,"add_to_invoice":false},{"type":1,"location_id":"$depot","gate_id":"$gate_id_2","vehicle_requirement_date":"$loadingDate","loader_available":false,"add_to_invoice":false}],"destinations":[{"type":2,"location_id":"$consignee_id_1","source_location_id":"$depot","source_gate_id":"$gate_id_1","sold_to_id":"$consignee_id_1","unloader_available":false,"add_to_invoice":false},{"type":2,"location_id":"$consignee_id_2","source_location_id":"$depot","source_gate_id":"$gate_id_2","sold_to_id":"$consignee_id_2","unloader_available":false,"add_to_invoice":false}],"no_of_vehicles":1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+*!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!***> Update LR for Consignee 1
+!define consignee_id {$consignee_id_1}
+!define lr_number {l1$unique}
+
+!|script|common                                                                                                                                       |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","source_location_id":"$depot","lr_number":"${lr_number}","source_gate_id":"$gate_id"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateDynamicAPI
+**!
+
+!***> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {cases}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {PRIMARY}
+!define invoice_amount {9000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"R$unique","gate_ref_id":"$gate_ref_id_1","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","type":"${type}","invoice_number":"INV-1$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":"000001"},{"indent_no":"$order_id","delivery_number":"D2$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"R$unique","gate_ref_id":"$gate_ref_id_2","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"$consignee_id_ref_2","sold_to":"$consignee_id_ref_2","type":"${type}","invoice_number":"INV-2$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":"000001"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!***> Marking Indent as delivered
+!define consignee_id {$consignee_id_1}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                                                                                                                   |
+|$data= |getTrim;|{"data":[{"destination_id":"$consignee_id_1","reported_at":"${arrived_at}","release_at":"${dispatched_at}"},{"destination_id":"$consignee_id_2","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+*!
+
+!***> ERP Upload for Consignee 1
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"$consignee_id_ref_1","sold_to":"$consignee_id_ref_1","material_invoice_number":"INV-1$unique","material_code":"mc$unique","no_of_shortage":"1","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"2","no_of_carton_damage":"3","release_date":"$rdate"},{"indent_number":"$order_id","ship_to":"$consignee_id_ref_2","sold_to":"$consignee_id_ref_2","material_invoice_number":"INV-2$unique","material_code":"mc$unique","no_of_shortage":"2","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"3","no_of_carton_damage":"1","release_date":"$rdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+
+!** Validating the delivery picklist
+!|Script              |MongoDBQuery                                                                                                                 |
+|getMongoConnection;  |${connection}                          |db_pando_testing                                                                     |
+|$erp_invoice_details=|getPodToSapPayload;                    |$order_id                                                                            |
+|check                |getValuesFromPodToSapPayload;          |transporter_code   |tr$unique                                                        |
+|check                |getValuesFromPodToSapPayload;          |transporter_name   |t$unique                                                         |
+|check                |getValuesFromPodToSapPayload;          |movement_type      |1                                                                |
+|check                |getValuesFromPodToSapPayload;          |vehicle_type       |FTL                                                              |
+|check                |getValuesFromPodToSapPayload;          |vehicle_name       |${truck_no}                                                      |
+|check                |getValuesFromPodToSapPayload;          |vehicle_description|v$unique                                                         |
+|check                |getPickupDetailsFromPodToSapPayload;   |RQ1$unique         |truck_in_date |$truck_out_date                                   |
+|check                |getPickupDetailsFromPodToSapPayload;   |RQ1$unique         |truck_in_time |$current_time                                     |
+|check                |getPickupDetailsFromPodToSapPayload;   |RQ1$unique         |truck_out_date|$truck_out_date                                   |
+|check                |getPickupDetailsFromPodToSapPayload;   |RQ1$unique         |truck_out_time|$current_time                                     |
+|check                |getConsigneeDetailsFromPodToSapPayload;|RQ1$unique         |cr1$unique    |sold_to      |cr1$unique                          |
+|check                |getConsigneeDetailsFromPodToSapPayload;|RQ1$unique         |cr1$unique    |expected_date|$expecteddate !-$current_time-!     |
+|check                |getConsigneeDetailsFromPodToSapPayload;|RQ1$unique         |cr1$unique    |reach_date   |$loadingDateVerify                  |
+|check                |getConsigneeDetailsFromPodToSapPayload;|RQ1$unique         |cr1$unique    |reach_time   |00:00                               |
+|check                |getConsigneeDetailsFromPodToSapPayload;|RQ1$unique         |cr1$unique    |release_date |$loadingDateVerify                  |
+|check                |getConsigneeDetailsFromPodToSapPayload;|RQ1$unique         |cr1$unique    |release_time |00:00                               |
+|check                |getConsigneeDetailsFromPodToSapPayload;|RQ1$unique         |cr1$unique    |lr_uploaded  |No                                  |
+|check                |getMaterialDetailsFromPodToSapPayload; |RQ1$unique         |cr1$unique    |D1$unique    |material_code          |mc$unique   |
+|check                |getMaterialDetailsFromPodToSapPayload; |RQ1$unique         |cr1$unique    |D1$unique    |material_invoice_number|INV-1$unique|
+|check                |getMaterialDetailsFromPodToSapPayload; |RQ1$unique         |cr1$unique    |D1$unique    |no_of_shortage         |            |
+|check                |getMaterialDetailsFromPodToSapPayload; |RQ1$unique         |cr1$unique    |D1$unique    |no_of_leakage          |            |
+|check                |getMaterialDetailsFromPodToSapPayload; |RQ1$unique         |cr1$unique    |D1$unique    |no_of_excess           |            |
+|check                |getMaterialDetailsFromPodToSapPayload; |RQ1$unique         |cr1$unique    |D1$unique    |no_of_damage           |            |
+|check                |getMaterialDetailsFromPodToSapPayload; |RQ1$unique         |cr1$unique    |D1$unique    |no_of_carton_damage    |            |
+|$lr_number_1=        |getMaterialDetailsFromPodToSapPayload; |RQ1$unique         |cr1$unique    |D1$unique    |lr_number                           |
+|check                |getPickupDetailsFromPodToSapPayload;   |RQ2$unique         |truck_in_date |$truck_out_date                                   |
+|check                |getPickupDetailsFromPodToSapPayload;   |RQ2$unique         |truck_in_time |$current_time                                     |
+|check                |getPickupDetailsFromPodToSapPayload;   |RQ2$unique         |truck_out_date|$truck_out_date                                   |
+|check                |getPickupDetailsFromPodToSapPayload;   |RQ2$unique         |truck_out_time|$current_time                                     |
+|check                |getConsigneeDetailsFromPodToSapPayload;|RQ2$unique         |cr2$unique    |sold_to      |cr2$unique                          |
+|check                |getConsigneeDetailsFromPodToSapPayload;|RQ2$unique         |cr2$unique    |expected_date|$expecteddate !-$current_time-!     |
+|check                |getConsigneeDetailsFromPodToSapPayload;|RQ2$unique         |cr2$unique    |reach_date   |$loadingDateVerify                  |
+|check                |getConsigneeDetailsFromPodToSapPayload;|RQ2$unique         |cr2$unique    |reach_time   |00:00                               |
+|check                |getConsigneeDetailsFromPodToSapPayload;|RQ2$unique         |cr2$unique    |release_date |$loadingDateVerify                  |
+|check                |getConsigneeDetailsFromPodToSapPayload;|RQ2$unique         |cr2$unique    |release_time |00:00                               |
+|check                |getConsigneeDetailsFromPodToSapPayload;|RQ2$unique         |cr2$unique    |lr_uploaded  |No                                  |
+|check                |getMaterialDetailsFromPodToSapPayload; |RQ2$unique         |cr2$unique    |D2$unique    |material_code          |mc$unique   |
+|check                |getMaterialDetailsFromPodToSapPayload; |RQ2$unique         |cr2$unique    |D2$unique    |material_invoice_number|INV-2$unique|
+|check                |getMaterialDetailsFromPodToSapPayload; |RQ2$unique         |cr2$unique    |D2$unique    |no_of_shortage         |            |
+|check                |getMaterialDetailsFromPodToSapPayload; |RQ2$unique         |cr2$unique    |D2$unique    |no_of_leakage          |            |
+|check                |getMaterialDetailsFromPodToSapPayload; |RQ2$unique         |cr2$unique    |D2$unique    |no_of_excess           |            |
+|check                |getMaterialDetailsFromPodToSapPayload; |RQ2$unique         |cr2$unique    |D2$unique    |no_of_damage           |            |
+|check                |getMaterialDetailsFromPodToSapPayload; |RQ2$unique         |cr2$unique    |D2$unique    |no_of_carton_damage    |            |
+|$lr_number_2=        |getMaterialDetailsFromPodToSapPayload; |RQ2$unique         |cr2$unique    |D2$unique    |lr_number                           |
+
+!|script   |common                                            |
+|$tresult1=|checkIfStringExistsIn;|tr$unique/OEL/|$lr_number_1|
+|$tresult2=|checkIfStringExistsIn;|tr$unique/OEL/|$lr_number_2|
+|$tresult= |checkIfStringAreEqual;|$tresult1     |$tresult2   |
+*!

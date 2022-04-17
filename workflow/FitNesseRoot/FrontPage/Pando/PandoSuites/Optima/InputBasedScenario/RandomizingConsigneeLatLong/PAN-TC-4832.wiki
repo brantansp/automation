@@ -1,0 +1,116 @@
+---
+Help: Ensure that randomization of lat long is not applicable for FDP mode
+Test
+---
+!5 PD-3954 : Ensure that randomization of lat long is not applicable for FDP mode
+
+!5 Expected : Thress consignees should be combine in a single order since it will be considered as single drop
+
+!***> Unique values assignment
+!|Script          |Common                                       |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$currDate=       |getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique  |0   |4    |
+|$detention_group=|getRandomString;        |4        |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000   |999999    |
+|$today=          |getSubString;           |$currDate|0   |10   |
+|$pincode1=       |getRandomNumber;        |111001   |999999    |
+|$pincode2=       |getRandomNumber;        |111001   |999999    |
+|$vno_1=          |getRandomNumber;        |20       |76        |
+|$vno_2=          |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=          |getRandomNumber;        |1000     |9999      |
+
+!|Script  |DateUtil                      |
+|$today=  |dateCalculation;|yyyy-MM-dd |0|
+|$rdate=  |dateCalculation;|yyyy/MM/dd |0|
+|$thisday=|dateCalculation;|dd MMM yyyy|0|
+
+!| Script     |Common                                      |
+|$rdate=      |stringConcatenation;   |$rdate|!- 10:00:00-!|
+|$loadingDate=|getCurrentDateTimeStamp|iso                 |
+*!
+
+!** Depot Optima Setting
+!define depo {Faridabad Cluster}
+!define max_split {3}
+!define split_factor {1}
+!define ftl_certify {false}
+!define algorithm {3}
+!define distance_deviation {500}
+!define degree_of_deviation {45}
+!define optima_type {1}
+!define weight {1}
+!define volume {1}
+!define mode {0}
+!define max_pickup {2}
+!define fitment {0}
+!define max_dropoff {2}
+!define optima_for_ptl {false}
+!define ptl_club_gates {false}
+!define limited_truck_count {false}
+!define hybrid_split {false}
+!define depot_id {5fe1b88b1093a20051ea0fe1}
+!define movement {1}
+!define movement_type {Secondary}
+!define material_category {"GT","MT"}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split": ${max_split},"split_factor": ${split_factor},"ftl_certify": ${ftl_certify},"algorithm": ${algorithm},"distance_deviation":"${distance_deviation}","degree_of_deviation":${degree_of_deviation},"optima_type":${optima_type},"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":${weight},"volume":${volume}},"material_categories":[${material_category}],"mode":${mode},"max_pickup_points":${max_pickup},"fitment":${fitment},"max_drop_points":${max_dropoff},"drop_off_rule":[],"optima_for_ptl":${optima_for_ptl},"ptl_club_gates":${ptl_club_gates},"limited_truck_count":${limited_truck_count},"hybrid_split": ${hybrid_split}},"depot_ids":["${depot_id}"],"movement":${movement}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!** Material Creation one
+!define material_name {m1$unique}
+!define material_code {mc1$unique}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+*!
+
+!** Uploading Rate Matrix
+!define erp_gate_id_api_1 {rq1$unique}
+!define transit_days {1}
+!define ratec {1000}
+!define rtrip {per_trip}
+!define mrate {10000}
+!define mfactor {1}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Pincode,121004,143115,TR32A,${transit_days},940148,MILAN TRANSPORT COMPANY,${transit_days},55,per_case,01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|Pincode,121004,152021,TR32A,${transit_days},940148,MILAN TRANSPORT COMPANY,${transit_days},55,per_case,01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|Pincode,121006,143115,TR32A,${transit_days},940148,MILAN TRANSPORT COMPANY,${transit_days},55,per_case,01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|Pincode,121006,152021,TR32A,${transit_days},940148,MILAN TRANSPORT COMPANY,${transit_days},55,per_case,01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0}
+
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!** Delivery Picklist API 
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"D1$num","material_code":"mc1$unique","pickup_reference_number":"1010","division":"","quantity":120,"quantity_unit":"NOS","weight":1500,"weight_unit":"KG","volume":"200","volume_unit":"CFT","lr_number":"","ship_to":"1020","sold_to":"1020","line_item":"122120","type":"${movement_type}","category":"","stn":"","date":"$today"},{"delivery_number":"D2$num","material_code":"mc1$unique","pickup_reference_number":"1010","division":"","quantity":50,"quantity_unit":"NOS","weight":1500,"weight_unit":"KG","volume":"200","volume_unit":"CFT","lr_number":"","ship_to":"1020","sold_to":"1020","line_item":"122120","type":"${movement_type}","category":"","stn":"","date":"$today"},{"delivery_number":"D3$num","material_code":"mc1$unique","pickup_reference_number":"1010","division":"","quantity":50,"quantity_unit":"NOS","weight":3000,"weight_unit":"KG","volume":"200","volume_unit":"CFT","lr_number":"","ship_to":"1021","sold_to":"1021","line_item":"122120","type":"${movement_type}","category":"","stn":"","date":"$today"},{"delivery_number":"D4$num","material_code":"mc1$unique","pickup_reference_number":"1010","division":"","quantity":50,"quantity_unit":"NOS","weight":900,"weight_unit":"KG","volume":"200","volume_unit":"CFT","lr_number":"","ship_to":"1022","sold_to":"1022","line_item":"122120","type":"${movement_type}","category":"","stn":"","date":"$today"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DeliveryPicklistAPI
+**!
+
+!** Delete the Line item from Depot via API
+!|script|Common              |
+|$depot=|getTrim;|${depot_id}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DiscardLineItemOptimaAPI
+**!
+
+!*** Validating Line Item in UI
+!define depot {Faridabad Cluster}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimisingDeliveryPicklist
+
+!|Script   |Ui                                                                                                              |
+|check     |getCountOfElements;|//div[@class='card-row card-row-show']                                              |xpath|1|
+|$tresult1=|isElementPresent;  |(//div[contains(@class,'row-show')])[1]//child::span[normalize-space(text())='1022']|xpath  |
+|$tresult2=|isElementPresent;  |(//div[contains(@class,'row-show')])[1]//child::span[normalize-space(text())='1021']|xpath  |
+|$tresult3=|isElementPresent;  |(//div[contains(@class,'row-show')])[1]//child::span[normalize-space(text())='1020']|xpath  |
+
+!|Script  |Common                                                          |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,true|
+|check    |checkIfStringAreEqual;       |$tresult      |true     |true     |
+**!
+
+!** Retrieving the Job ID using API
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.RetrieveOptimaJobIDAPI
+*!

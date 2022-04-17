@@ -1,0 +1,11 @@
+---
+Help: Contains common script for contract tsd matrix upload
+---
+!|Script                |Excel                      |
+|newSheetDynamicColumns;|${row}|${column}|$excelpath|
+
+!|Script                   |Ui                                                       |
+|navigateToUrl;            |${surl}/mdm/contract-tsd-matrix                          |
+|click;                    |//button[contains(text(),'UPLOAD')]     |xpath           |
+|sendKeys;                 |//input[@id='file']                     |xpath|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch']|xpath|60        |

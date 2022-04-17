@@ -1,0 +1,108 @@
+---
+Help: Single Gate - Multi Consignee - Open - FTL - Primary
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Consignee Creation one
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Egmore}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Consignee Creation two
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Egmore}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {1}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+**!
+
+
+!** Creating Indent
+!define consignee_name {c$unique}
+!define consignee_name_1 {c1$unique}
+
+!|Script                     |Ui                                                                                                                                           |
+|navigateToUrl;              |${surl}/indents                                                                                                                              |
+|click;                      |//button[contains(text(),'Add')]                                                                                   |xpath                    |
+|click;                      |//div[@class='primarycolor categoryselect']                                                                        |xpath                    |
+|click;                      |//span[text()='OPEN']                                                                                              |xpath                    |
+|click;                      |//li/div[contains(text(),'DEPOT')]/following-sibling::div//input                                                   |xpath                    |
+|click;                      |//span[text()='Nellore Depot']                                                                                     |xpath                    |
+|click;                      |//ul/li[contains(text(),' Consignee')]                                                                             |xpath                    |
+|click;                      |//a[contains(text(),'Primary')]                                                                                    |xpath                    |
+|sendKeys;                   |//input[@placeholder='Search by Consignee details']                                                                |xpath|${consignee_name}  |
+|waitForElementToBeDisplayed;|//span[contains(text(),'${consignee_name}')]                                                                       |xpath|300                |
+|click;                      |//input[@type='checkbox']                                                                                          |xpath                    |
+|click;                      |.btn.primary-button                                                                                                |cssselector              |
+|wait;                       |10                                                                                                                                           |
+|click;                      |//ul/li[contains(text(),' Consignee')]                                                                             |xpath                    |
+|click;                      |//a[contains(text(),'Primary')]                                                                                    |xpath                    |
+|sendKeys;                   |//input[@placeholder='Search by Consignee details']                                                                |xpath|${consignee_name_1}|
+|waitForElementToBeDisplayed;|//span[contains(text(),'${consignee_name_1}')]                                                                     |xpath|300                |
+|click;                      |//span[contains(text(),'${consignee_name_1}')]/ancestor::div[@class='table']//div[@class='checkbox-section']//input|xpath                    |
+|click;                      |.btn.primary-button                                                                                                |cssselector              |
+|click;                      |//li/div[contains(text(),'DELIVERY TYPE')]/following-sibling::div//input                                           |xpath                    |
+|click;                      |//span[text()='FTL']                                                                                               |xpath                    |
+|click;                      |//li/div[contains(text(),'VEHICLE TYPE')]/following-sibling::div//input                                            |xpath                    |
+|click;                      |//span[text()='300 CFT']                                                                                           |xpath                    |
+|click;                      |//li/div[contains(text(),'TRANSPORTER')]/following-sibling::div//input                                             |xpath                    |
+|sendKeys;                   |//li/div[contains(text(),'TRANSPORTER')]/following-sibling::div//input                                             |xpath|${transporter_name}|
+|click;                      |//span[contains(text(),'${transporter_name}')]                                                                     |xpath                    |
+|click;                      |//button[contains(text(),'Indent')]                                                                                |xpath                    |
+**!
+
+!** Switching to Other Depo
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Indents.IndentCreationPrimary.SwitchDepoPrimary
+
+**!
+
+!** Validating Order number
+!include -c .FrontPage.Pando.PandoSuites.Indents.OrderNoValidation
+**!
+
+!** Indent Assertion
+!|Script    |Ui                                                                                                                                                                              |
+|mouseHover;|(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                                                      |
+|check      |isElementPresent;                                                   |//div[@role='tooltip' and contains(@style,'absolute')]/child::div[contains(text(),'-r$unique-')]|xpath|true|
+|$tresult = |isElementPresent;                                                   |//div[@role='tooltip' and contains(@style,'absolute')]/child::div[contains(text(),'-r$unique-')]|xpath     |
+*!

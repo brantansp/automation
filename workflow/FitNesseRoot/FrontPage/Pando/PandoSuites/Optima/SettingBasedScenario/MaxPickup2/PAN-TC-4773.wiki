@@ -1,0 +1,62 @@
+---
+Help: Maximum pickup 2
+Test
+---
+!** Depot Optima setting
+!define depo {Chennai Depot}
+!define movement_type {Secondary}
+
+!define split_factor {5}
+!define max_split {2}
+!define algorithm_mode {Default}
+!define angle {30}
+!define optima_type {2D}
+!define mode {0}
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.RouteSettingCS
+
+!define max_pick_up {2}
+!define max_drop_off {5}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.RouteSetting
+
+!define option {(//span[@class='el-radio__inner'])[1]}
+!define weight {1}
+!define volume {1}
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.VehicalsSetting
+*!
+
+!** Uploading the Material and Optimizing
+#!define surl {https://optima-auto.pandostaging.in}
+!define depo {Chennai Depot}
+!define items {2}
+!define mcount {4}
+!define mcount1 {4}
+!define movement_type {Secondary}
+
+!|Script    |Common                                              |
+|$excelpath=|getPath;|optimaAttachment/max_pickup_2.xlsx|fullpath|
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.CommonOptimaRun
+*!
+
+!** Validating the Line item
+#|check|getText;|//span[@class='cfamount']|xpath|${items}|
+!|Script   |Ui                                                                                                                                                                                              |
+|check     |getCountOfElements;|//span[contains(text(),'IN01')]                                                                                                                                  |xpath|1   |
+|check     |getCountOfElements;|//span[contains(text(),'IN02')]                                                                                                                                  |xpath|1   |
+|check     |getCountOfElements;|//span[contains(text(),'IN03')]                                                                                                                                  |xpath|1   |
+|check     |getCountOfElements;|//span[contains(text(),'Consignee 3')]                                                                                                                           |xpath|3   |
+|check     |isElementPresent;  |(//span[contains(text(),'Consignee 3')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[5]//span[contains(text(),'Z009')] |xpath|true|
+|$tresult1=|isElementPresent;  |(//span[contains(text(),'Consignee 3')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[5]//span[contains(text(),'Z009')] |xpath     |
+|check     |isElementPresent;  |(//span[contains(text(),'Consignee 3')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[11]//span[contains(text(),'Z009')]|xpath|true|
+|$tresult2=|isElementPresent;  |(//span[contains(text(),'Consignee 3')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[11]//span[contains(text(),'Z009')]|xpath     |
+*!
+
+!** Validating result
+!|Script  |Common                                           |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2|
+*!
+
+!** Retrieving the Job ID
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.CommonTenantId
+*!

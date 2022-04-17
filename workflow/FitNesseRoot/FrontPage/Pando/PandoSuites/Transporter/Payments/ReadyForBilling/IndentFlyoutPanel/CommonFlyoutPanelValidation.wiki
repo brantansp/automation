@@ -1,0 +1,5 @@
+!|Script                     |Ui                                                                                                                                        |
+|waitForElementToBeDisplayed;|//div[@class='payments']                                     |xpath                                                                 |30   |
+|click;                      |//div[@class='el-table__fixed']//div[contains(@class,'location')]      |xpath                                                                       |
+|click;                      |//div[@id='tab-Details' or normalize-space(text())='Details']|xpath                                                                       |
+|$data=                      |getText();                                                   |//*[normalize-space(text())='Calculations']/following-sibling::div/div|xpath|

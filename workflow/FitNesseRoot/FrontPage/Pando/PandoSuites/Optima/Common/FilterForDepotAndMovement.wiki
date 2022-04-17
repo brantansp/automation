@@ -1,0 +1,22 @@
+---
+Help: Contains script to filter the depot and movement
+---
+!5 depot = depot name
+!5 movement = Primary, Secondary, Vendor, or Return
+
+!|Script                     |Ui                                                                                                               |
+|wait;                       |10                                                                                                               |
+|navigateToUrl;              |${surl}/optima                                                                                                   |
+|waitForElementToBeDisplayed;|//div[contains(@class,'empty-stage-message') or starts-with(@class,'order-item row')]             |xpath|20      |
+|wait;                       |2                                                                                                                |
+|click;                      |(//div[@class='cardfilter-grid']//i[@class='el-select__caret el-input__icon el-icon-arrow-up'])[1]|xpath         |
+|wait;                       |1                                                                                                                |
+|sendKeys;                   |(//div[@class='cardfilter-grid']//input[@class='el-input__inner'])[1]                             |xpath|${depot}|
+|wait;                       |1                                                                                                                |
+|click;                      |//span[text()='${depot}']                                                                         |xpath         |
+|wait;                       |1                                                                                                                |
+|click;                      |(//div[@class='cardfilter-grid']//i[@class='el-select__caret el-input__icon el-icon-arrow-up'])[2]|xpath         |
+|wait;                       |1                                                                                                                |
+|click;                      |//span[text()='${movement}']                                                                      |xpath         |
+|wait;                       |2                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'empty-stage-message') or starts-with(@class,'order-item row')]             |xpath|20      |

@@ -1,0 +1,14 @@
+---
+Help: DetentionValidationFor0Days
+---
+!|Script                     |Ui                                                                                                                                                       |
+|waitForElementToBeDisplayed;|//div[@class='el-table__header-wrapper']|xpath                                                                                                |60        |
+|check                       |isElementPresent;                       |(//tr[starts-with(@class,'el-table__row')]/td)[6]                                                                 |xpath|true|
+|$tresult1=                  |isElementPresent;                       |(//tr[starts-with(@class,'el-table__row')]/td)[6]                                                                 |xpath     |
+|click;                      |(//tr[starts-with(@class,'el-table__row')]/td)[6]    |xpath                                                                                                           |
+|check                       |isElementNotPresent;                    |//div[@class='focus-contain active']/div[@class='focus-contain-div']//div[@class='primary-text bold']|xpath|true|
+|$result1=                   |isElementNotPresent;                    |//div[@class='focus-contain active']/div[@class='focus-contain-div']//div[@class='primary-text bold']|xpath     |
+
+!|Script   |Common                                              |
+|$tresult2=|checkIfStringAreEqualIgnoreCase;|$result1   |true   |
+|$tresult= |checkIfStringAreEqualInArray;   |$tresult1,$tresult2|

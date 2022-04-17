@@ -1,0 +1,25 @@
+---
+Help: Contains steps to verify payment details and Click Next in the Invoice module of payment
+Test
+---
+!** Verifying Payments details and Clicking Next to proceed
+!| Script    |Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|setBaseUrl; |${turl}/api/login                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}                                                                                                                                                                                                                                                                                                                                                                                                             |
+|$token=     |getHeader;      |x-auth-token                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|addHeader;  |Authorization   |bearer $token                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|setBaseUrl; |${turl}/api/payment                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$response=  |getResponse;    |Application/Json|put|{"data":[{"id":"$payment_id","charges":[{"consignee_id":"$consignee_id","contract_charge":${contract_charge},"lr_charge":0,"oda_charges":0,"unloading_charge":0,"loading_charge":0,"extra_charges":0,"additional_point_charges":0,"arrival_charge":0,"loading_detention_charge":0,"leakage_charge":0,"shortage_charge":0,"damage_charge":0,"carton_damage_charge":0,"unloading_detention_charge":0,"transit_charge":0,"wallet_penalty_charge":0}],"filter_type":1}]}|
+|$status=    |getStatusCode;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+*!
+
+!** Retrieving wallet details
+!| Script    |Http                                                                                         |
+|setBaseUrl; |${turl}/api/login                                                                            |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}|
+|$status=    |getStatusCode;                                                                               |
+|$token=     |getHeader;      |x-auth-token                                                                |
+|addHeader;  |Authorization   |bearer $token                                                               |
+|setBaseUrl; |${turl}/api/wallet/${depot_id}?indentIds[]=$indent_id                                        |
+|$response=  |getResponse;    |Application/Json|get                            |                           |
+*!

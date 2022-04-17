@@ -1,0 +1,13 @@
+---
+Test
+---
+!|Script      |Http                                                                                         |
+|wait;        |5                                                                                            |
+|setBaseUrl;  |${turl}/api/login                                                                            |
+|getResponse; |Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}|
+|$token=      |getHeader;      |x-auth-token                                                                |
+|addHeader;   |Authorization   |bearer $token                                                               |
+|setBaseUrl;  |${turl}/api/order/$order_id/consignee/$consignee_id/grn                                      |
+|$grnresponse=|getResponse;    |Application/Json|put                         |$data                         |
+|$status=     |getStatusCode;                                                                               |
+|wait;        |2                                                                                            |

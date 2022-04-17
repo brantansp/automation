@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://siemens-auto.pandostaging.in}
+!define username {pandosiemensauto@gmail.com}
+!define password {test@123}
+!define shipper_client_id {609bc3847900150363058fce}

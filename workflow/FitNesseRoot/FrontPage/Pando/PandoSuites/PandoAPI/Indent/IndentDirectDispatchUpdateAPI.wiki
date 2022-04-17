@@ -1,0 +1,9 @@
+---
+Help: To update status of the direct dispatched indent for PG
+Test
+---
+!|Script    |Http                                      |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/erp/direct_dispatch/update    |
+|$response= |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|204                        |

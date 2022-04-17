@@ -1,0 +1,10 @@
+!* Selecting Types 
+!|Script  |Ui                                                                                 |
+|click;   |//label[text()='Delivery Type']/following-sibling::div//input|xpath                |
+|click;   |//span[text()='${delivery_type}']                            |xpath                |
+|click;   |//label[text()='Vehicle type']/following-sibling::div//input |xpath                |
+|sendKeys;|//label[text()='Vehicle type']/following-sibling::div//input |xpath|${vehicle_name}|
+|click;   |//span[text()='${vehicle_name}']                             |xpath                |
+|click;   |//span[text()='Indent']                                      |xpath                |
+|wait;    |2                                                                                  |
+*!

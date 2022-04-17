@@ -1,0 +1,5 @@
+---
+Help: Used to select the Transportation mode
+---
+!|Script|Ui                                                                |
+|click; |(//h5[normalize-space(text())='Select Mode']/..//i)[${mode}]|xpath|

@@ -1,0 +1,4 @@
+!|Script|Ui                                                                 |
+|click; |//label[text()='Delivery Type']/following-sibling::div//input|xpath|
+|click; |//span[text()='${delivery_type}']                            |xpath|
+|click; |//span[text()='Indent']                                      |xpath|

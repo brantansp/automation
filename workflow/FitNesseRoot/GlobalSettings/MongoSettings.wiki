@@ -1,0 +1,5 @@
+!** Mongo DB Connection
+!define database {db_pando_staging}
+!define connection {mongodb+srv://staging-admin:VpbUDlaBkv4vTzJ8@tsm-staging-mlxar.mongodb.net/${database}?retryWrites=true}
+!define testing_database {db_pando_testing}
+**!

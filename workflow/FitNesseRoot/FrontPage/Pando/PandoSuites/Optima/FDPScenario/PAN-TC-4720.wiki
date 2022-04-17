@@ -1,0 +1,96 @@
+---
+Help: Ensure the high priority materials will pickup
+Suites: optscn3
+Test
+---
+!5 Material priority -> Need to give high priority to material category insted of only checking on STN
+
+!** Depot Optima Setting
+!define depo {Jalgaon}
+!define movement_type {Primary}
+!define split_factor {5}
+!define max_split {2}
+!define algorithm_mode {FDP}
+!define angle {30}
+!define optima_type {2D}
+!define mode {0}
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.RouteSettingCS
+
+!define max_pick_up {3}
+!define max_drop_off {2}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.RouteSetting
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.MaterialPrioritySettings
+
+!define option {(//span[@class='el-radio__inner'])[1]}
+!define weight {1}
+!define volume {1}
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.VehicalsSetting
+*!
+
+!** Uploading the Material and Optimizing
+#!define surl {https://optima-auto.pandostaging.in}
+!define items {1}
+!define mcount {33}
+!define mcount1 {33}
+!define movement_type {Primary}
+!define depot_name {Jalgaon}
+!define depo {Jalgaon}
+
+!|Script    |Common                                                   |
+|$excelpath=|getPath;|optimaAttachment/material_priority.xlsx|fullpath|
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.CommonOptimaRun
+*!
+
+!** Validating the Line item
+#|check|getText;|//span[@class='cfamount']|xpath|${items}|
+!|Script|Ui                                                                                                                                       |
+|check  |getText;|(//span[contains(text(),'9169')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[2]|xpath|!-15600
+97.5%-!|
+|$volume1=|getText;|(//span[contains(text(),'9169')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[3]|xpath|
+
+!|Script   |Common                                      |
+|check     |checkIfStringExistsIn;|1055.92|$volume1|true|
+|$tresult1=|checkIfStringExistsIn;|1055.92|$volume1     |
+
+!|Script    |Ui                                                                                                                     |
+|click;     |//span[@class='ml-15']|xpath                                                                                           |
+|wait;      |2                                                                                                                      |
+|$quantity1=|getText;              |(//span[normalize-space(text())='711969']/ancestor::div[contains(@class,'rowbg')]//div)[4]|xpath|
+|$bun1=     |getText;              |(//span[normalize-space(text())='711969']/ancestor::div[contains(@class,'rowbg')]//div)[5]|xpath|
+|$weight1=  |getText;              |(//span[normalize-space(text())='711969']/ancestor::div[contains(@class,'rowbg')]//div)[6]|xpath|
+|$volume1=  |getText;              |(//span[normalize-space(text())='711969']/ancestor::div[contains(@class,'rowbg')]//div)[7]|xpath|
+
+!|Script   |Common                                          |
+|check     |checkIfStringExistsIn;|5        |$quantity1|true|
+|$tresult2=|checkIfStringExistsIn;|5        |$quantity1     |
+|check     |checkIfStringExistsIn;|nos      |$bun1     |true|
+|$tresult3=|checkIfStringExistsIn;|nos      |$bun1          |
+|check     |checkIfStringExistsIn;|3000     |$weight1  |true|
+|$tresult4=|checkIfStringExistsIn;|3000     |$weight1       |
+|check     |checkIfStringExistsIn;|203.06125|$volume1  |true|
+|$tresult5=|checkIfStringExistsIn;|203.06125|$volume1       |
+*!
+
+!** Validating Test Result
+!|Script  |Common                                                                         |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5|
+*!
+
+!** Navigating Back to the listing page
+!|Script  |Ui                                                                          |
+|click;   |//div[@class='back-option']//a                          |xpath              |
+|wait;    |2                                                                           |
+|click;   |(//div[@class='cardfilter-grid']//input)[1]/../self::div|xpath              |
+|sendKeys;|(//div[@class='cardfilter-grid']//input)[1]             |xpath|${depot_name}|
+|click;   |//span[contains(text(),'${depot_name}')]                |xpath              |
+|wait     |2                                                                           |
+|click;   |(//div[@class='cardfilter-grid']//input)[2]             |xpath              |
+|click;   |//span[contains(text(),'${movement_type}')]             |xpath              |
+*!
+
+!** Retrieving the Job ID
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.CommonTenantId
+*!

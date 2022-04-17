@@ -1,0 +1,209 @@
+---
+Help: Validate Freight Rate Calculation for Per Ton PTL
+Suites: pay2
+Test
+---
+!** Unique values assignment
+!|Script       |DateUtil                                       |
+|$unique=      |getCurrentDateTimeStamp;|yMMddHHmmss           |
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd|-1|
+|$rdate=|dateCalculation;|yyyy/MM/dd|0|
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=|utcConversion;|$rdate|
+|$indate=      |getCurrentDateTimeStamp;|yyyy/MM/dd            |
+|$loadingDate= |getCurrentDateTimeStamp |iso                   |
+|$loadingDate1=|getCurrentDateTimeStamp |iso                   |
+|$loadingDate2=|getCurrentDateTimeStamp |iso                   |
+|$loadingDate3=|getCurrentDateTimeStamp |iso                   |
+|$contractDate=|dateCalculation;        |dd-MMM-yyyy        |3 |
+
+
+
+**!
+
+!** Consignee Creation one
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Krishnan nager}
+!define city {city$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+**!
+
+!** Consignee Creation two
+!define consignee_name {c2$unique}
+!define consignee_ref_id {cr2$unique}
+!define address {Krishnan nager}
+!define city {city1$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_2=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_2=|getTrim;|${consignee_ref_id}|
+
+**!
+
+!** Consignee Creation three
+!define consignee_name {c3$unique}
+!define consignee_ref_id {cr3$unique}
+!define address {Krishnan nager}
+!define city {city1$unique}
+!define state {Andra Pradesh}
+!define pincode {520122}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+1+$unique@gmail.com}
+!define region {South}
+!define site {2}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!|Script             |Common                      |
+|$consignee_id_3=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_3=|getTrim;|${consignee_ref_id}|
+
+**!
+
+
+!** Uploading Rate Matrix
+!define erp_gate_id_api_1 {CHN01}
+!define transit_days {1}
+!define ratec {1000}
+!define rtrip {per_ton}
+!define mrate {100}
+!define mfactor {1}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column1 {Point,${erp_gate_id_api_1},$consignee_id_ref_1,965 MRT,${transit_days},$transporter_ref_id,$transporter_name,${transit_days},1000,${rtrip},01-Jan-2019,$contractDate,${mrate},${mfactor},D}
+!define column2 {Point,${erp_gate_id_api_1},$consignee_id_ref_2,965 MRT,${transit_days},$transporter_ref_id,$transporter_name,${transit_days},2000,${rtrip},01-Jan-2019,$contractDate,${mrate},${mfactor},D}
+!define column3 {Point,${erp_gate_id_api_1},$consignee_id_ref_3,965 MRT,${transit_days},$transporter_ref_id,$transporter_name,${transit_days},3000,${rtrip},01-Jan-2019,$contractDate,${mrate},${mfactor},D}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.MultipleRateMatrix
+**!
+
+
+!** Indent Creation
+!define order_type  {0}
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {5c750bf26e2ae92e2d5bc600}
+!define location_id {5c74edf0c8d634115eaf23bd}
+!define gate_id {5c74edf083f399115e3eaa55}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define unloader_available {false}
+!define destination_location_id_1 {$consignee_id_1}
+!define sold_to_id_1 {$consignee_id_1}
+!define expected_delivery_at_1 {$expected_date}
+!define destination_location_id_2 {$consignee_id_2}
+!define sold_to_id_2 {$consignee_id_2}
+!define expected_delivery_at_2 {$expected_date}
+!define destination_location_id_3 {$consignee_id_3}
+!define sold_to_id_3 {$consignee_id_3}
+!define expected_delivery_at_3 {$expected_date}
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationMultiConsigneeAPI
+**!
+
+!** validating and Assinging The Truck
+!define vechicle_number {tn 09 AT 9013}
+!define driver_name  {pay driver}
+!define phone_number  {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+**!
+
+!** Material upload for all consingee
+!define mrp_price {1000}
+!define quantity1 {10} 
+!define quantity2 {10} 
+!define quantity3 {10} 
+!define quantity_unit {cases}
+!define weight {1000}
+!define weight_unit {KG}
+!define volume {1}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {20000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialsInvoiceMutipleConsigneeERPAPI
+**!
+
+!** EPOD Calculation
+!define no_of_shortage {0}
+!define no_of_shortage1 {0}
+!define no_of_shortage2 {0}
+!define no_of_shortage3 {0} 
+!define no_of_leakage {0}
+!define no_of_leakage1 {0}
+!define no_of_leakage2 {0}
+!define no_of_leakage3 {0} 
+!define mrp {${mrp_price}}
+!define no_of_excess {0}
+!define no_of_excess1 {0}
+!define no_of_excess2 {0}
+!define no_of_excess3 {0} 
+!define no_of_damage {0}
+!define no_of_damage1 {0}
+!define no_of_damage2 {0}
+!define no_of_damage3 {0} 
+!define no_of_carton_damage {0}
+!define no_of_carton_damage1 {0}
+!define no_of_carton_damage2 {0}
+!define no_of_carton_damage3 {0} 
+!define release_date {$rdate}
+!define release_date1 {$rdate}
+!define release_date2 {$rdate}
+!define release_date3 {$rdate}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodSingleIndentMutliConsigneeErpAPI
+**!
+
+!** Freight Calculation
+!define pay_calcualtion {Freight}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.FreightRate.PaymentCalculationPTL
+
+!|Script   |Common                                                     |
+|check     |checkIfStringAreEqual;       |$calResult1   |1000   |true  |
+|$tresult1=|checkIfStringAreEqual;       |$calResult1   |1000          |
+|check     |checkIfStringAreEqual;       |$calResult2   |2000   |true  |
+|$tresult2=|checkIfStringAreEqual;       |$calResult2   |2000          |
+|check     |checkIfStringAreEqual;       |$calResult3   |3000   |true  |
+|$tresult3=|checkIfStringAreEqual;       |$calResult3   |3000          |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3|
+**!
+
+
+!define tname {TC-1401}
+ 
+
+
+
+
+

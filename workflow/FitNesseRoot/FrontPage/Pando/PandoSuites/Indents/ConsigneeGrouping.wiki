@@ -1,0 +1,7 @@
+---
+Help: Contains the test case for the Consignee grouping
+Suite
+Suites: indent1
+---
+!1 Test suite for Consignee grouping
+!contents -R2 -g -p -f -h

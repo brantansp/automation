@@ -1,0 +1,15 @@
+!include -c .FrontPage.Pando.Common.Import
+
+!note http://localhost:4000/FrontPage.Pando?responder=search&searchScope=root&searchString=${RUNNING_PAGE_NAME}&searchType=Search+Titles
+
+!|Script              |Ui                                                                                                                  |
+|$testCaseDescription=|getTestCaseDescription;|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME}                                                   |
+|startTestCase;       |${RUNNING_PAGE_NAME}   |${extent_tag}|${RUNNING_PAGE_PATH}.${RUNNING_PAGE_NAME} : $testCaseDescription|${log_to_elk}|
+
+!|script  |common        |
+|$tresult=|getTrim;|false|
+
+!define login_url {${surl}}
+!include -c .FrontPage.Pando.Common.Login
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.LoginAPI.ShipperLoginViaAPI

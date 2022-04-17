@@ -1,0 +1,10 @@
+---
+Help: Used to check if the column is Visible when enabled
+---
+!|Script    |Ui                                                                                                                                                                                              |
+|click;     |//span[@class='popover-icon']                                                   |xpath                                                                                                          |
+|wait;      |2                                                                                                                                                                                               |
+|$isChecked=|getElementAttribute;                                                            |//li//span[normalize-space(text())='${column_name}']/..//preceding-sibling::input           |xpath|checked     |
+|clickJS;   |//li//span[normalize-space(text())='${column_name}']/..//preceding-sibling::span|xpath                                                                                                          |
+|click;     |//span[@class='popover-icon']                                                   |xpath                                                                                                          |
+|check      |isElementPresentNoReporting;                                                    |//div[contains(@class,'grid-header')]//child::span[normalize-space(text())='${column_name}']|xpath|${visiblity}|

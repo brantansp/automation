@@ -1,0 +1,9 @@
+---
+Help: Contains steps to mark a voucher as paid
+Test
+---
+!|Script    |Http                                                                           |
+|addHeader; |Authorization |bearer $stoken                                                  |
+|setBaseUrl;|${surl}/api/invoice/accountant/voucher                                         |
+|$response= |getResponse;  |Application/Json|put|{"data":{"ids":["${voucher_id}"],"type":1}}|
+|check      |getStatusCode;|200                                                             |

@@ -1,0 +1,9 @@
+---
+Help: Contains API to verify Voucher
+Test
+---
+!|Script    |Http                                                                           |
+|addHeader; |Authorization |bearer $stoken                                                  |
+|setBaseUrl;|${surl}/api/invoice/librarian/voucher                                          |
+|$response= |getResponse;  |Application/Json|put|{"data":{"ids":["${voucher_id}"],"type":1}}|
+|check      |getStatusCode;|200                                                             |

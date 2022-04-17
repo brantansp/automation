@@ -1,0 +1,23 @@
+---
+Help: Contains steps to check physical LR available
+Test
+---
+!** Retriveing the Payment record in Transporter Payments module
+
+!|script|common                                                                                        |
+|$query=|getTrim;|client_id=${shipper_client_id}&depot_id=${depot_id}&page=1&filter_type=${filter_type}|
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.TransporterAPI.RetrievePaymentRecord
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.TransporterAPI.RetrievePaymentIdFromRecords
+*!
+
+!** Retrieving LR details attached to the Indent 
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.TransporterAPI.RetrieveLrDetailAttachedToIndent
+*!
+
+!** Marking the Physical LR received check for the Payment ID obtained
+!|script|common                             |
+|$data= |getTrim;|{"data":{"received":true}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.TransporterAPI.MarkingPhysicalLRUsingPaymentId
+*!

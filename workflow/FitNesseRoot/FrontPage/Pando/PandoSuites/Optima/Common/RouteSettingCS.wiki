@@ -1,0 +1,23 @@
+!|Script                     |Ui                                                                                        |
+|navigateToUrl;              |${surl}/optima/cs                                                                         |
+|click;                      |//input[@placeholder='Select Depot']                                |xpath                |
+|sendKeys;                   |//div[normalize-space(text())='Depot']/..//input                    |xpath|${depo}        |
+|click;                      |//span[contains(text(),'${depo}')]                                  |xpath                |
+|click;                      |//div[contains(text(),'Movement')]/following-sibling::div           |xpath                |
+|click;                      |//li[contains(.,'${movement_type}')]                                |xpath                |
+|clearValueWA;               |//div[contains(text(),'Split Factor')]//following-sibling::div/input|xpath                |
+|clearValueWA;               |//div[contains(text(),'Max Splits')]//following-sibling::div/input  |xpath                |
+|clearValueWA;               |//div[contains(text(),'Angle')]//following-sibling::div/input       |xpath                |
+|clearValueWA;               |//div[contains(text(),'Mode')]//following-sibling::div/input        |xpath                |
+|wait;                       |3                                                                                         |
+|sendKeys;                   |//div[contains(text(),'Split Factor')]//following-sibling::div/input|xpath|${split_factor}|
+|sendKeys;                   |//div[contains(text(),'Max Splits')]//following-sibling::div/input  |xpath|${max_split}   |
+|click;                      |//div[contains(text(),'Algorithm Mode')]/following-sibling::div     |xpath                |
+|click;                      |//li[contains(.,'${algorithm_mode}')]                               |xpath                |
+|sendKeys;                   |//div[contains(text(),'Angle')]//following-sibling::div/input       |xpath|${angle}       |
+|click;                      |//div[contains(text(),'Optima Type')]/following-sibling::div        |xpath                |
+|click;                      |//li[contains(.,'${optima_type}')]                                  |xpath                |
+|sendKeys;                   |//div[contains(text(),'Mode')]//following-sibling::div/input        |xpath|${mode}        |
+|wait;                       |1                                                                                         |
+|click;                      |//button[contains(.,'SAVE') or contains(.,'Save')]                                        |xpath                |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']/following-sibling::span[text()='Optima settings updated']           |xpath|30              |

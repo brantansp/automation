@@ -1,0 +1,9 @@
+#Selecting Reason from multiselect list
+
+!|Script  |Ui                                                                                             |
+|click;   |//label[text()='Reason']/../following-sibling::div[contains(@class,'list-dropdown')]     |xpath|
+|click;   |//div[contains(@class,'multiselect--active')]//span[normalize-space(text())='Select All']|xpath|
+|wait;    |1                                                                                              |
+|clickAll;|${multiple_reasons}                                                                      |xpath|
+|click;   |(//div[@class='flex-item'])[last()]                                                      |xpath|
+|wait;    |2                                                                                              |

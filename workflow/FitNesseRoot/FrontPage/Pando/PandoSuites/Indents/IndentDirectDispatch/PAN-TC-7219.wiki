@@ -1,0 +1,201 @@
+---
+Help: Create indent to check auto approval if wallet is not approved and Check auto approval job in queue
+Suites: pgstaging
+Test
+---
+!** coverage
+1.Create indent and submit EPOD with S/D/CD
+2.Check job_id in postgres  - Wallets table
+3.Move the previous day indent id from order_id_1 to order_id_2 and Store the current day indent id in order_id_1 in db 
+4.Check the status of order_id_2 next day (PAN-TC-7220)
+**!
+
+!**> Unique values assignment
+!|Script |Common                                     |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num1=  |getRandomNumber;        |20     |76        |
+|$num2=  |getRandomNumber;        |1000   |9999      |
+|$rand1= |getRandomString;        |2      |ALPHAUPPER|
+|$year=  |getSubString;           |$unique|0    |4   |
+|$indate=|getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1= |getRandomNumber;        |20     |76        |
+|$vno_2= |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000   |9999      |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$invoicedate= |dateCalculation;|dd-MM-yyyy |2 |
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-2|
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-1|
+
+!|Script       |Common                                        |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer-!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!**> Direct Dispatch Indent creation
+!define delivery_number {d$unique}
+!define mrp_price {1000}
+!define material_code1 {mat 2}
+!define depot_ref_id {40}
+!define gate_ref_id1 {40}
+!define division {LE1}
+!define quantity {100}
+!define quantity_unit {NOS}
+!define weight {10000}
+!define weight_unit {KG}
+!define volume {1024}
+!define volume_unit {CFT}
+!define ship_to_1 {PGC2}
+!define sold_to_1 {PGC2}
+!define type {Secondary}
+!define shipment_number {s1$unique}
+!define invoice_number {INV1$unique}
+!define invoice_amount {10000}
+!define category {20a}
+!define lr_number1 {lr1$unique}
+!define invoice_date {$invoicedate}
+!define transporter {SFT01}
+!define vehicle_type {L9}
+!define vehicle_number {TN $vno_1 $vno_2 $vno_3}
+
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"${delivery_number}","mrp_price":"${mrp_price}","material_code":"${material_code1}","depot_ref_id":"${depot_ref_id}","gate_ref_id":"${gate_ref_id1}","division":"${division}","quantity":"${quantity}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${ship_to_1}","sold_to":"${sold_to_1}","type":"${type}","shipment_number":"${shipment_number}","invoice_number":"${invoice_number}","invoice_amount":"${invoice_amount}","category":"${category}","invoice_date":"${invoice_date}","transporter":"${transporter}","vehicle_type":"${vehicle_type}","vehicle_number":"${vehicle_number}","lr_number":"${lr_number1}","truck_out":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentDirectDispatchAPI
+*!
+
+!**> Verify indent for depot and move it to delivered
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {Chennai Depot}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter 
+
+!define search_text {d$unique}
+!define search_by {Enter delivery number}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearchBy
+
+!|script                     |ui                                                                                                                                                                                                |
+|refresh;                                                                                                                                                                                                                       |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='SF Transport']//ancestor::div[contains(@class,'order-row')]|xpath                                                                                      |30        |
+|check                       |isElementPresent;                                                                          |//span[normalize-space(text())='SF Transport']//ancestor::div[contains(@class,'order-row')]|xpath|true|
+|$order_id=                  |getText;                                                                                   |(//div[@class='order-row']//div[1]//span)[1]                                               |xpath     |
+
+!**> EPOD submission through Consignee APP
+!define consignee_id {5fd8a3c654216000517c7531}
+!define cusername {thangabalu+RPGC2@pando.ai}
+!define crefid {PGC2}
+!define cpassword {Pando@123}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GetMaterialThroughConsigneeMobileAppAPI
+
+!|Script|Common                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":{"materials":[{"id":"$material_ref_id","leakage_count":"0","damage_count":"1","excess_count":"0","shortage_count":"2","carton_damage_count":"3","comment":"","shortage_charge":"120","damage_charge":"507.56","carton_damage_charge":"305.67"}],"packages":[]}}|
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.GRNSubmissionThroughConsigneeMobileApp
+
+!**> Verify EPOD submission
+!|Script                     |Ui                                                                                                                                                          |
+|click;                      |//span[text()='Document']             |xpath                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'card-content')]|xpath                                                                                              |30               |
+|$epodstatus_column=         |getHeaderColumnNumber;                |//div[@class='el-table__header-wrapper']//div[@class='cell']                                       |xpath|EPOD status|
+|$material_row_number=       |getHeaderColumnNumber;                |//div[contains(@class,'scrolling')]//span[contains(text(),'kg')]                                   |xpath|10000 kg   |
+|$epodstatus=                |getText;                              |((//div[contains(@class,'el-table__body')]//td[$epodstatus_column])[$material_row_number]//span)[2]|xpath            |
+
+!|Script|Common                                           |
+|check  |checkIfStringAreEqual;|$epodstatus|Submitted|true|
+**!
+**!
+
+!**> LR Upload in shipper
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!|Script  |Ui                                                                                         |
+|sendKeys;|//input[@class='el-upload__input']|xpath                                        |$pdfpath  |
+|check    |isElementPresent;                 |//span[@class='el-upload-list__item-preview']|xpath|true|
+**!
+
+!**> Marking Indent as delivered
+!define consignee_id_1 {5fd8a3c654216000517c7531}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                  |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id_1}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+
+!|script                     |ui                                                                                                                            |
+|navigateToUrl;              |${surl}/indents                                                                                                               |
+|refresh;                                                                                                                                                   |
+|waitForElementToBeDisplayed;|//span[normalize-space(text())='']//ancestor::div[contains(@class,'order-row')]|xpath                              |30        |
+|check                       |isElementPresent;                                                              |//div[contains(text(),'Delivered')]|xpath|true|
+*!
+**!
+
+!**> Validating Wallet entries in Shipper 
+!define depot_name {Chennai Depot}
+!include -c .FrontPage.Pando.Common.ShipperWalletFilter
+
+!define search_text {$order_id}
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletIndentSearch
+
+!|Script   |Ui                                                                                                                                                    |
+|$tresult1=|isElementPresent;|//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Carton Damage']|xpath|
+|$tresult2=|isElementPresent;|//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Damage']       |xpath|
+|$tresult3=|isElementPresent;|//*[contains(text(),'$order_id')]//ancestor::div[contains(@class,'col')]//following-sibling::div//span[text()='Shortage']     |xpath|
+
+!|Script        |Common                                                          |
+|$shipperresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,true|
+**!
+
+!** Check job id not null in Postgres DB
+!define query1 {SELECT auto_approval_job_id FROM public."Wallets" where order_no='$order_id' and reason = 1}
+!define query2 {SELECT auto_approval_job_id FROM public."Wallets" where order_no='$order_id' and reason = 2}
+!define query3 {SELECT auto_approval_job_id FROM public."Wallets" where order_no='$order_id' and reason = 3}
+
+!|script                 |PostgresDB                                               |
+|$shortage_job_in_db=    |getDataFromPostgresDb;|${pg_connection_staging}|${query1}|
+|$damage_job_in_db=      |getDataFromPostgresDb;|${pg_connection_staging}|${query2}|
+|$cartondamage_job_in_db=|getDataFromPostgresDb;|${pg_connection_staging}|${query3}|
+
+!|Script            |common                                                                |
+|check              |checkIfStringAreNotEqual;    |$shortage_job_in_db       |null  |true  |
+|$dbresult_1=       |checkIfStringAreNotEqual;    |$shortage_job_in_db       |null         |
+|check              |checkIfStringAreNotEqual;    |$damage_job_in_db         |null  |true  |
+|$dbresult_2=       |checkIfStringAreNotEqual;    |$damage_job_in_db         |null         |
+|check              |checkIfStringAreNotEqual;    |$cartondamage_job_in_db   |null  |true  |
+|$dbresult_3=       |checkIfStringAreNotEqual;    |$cartondamage_job_in_db   |null         |
+|$postgresdb_result=|checkIfStringAreEqualInArray;|$dbresult_1,$dbresult_2,$dbresult_3,true|
+**!
+
+!** storing old order number (already-approved)
+!define client_id {5fd89a8abdadf630f4e5f413}
+!define connection {mongodb+srv://staging-admin:VpbUDlaBkv4vTzJ8@tsm-staging-mlxar.mongodb.net/db_pando_testing?retryWrites=true}
+
+!|Script         |MongoDB                                                        |
+|initialize;     |${connection}           |db_pando_testing                      |
+|$old_order_id=  |getValuesFromCollection;|order_id_pg|name|pg_staging|order_id_1|
+|updateOrderIdPG;|${client_id}            |order_id_2 |$old_order_id             |
+|updateOrderIdPG;|${client_id}            |order_id_1 |$order_id                 |
+**!
+
+!** Validating the Result
+!|Script  |Common                                                              |
+|$tresult=|checkIfStringAreEqualInArray;|$shipperresult,$postgresdb_result,true|
+*!

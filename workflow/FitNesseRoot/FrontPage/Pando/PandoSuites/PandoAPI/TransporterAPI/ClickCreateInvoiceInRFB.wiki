@@ -1,0 +1,14 @@
+---
+Help: Contains steps for Clicking Create Invoice in Ready For Billing section
+Test
+---
+!** Click on the Create Invoice button in Transporter Payments module
+!| Script    |Http                                                                                         |
+|setBaseUrl; |${turl}/api/login                                                                            |
+|getResponse;|Application/Json|put             |{"data":{"email":"${tusername}","password":"${tpassword}"}}|
+|$token=     |getHeader;      |x-auth-token                                                                |
+|addHeader;  |Authorization   |bearer $token                                                               |
+|setBaseUrl; |${turl}/api/payment/indent-details                                                           |
+|$response=  |getResponse;    |Application/Json|post           |{"data":{"ids":["$payment_id"]}}           |
+|$status=    |getStatusCode;                                                                               |
+*!

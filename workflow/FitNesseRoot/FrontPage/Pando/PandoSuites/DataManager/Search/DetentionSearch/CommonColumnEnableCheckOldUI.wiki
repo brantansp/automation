@@ -1,0 +1,7 @@
+!|Script    |Ui                                                                                                                                                                                            |
+|click;     |//span[contains(@class,'popover')]//a                                          |xpath                                                                                                         |
+|wait;      |2                                                                                                                                                                                             |
+|$isChecked=|getElementAttribute;                                                           |//li//div[normalize-space(text())='${column_name}']/..//preceding-sibling::span//input     |xpath|checked     |
+|click;     |//li//div[normalize-space(text())='${column_name}']/..//preceding-sibling::span|xpath                                                                                                         |
+|click;     |//span[contains(@class,'popover')]//a                                          |xpath                                                                                                         |
+|check      |isElementPresentNoReporting;                                                   |//div[contains(@class,'card-header')]//child::div[normalize-space(text())='${column_name}']|xpath|${visiblity}|

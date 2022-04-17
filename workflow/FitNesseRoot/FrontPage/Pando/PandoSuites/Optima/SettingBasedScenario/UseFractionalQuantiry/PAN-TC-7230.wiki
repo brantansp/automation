@@ -1,0 +1,641 @@
+---
+Help: Ensure that user can able to send the Fractional quantities of cases and pieces for optima to optimize
+Suites: optjnj
+Test
+---
+!5 Description : ${RUNNING_PAGE_NAME} : Ensure that user can able to send the Fractional quantities of cases and pieces for optima to optimize
+
+!**> Input
+!|comment                                                                                                               |
+|material details|Delivery No|Input quantity|Output Quantity|Ceiled quantities|fractional quantities|Output Wt|Output vl|
+|!-MAT01
+10 pce per box
+10 per sku wt
+0.035 per sku vl
+'small case' sku category
+-!|D1         |10.25 pce     |1.025 cases    |1|0.025|10.25 KG |0.035875 CFT|
+|!-MAT02
+5 pce per box
+5 per sku wt
+0.011 per sku vl
+'default' sku category
+-!|D2         |10.25 pcs     |2.05 cases|2|0.05|10.25 KG|0.02255 CFT|
+|!-MAT03
+15 pce per box
+2 per sku wt
+0.011 per sku vl
+'20a' sku category
+-!|D3         |10.25 no     |0.68333334 cases|0|0.68333334|1.3666667 KG|0.007516667 CFT|
+|!-MAT04
+1 pce per box
+1 per sku wt
+0.035 per sku vl
+'20a' sku category
+-!|D4         |10.25 ea     |10.25 cases|10|0.25|10.25 KG|0.35875 CFT|
+|!-MAT05
+20 pce per box
+5 per sku wt
+1.154 per sku vl
+'20a' sku category
+-!|D5         |10.25 box     |10.25 box|10|0.25|51.25 KG|11.828501 CFT|
+|!-MAT06
+2 pce per box
+15 per sku wt
+2.456 per sku vl
+'small case' sku category
+-!|D6         |10.25 cs     |10.25 cs|10|0.25|153.75 KG|25.174 CFT|
+|!-MAT07
+1 pce per box
+20 per sku wt
+6.453 per sku vl
+'small case' sku category
+-!|D7         |10.25 each     |10.25 cases|10|0.25|205 KG|66.14325 CFT|
+
+Final cases needed :
+small case - 21
+20a - 20
+default - 2
+Big case - sum of fractional quantities * per SKU volume / big case volume conversion => 2.53344166674 / 3.96 = 0.6397579966515 => 1 case (Ceiled)
+
+0.025 x 0.035 = 0.000875
+0.05 x 0.011 = 0.00055
+0.011 x 0.6833334 = 0.00751666674
+0.035 x 0.25 = 0.00875
+1.154 x 0.25 = 0.2885
+2.456 x 0.25 = 0.614
+6.453 x 0.25 = 1.61325
+*!
+
+!***> Unique values assignment
+!|Script   |Common                                       |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$currDate=|getCurrentDateTimeStamp;|iso                 |
+|$num1=    |getRandomNumber;        |20       |76        |
+|$num2=    |getRandomNumber;        |1000     |9999      |
+|$rand1=   |getRandomString;        |2        |ALPHAUPPER|
+|$year=    |getSubString;           |$unique  |0   |4    |
+|$indate=  |getCurrentDateTimeStamp;|yyyy/MM/dd          |
+|$pincode1=|getRandomNumber;        |111001   |999999    |
+|$pincode2=|getRandomNumber;        |111001   |999999    |
+|$vno_1=   |getRandomNumber;        |20       |76        |
+|$vno_2=   |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=   |getRandomNumber;        |1000     |9999      |
+|$today=   |getSubString;           |$currDate|0   |10   |
+
+!|Script       |DateUtil                       |
+|$contractDate=|dateCalculation;|dd-MMM-yyyy|2 |
+|$truckindate= |dateCalculation;|yyyy/MM/dd |-5|
+|$loadingDate= |dateCalculation;|yyyy/MM/dd |-4|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd |-3|
+|$rdate=       |dateCalculation;|yyyy/MM/dd |0 |
+|$cdate=       |dateCalculation;|yyyy/MM/dd |1 |
+|$idate=       |dateCalculation;|MM-dd-YYYY |0 |
+
+!|Script       |Common                                         |
+|$truckindate= |stringConcatenation;|$truckindate |!- $timer -!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- $timer -!|
+|$rdate=       |stringConcatenation;|$rdate       |!- $timer -!|
+
+!|Script       |DateUtil                    |
+|$loadingDate= |utcConversion;|$loadingDate |
+|$truckindate= |utcConversion;|$truckindate |
+|$truckoutdate=|utcConversion;|$truckoutdate|
+|$rdate=       |utcConversion;|$rdate       |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!***> Depot for Shipper
+!define depot_name {d$unique}
+!define depot_state {Uttar Pradesh}
+!define depot_city {B$unique}
+!define depot_region {North}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {$pincode1}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!***> Gate Creation for shipper depot
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!*** Gate Manager Creation
+!define role_id {$retrieve_key_value}
+!define user_number {12891}
+!define user_name {u1$unique}
+!define user_email {pandoindent+1+$unique@gmail.com}
+!define status {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation one
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {North}
+!define gate_pincode {$pincode1}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+*!
+*!
+
+!***> Depot Optima Setting
+!define depo {d$unique}
+!define max_split {3}
+!define split_factor {1}
+!define ftl_certify {false}
+!define algorithm {4}
+!define distance_deviation {500}
+!define degree_of_deviation {45}
+!define optima_type {1}
+!define weight {1}
+!define volume {1}
+!define mode {0}
+!define max_pickup {2}
+!define fitment {0}
+!define max_dropoff {2}
+!define optima_for_ptl {false}
+!define ptl_club_gates {false}
+!define limited_truck_count {false}
+!define hybrid_split {true}
+!define depot_id {$depot}
+!define movement {1}
+!define movement_type {Secondary}
+!define material_category {"GT","MT"}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split": ${max_split},"split_factor": ${split_factor},"ftl_certify": ${ftl_certify},"algorithm": ${algorithm},"distance_deviation":"${distance_deviation}","degree_of_deviation":${degree_of_deviation},"optima_type":${optima_type},"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":${weight},"volume":${volume}},"material_categories":[${material_category}],"mode":${mode},"max_pickup_points":${max_pickup},"fitment":${fitment},"max_drop_points":${max_dropoff},"drop_off_rule":[],"optima_for_ptl":${optima_for_ptl},"ptl_club_gates":${ptl_club_gates},"limited_truck_count":${limited_truck_count},"hybrid_split": ${hybrid_split}},"depot_ids":["${depot_id}"],"movement":${movement}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                       |
+|wait;                       |8                                                                                                                                                                                                                                                                        |
+|navigateToUrl;              |${surl}/optima/cs                                                                                                                                                                                                                                                        |
+|click;                      |//input[@placeholder='Select Depot']                                                                       |xpath                                                                                                                                                        |
+|sendKeys;                   |//div[normalize-space(text())='Depot']/..//input                                                           |xpath                                                                                                                                        |${depo}        |
+|click;                      |//span[contains(text(),'${depo}')]                                                                         |xpath                                                                                                                                                        |
+|click;                      |//div[contains(text(),'Movement')]/following-sibling::div                                                  |xpath                                                                                                                                                        |
+|click;                      |//li[contains(.,'${movement_type}')]                                                                       |xpath                                                                                                                                                        |
+|wait;                       |3                                                                                                                                                                                                                                                                        |
+|$default_enabled=           |getElementAttribute;                                                                                       |//div[normalize-space(text())='Use Material fractional quantity']/..//span[not(contains(@aria-hidden,'true')) and not(contains(@class,'el'))]|xpath|innerText|
+|click;                      |//div[normalize-space(text())='Use Material fractional quantity']/..//span[contains(@class,'switch__core')]|xpath                                                                                                                                                        |
+|$enabled=                   |getElementAttribute;                                                                                       |//div[normalize-space(text())='Use Material fractional quantity']/..//span[not(contains(@aria-hidden,'true')) and not(contains(@class,'el'))]|xpath|innerText|
+|clickJS;                    |//button[contains(.,'SAVE') or contains(.,'Save')]                                                         |xpath                                                                                                                                                        |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']/following-sibling::span[text()='Optima settings updated']       |xpath                                                                                                                                        |30             |
+
+!|script|common                                  |
+|check  |checkIfStringAreEqual;|$enabled|YES|true|
+*!
+
+!***> Consignee Creation one (Secondary)
+!define consignee_name {dc1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {No 15,GST Street1$unique}
+!define city {$pincode2}
+!define state {Tamil Nadu}
+!define pincode {$pincode2}
+!define manager_name {Manager Automation1}
+!define manager_mobile {12891}
+!define manager_email {pandoconsignee+1+$unique@gmail.com}
+!define region {South}
+!define site {2}
+!define group {}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+
+!| Script            |Common                      |
+|$consignee_id_1=    |getTrim;|$consignee_id      |
+|$consignee_id_ref_1=|getTrim;|${consignee_ref_id}|
+
+!| Script         |json                                  |
+|$consignee1_name=|getValueFromJSON;|$consignee|data.name|
+*!
+
+!***> Transporter Creation one
+!define transporter_name {t1$unique}
+!define transporter_ref_id {tr1$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {$pincode1}
+!define manager_name {Manager1 $unique}
+!define manager_mobile {123}
+!define manager_email {pt$unique@gmail.com}
+!define pancard {AUYPD33324L}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation one
+!define vehicle_name {v1$unique MRT}
+!define cft {0}
+!define kg {0}
+!define vehicle_type {PTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!**> Material upload                                                                                                                                                                                                                                                                                                                                                                                                                                                             
+!define row {Code*,Name*,BU,Piece per Box*,Length(cm)*,Width(cm)*,Height (cm)*,Weight (kg)*,Volume (CFT),Volume Per Piece (Liter),Division,GST Exempt (Yes/No),Category}
+!define column {MAT01,LCMat1,PCS,10,600,14,56,10,0.035,0,DEFAULT,no,small case|MAT02,LCMat2,PCS,5,22,33,45,5,0.011,0,DEFAULT,no,|MAT03,LCMat3,PCS,15,34,56,77,2,0.011,0,DEFAULT,no,20a|MAT04,LCMat4,PCS,1,66,77,88,1,0.035,0,DEFAULT,no,20a|MAT05,LCMat5,PCS,20,45,56,66,5,1.154,0,DEFAULT,no,20a|MAT06,LCMat6,PCS,2,45,65,34,15,2.456,0,DEFAULT,no,small case|MAT07,LCMat7,PCS,1,44,44,44,20,6.453,0,DEFAULT,no,small case}
+
+!define file_name {m$unique.xlsx}
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonMaterialBulkUpload
+**!
+
+!**> Uploading Rate Matrix                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Is Dedicated,Truck Count,Product Category,Exclude,Trip Count}                         
+!define column {Point,rq1$unique,$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,75,per case,01-Jan-$year,31-Dec-$year,900,0,U,False,10,small case|Point,rq1$unique,$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,20,per case,01-Jan-$year,31-Dec-$year,100,0,U,False,10,big case|Point,rq1$unique,$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,30,per case,01-Jan-$year,31-Dec-$year,100,1,U,False,10,20a|Point,rq1$unique,$consignee_id_ref_1,${vehicle_name},100,$transporter_ref_id,$transporter_name,1,10,per case,01-Jan-$year,31-Dec-$year,100,1,U,False,10,Default}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!**> Delivery Picklist API 
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"D1$unique","pickup_reference_number":"rq1$unique","division":"","material_code":"MAT01","quantity":10.25,"quantity_unit":"pce","weight":0,"weight_unit":"KG","volume":"0","volume_unit":"CFT","lr_number":"","ship_to":"${consignee_ref_id}","sold_to":"${consignee_ref_id}","line_item":"","type":"${movement_type}","category":"small case","category_priority":"","stn":"0","date":"$today","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":""},{"delivery_number":"D2$unique","pickup_reference_number":"rq1$unique","division":"","material_code":"MAT02","quantity":10.25,"quantity_unit":"pcs","weight":0,"weight_unit":"KG","volume":"0","volume_unit":"CFT","lr_number":"","ship_to":"${consignee_ref_id}","sold_to":"${consignee_ref_id}","line_item":"","type":"${movement_type}","category":"default","category_priority":"","stn":"0","date":"$today","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":""},{"delivery_number":"D3$unique","pickup_reference_number":"rq1$unique","division":"","material_code":"MAT03","quantity":10.25,"quantity_unit":"no","weight":0,"weight_unit":"KG","volume":"0","volume_unit":"CFT","lr_number":"","ship_to":"${consignee_ref_id}","sold_to":"${consignee_ref_id}","line_item":"","type":"${movement_type}","category":"20a","category_priority":"","stn":"0","date":"$today","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":""},{"delivery_number":"D4$unique","pickup_reference_number":"rq1$unique","division":"","material_code":"MAT04","quantity":10.25,"quantity_unit":"ea","weight":0,"weight_unit":"KG","volume":"0","volume_unit":"CFT","lr_number":"","ship_to":"${consignee_ref_id}","sold_to":"${consignee_ref_id}","line_item":"","type":"${movement_type}","category":"20a","category_priority":"","stn":"0","date":"$today","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":""},{"delivery_number":"D5$unique","pickup_reference_number":"rq1$unique","division":"","material_code":"MAT05","quantity":10.25,"quantity_unit":"box","weight":0,"weight_unit":"KG","volume":"0","volume_unit":"CFT","lr_number":"","ship_to":"${consignee_ref_id}","sold_to":"${consignee_ref_id}","line_item":"","type":"${movement_type}","category":"20a","category_priority":"","stn":"0","date":"$today","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":""},{"delivery_number":"D6$unique","pickup_reference_number":"rq1$unique","division":"","material_code":"MAT06","quantity":10.25,"quantity_unit":"cs","weight":0,"weight_unit":"KG","volume":"0","volume_unit":"CFT","lr_number":"","ship_to":"${consignee_ref_id}","sold_to":"${consignee_ref_id}","line_item":"","type":"${movement_type}","category":"small case","category_priority":"","stn":"0","date":"$today","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":""},{"delivery_number":"D7$unique","pickup_reference_number":"rq1$unique","division":"","material_code":"MAT07","quantity":10.25,"quantity_unit":"each","weight":0,"weight_unit":"KG","volume":"0","volume_unit":"CFT","lr_number":"","ship_to":"${consignee_ref_id}","sold_to":"${consignee_ref_id}","line_item":"","type":"${movement_type}","category":"small case","category_priority":"","stn":"0","date":"$today","invoice_date":"","invoice_value":"","transporter_ref_id":"","mrp":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DeliveryPicklistAPI
+**!
+
+!**> Optima Auto Run via API
+!|script|common                                                           |
+|$data= |getTrim;|{"data":{"depot_id":"$depot","movement": "${movement}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.AutoRunViaAPI
+*!
+
+!** Validating Line Item and deliveries.
+!define depot {${depot_name}}
+!define movement {Secondary}
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.FilterForDepotAndMovement
+
+!|Script|Ui                                                                          |
+|check  |getText;|((//div[contains(@class,'row-show')])[1]//utilization/div)[2]|xpath|!-442.12
+100%-!|
+|check|getText;|((//div[contains(@class,'row-show')])[1]//utilization/div)[3]|xpath|!-103.57
+100%-!|
+|check                       |getText;                             |((//div[contains(@class,'row-show')])[1]//utilization/div)[4]                                                                                                                       |xpath|44.76       |
+|click;                      |//div[contains(@class,'row-show')]//a|xpath                                                                                                                                                                                                  |
+|waitForElementToBeDisplayed;|//div[@class='table']                |xpath                                                                                                                                                                               |20                |
+|$quantity_header=           |getHeaderColumnNumber;               |//*[local-name() = 'div' and starts-with(@class,'table-th') and not(descendant::*[local-name() = 'input'])]                                                                         |xpath|Quantity    |
+|$quantity_unit_header=      |getHeaderColumnNumber;               |//*[local-name() = 'div' and starts-with(@class,'table-th') and not(descendant::*[local-name() = 'input'])]                                                                         |xpath|Bun         |
+|$weight_header=             |getHeaderColumnNumber;               |//*[local-name() = 'div' and starts-with(@class,'table-th') and not(descendant::*[local-name() = 'input'])]                                                                         |xpath|Weight(KG)  |
+|$volume_header=             |getHeaderColumnNumber;               |//*[local-name() = 'div' and starts-with(@class,'table-th') and not(descendant::*[local-name() = 'input'])]                                                                         |xpath|Volume (CFT)|
+|$m1_row=                    |getHeaderColumnNumber;               |//div[contains(@class,'table-rowbg')]//div[2]//span/span                                                                                                                            |xpath|MAT01       |
+|$m2_row=                    |getHeaderColumnNumber;               |//div[contains(@class,'table-rowbg')]//div[2]//span/span                                                                                                                            |xpath|MAT02       |
+|$m3_row=                    |getHeaderColumnNumber;               |//div[contains(@class,'table-rowbg')]//div[2]//span/span                                                                                                                            |xpath|MAT03       |
+|$m4_row=                    |getHeaderColumnNumber;               |//div[contains(@class,'table-rowbg')]//div[2]//span/span                                                                                                                            |xpath|MAT04       |
+|$m5_row=                    |getHeaderColumnNumber;               |//div[contains(@class,'table-rowbg')]//div[2]//span/span                                                                                                                            |xpath|MAT05       |
+|$m6_row=                    |getHeaderColumnNumber;               |//div[contains(@class,'table-rowbg')]//div[2]//span/span                                                                                                                            |xpath|MAT06       |
+|$m7_row=                    |getHeaderColumnNumber;               |//div[contains(@class,'table-rowbg')]//div[2]//span/span                                                                                                                            |xpath|MAT07       |
+|$m1_qts=                    |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m1_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$quantity_header]     |xpath|innerText   |
+|$m1_qunit=                  |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m1_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$quantity_unit_header]|xpath|innerText   |
+|$m1_wt=                     |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m1_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$weight_header]       |xpath|innerText   |
+|$m1_vl=                     |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m1_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$volume_header]       |xpath|innerText   |
+|$m2_qts=                    |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m2_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$quantity_header]     |xpath|innerText   |
+|$m2_qunit=                  |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m2_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$quantity_unit_header]|xpath|innerText   |
+|$m2_wt=                     |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m2_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$weight_header]       |xpath|innerText   |
+|$m2_vl=                     |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m2_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$volume_header]       |xpath|innerText   |
+|$m3_qts=                    |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m3_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$quantity_header]     |xpath|innerText   |
+|$m3_qunit=                  |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m3_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$quantity_unit_header]|xpath|innerText   |
+|$m3_wt=                     |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m3_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$weight_header]       |xpath|innerText   |
+|$m3_vl=                     |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m3_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$volume_header]       |xpath|innerText   |
+|$m4_qts=                    |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m4_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$quantity_header]     |xpath|innerText   |
+|$m4_qunit=                  |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m4_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$quantity_unit_header]|xpath|innerText   |
+|$m4_wt=                     |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m4_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$weight_header]       |xpath|innerText   |
+|$m4_vl=                     |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m4_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$volume_header]       |xpath|innerText   |
+|$m5_qts=                    |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m5_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$quantity_header]     |xpath|innerText   |
+|$m5_qunit=                  |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m5_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$quantity_unit_header]|xpath|innerText   |
+|$m5_wt=                     |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m5_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$weight_header]       |xpath|innerText   |
+|$m5_vl=                     |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m5_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$volume_header]       |xpath|innerText   |
+|$m6_qts=                    |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m6_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$quantity_header]     |xpath|innerText   |
+|$m6_qunit=                  |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m6_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$quantity_unit_header]|xpath|innerText   |
+|$m6_wt=                     |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m6_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$weight_header]       |xpath|innerText   |
+|$m6_vl=                     |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m6_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$volume_header]       |xpath|innerText   |
+|$m7_qts=                    |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m7_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$quantity_header]     |xpath|innerText   |
+|$m7_qunit=                  |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m7_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$quantity_unit_header]|xpath|innerText   |
+|$m7_wt=                     |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m7_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$weight_header]       |xpath|innerText   |
+|$m7_vl=                     |getElementAttribute;                 |((//div[contains(@class,'table-rowbg')])[$m7_row]//*[local-name() = 'div' and starts-with(@class,'table-td') and not(descendant::*[local-name() = 'input'])])[$volume_header]       |xpath|innerText   |
+
+!|Script                     |Ui                                                                                            |
+|click;                      |//div[@class='back-option']                                                          |xpath   |
+|waitForElementToBeDisplayed;|//div[contains(@class,'empty-stage-message') or starts-with(@class,'order-item row')]|xpath|20|
+|click;                      |//input[@type='checkbox']/../span                                                    |xpath   |
+|click;                      |//button[contains(text(),'Indent')]                                                  |xpath   |
+|click;                      |//div[@class='el-message-box']//span[contains(text(),'Create')]                      |xpath   |
+|wait;                       |10                                                                                            |
+
+!|script|common                                           |
+|check  |checkIfStringAreEqual;|$m1_qts  |1.025      |true|
+|check  |checkIfStringAreEqual;|$m1_qunit|cases      |true|
+|check  |checkIfStringAreEqual;|$m1_wt   |10.25      |true|
+|check  |checkIfStringAreEqual;|$m1_vl   |0.035875   |true|
+|check  |checkIfStringAreEqual;|$m2_qts  |2.05       |true|
+|check  |checkIfStringAreEqual;|$m2_qunit|cases      |true|
+|check  |checkIfStringAreEqual;|$m2_wt   |10.25      |true|
+|check  |checkIfStringAreEqual;|$m2_vl   |0.02255    |true|
+|check  |checkIfStringAreEqual;|$m3_qts  |0.68333334 |true|
+|check  |checkIfStringAreEqual;|$m3_qunit|cases      |true|
+|check  |checkIfStringAreEqual;|$m3_wt   |1.3666667  |true|
+|check  |checkIfStringAreEqual;|$m3_vl   |0.007516667|true|
+|check  |checkIfStringAreEqual;|$m4_qts  |10.25      |true|
+|check  |checkIfStringAreEqual;|$m4_qunit|cases      |true|
+|check  |checkIfStringAreEqual;|$m4_wt   |10.25      |true|
+|check  |checkIfStringAreEqual;|$m4_vl   |0.35875    |true|
+|check  |checkIfStringAreEqual;|$m5_qts  |10.25      |true|
+|check  |checkIfStringAreEqual;|$m5_qunit|box        |true|
+|check  |checkIfStringAreEqual;|$m5_wt   |51.25      |true|
+|check  |checkIfStringAreEqual;|$m5_vl   |11.828501  |true|
+|check  |checkIfStringAreEqual;|$m6_qts  |10.25      |true|
+|check  |checkIfStringAreEqual;|$m6_qunit|cs         |true|
+|check  |checkIfStringAreEqual;|$m6_wt   |153.75     |true|
+|check  |checkIfStringAreEqual;|$m6_vl   |25.174     |true|
+|check  |checkIfStringAreEqual;|$m7_qts  |10.25      |true|
+|check  |checkIfStringAreEqual;|$m7_qunit|cases      |true|
+|check  |checkIfStringAreEqual;|$m7_wt   |205        |true|
+|check  |checkIfStringAreEqual;|$m7_vl   |66.14325   |true|
+*!
+
+!** Validating Indent
+!define search_text  {d$unique}
+
+!|Script       |Ui             |
+|navigateToUrl;|${surl}/indents|
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!define search_text  {$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentTransporterSearch
+
+!|Script                     |Ui                                                                                                                                                                                                                    |
+|check                       |isElementPresent;                                                   |//span[contains(text(),'${transporter_name}')]                                                                               |xpath|true         |
+|mouseHover;                 |(//div[@class='order-row']/div)[1]//span[contains(@class,'tooltip')]|xpath                                                                                                                                            |
+|$order_id=                  |getText;                                                            |(//div[@role='tooltip' and contains(@style,'absolute')]/child::div)[1]                                                       |xpath              |
+|click;                      |//div[@class='order-row']//span[contains(text(),'Document')]        |xpath                                                                                                                                            |
+|waitForElementToBeDisplayed;|//div[@class='card-right']//table                                   |xpath                                                                                                                        |15                 |
+|$quantity_header=           |getHeaderColumnNumber;                                              |//div[@class='el-table__header-wrapper']//div[@class='cell']                                                                 |xpath|Quantity     |
+|$weight_header=             |getHeaderColumnNumber;                                              |//div[@class='el-table__header-wrapper']//div[@class='cell']                                                                 |xpath|Weight       |
+|$volume_header=             |getHeaderColumnNumber;                                              |//div[@class='el-table__header-wrapper']//div[@class='cell']                                                                 |xpath|Volume       |
+|$m1_row=                    |getHeaderColumnNumber;                                              |//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')]//td[2]//span[contains(@class,'tooltip')]        |xpath|MAT01:LCMa...|
+|$m2_row=                    |getHeaderColumnNumber;                                              |//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')]//td[2]//span[contains(@class,'tooltip')]        |xpath|MAT02:LCMa...|
+|$m3_row=                    |getHeaderColumnNumber;                                              |//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')]//td[2]//span[contains(@class,'tooltip')]        |xpath|MAT03:LCMa...|
+|$m4_row=                    |getHeaderColumnNumber;                                              |//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')]//td[2]//span[contains(@class,'tooltip')]        |xpath|MAT04:LCMa...|
+|$m5_row=                    |getHeaderColumnNumber;                                              |//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')]//td[2]//span[contains(@class,'tooltip')]        |xpath|MAT05:LCMa...|
+|$m6_row=                    |getHeaderColumnNumber;                                              |//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')]//td[2]//span[contains(@class,'tooltip')]        |xpath|MAT06:LCMa...|
+|$m7_row=                    |getHeaderColumnNumber;                                              |//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')]//td[2]//span[contains(@class,'tooltip')]        |xpath|MAT07:LCMa...|
+|$m1_qts=                    |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m1_row]//td)[$quantity_header]//span)[last()]|xpath|innerText    |
+|$m1_wt=                     |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m1_row]//td)[$weight_header]//span)[last()]  |xpath|innerText    |
+|$m1_vl=                     |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m1_row]//td)[$volume_header]//span)[last()]  |xpath|innerText    |
+|$m2_qts=                    |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m2_row]//td)[$quantity_header]//span)[last()]|xpath|innerText    |
+|$m2_wt=                     |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m2_row]//td)[$weight_header]//span)[last()]  |xpath|innerText    |
+|$m2_vl=                     |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m2_row]//td)[$volume_header]//span)[last()]  |xpath|innerText    |
+|$m3_qts=                    |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m3_row]//td)[$quantity_header]//span)[last()]|xpath|innerText    |
+|$m3_wt=                     |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m3_row]//td)[$weight_header]//span)[last()]  |xpath|innerText    |
+|$m3_vl=                     |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m3_row]//td)[$volume_header]//span)[last()]  |xpath|innerText    |
+|$m4_qts=                    |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m4_row]//td)[$quantity_header]//span)[last()]|xpath|innerText    |
+|$m4_wt=                     |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m4_row]//td)[$weight_header]//span)[last()]  |xpath|innerText    |
+|$m4_vl=                     |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m4_row]//td)[$volume_header]//span)[last()]  |xpath|innerText    |
+|$m5_qts=                    |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m5_row]//td)[$quantity_header]//span)[last()]|xpath|innerText    |
+|$m5_wt=                     |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m5_row]//td)[$weight_header]//span)[last()]  |xpath|innerText    |
+|$m5_vl=                     |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m5_row]//td)[$volume_header]//span)[last()]  |xpath|innerText    |
+|$m6_qts=                    |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m6_row]//td)[$quantity_header]//span)[last()]|xpath|innerText    |
+|$m6_wt=                     |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m6_row]//td)[$weight_header]//span)[last()]  |xpath|innerText    |
+|$m6_vl=                     |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m6_row]//td)[$volume_header]//span)[last()]  |xpath|innerText    |
+|$m7_qts=                    |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m7_row]//td)[$quantity_header]//span)[last()]|xpath|innerText    |
+|$m7_wt=                     |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m7_row]//td)[$weight_header]//span)[last()]  |xpath|innerText    |
+|$m7_vl=                     |getElementAttribute;                                                |((//div[contains(@class,'scrolling')]//tr[starts-with(@class,'el-table__row')][$m7_row]//td)[$volume_header]//span)[last()]  |xpath|innerText    |
+
+!|script|common                                        |
+|check  |checkIfStringExistsIn;|1.025 case|$m1_qts|true|
+|check  |checkIfStringExistsIn;|10.25 KG  |$m1_wt |true|
+|check  |checkIfStringExistsIn;|0.035875  |$m1_vl |true|
+|check  |checkIfStringExistsIn;|2.05 cases|$m2_qts|true|
+|check  |checkIfStringExistsIn;|10.25 KG  |$m2_wt |true|
+|check  |checkIfStringExistsIn;|0.02255   |$m2_vl |true|
+|check  |checkIfStringExistsIn;|0.68333   |$m3_qts|true|
+|check  |checkIfStringExistsIn;|1.3666    |$m3_wt |true|
+|check  |checkIfStringExistsIn;|0.0075    |$m3_vl |true|
+|check  |checkIfStringExistsIn;|10.25 case|$m4_qts|true|
+|check  |checkIfStringExistsIn;|10.25     |$m4_wt |true|
+|check  |checkIfStringExistsIn;|0.35875   |$m4_vl |true|
+|check  |checkIfStringExistsIn;|10.25 box |$m5_qts|true|
+|check  |checkIfStringExistsIn;|51.25     |$m5_wt |true|
+|check  |checkIfStringExistsIn;|11.828501 |$m5_vl |true|
+|check  |checkIfStringExistsIn;|10.25 cs  |$m6_qts|true|
+|check  |checkIfStringExistsIn;|153.75    |$m6_wt |true|
+|check  |checkIfStringExistsIn;|25.174    |$m6_vl |true|
+|check  |checkIfStringExistsIn;|10.25 case|$m7_qts|true|
+|check  |checkIfStringExistsIn;|205       |$m7_wt |true|
+|check  |checkIfStringExistsIn;|66.14325  |$m7_vl |true|
+*!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!***> Truck In
+!| Script       |Common               |
+|$truck_in_date=|getTrim;|$truckindate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!***> Reached Load point
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LoadingPointAPI
+*!
+
+!***> Start Loading
+!define gate_id {$gate_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.StartLoadAPI
+*!
+
+!***> End Loading
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.EndPointAPI
+*!
+
+!**> Update LR for Consignee 1
+!define consignee_id {$consignee_id_1}
+!define lr_number {l1$unique}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!***> Truck Out
+!| Script        |Common                |
+|$truck_out_date=|getTrim;|$truckoutdate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckOutAPI
+*!
+
+!***> Marking Indent as delivered
+!define consignee_id {$consignee_id}
+!define arrived_at {$loadingDate}
+!define dispatched_at {$loadingDate}
+
+!|script|common                                                                                                                |
+|$data= |getTrim;|{"data":[{"destination_id":"${consignee_id}","reported_at":"${arrived_at}","release_at":"${dispatched_at}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.MarkAsDeliveredAPI
+*!
+
+!**> Transporter Login
+!define transporter_email {pt$unique@gmail.com}
+!define transporter_password {$password}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!*> Ready for billing page
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!include -c .FrontPage.Pando.Common.CommonPDFUploadInReadyForBilling
+*!
+
+!** Verify freight charge
+!define header_name {Freight}
+!define consignee_name {dc1$unique}
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                       |
+|waitForElementToBeDisplayed;|//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody|xpath                                                                                                                                                                                                                         |10             |
+|$FreightHeaderNo=           |getHeaderColumnNumber;                                                    |//div[@class='el-table__header-wrapper']//th/div[@class='cell']                                                                                                                                                               |xpath|Freight  |
+|$consignee1_row_number=     |getHeaderColumnNumber;                                                    |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//div[@class='tabletitle']/span)[1]                                                                                |xpath|$order_id|
+|$freight_transporter=       |getText;                                                                  |(//div[@class='el-table__header-wrapper']/following-sibling::div[contains(@class,'el-table__body-wrapper')]//tr)[$consignee1_row_number]//td[$FreightHeaderNo]//div[starts-with(@class,'gridrefvalue') or @class='totalvalue']|xpath          |
+
+!|script                     |ui                                                                                                                                                                                                                              |
+|click;                      |//div[@class='el-table__fixed']//div[contains(@class,'location') and normalize-space(text())='${consignee_name}']|xpath                                                                                                         |
+|waitForElementToBeDisplayed;|//div[@id='pane-Details']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath                                                                                              |15        |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'small case:')]                                                                |xpath|true|
+|$smallcase_rate=            |getText;                                                                                                         |//p[contains(text(),'small case:')]//strong                                                        |xpath     |
+|$smallcase_Qty=             |getText;                                                                                                         |//p[starts-with(normalize-space(),'small')]/following-sibling::p[contains(text(),'Qty:')]//strong  |xpath     |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'20a:')]                                                                       |xpath|true|
+|$rate2=                     |getText;                                                                                                         |//p[contains(text(),'20a:')]//strong                                                               |xpath     |
+|$Qty2=                      |getText;                                                                                                         |//p[starts-with(normalize-space(),'20a')]/following-sibling::p[contains(text(),'Qty:')]//strong    |xpath     |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'default:')]                                                                   |xpath|true|
+|$default_rate=              |getText;                                                                                                         |//p[contains(text(),'default:')]//strong                                                           |xpath     |
+|$default_Qty=               |getText;                                                                                                         |//p[starts-with(normalize-space(),'default')]/following-sibling::p[contains(text(),'Qty:')]//strong|xpath     |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'big case:')]                                                                  |xpath|true|
+|$bigcase_rate=              |getText;                                                                                                         |//p[contains(text(),'big case:')]//strong                                                          |xpath     |
+|$bigcase_Qty=               |getText;                                                                                                         |//p[starts-with(normalize-space(),'big')]/following-sibling::p[contains(text(),'Qty:')]//strong    |xpath     |
+|click;                      |//div[@id='tab-Charges']                                                                                         |xpath                                                                                                         |
+|waitForElementToBeDisplayed;|//div[@id='pane-Charges']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath                                                                                              |15        |
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!|script|ui                                                                                       |
+|click; |//div[contains(text(),'$order_id')]/..//button//i[contains(@class,'el-icon-close')]|xpath|
+
+!| Script                        |Common                                                          |
+|$transporter_freight_chargestab=|getTrim;              |$system_generated_amount                 |
+|check                           |checkIfStringAreEqual;|$smallcase_rate                |75  |true|
+|check                           |checkIfStringAreEqual;|$smallcase_Qty                 |21  |true|
+|check                           |checkIfStringAreEqual;|$rate2                         |30  |true|
+|check                           |checkIfStringAreEqual;|$Qty2                          |20  |true|
+|check                           |checkIfStringAreEqual;|$default_rate                  |10  |true|
+|check                           |checkIfStringAreEqual;|$default_Qty                   |2   |true|
+|check                           |checkIfStringAreEqual;|$bigcase_rate                  |20  |true|
+|check                           |checkIfStringAreEqual;|$bigcase_Qty                   |1   |true|
+|$tresult1=                      |checkIfStringAreEqual;|$freight_transporter           |2215     |
+|check                           |checkIfStringAreEqual;|$freight_transporter           |2215|true|
+|$tresult2=                      |checkIfStringAreEqual;|$transporter_freight_chargestab|2215     |
+|check                           |checkIfStringAreEqual;|$transporter_freight_chargestab|2215|true|
+**!
+
+!**> Generate invoice
+!define invoice_number {ic$unique}
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceGeneration
+**!
+
+!**> Invoice Filter
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+**!
+
+!** Verify freight charge in shipper invoice
+!|Script                     |Ui                                                                                 |
+|click;                      |(//div[contains(@class,'card-row-col')])[3]                               |xpath   |
+|waitForElementToBeDisplayed;|//div[contains(@class,'scrolling')]//table[@class='el-table__body']//tbody|xpath|10|
+
+!define header_name {Freight}
+!define consignee_name {dc1$unique}
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.CommonPaymentValidationByConsigneeInShipperInvoice
+
+!| Script                |Common                         |
+|$shipper_freight_charge=|getTrim;|$shipper_payment_value|
+
+!|script                     |ui                                                                                                                                                                                                                              |
+|click;                      |//div[@class='el-table__fixed']//div[contains(@class,'location') and normalize-space(text())='${consignee_name}']|xpath                                                                                                         |
+|waitForElementToBeDisplayed;|//div[@id='pane-Details']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath                                                                                              |15        |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'small case:')]                                                                |xpath|true|
+|$smallcase_rate=            |getText;                                                                                                         |//p[contains(text(),'small case:')]//strong                                                        |xpath     |
+|$smallcase_Qty=             |getText;                                                                                                         |//p[starts-with(normalize-space(),'small')]/following-sibling::p[contains(text(),'Qty:')]//strong  |xpath     |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'20a:')]                                                                       |xpath|true|
+|$rate2=                     |getText;                                                                                                         |//p[contains(text(),'20a:')]//strong                                                               |xpath     |
+|$Qty2=                      |getText;                                                                                                         |//p[starts-with(normalize-space(),'20a')]/following-sibling::p[contains(text(),'Qty:')]//strong    |xpath     |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'default:')]                                                                   |xpath|true|
+|$default_rate=              |getText;                                                                                                         |//p[contains(text(),'default:')]//strong                                                           |xpath     |
+|$default_Qty=               |getText;                                                                                                         |//p[starts-with(normalize-space(),'default')]/following-sibling::p[contains(text(),'Qty:')]//strong|xpath     |
+|check                       |isElementPresent;                                                                                                |//p[contains(text(),'big case:')]                                                                  |xpath|true|
+|$bigcase_rate=              |getText;                                                                                                         |//p[contains(text(),'big case:')]//strong                                                          |xpath     |
+|$bigcase_Qty=               |getText;                                                                                                         |//p[starts-with(normalize-space(),'big')]/following-sibling::p[contains(text(),'Qty:')]//strong    |xpath     |
+|click;                      |//div[@id='tab-Charges']                                                                                         |xpath                                                                                                         |
+|waitForElementToBeDisplayed;|//div[@id='pane-Charges']//div[starts-with(normalize-space(@class),'tab-content')]                               |xpath                                                                                              |15        |
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationInPopupDialogInReadyForBilling
+
+!| Script                    |Common                                                      |
+|$shipper_freight_chargestab=|getTrim;              |$system_generated_amount             |
+|check                       |checkIfStringAreEqual;|$smallcase_rate            |75  |true|
+|check                       |checkIfStringAreEqual;|$smallcase_Qty             |21  |true|
+|check                       |checkIfStringAreEqual;|$rate2                     |30  |true|
+|check                       |checkIfStringAreEqual;|$Qty2                      |20  |true|
+|check                       |checkIfStringAreEqual;|$default_rate              |10  |true|
+|check                       |checkIfStringAreEqual;|$default_Qty               |2   |true|
+|check                       |checkIfStringAreEqual;|$bigcase_rate              |20  |true|
+|check                       |checkIfStringAreEqual;|$bigcase_Qty               |1   |true|
+|$tresult3=                  |checkIfStringAreEqual;|$shipper_freight_charge    |2215     |
+|check                       |checkIfStringAreEqual;|$shipper_freight_charge    |2215|true|
+|$tresult4=                  |checkIfStringAreEqual;|$shipper_freight_chargestab|2215     |
+|check                       |checkIfStringAreEqual;|$shipper_freight_chargestab|2215|true|
+**!
+
+!**> Validating Test Results
+!|script  |common                                                                    |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+**!
+
+!** Retrieving the Job ID using API
+!define movement {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.RetrieveOptimaJobIDAPI
+*!

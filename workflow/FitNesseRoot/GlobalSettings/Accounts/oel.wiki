@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://oel-auto.pandostaging.in}
+!define username {pandooelauto@outlook.com}
+!define password {test@1234}
+!define shipper_client_id {5e8f0144b496cb0adf752ba6}

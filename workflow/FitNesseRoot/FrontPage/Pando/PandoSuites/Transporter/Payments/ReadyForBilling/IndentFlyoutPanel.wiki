@@ -1,0 +1,6 @@
+---
+Suite
+Suites: pay2
+---
+!1 Test suite for payments indent flyout panel showing base freight calculation
+!contents -R2 -g -p -f -h

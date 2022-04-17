@@ -1,0 +1,405 @@
+---
+Help: Full flow from indent to Payments through ERP only
+Suites: oel3
+Test
+---
+!**> Unique values assignment
+!|script   |common                                 |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss   |
+|$num=     |getRandomNumber;        |100000 |999999|
+|$currDate=|getCurrentDateTimeStamp |default       |
+|$year=    |getSubString;           |$unique|0  |4 |
+
+!|script       |DateUtil                      |
+|$truckindate= |dateCalculation;|yyyy/MM/dd|-2|
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd|-1|
+|$cdate=       |dateCalculation;|yyyy/MM/dd|1 |
+|$rdate=       |dateCalculation;|yyyy/MM/dd|0 |
+|$paydate=     |dateCalculation;|yyyy/MM/dd|2 |
+
+!| Script      |Common                                          |
+|$truckindate= |stringConcatenation;|$truckindate |!- 10:00:00-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- 14:00:00-!|
+|$rdate=       |stringConcatenation;|$rdate       |!- $timer -! |
+|$paydate=     |stringConcatenation;|$paydate     |!- 10:00:00-!|
+
+!|Script        |DateUtil                            |
+|$loadingDate=  |dateCalculation;|yyyy/MM/dd|0       |
+|$truckindate=  |utcConversion;  |$truckindate       |
+|$loadingDate=  |utcConversion;  |$loadingDate       |
+|$truckoutdate= |utcConversion;  |$truckoutdate      |
+|$validate_mail=|parseDate;      |$rdate    |hh:mm a |
+|$rdate=        |utcConversion;  |$rdate             |
+|$reporttime=   |dateCalculation;|hour      |hh:mma|0|
+|$reportdate=   |dateCalculation;|dd-MM-yyyy|0       |
+
+!define truck_no {TN 09 CF 2857}
+*!
+
+!***> Consignee Creation via ERP API
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Egmore}
+!define city {city$unique}
+!define state {Tamil Nadu}
+!define pincode {600980}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+
+!| Script|Common                                                                                                                                                                                                                                                                                                        |
+|$data = |getTrim;|{"data":[{"name":"${consignee_name}","reference_number":"${consignee_ref_id}","address":"${address}","city":"${city}","state":"${state}","region":"${region}","mobile_number":"${manager_mobile}","pincode":"${pincode}","email":"${manager_email}","category":"B","customer_type":"customer site"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.CommonERPAPI.CommonConsigneeCreationDynamicERPAPI
+*!
+
+!**> Transporter Creation via ERP API
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pt+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!define gst_number {GST$unique}
+!define gst_type {FCM}
+!define gst_percentage {10}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|$data= |getTrim;|{"data":[{"name": "${transporter_name}","reference_number": "${transporter_ref_id}","address": "${address}, ","city": "${city}","state": "${state}","pincode": "${pincode}","contact_name": "${manager_name}","contact_mobile": "${manager_mobile}","contact_email": "${manager_email}","gst_number": "${gst_number}","pan_number": "${pancard}","gst_type": "${gst_type}","percentage": "${gst_percentage}"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.TransporterCreationDynamicERPAPI
+
+!** Updating manager data in UI
+!define search_field {Enter Transporter Name}
+!define search_text {${transporter_name}}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonTransporterSearchInDataManager
+
+!|Script                     |Ui                                                                                                                                                                     |
+|click;                      |//span[contains(text(),'Edit')]                                       |xpath                                                                                           |
+|waitForElementToBeDisplayed;|//div[contains(@class,'drawer-body')]                                 |xpath                                                               |15                         |
+|$NameHeaderNo=              |getHeaderColumnNumber;                                                |(//div[@class='el-table__header-wrapper'])[2]//th/div[@class='cell']|xpath|Manager              |
+|$MobileHeaderNo=            |getHeaderColumnNumber;                                                |(//div[@class='el-table__header-wrapper'])[2]//th/div[@class='cell']|xpath|Representative Mobile|
+|$EmailHeaderNo=             |getHeaderColumnNumber;                                                |(//div[@class='el-table__header-wrapper'])[2]//th/div[@class='cell']|xpath|Representative Email |
+|click;                      |(//tr[starts-with(@class,'el-table__row')]/td)[$NameHeaderNo]//input  |xpath                                                                                           |
+|clearValue;                 |(//tr[starts-with(@class,'el-table__row')]/td)[$NameHeaderNo]//input  |xpath                                                                                           |
+|sendKeys;                   |(//tr[starts-with(@class,'el-table__row')]/td)[$NameHeaderNo]//input  |xpath                                                               |${manager_name}            |
+|click;                      |(//tr[starts-with(@class,'el-table__row')]/td)[$MobileHeaderNo]//input|xpath                                                                                           |
+|clearValue;                 |(//tr[starts-with(@class,'el-table__row')]/td)[$MobileHeaderNo]//input|xpath                                                                                           |
+|sendKeys;                   |(//tr[starts-with(@class,'el-table__row')]/td)[$MobileHeaderNo]//input|xpath                                                               |${manager_mobile}          |
+|click;                      |(//tr[starts-with(@class,'el-table__row')]/td)[$EmailHeaderNo]//input |xpath                                                                                           |
+|clearValue;                 |(//tr[starts-with(@class,'el-table__row')]/td)[$EmailHeaderNo]//input |xpath                                                                                           |
+|sendHumanKeys;              |(//tr[starts-with(@class,'el-table__row')]/td)[$EmailHeaderNo]//input |xpath                                                               |${manager_email}           |
+|click;                      |//span[normalize-space(text())='Update']                              |xpath                                                                                           |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[contains(text(),'Success')]                  |xpath                                                               |30                         |
+|$successMessage=            |getElementAttribute;                                                  |//h3[text()='Success']/following-sibling::span                      |xpath|innerText            |
+**!
+**!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!***> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!**> Material Creation via ERP API
+!define material_name {m$unique}
+!define material_code {mc$unique}
+!define business_unit {Kg}
+!define piece_per_box {100}
+!define box_width {50}
+!define box_length {40}
+!define box_height {60}
+!define box_weight {20}
+!define box_volume {30}
+
+!|script|common                                                                                                                                                                                                                                                                              |
+|$data= |getTrim;|{"data":[{"name":"${material_name}","code":"${material_code}","bu":"${business_unit}","piece_box":"${piece_per_box}","box_width":"${box_width}","box_length":"${box_length}","box_height":"${box_height}","box_weight":"${box_weight}","division":"D","gst_exempt":false}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.CommonERPAPI.CommonMaterialCreationERPAPI
+**!
+
+!***> Uploading Rate Matrix via ERP API
+!|Script|Common                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":[{"contract_type":"City","source":"${depot_city}","destination":"city$unique","vehicle_type":"${vehicle_name}","distance":"100","transporter_reference_number":"${transporter_ref_id}","transporter_name":"${transporter_name}","transit_days":"1","freight_rate":"10000","freight_unit":"trip","valid_from":"2019/01/01","valid_to":"$cdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.RateMatrixDynamicAPI
+*!
+
+!**> Creating Indent 
+!define type {Outbound}
+!define source_location {${depot_name}}
+!define destination_location {${consignee_name}}
+!define gate_id {RQ$unique}
+!define switch_depo {Consignee} 
+!define switch_type {2}
+!define delivery_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentBasedOnLocation.CommonSecondaryIndentInUI
+**!
+
+!***> Indent Delivery
+!**> Adding vehicle number
+!define vechicle_number {TN $num1 $rand1 $num2}
+!define driver_name {$driver}
+!define phone_number {123}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!**> Inspection Accept
+!|script|common                                                                                                                                                                                                                                           |
+|$data= |getTrim;|{"data":{"accepted":true,"inspection":{"truck_type":true,"truck_condition":true,"loading_straps":true,"loading_space":true,"clean":true},"documents":{"driving_licence":true,"vehicle_registration":true,"pollution_certificate":true}}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInspection
+**!
+
+!**> Truck In 
+!|Script        |Common               |
+|$truck_in_date=|getTrim;|$truckindate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!*** Start Loading
+!define gate_id {$gate_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.StartLoadAPI
+*!
+
+!*** End Loading
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.EndPointAPI
+*!
+
+!*** Truck Out
+!| Script        |Common                |
+|$truck_out_date=|getTrim;|$truckoutdate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckOutAPI
+*!
+
+!** Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {100} 
+!define quantity_unit {cases}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {10000}
+!define invoice_date {$rdate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"mc$unique","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${consignee_ref_id}","sold_to":"${consignee_ref_id}","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$rdate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":"000001"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** Marking Indent as delivered
+!|Script       |Ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {d$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+
+!define report_date {$reportdate}
+!define report_time {$reporttime}
+!define pod_date {$reportdate}
+!define pod_time {$reporttime}
+
+!include -c .FrontPage.Pando.PandoSuites.Payments.CommonMarkAsDeliveredinUI
+*!
+
+!** ERP Upload for Consignee
+!|script|common                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"cr$unique","sold_to":"cr$unique","material_invoice_number":"INV-$unique","material_code":"mc$unique","no_of_shortage":"5","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"0","no_of_carton_damage":"0","release_date":"$rdate"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+*!
+
+!**> Login to Transporter
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+
+!include -c .FrontPage.Pando.Common.TransporterLogin
+*!
+
+!*> Ready for billing page
+!|Script  |Common                                          |
+|$pdfpath=|getPath;|testAttachment/pdf_$unique.pdf|fullpath|
+
+!|Script               |FileUtil           |
+|createFileFromContent;|$pdfpath|test|UTF-8|
+
+!define lr_copy {$pdfpath}
+!include -c .FrontPage.Pando.Common.CommonPDFUploadInReadyForBilling
+*!
+
+!** Validating payments on ready for billing
+!define header_name {Freight}
+!define consignee_name {city$unique}
+
+!|script                     |ui                                            |
+|waitForElementToBeDisplayed;|//div[contains(@class,'table__body')]|xpath|20|
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonPaymentValidationByConsigneeInReadyForBilling
+
+!| Script                    |Common                           |
+|$transporter_freight_charge=|getTrim;|$system_generated_amount|
+
+!|Script   |common                                                       |
+|check     |checkIfStringAreEqual;|$transporter_freight_charge|10000|true|
+|$tresult1=|checkIfStringAreEqual;|$transporter_freight_charge|10000     |
+**!
+
+!**> Generate Invoice 
+!define invoice_number {ic$unique}
+!define gstn_no {gst$unique}
+!define remarks {remarks$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.CommonGenerateInvoice
+**!
+
+!** Validating Data on shipper invoice
+!define depot_name {d$unique}
+
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!define click_invoice {t$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.CommonNavigatingToInvoiceDetailsShipperInvoice
+
+!define header_name {Freight}
+!define consignee_name {city$unique}
+
+!|script                     |ui                                            |
+|waitForElementToBeDisplayed;|//div[contains(@class,'table__body')]|xpath|20|
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.CommonPaymentValidationByConsigneeInShipperInvoice
+
+!| Script                |Common                         |
+|$shipper_freight_charge=|getTrim;|$shipper_payment_value|
+
+!|Script   |common                                                   |
+|check     |checkIfStringAreEqual;|$shipper_freight_charge|10000|true|
+|$tresult2=|checkIfStringAreEqual;|$shipper_freight_charge|10000     |
+
+!|Script  |Ui                                                             |
+|click;   |//button[contains(text(),'Summary')]    |xpath                 |
+|click;   |//button/span[contains(text(),'Return')]|xpath                 |
+|sendKeys;|//textarea[@class='comments']           |xpath|Rejected $unique|
+|click;   |//button[text()='RETURN']               |xpath                 |
+|wait;    |5                                                              |
+**!
+
+!** Validating invoices 
+
+!include -c .FrontPage.Pando.Common.CommonTransporterInvoiceFilter
+
+!|Script|Ui                                                                            |
+|click; |//span[contains(@class,'status') and normalize-space(text())='Returned']|xpath|
+|click; |//button[contains(text(),'Summary')]                                    |xpath|
+|click; |//button[contains(text(),'Re-Submit')]                                  |xpath|
+|click; |//button/span[normalize-space(text())='YES']                    |xpath|
+
+!include -c .FrontPage.Pando.Common.CommonTransporterInvoiceFilter
+
+!|Script                        |Ui                                                                                                                                                                  |
+|refreshForElementToBeDisplayed;|//span[contains(@class,'status') and normalize-space(text())='Re-submitted']|xpath                                                                       |5    |1   |
+|check                          |isElementPresent;                                                           |//span[contains(@class,'status') and normalize-space(text())='Re-submitted']|xpath|true|
+|$tresult3=                     |isElementPresent;                                                           |//span[contains(@class,'status') and normalize-space(text())='Re-submitted']|xpath     |
+**!
+
+!** Validating Checker
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!|Script|Ui                                                  |
+|click; |//span[contains(text(),'${transporter_name}')]|xpath|
+|click; |//button[contains(text(),'Summary')]          |xpath|
+|click; |//button/span[contains(text(),'Checked')]     |xpath|
+|click; |//button/span[normalize-space(text())='YES']                    |xpath|
+|wait;  |3                                                   |
+
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|Script                        |Ui                                                                                                                                                        |
+|refreshForElementToBeDisplayed;|//span[contains(@class,'status') and normalize-space(text())='Checked']|xpath                                                                  |5    |1   |
+|check                          |isElementPresent;                                                      |//span[contains(@class,'status') and normalize-space(text())='Checked']|xpath|true|
+|$tresult4=                     |isElementPresent;                                                      |//span[contains(@class,'status') and normalize-space(text())='Checked']|xpath     |
+**!
+
+!***> Validating the test results
+!|Script  |Common                                                                    |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+*!

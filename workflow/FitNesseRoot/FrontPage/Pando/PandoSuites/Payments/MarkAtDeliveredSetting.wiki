@@ -1,0 +1,22 @@
+---
+Help: MarkAtDeliveredSetting
+---
+!|Script|Ui|
+|click;|//span[contains(text(),'MARK AS DELIVERED')]|xpath|
+|click;|(//div[@aria-hidden='false']//i[@class='el-input__icon el-icon-time'])[1]|xpath|
+|click;|//input[@placeholder='Select date']|xpath|
+|sendKeys;|//input[@placeholder='Select date']|xpath|${out_date}|
+|click;|//input[@placeholder='Select time']|xpath|
+|clearValueWA;|//input[@placeholder='Select time']|xpath|
+|sendKeys;|//input[@placeholder='Select time']|xpath|${out_time}|
+|click;|//div[@class='el-picker-panel__footer']|xpath|
+|click;|//div[@class='el-picker-panel__footer']/button[@class='el-button el-picker-panel__link-btn el-button--default el-button--mini is-plain']|xpath|
+|click;|(//div[@aria-hidden='false']//i[@class='el-input__icon el-icon-time'])[2]|xpath|
+|click;|(//input[@placeholder='Select date'])[2]|xpath|
+|sendKeys;|(//input[@placeholder='Select date'])[2]|xpath|${out_date}|
+|click;|(//input[@placeholder='Select time'])[2]|xpath|
+|clearValueWA;|(//input[@placeholder='Select time'])[2]|xpath|
+|sendKeys;|(//input[@placeholder='Select time'])[2]|xpath|${out_time}|
+|click;|(//div[@class='el-picker-panel__footer'])[2]|xpath|
+|click;|(//div[@class='el-picker-panel__footer']/button[@class='el-button el-picker-panel__link-btn el-button--default el-button--mini is-plain'])[2]|xpath|
+|click;|//div[@aria-hidden='false']//button[@class='btn-primary-outline']|xpath|

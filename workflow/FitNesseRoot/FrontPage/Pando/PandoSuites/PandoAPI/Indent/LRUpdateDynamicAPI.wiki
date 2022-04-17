@@ -1,0 +1,8 @@
+---
+Test
+---
+!|Script    |Http                                     |
+|addHeader; |Authorization |bearer $stoken            |
+|setBaseUrl;|${surl}/api/order/$order_id/lorry_receipt|
+|$lrresult= |getResponse;  |Application/Json|put|$data|
+|check      |getStatusCode;|200                       |

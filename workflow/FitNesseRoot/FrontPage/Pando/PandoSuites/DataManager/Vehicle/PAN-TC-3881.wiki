@@ -1,0 +1,51 @@
+---
+Help: vehicle bulk upload
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Uploading Vehicles with 1 valid FTL type, 1 valid PTL type and 1 invalid data
+!define row {Vehicle Name*,CFT*,KG*,Vehicle Type*,Length (cm),Breadth (cm),Height (cm),Description,Mode}
+!define column {f$unique,600,1000,FTL,100,200,300,vehicle|p$unique,300,1000,PTL,100,200,300,vehicle|inv$unique,,1000,PTL,100,200,300,invalidvehicledata}
+!define file_name {v_$unique}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonVehicleBulkUpload
+**!
+
+!** Verifying the Uploaded valid data in UI and invalid data in rejected list
+!|Script                     |Ui                                                                                                           |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span|xpath                                         |30             |
+|$successMessage=            |getElementAttribute;                          |//h3[text()='Success']/following-sibling::span|xpath|innerText|
+|wait;                       |8                                                                                                            |
+|$tresult1=                  |isElementPresent;                             |//span[contains(text(),'p$unique')]           |xpath          |
+|$tresult2=                  |isElementPresent;                             |//span[contains(text(),'f$unique')]           |xpath          |
+|$tresult3=                  |isElementNotPresent;                          |//span[contains(text(),'inv$unique')]         |xpath          |
+|$tresult4=                  |isElementPresent;                             |//button[contains(text(), 'Rejected List')]   |xpath          |
+
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+
+!|Script|Ui                                               |
+|click; |//button[contains(text(), 'Rejected List')]|xpath|
+|wait;  |10                                               |
+**!
+
+!** Verifying the invalid data rejection list
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|script|ExcelQuery                                                                                |
+|$count=|getCountQuery;|$filename|select * from "transporters" where "Vehicle Name*" = 'inv$unique'|
+
+!|Script   |common                                                                               |
+|check     |checkIfStringAreEqual;|$successMessage|2 Uploaded and 1 Invalid records out of 3|true|
+|check     |checkIfStringAreEqual;|$count         |1                                        |true|
+|$tresult5=|checkIfStringAreEqual;|$count         |1                                             |
+
+!|Script  |Common                                                                              |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|
+**!

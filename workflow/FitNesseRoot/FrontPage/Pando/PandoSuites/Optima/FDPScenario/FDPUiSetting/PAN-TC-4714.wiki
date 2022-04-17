@@ -1,0 +1,122 @@
+---
+Help: Only FDP mode can set the weight and volume for pickup_threshold, floor_one, floor_two in the UI level
+Test
+---
+!5 Description : Optima FDP Mode UI setting
+!5 Expected : Customer should be able to set Optima FDP setting in /optima/cs setting page only when FDP enabled
+
+!***> Unique values assignment
+!| Script         |Common                                     |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$currDate=       |getCurrentDateTimeStamp |iso               |
+|$year=           |getSubString;           |$unique|0    |4   |
+|$detention_group=|getRandomString;        |4      |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000 |999999    |
+
+!|script     |DateUtil                  |
+|$today=     |dateCalculation;|y-MM-dd|0|
+|$todayPlus1=|dateCalculation;|y-MM-dd|1|
+|$todayPlus2=|dateCalculation;|y-MM-dd|2|
+*!
+
+!** Depot for Shipper
+!define depot_name {d$unique}
+!define depot_state {Madhya Pradesh}
+!define depot_city {B$unique}
+!define depot_region {North}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {462001}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!*** Gate Creation for shipper depot
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!*** Gate Manager Creation
+!define role_id {$retrieve_key_value}
+!define user_number {12891}
+!define user_name {u1$unique}
+!define user_email {pandoindent+1+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation one
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {North}
+!define gate_pincode {462001}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+*!
+*!
+
+!** Route CS Setting
+!define depo {${depot_name}}
+!define movement_type {Primary}
+!define movement_type {Primary}
+!define movement {2}
+
+!define split_factor {5}
+!define max_split {2}
+!define algorithm_mode {FDP}
+!define angle {30}
+!define optima_type {2D}
+!define mode {0}
+!define pickupkg {2000}
+!define pickupcft {200}
+!define floor1kg {5400}
+!define floor1cft {600}
+!define floor2kg {90}
+!define floor2cft {90}
+
+!|Script       |Ui                                                                                                                 |
+|navigateToUrl;|${surl}/optima/cs                                                                                                  |
+|click;        |//input[@placeholder='Select Depot']                           |xpath                                              |
+|sendKeys;     |//div[normalize-space(text())='Depot']/..//input               |xpath                                   |${depo}   |
+|click;        |//span[contains(text(),'${depo}')]                             |xpath                                              |
+|click;        |//div[contains(text(),'Movement')]/following-sibling::div      |xpath                                              |
+|click;        |//li[contains(.,'${movement_type}')]                           |xpath                                              |
+|click;        |//div[contains(text(),'Algorithm Mode')]/following-sibling::div|xpath                                              |
+|click;        |//li[contains(.,'Default')]                                    |xpath                                              |
+|check         |isElementNotPresent;                                           |//*[contains(text(),'Pickup Threshold')]|xpath|true|
+|$tresult1=    |isElementNotPresent;                                           |//*[contains(text(),'Pickup Threshold')]|xpath     |
+|click;        |//div[contains(text(),'Algorithm Mode')]/following-sibling::div|xpath                                              |
+|click;        |//li[contains(.,'Custom')]                                     |xpath                                              |
+|check         |isElementNotPresent;                                           |//*[contains(text(),'Pickup Threshold')]|xpath|true|
+|$tresult2=    |isElementNotPresent;                                           |//*[contains(text(),'Pickup Threshold')]|xpath     |
+|click;        |//div[contains(text(),'Algorithm Mode')]/following-sibling::div|xpath                                              |
+|click;        |//li[contains(.,'Courier')]                                    |xpath                                              |
+|check         |isElementNotPresent;                                           |//*[contains(text(),'Pickup Threshold')]|xpath|true|
+|$tresult3=    |isElementNotPresent;                                           |//*[contains(text(),'Pickup Threshold')]|xpath     |
+|click;        |//div[contains(text(),'Algorithm Mode')]/following-sibling::div|xpath                                              |
+|click;        |//li[contains(.,'FDP')]                                        |xpath                                              |
+|check         |isElementPresent;                                              |//*[contains(text(),'Pickup Threshold')]|xpath|true|
+|$tresult4=    |isElementPresent;                                              |//*[contains(text(),'Pickup Threshold')]|xpath     |
+
+!|script  |common                                                                    |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+*!
+
+!*** Update result
+!include .FrontPage.Pando.Common.CommonResultImage
+*!

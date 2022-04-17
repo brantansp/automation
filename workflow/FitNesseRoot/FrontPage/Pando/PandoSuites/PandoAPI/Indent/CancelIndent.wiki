@@ -1,0 +1,8 @@
+---
+Test
+---
+!|Script    |Http                                                                     |
+|addHeader; |Authorization |bearer $stoken                                            |
+|setBaseUrl;|${surl}/api/order/$order_id/cancel                                       |
+|$report_at=|getResponse;  |Application/Json|put|{"data":{"comment":"Cancel $unique"}}|
+|check      |getStatusCode;|200                                                       |

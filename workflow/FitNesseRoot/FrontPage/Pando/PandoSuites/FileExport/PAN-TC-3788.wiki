@@ -1,0 +1,43 @@
+---
+Help: Transporter Rejected list should only show updated with most recent upload
+Suites: export1
+Test
+---
+!** Uploading Transporter Bulk Upload
+!define row {Transporter Name*,Reference ID*,Manager,Representative Mobile,Representative Email*,Address,City,State,Postal Code,Gst type(FCM/RCM)*,Percentage*,GST State,GSTIN,GST Reference ID,Credit Period,MSME,PAN Number,Status}
+!define column {tbulk1$unique,t1$unique refrence,t1 $unique,123,pandotransporter+1$unique@gmail,Ashok Nager,Chennai,Tamil Nadu,600083,FCM,20,Tamil Nadu,10,123456789012,,,,Active}
+
+!|Script    |Common                                       |
+|$excelpath=|getPath;|testAttachment/$unique.xlsx|fullpath|
+
+
+!|Script                |Excel                      |
+|newSheetDynamicColumns;|${row}|${column}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/transporter                                         |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|click;                    |//button[text()='Rejected List']         |xpath                 |
+|wait;                     |15                                                              |
+**!
+
+!** Get Filename and rename it
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+**!
+
+!|script  |ExcelQuery                                                                            |
+|$count=  |getCountQuery;|$filename|select * from transporters                                   |
+|$reason1=|selectQuery;  |$filename|select Reason from transporters where City = 'Chennai'|Reason|
+
+!|Script   |common                                                                                                             |
+|check     |checkIfStringExistsIn;       |[User alone not created: pandotransporter+1$unique@gmail invalid email]|$reason1|true|
+|$tresult1=|checkIfStringExistsIn;       |[User alone not created: pandotransporter+1$unique@gmail invalid email]|$reason1     |
+|check     |checkIfStringAreEqual;       |$count                                                                 |1       |true|
+|$tresult2=|checkIfStringAreEqual;       |$count                                                                 |1            |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2                                                                  |

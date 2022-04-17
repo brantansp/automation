@@ -1,0 +1,11 @@
+---
+Help: Invoice Filter for Pay V2 Transporter Side
+---
+!|Script|Ui|
+|navigateToUrl;| ${turl}/v2/invoices|
+|click;|//button[@class='el-button el-button--default']|xpath|
+|click;|(//div[@class='slideleft_menu']//input)[2]|xpath|
+|sendKeys;|(//div[@class='slideleft_menu']//input)[2]|xpath|${depot_name}|
+|click;|//span[text()='${depot_name}']|xpath|
+|wait;                       |2                                                                       |
+|click;|//button[text()='APPLY']|xpath|

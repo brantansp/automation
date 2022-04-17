@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://itcpspd-auto.pandostaging.in}
+!define username {pandoitcpspdauto@gmail.com}
+!define password {test@1234}
+!define shipper_client_id {621ee79371a20c4a57fb1416}

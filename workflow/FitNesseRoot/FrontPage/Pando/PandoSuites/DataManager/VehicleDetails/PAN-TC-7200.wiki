@@ -1,0 +1,93 @@
+---
+Help: Ensure if record with valid transporter ID, vehicle type, Vehicle id gets updated via Upload
+Suites: castrol
+Test
+---
+!*> Unique value assignment
+!|Script |Common                                  |
+|$vno_1= |getRandomNumber;        |20  |76        |
+|$vno_2= |getRandomString;        |2   |ALPHAUPPER|
+|$vno_3= |getRandomNumber;        |1000|9999      |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss    |
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+!define truckno_nospace {TN$vno_1$vno_2$vno_3}
+*!
+
+!*> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}  
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!*> Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {FTL}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!***> Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!define credit_period {20}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","credit_period":"${credit_period}","reference_id":"${transporter_ref_id}","status":${transporter_status},"country":"India","generate_lr":true,"users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+*!
+
+!* Vehicle details bulk upload
+!define row {Vehicle Number,Vehicle Type,Chasis Number,Engine Number,Insurance Validity,Fitness Validity,Vehicle Model,Depot,Transporter,Tare Weight,Vehicle Length,Vehicle Width,Vehicle Height,Vehicle uom,Vehicle Filled Weight,Vehicle Gross Weight,Vehicle Volume,Induction Date,Induction End Date,Pimc Expiry Date}
+!define column {${truck_no},${vehicle_name},MED2261CGEP009435,,,,TATA ACE,$depot_ref_id,${transporter_ref_id},11020,28,8.25,8,KG,239800,35000,459,2014-04-01T00:00:00.000Z,2030-12-31T00:00:00.000Z,2030-12-31T00:00:00.000Z}
+
+!include -c .FrontPage.Pando.Common.CommonVehicleDetailsBulkUpload
+*!
+
+!** Verification of Vehcile creation details
+!define search_text {${truckno_nospace}}
+!define filter_by {Enter Vehicle Number}
+
+!include -c .FrontPage.Pando.Common.CommonSearchTrigger
+
+!|Script            |Ui                                                                                                                                                             |
+|$noofrows=         |getCountOfElements;                                                                              |//div[@class="grid-list-row el-row el-row--flex"]|xpath      |
+|isElementDisplayed;|(//div[contains(@class,'grid-list-row')]//descendant::span[1]/span)[text()='${truckno_nospace}'] |xpath                                                        |
+|isElementDisplayed;|(//div[contains(@class,'grid-list-row')]//descendant::span[1]/span)[text()='${vehicle_name}']    |xpath                                                        |
+|isElementDisplayed;|(//div[contains(@class,'grid-list-row')]//descendant::span[1]/span)[text()='TATA ACE']           |xpath                                                        |
+|isElementDisplayed;|(//div[contains(@class,'grid-list-row')]//descendant::span[1]/span)[text()='${transporter_name}']|xpath                                                        |
+|isElementDisplayed;|(//div[contains(@class,'grid-list-row')]//descendant::span[1]/span)[text()='MED2261CGEP009435']  |xpath                                                        |
+|click;             |//span[contains(text(),"Edit")]                                                                  |xpath                                                        |
+|$numberofdepots=   |getCountOfElements;                                                                              |//tr[contains(@class,'row')]                     |xpath      |
+|$deponame=         |getElementAttribute;                                                                             |(//tr[contains(@class,'row')])[1]//td[1]//input  |xpath|value|
+**!
+
+!* Validating test result
+!|Script   |common                                                          |
+|$tresult1=|checkIfStringAreEqual;       |1           |$noofrows            |
+|$tresult2=|checkIfStringAreEqual;       |1           |$numberofdepots      |
+|$tresult3=|checkIfStringAreEqual;       |$deponame   |$depot_name          |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,true|
+|check     |checkIfStringAreEqual;       |$tresult    |true      |true      |
+*!

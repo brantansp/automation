@@ -1,0 +1,10 @@
+---
+Help: Use to Filter and Search in all DM modules
+---
+!|Script                     |Ui                                                                                                                                                        |
+|click;                      |//div[contains(@class,'searchterm')]                                                                                                 |xpath               |
+|wait;                       |1                                                                                                                                                         |
+|waitForElementToBeDisplayed;|//input[@placeholder='${filter_by}']                                                                                                 |xpath|30            |
+|clearAndSend;               |//input[@placeholder='${filter_by}']                                                                                                 |xpath|${search_text}|
+|click;                      |//button[text()='Search']                                                                                                            |xpath               |
+|waitForElementToBeDisplayed;|//div[contains(@class,'order-item') or contains(@class,'card-row') or contains(@class,'paymentempty') or contains(@class,'list-row')]|xpath|30            |

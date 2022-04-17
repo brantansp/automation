@@ -1,0 +1,225 @@
+---
+Help: ALGORITHM MODE - FDP mode Depot level configuration for Primary movement
+Test
+---
+!5 Description : Optima FDP Mode UI setting
+!5 Expected : Customer should be able to set Optima FDP setting in /optima/cs setting page and able to perform optimize for FDP Algorithm
+
+!***> Unique values assignment
+!| Script         |Common                                     |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$currDate=       |getCurrentDateTimeStamp |iso               |
+|$year=           |getSubString;           |$unique|0    |4   |
+|$detention_group=|getRandomString;        |4      |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000 |999999    |
+
+!|script     |DateUtil                  |
+|$today=     |dateCalculation;|y-MM-dd|0|
+|$todayPlus1=|dateCalculation;|y-MM-dd|1|
+|$todayPlus2=|dateCalculation;|y-MM-dd|2|
+
+*!
+
+!** Source Depot Creation
+!define depot_name {src$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {s$unique}
+!define depot_region {South}
+!define depot_short_code {s$num}
+!define depot_reference_id {s$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {SG1$unique}
+!define g_user_email {pandoindent+1$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script         |common           |
+|$location_id=   |getTrim;|$depot  |
+|$source_gate_id=|getTrim;|$gate_id|
+*!
+
+!*** Destination Depot Creation
+!define depot_name {dest$unique}
+!define depot_state {Hariyana}
+!define depot_city {d$unique}
+!define depot_region {South}
+!define depot_short_code {d$num}
+!define depot_reference_id {dr$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {DG1$unique}
+!define g_user_email {pandoindent+2$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script                       |common           |
+|$destination_location_id=     |getTrim;|$depot  |
+|$destination_gate_location_id=|getTrim;|$gate_id|
+*!
+
+!** Route CS Setting
+!define depo {src$unique}
+!define movement_type {Primary}
+!define movement {2}
+
+!define split_factor {5}
+!define max_split {2}
+!define algorithm_mode {FDP}
+!define angle {30}
+!define optima_type {2D}
+!define mode {0}
+!define pickupkg {2000}
+!define pickupcft {200}
+!define floor1kg {5400}
+!define floor1cft {600}
+!define floor2kg {90}
+!define floor2cft {90}
+
+!|Script                     |Ui                                                                                                                                               |
+|navigateToUrl;              |${surl}/optima/cs                                                                                                                                |
+|click;                      |//input[@placeholder='Select Depot']                                                                                       |xpath                |
+|sendKeys;                   |//div[normalize-space(text())='Depot']/..//input                                                                           |xpath|${depo}        |
+|click;                      |//span[contains(text(),'${depo}')]                                                                                         |xpath                |
+|click;                      |//div[contains(text(),'Movement')]/following-sibling::div                                                                  |xpath                |
+|click;                      |//li[contains(.,'${movement_type}')]                                                                                       |xpath                |
+|clearValueWA;               |//div[contains(text(),'Split Factor')]//following-sibling::div/input                                                       |xpath                |
+|sendKeys;                   |//div[contains(text(),'Split Factor')]//following-sibling::div/input                                                       |xpath|${split_factor}|
+|clearValueWA;               |//div[contains(text(),'Max Splits')]//following-sibling::div/input                                                         |xpath                |
+|sendKeys;                   |//div[contains(text(),'Max Splits')]//following-sibling::div/input                                                         |xpath|${max_split}   |
+|click;                      |//div[contains(text(),'Algorithm Mode')]/following-sibling::div                                                            |xpath                |
+|click;                      |//li[contains(.,'${algorithm_mode}')]                                                                                      |xpath                |
+|clearValueWA;               |//div[contains(text(),'Angle')]//following-sibling::div/input                                                              |xpath                |
+|sendKeys;                   |//div[contains(text(),'Angle')]//following-sibling::div/input                                                              |xpath|${angle}       |
+|click;                      |//div[contains(text(),'Optima Type')]/following-sibling::div                                                               |xpath                |
+|click;                      |//li[contains(.,'${optima_type}')]                                                                                         |xpath                |
+|clearValueWA;               |//div[contains(text(),'Mode')]//following-sibling::div/input                                                               |xpath                |
+|sendKeys;                   |//div[contains(text(),'Mode')]//following-sibling::div/input                                                               |xpath|${mode}        |
+|scrollToView;               |(//div[normalize-space(text())='Floor 2']/following-sibling::div//div)[last()]                                             |xpath                |
+|clearValue;                 |(//div[normalize-space(text())='Pickup Threshold']/following-sibling::div)[1]//input[@placeholder='Enter weight threshold']|xpath                |
+|sendKeys;                   |(//div[normalize-space(text())='Pickup Threshold']/following-sibling::div)[1]//input[@placeholder='Enter weight threshold']|xpath|${pickupkg}    |
+|clearValue;                 |(//div[normalize-space(text())='Pickup Threshold']/following-sibling::div)[1]//input[@placeholder='Enter volume threshold']|xpath                |
+|sendKeys;                   |(//div[normalize-space(text())='Pickup Threshold']/following-sibling::div)[1]//input[@placeholder='Enter volume threshold']|xpath|${pickupcft}   |
+|clearValue;                 |(//div[normalize-space(text())='Floor 1']/following-sibling::div)[1]//input[@placeholder='Enter weight threshold']         |xpath                |
+|sendKeys;                   |(//div[normalize-space(text())='Floor 1']/following-sibling::div)[1]//input[@placeholder='Enter weight threshold']         |xpath|${floor1kg}    |
+|clearValue;                 |(//div[normalize-space(text())='Floor 1']/following-sibling::div)[1]//input[@placeholder='Enter volume threshold']         |xpath                |
+|sendKeys;                   |(//div[normalize-space(text())='Floor 1']/following-sibling::div)[1]//input[@placeholder='Enter volume threshold']         |xpath|${floor1cft}   |
+|clearValue;                 |(//div[normalize-space(text())='Floor 2']/following-sibling::div)[1]//input[@placeholder='Enter weight threshold']         |xpath                |
+|sendKeys;                   |(//div[normalize-space(text())='Floor 2']/following-sibling::div)[1]//input[@placeholder='Enter weight threshold']         |xpath|${floor2kg}    |
+|clearValue;                 |(//div[normalize-space(text())='Floor 2']/following-sibling::div)[1]//input[@placeholder='Enter volume threshold']         |xpath                |
+|sendKeys;                   |(//div[normalize-space(text())='Floor 2']/following-sibling::div)[1]//input[@placeholder='Enter volume threshold']         |xpath|${floor2cft}   |
+|scrollToView;               |//div[text()='OPTIMA SETTINGS']                                                                                            |xpath                |
+|clickJS;                    |//button[contains(.,'SAVE') or contains(.,'Save')]                                                                                               |xpath                |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[text()='Success']/following-sibling::span[text()='Optima settings updated']                       |xpath|30             |
+
+*!
+
+!** Route setting
+!define max_pick_up {3}
+!define max_drop_off {2}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.RouteSetting
+*!
+
+!** Vehicle Setting
+!define option {(//span[@class='el-radio__inner'])[1]}
+!define weight {1}
+!define volume {1}
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.VehicalsSetting
+*!
+
+!** Material Priority setting
+!define mat_cat {GT}
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.MaterialPrioritySetting
+*!
+
+!*** Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!*** Vehicle Creation
+!define vehicle_name {v1$unique}
+!define cft {1077}
+!define kg {16000}
+!define vehicle_type {FTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Material Creation One
+!define material_name {m1$unique}
+!define material_code {mc1$unique}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+*!
+
+!** Material Creation Two
+!define material_name {m2$unique}
+!define material_code {mc2$unique}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+*!
+
+!** Material Creation Three
+!define material_name {m3$unique}
+!define material_code {mc3$unique}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+*!
+
+!** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,s$unique,d$unique,v1$unique,100,$transporter_ref_id,$transporter_name,1,1000,per_trip,01-Jan-$year,31-Dec-2030,100,1,}
+
+!include -c  .FrontPage.Pando.Common.RateMatrix
+**!
+
+!** Delivery Picklist API 
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"D1$unique","material_code":"mc1$unique","pickup_reference_number":"SG1$unique","division":"","quantity":10,"quantity_unit":"S/O","weight":6000,"weight_unit":"KG","volume":"406","volume_unit":"CFT","lr_number":"","ship_to":"DG1$unique","sold_to":"DG1$unique","line_item":"122121","type":"${movement_type}","category":"GT","category_priority":"GT","stn":"0","date":"$today"},{"delivery_number":"D2$unique","material_code":"mc2$unique","pickup_reference_number":"SG1$unique","division":"","quantity":10,"quantity_unit":"S/O","weight":6000,"weight_unit":"KG","volume":"406","volume_unit":"CFT","lr_number":"","ship_to":"DG1$unique","sold_to":"DG1$unique","line_item":"122122","type":"${movement_type}","category":"GT","category_priority":"GT","stn":"0","date":"$today"},{"delivery_number":"D3$unique","material_code":"mc3$unique","pickup_reference_number":"SG1$unique","division":"","quantity":5,"quantity_unit":"S/O","weight":3000,"weight_unit":"KG","volume":"203","volume_unit":"CFT","lr_number":"","ship_to":"DG1$unique","sold_to":"DG1$unique","line_item":"122123","type":"${movement_type}","category":"GT","category_priority":"GT","stn":"0","date":"$today"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DeliveryPicklistAPI
+**!
+
+!*** Validating Delivery number in Delivery picklist section
+!define key {depot_reference}
+!define key_value {r$unique}
+!define retrieve_key {delivery_number}
+!define delivery_num {$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.VerifyDeliveryNumInDeliveryPicklist
+
+!|script   |common                                                         |
+|check     |checkIfStringExistsIn;|$retrieve_key_value|${delivery_num}|true|
+|$tresult1=|checkIfStringExistsIn;|$retrieve_key_value|${delivery_num}     |
+**!
+
+!*** Optimizing by clicking Optimize in setting
+!define depot {src$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimisingDeliveryPicklist
+
+!|Script  |Ui                                                                                    |
+|click;   |//div[contains(@class,'row-show')]//a|xpath                                           |
+|check    |isElementPresent;                    |//p[normalize-space(text())='Gate 1']|xpath|true|
+|$tresult=|isElementPresent;                    |//p[normalize-space(text())='Gate 1']|xpath     |
+|click;   |//div[@class='back-option']          |xpath                                           |
+**!
+
+!** Retrieving the Job ID
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.CommonTenantId
+*!

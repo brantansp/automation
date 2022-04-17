@@ -1,0 +1,27 @@
+---
+Help: SCN18_Ensure consignees (SR0122S00001, SA1860S00001) are fit in one truck
+Test
+---
+!5 SCN18_Ensure consignees (SR0122S00001, SA1860S00001) are fit in one truck
+
+!5 Client TCL
+
+!5 https://gopando.atlassian.net/browse/PAN-2434
+
+!5 https://github.com/pandocorp/optima-v2/pull/50
+
+!|Script   |Common                                              |
+|$jsonpath=|getPath;|download/scn18_PAN2434_output.json|fullpath|
+
+!|script                   |QueryOptimaOutput                                       |
+|getParsedJson;            |$jsonpath                                               |
+|$totalNoOfOrders=         |getTotalNumberOfOrders;                                 |
+|$areConsigneesInSameOrder=|areConsigneesInSameOrder;|sa1860s00001,sr0122s00001     |
+|check                     |areConsigneesInSameOrder;|sa1860s00001,sr0122s00001|true|
+
+!|script   |common                                                           |
+|check     |comparisonResult;            |$totalNoOfOrders   |<=  |5  |true  |
+|$tresult1=|comparisonResult;            |$totalNoOfOrders   |<=  |5         |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$areConsigneesInSameOrder|
+
+ 

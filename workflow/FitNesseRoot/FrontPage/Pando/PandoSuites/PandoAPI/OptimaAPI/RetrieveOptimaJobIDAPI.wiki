@@ -1,0 +1,12 @@
+---
+Help: Contains script to Retrieve last Optima Job ID
+Test
+---
+!| Script   |Http                                      |
+|addHeader; |Authorization   |bearer $stoken           |
+|setBaseUrl;|${surl}/api/optima/meta/$depot/${movement}|
+|$response= |getResponse;    |Application/Json  |get | |
+|check      |getStatusCode;  |200                      |
+
+!|Script|json                                      |
+|$jobID=|getValueFromJSON;|$response|data.lastJobId|

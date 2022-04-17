@@ -1,0 +1,296 @@
+---
+Help: Ensure negative amount is not get added in wallet while Swithching to RFQ
+Test
+---
+!5 When Indent Rejected by T1, shipper send RFQ to T2 transporter for Per-ton contract. When T2 Bids lesser than contract amount, shipper accepts and Indent for T2 transporter.
+
+!5 In Wallet V2, for the T1, only arrival delay breach amount should be available for debit. Not the difference amount of the T2's bid.
+
+!** Unique values assignment
+!|Script   |Common                                     |
+|$unique=  |getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num=     |getRandomNumber;        |100000 |999999    |
+|$num1=    |getRandomNumber;        |20     |76        |
+|$num2=    |getRandomNumber;        |1000   |9999      |
+|$rand1=   |getRandomString;        |2      |ALPHAUPPER|
+|$year=    |getSubString;           |$unique|0    |4   |
+|$indate=  |getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$pincode1=|getRandomNumber;        |100000 |999999    |
+|$pincode2=|getRandomNumber;        |100000 |999999    |
+
+!|Script       |DateUtil                                         |
+|$truckindate= |dateCalculation;|yyyy/MM/dd                  |-7 |
+|$truckoutdate=|dateCalculation;|yyyy/MM/dd                  |-5 |
+|$rdate=       |dateCalculation;|yyyy/MM/dd                  |0  |
+|$loadingDate1=|dateCalculation;|yyyy-MM-dd'T'HH:mm:ss.SSSXXX|-10|
+|$loadingDate2=|dateCalculation;|yyyy-MM-dd'T'HH:mm:ss.SSSXXX|-9 |
+
+!|Script       |Common                                          |
+|$truckindate= |stringConcatenation;|$truckindate |!- 10:00:00-!|
+|$truckoutdate=|stringConcatenation;|$truckoutdate|!- 10:00:00-!|
+|$rdate=       |stringConcatenation;|$rdate       |!- 10:00:00-!|
+
+!|Script            |DateUtil                      |
+|$truckindate=      |utcConversion;  |$truckindate |
+|$truckoutdate=     |utcConversion;  |$truckoutdate|
+|$indentCutoffHour= |dateCalculation;|minute |H |2 |
+|$indentCutoffMin=  |dateCalculation;|minute |m |2 |
+|$arrivalCutoffHour=|dateCalculation;|minute |H |3 |
+|$arrivalCutoffMin= |dateCalculation;|minute |m |3 |
+**!
+
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Thanesar Road}
+!define city {Thanesar}
+!define state {Haryana}
+!define pincode {$pincode2}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@outlook.com}
+!define region {North}
+!define site {2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.ConsigneeCreationAPI
+**!
+
+!** Transporter Creation 1
+!define transporter_name {t1$unique}
+!define transporter_ref_id {tr1$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager1 $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+1$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+
+!|script           |common                  |
+|$transporter_id_1=|getTrim;|$transporter_id|
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+
+!|script    |common            |
+|$password1=|getTrim;|$password|
+*!
+**!
+
+!** Transporter Creation 2
+!define transporter_name {t2$unique}
+!define transporter_ref_id {tr2$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager2 $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+2$unique@outlook.com}
+!define pancard {AUYPD33324L}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"name":"${transporter_name}","gst_type":1,"gst_percentage":"10","reference_id":"${transporter_ref_id}","discount":"0","status":${transporter_status},"country":"India","users":[{"name":"${manager_name}","phone":"${manager_mobile}","email":"${manager_email}"}],"address":"${address}","city":"${city}","pincode":"${pincode}","state":"${state}","pan_no":"${pancard}"}}|
+
+!include -c  .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationDynamicAPI
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+
+!|script    |common            |
+|$password2=|getTrim;|$password|
+*!
+**!
+
+!** Vehicle Creation 
+!define vehicle_name {v$unique MRT}
+!define cft {4825}
+!define kg {5000}
+!define vehicle_type {FTL}
+
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {$pincode1}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!** Gate Manager Creation
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@outlook.com}
+!define status {1}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {South}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+*!
+
+!** Uploading the SLA Contract
+!define Movement {Secondary}
+!define vehicle_movement {1}
+!define Vehicle_Type {${vehicle_name}}
+!define Depot_Ref_Id {$depot_ref_id}
+
+!|script|common                  |
+|$rand1=|getRandomNumber;|100|999|
+|$rand2=|getRandomNumber;|100|999|
+|$rand3=|getRandomNumber;|100|999|
+|$rand4=|getRandomNumber;|100|999|
+|$rand5=|getTrim;        |0      |
+!include -c .FrontPage.Pando.PandoSuites.DataManager.CommonSLAUpload
+*!
+
+!** Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Point,${gate_ref_id},${consignee_ref_id},${vehicle_name},100,tr1$unique,t1$unique,1,5000,per_trip,01-Jan-$year,31-Dec-2030,100,1,D|Point,${gate_ref_id},${consignee_ref_id},${vehicle_name},100,tr2$unique,t2$unique,1,5100,per_trip,01-Jan-$year,31-Dec-2030,100,1,D}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id_1}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$depot}
+!define gate_id {$gate_id}
+!define vehicle_requirement_date {$loadingDate}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$consignee_id}
+!define sold_to_id {$consignee_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice}}],"destinations":[{"type":2,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"expected_delivery_at":"${expected_delivery_at}"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+**!
+
+!** Rejecting Indent by Transporter 1
+!define tusername {pandotransporter+1$unique@outlook.com}
+!define tpassword {$password1}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.TransporterProfile.TransporterRejectIndent
+**!
+
+!** Reindent new transporter 
+!define depot_selection {${depot_name}}
+!define transporter_name {t1$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentSearch
+
+!|Script                     |Ui                                                            |
+|click;                      |//span[text()='Re-indent']/../self::div       |xpath          |
+|waitForElementToBeDisplayed;|//div[@class='el-dialog__body']               |xpath|10       |
+|sendKeys;                   |//input[@placeholder='Search for Transporter']|xpath|t2$unique|
+|wait;                       |3                                                             |
+|click;                      |//span[contains(text(),'tr2$unique')]         |xpath          |
+|click;                      |//input[@placeholder='Pick a day']            |xpath          |
+|click;                      |//td[@class='available today']/div/span       |xpath          |
+|click;                      |//button[text()='SEND']                       |xpath          |
+**!
+
+!** Bids quotes from transporter side
+!|Script     |DateUtil                                    |
+|$arrival_at=|getCurrentDateTimeStamp;|yyyy/MM/dd HH:mm:ss|
+|$arrival_at=|utcConversion;          |$arrival_at        |
+
+!define freight_charge {4500}
+!define rfq_status {3}
+!define vehicle_type_id {$vehicle_id}
+
+
+!define tusername {pandotransporter+2$unique@outlook.com}
+!define tpassword {$password2}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.RfqStatus
+**!
+
+!** Accepting Quotes and Selecting Transporter
+!define depot_selection {${depot_name}}
+!define transporter_name {t1$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Indents.SwitchDepoOrderValidation
+
+!|Script   |Ui                                                                                                                                                               |
+|click;    |//div/span[contains(text(),'Quotes')]|xpath                                                                                                                      |
+|check     |isElementPresent;                    |//div[normalize-space(text())='${freight_charge}']/../preceding-sibling::div//span[contains(text(),'t2$unique')]|xpath|true|
+|$tresult1=|isElementPresent;                    |//div[normalize-space(text())='${freight_charge}']/../preceding-sibling::div//span[contains(text(),'t2$unique')]|xpath     |
+|click;    |//span[contains(text(),'t2$unique')] |xpath                                                                                                                      |
+|click;    |//button[text()='Indent']            |xpath                                                                                                                      |
+|check     |isElementPresent;                    |//span[normalize-space(text())='t2$unique']                                                                     |xpath|true|
+|$tresult2=|isElementPresent;                    |//span[normalize-space(text())='t2$unique']                                                                     |xpath     |
+**!
+
+!** Validating the Wallet V2 Entry for the penalty for T1
+!|script|common                         |
+|$rand4=|stringConcatenation;|$rand4|.00|
+
+!define wallet_reason {Transporter Rejection}
+!define wallet_amount {$rand4}
+
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.WalletValidationShipper
+
+!|Script                     |Ui                                                                                                                                                                                                                                                                                                                                |
+|waitForElementToBeDisplayed;|//div[contains(@class,'grid-list-row') or contains(@class,'card-row row') or @class='emptytext']|xpath                                                                                                                                                                                                                 |15        |
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]                                                                                                                                                                                     |xpath|true|
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']                                                                                           |xpath|true|
+|check                       |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']//parent::span//parent::div//following-sibling::div//*[contains(text(),'${wallet_amount}')]|xpath|true|
+|$tresult=                   |isElementPresent;                                                                               |//*[contains(text(),'$order_id')]//parent::span//parent::div//following-sibling::div//span//span[text()='${wallet_reason}']//parent::span//parent::div//following-sibling::div//*[contains(text(),'${wallet_amount}')]|xpath     |
+
+!define search_text {$unique}
+!include -c .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletIndentSearch
+
+!|script   |ui                                                                                                                                          |
+|check     |isElementNotPresent;|//span[normalize-space(text())='$order_id']/../parent::div//following-sibling::div//span[text()='RFQ Debit']|xpath|true|
+|$tresult3=|isElementNotPresent;|//span[normalize-space(text())='$order_id']/../parent::div//following-sibling::div//span[text()='RFQ Debit']|xpath     |
+*!
+
+!** Validating result
+!|Script  |Common                                                              |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult,$tresult1,$tresult2,$tresult3|
+|check    |checkIfStringAreEqual;       |$tresult       |true       |true      |
+*!

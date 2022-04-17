@@ -1,0 +1,14 @@
+---
+Help: The data is parameterized to be sent from test case
+Test
+---
+!|Script      |Http                                      |
+|addHeader;   |Authorization |bearer $stoken             |
+|setBaseUrl;  |${surl}/api/transporter/                  |
+|$transporter=|getResponse;  |Application/Json|post|$data|
+|check        |getStatusCode;|200                        |
+
+!|Script             |json                                            |
+|$transporter_id=    |getValueFromJSON;|$transporter|data.id          |
+|$transporter_name=  |getValueFromJSON;|$transporter|data.name        |
+|$transporter_ref_id=|getValueFromJSON;|$transporter|data.reference_id|

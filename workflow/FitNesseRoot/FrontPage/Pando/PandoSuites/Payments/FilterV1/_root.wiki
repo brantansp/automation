@@ -1,0 +1,13 @@
+---
+Edit: no
+Files: no
+Properties: no
+RecentChanges: no
+Refactor: no
+Search: no
+Suite
+Versions: no
+WhereUsed: no
+---
+!1 Test suite to validate filter and LR toggle
+!contents -R2 -g -p -f -h

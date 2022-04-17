@@ -1,0 +1,12 @@
+---
+Help: Use to Status filter the Transporter
+---
+!|Script|Ui                                                               |
+|click; |//span[contains(text(),'Filter')]                          |xpath|
+|click; |//label[text()='Status']/../following-sibling::div//input  |xpath|
+|click; |//li/span[text()='${transporter_status}']                  |xpath|
+|click; |//label[text()='GST Type']/../following-sibling::div//input|xpath|
+|click; |//li/span[text()='${gst_type_filter}']                     |xpath|
+|wait;  |1                                                                |
+|click; |//button[text()='APPLY']                                   |xpath|
+|wait;  |3                                                                |

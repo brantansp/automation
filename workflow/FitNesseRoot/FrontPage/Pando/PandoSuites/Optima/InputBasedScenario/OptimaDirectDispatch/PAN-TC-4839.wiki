@@ -1,0 +1,138 @@
+---
+Help: Ensure that user able able to create Indent with dispatched status via Delivery Picklist
+Test
+---
+!***> Unique values assignment
+!|Script          |Common                                       |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$currDate=       |getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique  |0   |4    |
+|$detention_group=|getRandomString;        |4        |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000   |999999    |
+|$today=          |getSubString;           |$currDate|0   |10   |
+|$pincode1=       |getRandomNumber;        |111001   |999999    |
+|$pincode2=       |getRandomNumber;        |111001   |999999    |
+|$lrnum=          |getRandomNumber;        |1000     |99999     |
+|$delivery_num=   |getSubString;           |$unique  |4   |8    |
+
+!|Script  |DateUtil                      |
+|$today=  |dateCalculation;|yyyy-MM-dd |0|
+|$rdate=  |dateCalculation;|yyyy/MM/dd |0|
+|$thisday=|dateCalculation;|dd MMM yyyy|0|
+
+!| Script     |Common                                      |
+|$rdate=      |stringConcatenation;   |$rdate|!- 10:00:00-!|
+|$loadingDate=|getCurrentDateTimeStamp|iso                 |
+*!
+
+!**> Depot Optima Setting
+!define depo {Mumbai Depot}
+!define max_split {2}
+!define split_factor {5}
+!define ftl_certify {false}
+!define algorithm {4}
+!define distance_deviation {100}
+!define degree_of_deviation {50}
+!define optima_type {1}
+!define weight {1}
+!define volume {1}
+!define mode {0}
+!define max_pickup {2}
+!define fitment {0}
+!define max_dropoff {3}
+!define optima_for_ptl {false}
+!define ptl_club_gates {false}
+!define limited_truck_count {false}
+!define hybrid_split {false}
+!define depot_id {61cee3d22a0e79004aaa5294}
+!define movement {1}
+!define movement_type {Secondary}
+!define ptl_contracts {1}
+!define material_category {"MT","GT"}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split": ${max_split},"split_factor": ${split_factor},"ftl_certify": ${ftl_certify},"algorithm": ${algorithm},"distance_deviation":"${distance_deviation}","degree_of_deviation":${degree_of_deviation},"optima_type":${optima_type},"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":${weight},"volume":${volume}},"material_categories":[${material_category}],"mode":${mode},"max_pickup_points":${max_pickup},"fitment":${fitment},"max_drop_points":${max_dropoff},"drop_off_rule":[],"optima_for_ptl":${optima_for_ptl},"ptl_club_gates":${ptl_club_gates},"limited_truck_count":${limited_truck_count},"hybrid_split": ${hybrid_split},"ptl_contracts":${ptl_contracts}},"depot_ids":["${depot_id}"],"movement":${movement}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!**> Uploading Rate Matrix
+!5  City	MUMBAI	AGRA	SingleAx24ft8MT	1000	402838	RASTUS LOGISTICS	3	38000	per trip	01-01-2022	31-12-2030
+!5  City	MUMBAI	AGRA	SingleAx32ft9MT	1000	402838	RASTUS LOGISTICS	3	40000	per trip	01-01-2022	31-12-2030
+!5  City	MUMBAI	AGRA	SingleAx9MT		1000	402838	RASTUS LOGISTICS	3	36000	per trip	01-01-2022	31-12-2030
+**!
+
+!**> Delivery Picklist API 
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"A$delivery_num","material_code":"mat036","pickup_reference_number":"MUMGATE","gate_ref_id":"MUMGATE","division":"DIV","quantity":10.00,"quantity_unit":"NOS","weight":7400.00,"weight_unit":"KG","volume":"800.00","volume_unit":"CFT","lr_number":"$lrnum","ship_to":"CONSAGRA","sold_to":"CONSAGRA","line_item":"","type":"Secondary","category":"oil","category_priority":"GT","stn":"0","date":"$today","invoice_date":"$today","invoice_value":"100000","transporter_ref_id":"402838","mrp":"10000"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DeliveryPicklistAPI
+**!
+
+!**> Delete the Line item from Depot via API
+!|script|common                           |
+|$depot=|getTrim;|61cee3d22a0e79004aaa5294|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DiscardLineItemOptimaAPI
+**!
+
+!**> Optima Run via Task API
+!|script|common                                                           |
+|$data= |getTrim;|{"data":{"depot_id":"$depot","movement": "${movement}"}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.AutoRunViaAPI
+*!
+
+!** Validating Line Item
+!define depot_selection  {Mumbai Depot}
+!define depot {Mumbai Depot}
+!define transporter_name {RASTUS LOGISTICS}
+!define vehicle {SingleAx9MT}
+!define movement {Secondary}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.FilterForDepotAndMovement
+
+!|Script   |Ui                                                                                                                         |
+|$tresult1=|isElementPresent;                                              |//span[normalize-space(text())='${transporter_name}']|xpath|
+|$tresult2=|isElementPresent;                                              |//span[normalize-space(text())='${vehicle}']         |xpath|
+|click;    |//input[@type='checkbox']/../span                              |xpath                                                      |
+|click;    |//button[contains(text(),'Indent')]                            |xpath                                                      |
+|click;    |//div[@class='el-message-box']//span[contains(text(),'Create')]|xpath                                                      |
+|wait;     |10                                                                                                                         |
+*!
+
+!*** Validating that Indent is directly created and available in Indents page
+!|script       |ui             |
+|navigateToUrl;|${surl}/indents|
+
+!define search_text {Mumbai Depot}
+!include -c .FrontPage.Pando.PandoSuites.Indents.IndentSearch.CommonIndentDepotFilter
+
+!|Script   |Ui                                               |
+|$order_id=|getText;|(//div[@class='order-row']/div)[1]|xpath|
+
+!|script   |common                                         |
+|$order_id=|replaceString;        |$order_id|$thisday |    |
+|$order_id=|replaceString;        |$order_id|\n       |    |
+|check     |checkIfStringExistsIn;|-OD-     |$order_id|true|
+
+!|Script                     |Ui                                                                                                                                                                                          |
+|check                       |isElementPresent;                             |//span[contains(text(),'${transporter_name}')]                                                                                    |xpath|true|
+|check                       |isElementPresent;                             |//span[normalize-space(text())='$order_id']/ancestor::div[contains(@class,'order-row')]//div[normalize-space(text())='Dispatched']|xpath|true|
+|click;                      |//span[contains(text(),'${transporter_name}')]|xpath                                                                                                                                        |
+|click;                      |//span[normalize-space(text())='${vehicle}']  |xpath                                                                                                                                        |
+|waitForElementToBeDisplayed;|//div[starts-with(@class,'content-scroll')]   |xpath                                                                                                                             |15        |
+|$baseFreightRate=           |getText;                                      |//p[contains(text(),'Base Freight')]/strong                                                                                       |xpath     |
+|click;                      |//a[contains(@class,'close')]                 |xpath                                                                                                                                        |
+
+!|script                     |ui                                                                                                                                                    |
+|click;                      |//span[text()='Document'] |xpath                                                                                                                      |
+|waitForElementToBeDisplayed;|//div[@class='card-right']|xpath                                                                                                                |30   |
+|$tresult3=                  |isElementPresent;         |(//span[contains(text(),'A$delivery_num')]/ancestor::tr[contains(@class,'row')])[1]//span[contains(text(),'MUMGATE')]|xpath|
+*!
+
+!**> Validating test result
+!|script   |common                                                                    |
+|$tresult4=|checkIfStringExistsIn;       |₹ 36000.00 / Per Trip   |$baseFreightRate   |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+*!

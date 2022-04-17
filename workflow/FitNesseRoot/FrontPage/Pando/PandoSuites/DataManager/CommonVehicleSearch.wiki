@@ -1,0 +1,9 @@
+---
+Help: Use to search Vehicle name in Vehicle
+---
+!|script        |ui                                                                  |
+|navigateToUrl; |${surl}/mdm/vehicles                                                |
+|waitForElementToBeDisplayed;|//input[@placeholder='Search by Vehicle Name']|xpath|30|
+|sendHumanKeys;      |//input[@placeholder='Search by Vehicle Name']|xpath|${search_value}|
+|sendControlKey;|//input[@placeholder='Search by Vehicle Name']|xpath|ENTER          |
+|wait;          |3                                                                   |

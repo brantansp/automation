@@ -1,0 +1,127 @@
+---
+Help: Extra Vehicle Validation
+Test
+---
+!***> Unique values assignment
+!| Script         |Common                                     |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$currDate=       |getCurrentDateTimeStamp |iso               |
+|$year=           |getSubString;           |$unique|0    |4   |
+|$detention_group=|getRandomString;        |4      |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000 |999999    |
+*!
+
+!** Depot for Shipper
+!define depot_name {d$unique}
+!define depot_state {Madhya Pradesh}
+!define depot_city {Chennai}
+!define depot_region {North}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {462001}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!*** Gate Creation for shipper depot
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!*** Gate Manager Creation
+!define role_id {$retrieve_key_value}
+!define user_number {12891}
+!define user_name {u1$unique}
+!define user_email {pandoindent+1+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation one
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {North}
+!define gate_pincode {462001}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+*!
+*!
+
+!** Depot Route Setting in CS
+!define depo {d$unique}
+!define movement_type {Secondary}
+!define split_factor {5}
+!define max_split {2}
+!define algorithm_mode {Default}
+!define angle {30}
+!define optima_type {2D}
+!define mode {0}
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.RouteSettingCS
+*!
+
+!** Depot Route Setting in Optima settings
+!define max_pick_up {3}
+!define max_drop_off {2}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.RouteSetting
+*!
+
+!** Depot Vehicle setting
+!define option {(//span[@class='el-radio__inner'])[1]}
+!define weight {1}
+!define volume {1}
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.VehicalsSetting
+*!
+
+!** Uploading the Material and Optimizing
+#!define surl {https://optima-auto.pandostaging.in}
+!define items {1}
+!define mcount {4}
+!define mcount1 {4}
+!define movement_type {Secondary}
+
+!define row {Sales Doc./Delivery Number/Material Invoice Number,Material Code,Order Quantity,Quantity Unit,Weight,Weight Unit,Volume,Volume Unit,Pickup Ref Id,Customer/Ship To Ref Id,Sold To Ref Id,Category,Sub Category	,Date(YYYY-MM-DD),STN,Material Category,Category Priority,Invoice Date(YYYY-MM-DD),Invoice Value,Transporter Reference Id,MRP}
+!define columns {D1,12010,9,Nos,1500,Kg,210,cft,rq1$unique,c1,c1,General,General,2020-09-03,,|D2,12011,6,Nos,1500,kg,210,cft,rq1$unique,c1,c1,General,General,2020-09-03,,|D3,12012,3,Nos,1500,Kg,210,cft,rq1$unique,c2,c2,General,General,2020-09-03,,|D4,12013,3,Nos,1500,Kg,210,cft,rq1$unique,c2,c2,General,General,2020-09-03,,,,,,}
+
+!|Script    |Common                                         |
+|$excelpath=|getPath;|testAttachment/m_$unique.xlsx|fullpath|
+
+!|Script                |Excel                       |
+|newSheetDynamicColumns;|${row}|${columns}|$excelpath|
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.CommonOptimaRun
+*!
+
+!** Validating the Line item
+#|check    |getText;         |//span[@class='cfamount']|xpath|${items}|                                                                                          
+!|Script|Ui                                                                                                                                             |
+|check  |getText;|(//span[contains(text(),'rq1$unique')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[2]|xpath|!-6000
+100%-!|
+|check     |isElementPresent;|(//span[contains(text(),'rq1$unique')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[5]//span[contains(text(),'Z009')]|xpath|true|
+|$tresult1=|isElementPresent;|(//span[contains(text(),'rq1$unique')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[5]//span[contains(text(),'Z009')]|xpath     |
+|$volume1= |getText;         |(//span[contains(text(),'rq1$unique')]//ancestor::wrappercontainer/utilization/div[contains(@class,'card-row-col card-col')])[3]                               |xpath     |
+
+|Script    |Common                                           |
+|check     |checkIfStringExistsIn;       |840 |$volume1 |true|
+|$tresult2=|checkIfStringExistsIn;       |840 |$volume1      |
+|$tresult= |checkIfStringAreEqualInArray;|$tresult1,$tresult2|
+*!
+
+!** Retrieving the Job ID
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.CommonTenantId
+*!

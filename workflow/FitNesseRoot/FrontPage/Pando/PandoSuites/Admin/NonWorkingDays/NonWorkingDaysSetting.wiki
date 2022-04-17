@@ -1,0 +1,15 @@
+---
+Help: Contains steps to set Non Working days
+---
+!|script                     |ui                                                                                             |
+|navigateToUrl;              |${surl}/admin                                                                                  |
+|click;                      |//a[normalize-space(text())='Non Working Days']                          |xpath                |
+|click;                      |//div[text()='Depot']/..//input[@class='el-input__inner']                |xpath                |
+|scrollToView;               |//span[text()='${depot_id}']/../self::li                                 |xpath                |
+|click;                      |//span[text()='${depot_id}']/../self::li                                 |xpath                |
+|click;                      |//input[@placeholder='Select Date']                                      |xpath                |
+|click;                      |//tr[contains(@class,'row')]//span[normalize-space(text())='$dayOfMonth']|xpath                |
+|sendKeys;                   |//input[@placeholder='Add Reason']                                       |xpath|${leave_reason}|
+|click;                      |//button[normalize-space(text())='SAVE']                                 |xpath                |
+|waitForElementToBeDisplayed;|//div[@class='el-notification success right']                            |xpath|5              |
+|waitForElementToDisappear;  |//div[@class='el-notification success right']                            |xpath|5              |

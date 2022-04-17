@@ -1,0 +1,17 @@
+---
+Help: SCN4_Single Consignee Courier - output should contain one truck (courier) for '405237'
+Test
+---
+!|script       |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!|script       |CsvQuery                                                                                                                        |
+|getConnection;|$fileLocation|,                                                                                                                 |
+|$tresult=     |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE File LIKE 'scn4_%' AND Consignee = '405237:'|noOfOccurrences|
+|closeConnection;                                                                                                                               |
+
+!|script  |common                                  |
+|check    |checkIfStringAreEqual;|$tresult|1|true|
+|$tresult=|checkIfStringAreEqual;|$tresult|1     |
+
+ 

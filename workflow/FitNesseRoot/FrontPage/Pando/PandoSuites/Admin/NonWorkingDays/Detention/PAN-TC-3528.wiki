@@ -1,0 +1,438 @@
+---
+Help: Validate Single Pickup to Multiple drop for holiday detention
+Suites: hold
+Test
+---
+!3 This case is move to hold due to payment generated at depot level not at gate level
+
+!5 Primary - Loading Detention |Today is !today |VRD on !today -51|Holiday on !today -50 and !today -49 | Truck In !today -50 before 3.00 | Truck Out !today -43 after 10.30 |Loading Detention 8 days - 2 days = 6 days|Unloading Detention 8 days - 2 days = 6 days |
+
+!*** Unique values assignment
+!|Script       |DateUtil                                                 |
+|$unique=      |getCurrentDateTimeStamp;|yMMddHHmmss                     |
+|$truckoutdate=|getCurrentDateTimeStamp;|yyyy/MM/dd HH:mm:ss             |
+|$indate=      |getCurrentDateTimeStamp;|yyyy/MM/dd                      |
+|$loadingDate1=|dateCalculation;        |yyyy-MM-dd'T'HH:mm:ss.SSSXXX|-51|
+|$loadingDate2=|dateCalculation;        |yyyy-MM-dd'T'HH:mm:ss.SSSXXX|-51|
+|$loadingDate3=|dateCalculation;        |yyyy-MM-dd'T'HH:mm:ss.SSSXXX|-51|
+
+!| Script         |Common                                       |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$cGroup=         |getRandomString;        |5        |ALPHAUPPER|
+|$vno_1=          |getRandomNumber;        |20       |76        |
+|$vno_2=          |getRandomString;        |2        |ALPHAUPPER|
+|$vno_3=          |getRandomNumber;        |1000     |9999      |
+|$currDate=       |getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique  |0   |4    |
+|$today=          |getSubString;           |$currDate|8   |10   |
+|$detention_group=|getRandomString;        |4        |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000   |999999    |
+|$d1pincode=      |getRandomNumber;        |100000   |999999    |
+|$d2pincode=      |getRandomNumber;        |100000   |999999    |
+|$d3pincode=      |getRandomNumber;        |100000   |999999    |
+
+!| Script          |DateUtil                       |
+|$truckindate_1=   |dateCalculation;|yyyy/MM/dd|-50|
+|$truckoutdate_1=  |dateCalculation;|yyyy/MM/dd|-48|
+|$truckindate_2=   |dateCalculation;|yyyy/MM/dd|-48|
+|$truckoutdate_2=  |dateCalculation;|yyyy/MM/dd|-46|
+|$truckindate_3=   |dateCalculation;|yyyy/MM/dd|-46|
+|$truckoutdate_3=  |dateCalculation;|yyyy/MM/dd|-43|
+|$arrivedDate_1=   |dateCalculation;|yyyy/MM/dd|-36|
+|$arrivedDate_2=   |dateCalculation;|yyyy/MM/dd|-22|
+|$arrivedDate_3=   |dateCalculation;|yyyy/MM/dd|-8 |
+|$dispatchedDate_1=|dateCalculation;|yyyy/MM/dd|-29|
+|$dispatchedDate_2=|dateCalculation;|yyyy/MM/dd|-15|
+|$dispatchedDate_3=|dateCalculation;|yyyy/MM/dd|-1 |
+
+!| Script          |Common                                              |
+|$truckindate_1=   |stringConcatenation;|$truckindate_1   |!- 14:30:00-!|
+|$truckoutdate_1=  |stringConcatenation;|$truckoutdate_1  |!- 14:00:00-!|
+|$truckindate_2=   |stringConcatenation;|$truckindate_2   |!- 14:30:00-!|
+|$truckoutdate_2=  |stringConcatenation;|$truckoutdate_2  |!- 14:00:00-!|
+|$truckindate_3=   |stringConcatenation;|$truckindate_3   |!- 14:30:00-!|
+|$truckoutdate_3=  |stringConcatenation;|$truckoutdate_3  |!- 22:30:00-!|
+|$arrivedDate_1=   |stringConcatenation;|$arrivedDate_1   |!- 14:30:00-!|
+|$arrivedDate_2=   |stringConcatenation;|$arrivedDate_2   |!- 14:30:00-!|
+|$arrivedDate_3=   |stringConcatenation;|$arrivedDate_3   |!- 14:30:00-!|
+|$dispatchedDate_1=|stringConcatenation;|$dispatchedDate_1|!- 22:30:00-!|
+|$dispatchedDate_2=|stringConcatenation;|$dispatchedDate_2|!- 22:30:00-!|
+|$dispatchedDate_3=|stringConcatenation;|$dispatchedDate_3|!- 22:30:00-!|
+
+!| Script             |DateUtil                          |
+|$truckindate_1=      |utcConversion;  |$truckindate_1   |
+|$truckoutdate_1=     |utcConversion;  |$truckoutdate_1  |
+|$truckindate_2=      |utcConversion;  |$truckindate_2   |
+|$truckoutdate_2=     |utcConversion;  |$truckoutdate_2  |
+|$truckindate_3=      |utcConversion;  |$truckindate_3   |
+|$truckoutdate_3=     |utcConversion;  |$truckoutdate_3  |
+|$arrivedDate_1=      |utcConversion;  |$arrivedDate_1   |
+|$arrivedDate_2=      |utcConversion;  |$arrivedDate_2   |
+|$arrivedDate_3=      |utcConversion;  |$arrivedDate_3   |
+|$dispatchedDate_1=   |utcConversion;  |$dispatchedDate_1|
+|$dispatchedDate_2=   |utcConversion;  |$dispatchedDate_2|
+|$dispatchedDate_3=   |utcConversion;  |$dispatchedDate_3|
+|$invoice_filter_date=|dateCalculation;|yyyy-MM-dd |0    |
+|$weeklyHoliday1=     |dateCalculation;|dayOfWeek  |d|-50|
+|$weeklyHoliday2=     |dateCalculation;|dayOfWeek  |d|-49|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!*** Transporter Creation for Indent
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nagar}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define manager_name {Manager $unique}
+!define manager_mobile {123}
+!define manager_email {pandotransporter+$unique@outlook.com}
+!define pancard {AUYPD33324L}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.TransporterCreationAPI
+*!
+
+!** Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!*** Vehicle Creation
+!define vehicle_name {v$unique}
+!define cft {965}
+!define kg {1000}
+!define vehicle_type {PTL}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.VehicleCreationAPI
+*!
+
+!** Material Creation
+!define material_name {m$unique}
+!define material_code {mc$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.MaterialCreationAPI
+**!
+
+!** Uploading Detention for the Vehicle Group - $detention_group (Primary)
+!define row {Vehicle Name,Group Code,Movement,LOADING_DETENTION_DAY1,LOADING_DETENTION_DAY2,LOADING_DETENTION_DAY3,LOADING_DETENTION_DAY4,LOADING_DETENTION_DAY5,LOADING_DETENTION_MORETHAN_DAY5,UnLOADING_DETENTION_DAY1,UnLOADING_DETENTION_DAY2,UnLOADING_DETENTION_DAY3,UnLOADING_DETENTION_DAY4,UnLOADING_DETENTION_DAY5,UnLOADING_DETENTION_MORETHAN_DAY5,TRANSIT_DAY1,TRANSIT_DAY2,TRANSIT_DAY3,TRANSIT_DAY4,TRANSIT_DAY5,TRANSIT_MORETHAN_DAY5,TRANSIT_DELAY_PERCENTAGE}
+!define column1 {${vehicle_name},$detention_group,Primary,100,200,300,400,500,600,100,200,300,400,500,600,100,200,300,400,500,600,}
+
+!|Script    |Common                                          |
+|$excelpath=|getPath;|testAttachment/d1_$unique.xlsx|fullpath|
+
+
+!|Script  |Excel                       |
+|newSheet;|${row}|${column1}|$excelpath|
+
+!|Script                   |Ui                                                              |
+|navigateToUrl;            |${surl}/mdm/detentions                                          |
+|click;                    |.btn.btn-secondary.el-dropdown-selfdefine|cssselector           |
+|sendKeys;                 |.upload-material                         |cssselector|$excelpath|
+|waitForElementToDisappear;|//div[@class='spinner spinner--stretch'] |xpath      |30        |
+|wait;                     |5                                                               |
+**!
+
+!** Source Depot Creation
+
+!define depot_name {src$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {s$num}
+!define depot_reference_id {sr$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!define gname {Gate 1}
+!define grefid {SG1$unique}
+!define g_user_email {pandoindent+$unique@gmail.com}
+
+!include -c .FrontPage.Pando.Common.CommonDepoCreationWithGate
+
+!|script         |common           |
+|$location_id=   |getTrim;|$depot  |
+|$source_gate_id=|getTrim;|$gate_id|
+
+*!
+
+
+!** Destination Depo
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Vijayawada}
+!define depot_region {South}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!** Gate Manager Creation 1
+
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+1$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+
+
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script    |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!** Gate Manager Creation 2
+
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+2$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+
+
+!define depot_id {$depot}
+!define gate_name {Gate 2}
+!define gate_ref_id {rq2$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G2$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script    |json                                |
+|$gate_id_2=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!** Gate Manager Creation 3
+
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+3$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+
+
+!define depot_id {$depot}
+!define gate_name {Gate 3}
+!define gate_ref_id {rq3$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G3$num}
+!define gate_user_id {$user_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!|Script    |json                                |
+|$gate_id_3=|getValueFromJSON;|$depotResp|data.id|
+*!
+
+!** Holiday for consignee depot one
+!define depot_id {$location_id}
+!define weeklyHoliday1 {$weeklyHoliday1}
+!define weeklyHoliday2 {$weeklyHoliday2}
+
+!|script|common                                                                                                      |
+|$data= |getTrim;|{"depot_ids":["$location_id"],"holidays":{"weekly_holidays":["$weeklyHoliday1","$weeklyHoliday2"]}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Settings.AdminWeeklyHolidaySettingAPI
+*!
+
+!** Uploading Rate Matrix
+!define transit_days {1}
+!define ratec {1000}
+!define rtrip {per_trip}
+!define mrate {10000}
+!define mfactor {1}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,Chennai,Vijayawada,${vehicle_name},${transit_days},$transporter_ref_id,$transporter_name,${transit_days},2000,${rtrip},01-Jan-$year,31-Dec-2030,${mrate},${mfactor},$detention_group}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!** Indent Creation
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$location_id}
+!define gate_id {$source_gate_id}
+!define expected_delivery_at {$expected_date}
+!define vehicle_requirement_date {$loadingDate1}
+!define destination_location_id {$depot}
+
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"order_type":"${order_type}","transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":false,"add_to_invoice":false}],"destinations":[{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"$gate_id_1","unloader_available":false,"add_to_invoice":false,"gate_id":"$gate_id_1"},{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"$gate_id_2","unloader_available":false,"add_to_invoice":false,"gate_id":"$gate_id_2"},{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"$gate_id_3","unloader_available":false,"add_to_invoice":false,"gate_id":"$gate_id_3"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+*!
+
+!*** Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!** Truck in -> Reached Load Point -> Start Load -> End Load -> Truck Out
+!| Script       |Common                 |
+|$truck_in_date=|getTrim;|$truckindate_1|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!*** Reached Load point
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LoadingPointAPI
+*!
+
+!** Start Loading
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.StartLoadAPI
+*!
+
+!*** End Loading
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.EndPointAPI
+*!
+
+!** Adding LR
+!define lr_number {$unique}
+!define consignee_id {$depot}
+!define source_location_id {$location_id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+*!
+
+!** Truck Out
+
+!| Script        |Common                  |
+|$truck_out_date=|getTrim;|$truckoutdate_3|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckOutAPI
+*!
+
+
+
+!*** Marking Indent as delivered
+!5 |Con1 Reported !today -36 Released !today -29|Con2 Reported !today -22 Released !today -15|Con3 Reported !today -8 Released !today -1|
+
+
+!|Script     |Http                                                                                                                                        |
+|wait;       |5                                                                                                                                           |
+|setBaseUrl; |${surl}/api/login                                                                                                                           |
+|getResponse;|Application/Json|put             |{"data":{"email":"${username}","password":"${password}"}}                                                 |
+|$token=     |getHeader;      |x-auth-token                                                                                                               |
+|addHeader;  |Authorization   |bearer $token                                                                                                              |
+|setBaseUrl; |${surl}/api/order/$order_id/deliver                                                                                                         |
+|$report=    |getResponse;    |Application/Json|put|{"data":[{"destination_id":"$depot","reported_at":"$arrivedDate_1","release_at":"$dispatchedDate_1"}]}|
+**!
+
+!5 Transporter : Invoice -> Physical LR check -> Create Invoice -> Next (payment detail check) -> Generate Invoice
+!** Transporter login
+
+!define transporter_email {pandotransporter+$unique@outlook.com}
+!define transporter_password {$password}
+!include -c  .FrontPage.Pando.Common.TransporterLogin
+
+*!
+
+!** Transporter - Generating Invoice for the Delivered Indent
+
+!** Create Invoice
+!define depot_name {src$unique}
+!include -c .FrontPage.Pando.PandoSuites.Payments.ClickCreateInvoice
+*!
+
+*!
+
+!** Invoice charges calculation
+
+!** Loading Detention Validation
+!define value {6}
+!define detention_column {6}
+
+!define detention_row {1}
+!include -c .FrontPage.Pando.PandoSuites.Payments.DetentionValidationForXDays
+
+!|script   |common           |
+|$tresult1=|getTrim;|$tresult|
+
+!define detention_row {2}
+!include -c .FrontPage.Pando.PandoSuites.Payments.DetentionValidationForXDays
+
+!|script   |common           |
+|$tresult2=|getTrim;|$tresult|
+
+!define detention_row {3}
+!include -c .FrontPage.Pando.PandoSuites.Payments.DetentionValidationForXDays
+
+!|script   |common           |
+|$tresult3=|getTrim;|$tresult|
+**!
+
+!**  Detention Validation
+!define value {8}
+!define detention_column {7}
+
+!define detention_row {1}
+!include -c .FrontPage.Pando.PandoSuites.Payments.DetentionValidationForXDays
+
+!|script   |common           |
+|$tresult4=|getTrim;|$tresult|
+
+!define detention_row {2}
+!include -c .FrontPage.Pando.PandoSuites.Payments.DetentionValidationForXDays
+
+!|script   |common           |
+|$tresult5=|getTrim;|$tresult|
+
+!define detention_row {3}
+!include -c .FrontPage.Pando.PandoSuites.Payments.DetentionValidationForXDays
+
+!|script   |common           |
+|$tresult6=|getTrim;|$tresult|
+**!
+
+**!
+
+!** Validating the Result
+!|Script  |Common                                                                                   |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6|
+*!
+
+
+

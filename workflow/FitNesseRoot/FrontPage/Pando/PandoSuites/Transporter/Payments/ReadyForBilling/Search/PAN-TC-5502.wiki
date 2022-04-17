@@ -1,0 +1,28 @@
+---
+Help: Ensure indent ID should not list in view page for other Depo
+Test
+---
+!** Filter setting 
+!define client {Automation}
+!define depo {Nellore Depot} 
+!define invoice_type {All Indents}
+!define delivery_type {All delivery types}
+
+!|Script       |DateUtil                     |
+|$filter_start=|dateCalculation;|yyyy-MM-dd|0|
+|$filter_end=  |dateCalculation;|yyyy-MM-dd|0|
+
+!include -c .FrontPage.Pando.PandoSuites.Transporter.Payments.ReadyForBilling.Filter.CommonFilterPage
+
+!|Script   |Common            |
+|$order_id=|getTrim;|$order_id|
+
+!|Script                     |Ui                                                                                                               |
+|click;                      |//span[text()='Search']                                                  |xpath                                  |
+|waitForElementToBeDisplayed;|//input[@placeholder='Enter Indent ID' or @placeholder='Enter indent id']|xpath                       |30        |
+|clearAndSend;               |//input[@placeholder='Enter Indent ID' or @placeholder='Enter indent id']|xpath                       |$order_id |
+|click;                      |//button[text()='Search']                                                |xpath                                  |
+|waitForElementToBeDisplayed;|//div[@class='emptydiv']                                                 |xpath                       |10        |
+|check                       |isElementPresent;                                                        |//div[@class='paymentempty']|xpath|true|
+|$tresult=                   |isElementPresent;                                                        |//div[@class='paymentempty']|xpath     |
+**!

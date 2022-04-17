@@ -1,0 +1,9 @@
+---
+Help: Contains script o enable Rate Matrix column
+---
+!|Script    |Ui                                                                                                                                                                                                 |
+|click;     |//div[@class='card-header-col card-col card-action']                            |xpath                                                                                                             |
+|$isChecked=|getElementAttribute;                                                            |//span/div[normalize-space(text())='${column_name}']/..//preceding-sibling::span//input        |xpath|checked     |
+|clickJS;   |//span/div[normalize-space(text())='${column_name}']/..//preceding-sibling::span|xpath                                                                                                             |
+|click;     |//div[@class='card-header-col card-col card-action']                            |xpath                                                                                                             |
+|check      |isElementPresent;                                                               |//div[@class='card-header double-header']//child::div[normalize-space(text())='${column_name}']|xpath|${visiblity}|

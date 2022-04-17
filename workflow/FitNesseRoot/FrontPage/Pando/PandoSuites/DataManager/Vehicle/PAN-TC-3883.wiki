@@ -1,0 +1,261 @@
+---
+Help: Validate the fields Length,breadth,height,Description to perform CRUD
+Test
+---
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Add vehicle with valid Length,BREADTH,Height and Description
+!define vehicle_name {v$unique}
+!define cft {600}
+!define kg {900}
+!define weightage {1000}
+!define vehicle_type {FTL}
+
+!|script                     |ui                                                                                                                                   |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                                                 |
+|click;                      |//button[normalize-space(text())='Add']                               |xpath                                                         |
+|sendKeys;                   |//input[@placeholder='Enter Vehicle Name']                            |xpath                                         |${vehicle_name}|
+|sendKeys;                   |//input[@placeholder='Enter CFT']                                     |xpath                                         |${cft}         |
+|sendKeys;                   |//input[@placeholder='Enter KG']                                      |xpath                                         |${kg}          |
+|sendKeys;                   |//input[@placeholder='Enter WEIGHTAGE']                               |xpath                                         |${weightage}   |
+|click;                      |//label[contains(text(),'Vehicle Type')]/following-sibling::div//input|xpath                                                         |
+|click;                      |//span[text()='${vehicle_type}']                                      |xpath                                                         |
+|sendKeys;                   |//label[text()='EXCLUDE SKU CATEGORIES']/following-sibling::input     |xpath                                         |1              |
+|sendKeys;                   |//input[@placeholder='Enter Length factor']                           |xpath                                         |1              |
+|sendKeys;                   |//input[@placeholder='Enter breadth factor']                          |xpath                                         |1              |
+|sendKeys;                   |//input[@placeholder='Enter height factor']                           |xpath                                         |1              |
+|sendKeys;                   |//input[@placeholder='Enter Length']                                  |xpath                                         |123            |
+|sendKeys;                   |//input[@placeholder='Enter Breadth']                                 |xpath                                         |456            |
+|sendKeys;                   |//input[@placeholder='Enter Height']                                  |xpath                                         |789            |
+|sendKeys;                   |//input[@placeholder='Enter Description']                             |xpath                                         |Heavy Vehicle  |
+|click;                      |//li[normalize-space(text())='Save']                                  |xpath                                                         |
+|waitForElementToBeDisplayed;|//h3[text()='Success']                                                |xpath                                         |10             |
+|$successMessage=            |getElementAttribute;                                                  |//h3[text()='Success']/following-sibling::span|xpath|innerText|
+
+!|Script   |common                                                   |
+|check     |checkIfStringAreEqual;|$successMessage|Record Added!|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage|Record Added!     |
+**!
+
+!**> Verify added record
+!|Script                     |Ui                                                                                                            |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                          |
+|sendKeys;                   |//input[@placeholder='Search by Vehicle Name']                                          |xpath|${vehicle_name}|
+|waitForElementToBeDisplayed;|(//div[contains(@class,'row-show')])[1]//span[normalize-space(text())='${vehicle_name}']|xpath|15             |
+
+!define column_name {Length}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|Script   |Ui                                                                            |
+|check     |isElementPresent;|//span[normalize-space(text())='${vehicle_name}']|xpath|true|
+|$tresult2=|isElementPresent;|//span[normalize-space(text())='${vehicle_name}']|xpath     |
+|check     |isElementPresent;|//span[contains(text(),'123')]                   |xpath|true|
+|$tresult3=|isElementPresent;|//span[contains(text(),'123')]                   |xpath     |
+
+!|Script                     |Ui                                                                                                            |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                          |
+|sendKeys;                   |//input[@placeholder='Search by Vehicle Name']                                          |xpath|${vehicle_name}|
+|waitForElementToBeDisplayed;|(//div[contains(@class,'row-show')])[1]//span[normalize-space(text())='${vehicle_name}']|xpath|15             |
+
+!define column_name {BREADTH}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|Script   |Ui                                                         |
+|check     |isElementPresent;|//span[contains(text(),'456')]|xpath|true|
+|$tresult4=|isElementPresent;|//span[contains(text(),'456')]|xpath     |
+
+!|Script                     |Ui                                                                                                            |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                          |
+|sendKeys;                   |//input[@placeholder='Search by Vehicle Name']                                          |xpath|${vehicle_name}|
+|waitForElementToBeDisplayed;|(//div[contains(@class,'row-show')])[1]//span[normalize-space(text())='${vehicle_name}']|xpath|15             |
+
+!define column_name {Height}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|Script   |Ui                                                         |
+|check     |isElementPresent;|//span[contains(text(),'789')]|xpath|true|
+|$tresult5=|isElementPresent;|//span[contains(text(),'789')]|xpath     |
+
+!|Script                     |Ui                                                                                                            |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                          |
+|sendKeys;                   |//input[@placeholder='Search by Vehicle Name']                                          |xpath|${vehicle_name}|
+|waitForElementToBeDisplayed;|(//div[contains(@class,'row-show')])[1]//span[normalize-space(text())='${vehicle_name}']|xpath|15             |
+
+!define column_name {Description}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|Script   |Ui                                                                   |
+|check     |isElementPresent;|//span[contains(text(),'Heavy Vehicle')]|xpath|true|
+|$tresult6=|isElementPresent;|//span[contains(text(),'Heavy Vehicle')]|xpath     |
+**!
+
+!** Edit vehicle with valid data in Length,BREADTH,Height and Description
+!|script                     |ui                                                                                                           |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                         |
+|sendKeys;                   |//input[@placeholder='Search by Vehicle Name']|xpath                                         |${vehicle_name}|
+|click;                      |//a[normalize-space(text())='Edit']           |xpath                                                         |
+|wait;                       |5                                                                                                            |
+|click;                      |//input[@placeholder='Enter Length']          |xpath                                                         |
+|clearValueJS;               |//input[@placeholder='Enter Length']          |xpath                                                         |
+|sendKeys;                   |//input[@placeholder='Enter Length']          |xpath                                         |444            |
+|click;                      |//input[@placeholder='Enter Breadth']         |xpath                                                         |
+|clearValueJS;               |//input[@placeholder='Enter Breadth']         |xpath                                                         |
+|sendKeys;                   |//input[@placeholder='Enter Breadth']         |xpath                                         |250.58         |
+|click;                      |//input[@placeholder='Enter Height']          |xpath                                                         |
+|clearValueJS;               |//input[@placeholder='Enter Height']          |xpath                                                         |
+|sendKeys;                   |//input[@placeholder='Enter Height']          |xpath                                         |360.8          |
+|click;                      |//input[@placeholder='Enter Description']     |xpath                                                         |
+|clearValueJS;               |//input[@placeholder='Enter Description']     |xpath                                                         |
+|sendKeys;                   |//input[@placeholder='Enter Description']     |xpath                                         |Heavy Load     |
+|click;                      |//li[normalize-space(text())='Update']        |xpath                                                         |
+|waitForElementToBeDisplayed;|//h3[text()='Success']                        |xpath                                         |10             |
+|$successMessage=            |getElementAttribute;                          |//h3[text()='Success']/following-sibling::span|xpath|innerText|
+
+!|Script   |common                                                     |
+|check     |checkIfStringAreEqual;|$successMessage|Record Updated!|true|
+|$tresult7=|checkIfStringAreEqual;|$successMessage|Record Updated!     |
+**!
+
+!**> Verify updated record
+!|Script                     |Ui                                                                                                            |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                          |
+|sendKeys;                   |//input[@placeholder='Search by Vehicle Name']                                          |xpath|${vehicle_name}|
+|waitForElementToBeDisplayed;|(//div[contains(@class,'row-show')])[1]//span[normalize-space(text())='${vehicle_name}']|xpath|15             |
+
+!define column_name {Length}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|Script   |Ui                                                                            |
+|check     |isElementPresent;|//span[normalize-space(text())='${vehicle_name}']|xpath|true|
+|$tresult8=|isElementPresent;|//span[normalize-space(text())='${vehicle_name}']|xpath     |
+|check     |isElementPresent;|//span[contains(text(),'444')]                   |xpath|true|
+|$tresult9=|isElementPresent;|//span[contains(text(),'444')]                   |xpath     |
+
+!|Script                     |Ui                                                                                                            |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                          |
+|sendKeys;                   |//input[@placeholder='Search by Vehicle Name']                                          |xpath|${vehicle_name}|
+|waitForElementToBeDisplayed;|(//div[contains(@class,'row-show')])[1]//span[normalize-space(text())='${vehicle_name}']|xpath|15             |
+
+!define column_name {BREADTH}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|Script    |Ui                                                            |
+|check      |isElementPresent;|//span[contains(text(),'250.58')]|xpath|true|
+|$tresult10=|isElementPresent;|//span[contains(text(),'250.58')]|xpath     |
+
+!|Script                     |Ui                                                                                                            |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                          |
+|sendKeys;                   |//input[@placeholder='Search by Vehicle Name']                                          |xpath|${vehicle_name}|
+|waitForElementToBeDisplayed;|(//div[contains(@class,'row-show')])[1]//span[normalize-space(text())='${vehicle_name}']|xpath|15             |
+
+!define column_name {Height}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|Script    |Ui                                                           |
+|check      |isElementPresent;|//span[contains(text(),'360.8')]|xpath|true|
+|$tresult11=|isElementPresent;|//span[contains(text(),'360.8')]|xpath     |
+
+!|Script                     |Ui                                                                                                            |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                          |
+|sendKeys;                   |//input[@placeholder='Search by Vehicle Name']                                          |xpath|${vehicle_name}|
+|waitForElementToBeDisplayed;|(//div[contains(@class,'row-show')])[1]//span[normalize-space(text())='${vehicle_name}']|xpath|15             |
+
+!define column_name {Description}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|Script    |Ui                                                                |
+|check      |isElementPresent;|//span[contains(text(),'Heavy Load')]|xpath|true|
+|$tresult12=|isElementPresent;|//span[contains(text(),'Heavy Load')]|xpath     |
+**!
+
+!** Delete Length,BREADTH,Height and Description and verify Vehicle
+!|script                     |ui                                                                                                                                                     |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                                                                   |
+|sendKeys;                   |//input[@placeholder='Search by Vehicle Name']                                          |xpath                                         |${vehicle_name}|
+|waitForElementToBeDisplayed;|(//div[contains(@class,'row-show')])[1]//span[normalize-space(text())='${vehicle_name}']|xpath                                         |15             |
+|click;                      |//a[normalize-space(text())='Edit']                                                     |xpath                                                         |
+|wait;                       |5                                                                                                                                                      |
+|clearValueWA;               |//input[@placeholder='Enter Length']                                                    |xpath                                                         |
+|clearValueWA;               |//input[@placeholder='Enter Breadth']                                                   |xpath                                                         |
+|clearValueWA;               |//input[@placeholder='Enter Height']                                                    |xpath                                                         |
+|clearValueWA;               |//input[@placeholder='Enter Description']                                               |xpath                                                         |
+|click;                      |//li[normalize-space(text())='Update']                                                  |xpath                                                         |
+|waitForElementToBeDisplayed;|//h3[text()='Success']                                                                  |xpath                                         |10             |
+|$successMessage=            |getElementAttribute;                                                                    |//h3[text()='Success']/following-sibling::span|xpath|innerText|
+
+!|Script    |common                                                     |
+|check      |checkIfStringAreEqual;|$successMessage|Record Updated!|true|
+|$tresult13=|checkIfStringAreEqual;|$successMessage|Record Updated!     |
+**!
+
+!**> Verify vehicle after deleting values
+!|Script                     |Ui                                                                                                            |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                          |
+|sendKeys;                   |//input[@placeholder='Search by Vehicle Name']                                          |xpath|${vehicle_name}|
+|waitForElementToBeDisplayed;|(//div[contains(@class,'row-show')])[1]//span[normalize-space(text())='${vehicle_name}']|xpath|15             |
+
+!define column_name {Length}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|Script    |Ui                                                                            |
+|check      |isElementPresent;|//span[normalize-space(text())='${vehicle_name}']|xpath|true|
+|$tresult14=|isElementPresent;|//span[normalize-space(text())='${vehicle_name}']|xpath     |
+|check      |isElementPresent;|//span[contains(text(),'-')]                     |xpath|true|
+|$tresult15=|isElementPresent;|//span[contains(text(),'-')]                     |xpath     |
+
+!|Script                     |Ui                                                                                                            |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                          |
+|sendKeys;                   |//input[@placeholder='Search by Vehicle Name']                                          |xpath|${vehicle_name}|
+|waitForElementToBeDisplayed;|(//div[contains(@class,'row-show')])[1]//span[normalize-space(text())='${vehicle_name}']|xpath|15             |
+
+!define column_name {BREADTH}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|Script    |Ui                                                       |
+|check      |isElementPresent;|//span[contains(text(),'-')]|xpath|true|
+|$tresult16=|isElementPresent;|//span[contains(text(),'-')]|xpath     |
+
+!|Script                     |Ui                                                                                                            |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                          |
+|sendKeys;                   |//input[@placeholder='Search by Vehicle Name']                                          |xpath|${vehicle_name}|
+|waitForElementToBeDisplayed;|(//div[contains(@class,'row-show')])[1]//span[normalize-space(text())='${vehicle_name}']|xpath|15             |
+
+!define column_name {Height}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|Script    |Ui                                                       |
+|check      |isElementPresent;|//span[contains(text(),'-')]|xpath|true|
+|$tresult17=|isElementPresent;|//span[contains(text(),'-')]|xpath     |
+
+!|Script                     |Ui                                                                                                            |
+|navigateToUrl;              |${surl}/mdm/vehicles                                                                                          |
+|sendKeys;                   |//input[@placeholder='Search by Vehicle Name']                                          |xpath|${vehicle_name}|
+|waitForElementToBeDisplayed;|(//div[contains(@class,'row-show')])[1]//span[normalize-space(text())='${vehicle_name}']|xpath|15             |
+
+!define column_name {Description}
+!define visiblity {true}
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonColumnEnableCheckOldUI
+
+!|Script    |Ui                                                       |
+|check      |isElementPresent;|//span[contains(text(),'-')]|xpath|true|
+|$tresult18=|isElementPresent;|//span[contains(text(),'-')]|xpath     |
+**!
+
+!**> Validating test result
+!|Script  |Common                                                                                                                                                                                                                         |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,$tresult10,$tresult11,$tresult12,$tresult13,$tresult14,$tresult15,$tresult16,$tresult17,$tresult18,true|
+**!

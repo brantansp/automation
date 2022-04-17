@@ -1,0 +1,15 @@
+---
+Help: Contains script to accept the Indent by Transporter
+Test
+---
+!|Script     |Http                                                                                       |
+|wait;       |5                                                                                          |
+|setBaseUrl; |${turl}/api/login                                                                          |
+|getResponse;|Application/Json|put             |{"data":{"email":"${username}","password":"${password}"}}|
+|$token=     |getHeader;      |x-auth-token                                                              |
+|addHeader;  |Authorization   |bearer $token                                                             |
+|setBaseUrl; |${turl}/api/order/$order_id/accept                                                         |
+|$truck=     |getResponse;    |Application/Json|put                           |                          |
+
+!|Script  |json                            |
+|$data_id=|getValueFromJSON;|$truck|data._id|

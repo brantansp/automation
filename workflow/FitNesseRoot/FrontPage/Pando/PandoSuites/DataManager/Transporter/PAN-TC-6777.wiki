@@ -1,0 +1,87 @@
+---
+Help: Validate the application when Manager details - Remove(Delete) button is clicked in Transporter
+Suites: dm2
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!** Transporter Creation
+!define transporter_name {t$unique}
+!define transporter_ref_id {tr$unique}
+!define address {Ashok Nager}
+!define city {Chennai}
+!define state {Tamil Nadu}
+!define pincode {600083}
+!define pancard {AUYPD33324L}
+!define discount {5}
+
+!|Script       |Ui                                                                                                                                   |
+|navigateToUrl;|${surl}/mdm/transporter                                                                                                              |
+|click;        |//button[contains(text(),'Add')]                                                                         |xpath                      |
+|sendKeys;     |//input[@placeholder='Enter Transporter Name here']                                                      |xpath|${transporter_name}  |
+|sendKeys;     |//input[@placeholder='Enter Reference Id here']                                                          |xpath|${transporter_ref_id}|
+|sendKeys;     |//input[@placeholder='Enter Address here']                                                               |xpath|${address}           |
+|sendKeys;     |//input[@placeholder='Enter City here']                                                                  |xpath|${city}              |
+|sendKeys;     |//input[@placeholder='Enter State here']                                                                 |xpath|${state}             |
+|sendKeys;     |//input[@placeholder='Enter Postal code here']                                                               |xpath|${pincode}           |
+|sendKeys;     |//input[@placeholder='Enter PAN Number here']                                                            |xpath|${pancard}           |
+|click;        |//label[contains(text(),'GST Type')]/following-sibling::div[@class='el-form-item__content']/div/div/input|xpath                      |
+|click;        |(//li//span[text()='FCM'])[2]                                                                            |xpath                      |
+|sendKeys;     |//input[@placeholder='Enter GST Percentage here']                                                        |xpath|10                   |
+|click;        |//label[contains(text(),'Status')]/following-sibling::div[@class='el-form-item__content']/div/div/input  |xpath                      |
+|click;        |(//li//span[text()='Active'])[2]                                                                         |xpath                      |
+|sendKeys;     |//input[@placeholder='Enter Discount(%) here']                                                           |xpath|${discount}          |
+**!
+
+!** Add and Delete manager
+!|Script                     |Ui                                                                                                                                                                     |
+|click;                      |(//span[contains(text(),'ADD')])[2]                         |xpath                                                                                                     |
+|$NameHeaderNo=              |getHeaderColumnNumber;                                      |(//div[@class='el-table__header-wrapper'])[2]//th/div[@class='cell']|xpath     |Manager                   |
+|$MobileHeaderNo=            |getHeaderColumnNumber;                                      |(//div[@class='el-table__header-wrapper'])[2]//th/div[@class='cell']|xpath     |Representative Mobile     |
+|$EmailHeaderNo=             |getHeaderColumnNumber;                                      |(//div[@class='el-table__header-wrapper'])[2]//th/div[@class='cell']|xpath     |Representative Email      |
+|sendKeys;                   |(//tr[starts-with(@class,'el-table__row')]/td)[$NameHeaderNo]//input     |xpath                                                               |Manager1 $unique                     |
+|sendKeys;                   |(//tr[starts-with(@class,'el-table__row')]/td)[$MobileHeaderNo]//input   |xpath                                                               |12345                                |
+|sendKeys;                   |(//tr[starts-with(@class,'el-table__row')]/td)[$EmailHeaderNo]//input    |xpath                                                               |pandotransporter1+$unique@outlook.com|
+|wait;                       |2                                                                                                                                                                      |
+|click;                      |(//span[contains(text(),'ADD')])[2]                         |xpath                                                                                                     |
+|sendKeys;                   |(//tr[@class='el-table__row'][2]/td)[$NameHeaderNo]//input  |xpath                                                               |Manager2 $unique                     |
+|sendKeys;                   |(//tr[@class='el-table__row'][2]/td)[$MobileHeaderNo]//input|xpath                                                               |12345                                |
+|sendKeys;                   |(//tr[@class='el-table__row'][2]/td)[$EmailHeaderNo]//input |xpath                                                               |pandotransporter2+$unique@outlook.com|
+|check                       |isElementPresent;                                           |(//tr[starts-with(@class,'el-table__row')]/td)[$NameHeaderNo]//input             |xpath     |true                      |
+|$tresult1=                  |isElementPresent;                                           |(//tr[starts-with(@class,'el-table__row')]/td)[$NameHeaderNo]//input             |xpath                                |
+|check                       |isElementPresent;                                           |(//tr[@class='el-table__row'][2]/td)[$NameHeaderNo]//input          |xpath     |true                      |
+|$tresult2=                  |isElementPresent;                                           |(//tr[@class='el-table__row'][2]/td)[$NameHeaderNo]//input          |xpath                                |
+|click;                      |(//tr[@class='el-table__row'][2]/td)[1]//span               |xpath                                                                                                     |
+|click;                      |(//span[contains(text(),'DELETE')])[2]                      |xpath                                                                                                     |
+|check                       |isElementPresent;                                           |(//tr[starts-with(@class,'el-table__row')]/td)[$NameHeaderNo]//input             |xpath     |true                      |
+|$tresult3=                  |isElementPresent;                                           |(//tr[starts-with(@class,'el-table__row')]/td)[$NameHeaderNo]//input             |xpath                                |
+|check                       |isElementNotPresent;                                        |(//tr[@class='el-table__row'][2]/td)[$NameHeaderNo]//input          |xpath     |true                      |
+|$tresult4=                  |isElementNotPresent;                                        |(//tr[@class='el-table__row'][2]/td)[$NameHeaderNo]//input          |xpath                                |
+|click;                      |//span[contains(text(),'Create')]                           |xpath                                                                                                     |
+|waitForElementToBeDisplayed;|//div[@role='alert']//h3[contains(text(),'Success')]        |xpath                                                               |30                                   |
+|$successMessage=            |getElementAttribute;                                        |//h3[text()='Success']/following-sibling::span                      |xpath     |innerText                 |
+**!
+
+!** Validating Result
+!define search_field {Enter Transporter Name}
+!define search_text {${transporter_name}}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.CommonTransporterSearchInDataManager
+
+!|Script   |Ui                                                                                                   |
+|check     |isElementPresent;              |//span[contains(text(),'t$unique')]                       |xpath|true|
+|$tresult5=|isElementPresent;              |//span[contains(text(),'t$unique')]                       |xpath     |
+|click;    |//span[contains(text(),'Edit')]|xpath                                                                |
+|check     |isElementPresent;              |(//tr[starts-with(@class,'el-table__row')]/td)[$NameHeaderNo]//input   |xpath|true|
+|$tresult6=|isElementPresent;              |(//tr[starts-with(@class,'el-table__row')]/td)[$NameHeaderNo]//input   |xpath     |
+|check     |isElementNotPresent;           |(//tr[@class='el-table__row'][2]/td)[$NameHeaderNo]//input|xpath|true|
+|$tresult7=|isElementNotPresent;           |(//tr[@class='el-table__row'][2]/td)[$NameHeaderNo]//input|xpath     |
+*!
+
+!**> Validating Test Results
+!|script  |common                                                                                                  |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,true|
+**!

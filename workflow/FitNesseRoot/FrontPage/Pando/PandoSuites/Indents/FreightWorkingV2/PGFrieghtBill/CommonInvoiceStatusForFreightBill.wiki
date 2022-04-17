@@ -1,0 +1,5 @@
+!|script            |ui                                                                                                                                                                   |
+|check              |isElementPresent;|//div[contains(@class,'card-row row')]//*[normalize-space(text())='${freight_bill_no}']                                                 |xpath|true|
+|$freightbillstatus=|getText;         |//*[normalize-space(text())='${freight_bill_no}']//ancestor::div[contains(@class,'card-row row')]//span[contains(@class,'status')]      |xpath     |
+|check              |isElementPresent;|//div[contains(@class,'card-row row')]//*[normalize-space(text())='${other_charges_bill_no}']                                           |xpath|true|
+|$otherbillstatus=  |getText;         |//*[normalize-space(text())='${other_charges_bill_no}']//ancestor::div[contains(@class,'card-row row')]//span[contains(@class,'status')]|xpath     |

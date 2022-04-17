@@ -1,0 +1,64 @@
+---
+Help: Edit user and login with new email id
+Suites: sanity3, dm2
+Test
+---
+!** Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+
+
+!** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define user_name {Automation $unique}
+!define user_number {123}
+!define user_email {pandoautomation+$unique@gmail.com}
+!define role_id {$retrieve_key_value}
+!define status {1}
+
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+
+
+!define user_name_1 {Automation1 $unique}
+!define role {Librarian}
+!define user_number {0987654321}
+!define user_email {pandoautomationedit+$unique@gmail.com}
+
+!|Script                     |Ui                                                                                                                                                                                    |
+|navigateToUrl;              |${surl}/mdm/users                                                                                                                                                                     |
+|waitForElementToBeDisplayed;|//input[@placeholder='Search by user name']                                                                   |xpath                                                   |30            |
+|sendKeys;                   |//input[@placeholder='Search by user name']                                                                   |xpath                                                   |${user_name}  |
+|wait;                       |5                                                                                                                                                                                     |
+|click;                      |//span[contains(text(),'pandoautomation+$unique@gmail.com')]/ancestor::div[@class='card-row card-row-show']//a|xpath                                                                  |
+|clearAndSend;               |//input[@placeholder='Enter User Name']                                                                       |xpath                                                   |${user_name_1}|
+|click;                      |//label[contains(text(),'Role')]/following-sibling::div[@class='dropdown-section']/div/div/input              |xpath                                                                  |
+|click;                      |//ul/li/span[contains(text(),'${role}')]                                                                      |xpath                                                                  |
+|clearAndSend;               |//input[@type='number']                                                                                       |xpath                                                   |${user_number}|
+|clearAndSend;               |//input[@placeholder='Enter Email']                                                                           |xpath                                                   |${user_email} |
+|click;                      |//ul[@class='action-list']/li[contains(text(),'Update')]                                                      |xpath                                                                  |
+|check                       |isElementPresent;                                                                                             |//div[contains(@class,'el-message el-message--success')]|xpath  |true  |
+
+!include -c .FrontPage.Pando.Common.ShipperLogout
+
+
+!** Unique values assignment
+!|Script     |Common                |
+|$user_email=|getTrim;|${user_email}|
+**!
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Users.CommonResetLogin
+
+ 
+
+
+
+
+

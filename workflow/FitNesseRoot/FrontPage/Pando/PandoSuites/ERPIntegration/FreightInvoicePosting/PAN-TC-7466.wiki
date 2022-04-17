@@ -1,0 +1,770 @@
+---
+Help: Validate payments and invoice posting by combining two Primary PTL indents
+Suites: marico2
+Test
+---
+!** Configuration
+"max_indents_for_invoice" : {
+			"primary" : 2
+		},
+**!
+
+!**> Update client config to allow 2 indents for primary
+!|script                   |MongoDB                                                         |
+|initialize;               |${connection}|${database}                                       |
+|updateClientConfiguration;|${surl}      |payment_settings.max_indents_for_invoice.primary|2|
+**!
+
+!***> Unique values assignment
+!|Script      |Common                                     |
+|$unique=     |getCurrentDateTimeStamp;|yMMddHHmmss       |
+|$num=        |getRandomNumber;        |100    |999       |
+|$num1=       |getRandomNumber;        |20     |76        |
+|$num2=       |getRandomNumber;        |1000   |9999      |
+|$rand1=      |getRandomString;        |2      |ALPHAUPPER|
+|$year=       |getSubString;           |$unique|0    |4   |
+|$indate=     |getCurrentDateTimeStamp;|yyyy/MM/dd        |
+|$vno_1=      |getRandomNumber;        |20     |76        |
+|$vno_2=      |getRandomString;        |2      |ALPHAUPPER|
+|$vno_3=      |getRandomNumber;        |1000   |9999      |
+|$invoicedate=|getCurrentDateTimeStamp;|yyyy-MM-dd        |
+
+!|Script            |DateUtil                            |
+|$truckindate=      |dateCalculation;     |yyyy/MM/dd|-10|
+|$loadingDate=      |dateCalculation;     |yyyy/MM/dd|-4 |
+|$truckoutdate=     |dateCalculation;     |yyyy/MM/dd|-7 |
+|$reported_date=    |dateCalculation;     |yyyy/MM/dd|-3 |
+|$released_date=    |dateCalculation;     |yyyy/MM/dd|-1 |
+|$monthAndYear=     |dateCalculation;     |MMMM yyyy |0  |
+|$todayDate=        |dateCalculation;     |d         |0  |
+|$ordinalDateSuffix=|getOrdinalDateSuffix;|$todayDate    |
+|$released_date_2=  |dateCalculation;     |yyyy/MM/dd|-4 |
+
+!|Script          |Common                                              |
+|$truckindate=    |stringConcatenation;|$truckindate    |!- 10:00:00 -!|
+|$truckoutdate=   |stringConcatenation;|$truckoutdate   |!- 10:00:00 -!|
+|$reported_date=  |stringConcatenation;|$reported_date  |!- 10:00:00 -!|
+|$released_date=  |stringConcatenation;|$released_date  |!- 10:00:00 -!|
+|$released_date_2=|stringConcatenation;|$released_date_2|!- 10:00:00 -!|
+
+!|Script          |DateUtil                       |
+|$loadingDate=    |utcConversion;|$loadingDate    |
+|$truckindate=    |utcConversion;|$truckindate    |
+|$truckoutdate=   |utcConversion;|$truckoutdate   |
+|$reported_date=  |utcConversion;|$reported_date  |
+|$released_date=  |utcConversion;|$released_date  |
+|$released_date_2=|utcConversion;|$released_date_2|
+
+!|Script        |DateUtil                                      |
+|$expected_date=|dateCalculation;|yyyy/MM/dd        |-12       |
+|$expected_date=|utcConversion;  |$expected_date !- 10:00:00 -!|
+
+!define truck_no {TN $vno_1 $vno_2 $vno_3}
+*!
+
+!***> Destination Depot Creation
+!define destination_depot_name {MUMBAI DEPOT}
+!define destination_depot_id {61cee3d22a0e79004aaa5294}
+!define destination_depot_gate {61cee4d71ca9650049e019e0}
+!define destination_depot_refid {MUMDEPOT}
+!define destination_depot_gateid {MUMGATE}
+
+!|script                       |common                            |
+|$destination_location_id=     |getTrim;|${destination_depot_id}  |
+|$destination_gate_location_id=|getTrim;|${destination_depot_gate}|
+*!
+
+!***> Transporter with discount
+!define transporter_name {TRANSPORTER MARICO D}
+!define transporter_ref_id {TRANSMARICOD}
+!define discount {10}
+!define gst_percentage {5}
+!define manager_email {pandotransporter+m1@outlook.com}
+!define transporter_id {61cbf78f7270d2004935257d}
+
+!| Script        |Common                    |
+|$transporter_id=|getTrim;|${transporter_id}|
+*!
+
+!**> Retrieving Password for the Created Transporter 
+!include -c .FrontPage.Pando.Common.CommonTransporterPassword
+*!
+
+!***> Vehicle Creation
+!define vehicle_name {VEHICLE 900 CFT PTL}
+!define cft {900}
+!define kg {1000}
+!define vehicle_type {PTL}
+!define vehicle_id {61f2911f28b19200490a02d5}
+
+!| Script    |Common                |
+|$vehicle_id=|getTrim;|${vehicle_id}|
+*!
+
+!***> Depot Creation
+!define depot_name {d$unique}
+!define depot_state {Tamil Nadu}
+!define depot_city {Chennai}
+!define depot_region {South}
+!define depot_short_code {D$unique}
+!define depot_reference_id {R$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {123456}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+*!
+
+!***> Gate Manager Creation
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!define role_id {$retrieve_key_value}
+!define user_number {123}
+!define user_name {u$unique}
+!define user_email {pandoindent+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!***> Gate Creation
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {RQ$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {${depot_region}}
+!define gate_pincode {${depot_pincode}}
+!define gate_short_code {G1$unique}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script |json                                |
+|$gate_id=|getValueFromJSON;|$depotResp|data.id|
+
+!|Script         |Common           |
+|$location_id=   |getTrim;|$depot  |
+|$source_gate_id=|getTrim;|$gate_id|
+*!
+
+!**> Material Creation 1
+!define material_name {PARACHUTE OIL}
+!define material_code {PARACHUTE}
+**!
+
+!**> Material Creation 2
+!define material_name_2 {SAFFOLA MASALA OATS}
+!define material_code_2 {SAFFOLAOATS}
+**!
+
+!** Upload Loading and Unloading charges
+!define src_depot_Ref_Id {R$unique}
+!define Loading_Cost1 {400}
+!define Unloading_Cost1 {520}
+!define ODA_Cost1 {100}
+!define Loading_Cost1 {400}
+!define Unloading_Cost1 {520}
+!define ODA_Cost1 {100}
+!define Loading_Cost2 {680}
+!define Unloading_Cost2 {740}
+!define ODA_Cost2 {100}
+!define unit {per_trip}
+
+!define row {Vehicle Type,Movement,Depot REF ID,Loading cost,Unloading cost,ODA cost,Unit}
+!define column {${vehicle_name},Primary,${src_depot_Ref_Id},${Loading_Cost1},${Unloading_Cost1},${ODA_Cost1},${unit}|${vehicle_name},Primary,${destination_depot_refid},${Loading_Cost2},${Unloading_Cost2},${ODA_Cost2},${unit}}
+
+!include .FrontPage.Pando.PandoSuites.DataManager.Search.LoadingAndUnloadingSearch.CommonLUDynamicUpload
+*!
+
+!**> Enable Admin setting
+!define movement {Primary}
+!define amount_type {INR}
+!define threshold_amount {0}
+!define type1 {Shortage}
+!define s_value {Fixed Price}
+!define s_factor {0.85}
+!define type2 {Damage}
+!define d_value {Fixed Price}
+!define d_factor {1}
+!define type3 {Carton Damage}
+!define cd_value {Fixed Price}
+!define cd_factor {30}
+
+!|script|common                                                                                                                                                                        |
+|$data= |getTrim;|{"insurance_threshold":${threshold_amount},"shortage":{"value":1,"factor":0.85},"damage":{"value":1,"factor":1},"carton_damage":{"value":1,"factor":30},"movement":2}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.AdminSettings.ShortageDamageSettingAPI
+**!
+
+!** Detention Upload
+!define row {Vehicle Name,Group Code,Movement,LOADING_DETENTION_DAY1,LOADING_DETENTION_DAY2,LOADING_DETENTION_DAY3,LOADING_DETENTION_DAY4,LOADING_DETENTION_DAY5,LOADING_DETENTION_MORETHAN_DAY5,UnLOADING_DETENTION_DAY1,UnLOADING_DETENTION_DAY2,UnLOADING_DETENTION_DAY3,UnLOADING_DETENTION_DAY4,UnLOADING_DETENTION_DAY5,UnLOADING_DETENTION_MORETHAN_DAY5,TRANSIT_DAY1,TRANSIT_DAY2,TRANSIT_DAY3,TRANSIT_DAY4,TRANSIT_DAY5,TRANSIT_MORETHAN_DAY5,TRANSIT_DELAY_PERCENTAGE}
+!define column {${vehicle_name},U,Primary,100,200,300,400,500,600,110,210,310,410,510,610,120,220,320,420,520,620,10}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.Search.DetentionSearch.CommonDetentionBulkUpload
+**!
+
+!***> Uploading Rate Matrix
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Drop Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {City,Chennai,Mumbai,${vehicle_name},100,${transporter_ref_id},${transporter_name},1,12000,per_trip,01-Jan-$year,31-Dec-2030,100,1,U,PC,550,770,Per trip,500,300,no,0}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+*!
+
+!**> Indent Creation 1 and deliver indent
+
+!**> Indent Creation 1
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$location_id}
+!define gate_id {$source_gate_id}
+!define vehicle_requirement_date {$expected_date}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$destination_location_id}
+!define sold_to_id {$destination_gate_location_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice}}],"destinations":[{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id}"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+
+!| Script    |Common            |
+|$order_id_1=|getTrim;|$order_id|
+*!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!*** Truck In
+!| Script       |Common               |
+|$truck_in_date=|getTrim;|$truckindate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!**> Update LR for Consignee
+!define consignee_id {$destination_location_id}
+!define lr_number {l1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!**> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {1000} 
+!define quantity_unit {cases}
+!define weight {480}
+!define weight_unit {KG}
+!define volume {450}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {1000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"${material_code}","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${destination_depot_gateid}","sold_to":"${destination_depot_gateid}","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** ERP Upload
+!|script|common                                                                                                                                                                                                                                                                                                                                                         |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"${destination_depot_gateid}","sold_to":"${destination_depot_gateid}","material_invoice_number":"INV-$unique","material_code":"PARACHUTE","no_of_shortage":"100","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"400","no_of_carton_damage":"10","release_date":"$released_date"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+**!
+
+!**> Indent Creation 2 and deliver indent
+
+!**> Indent Creation 2
+!define order_type  {0}
+!define transporter_id {$transporter_id}
+!define vehicle_type_id {$vehicle_id}
+!define location_id {$location_id}
+!define gate_id {$source_gate_id}
+!define vehicle_requirement_date {$expected_date}
+!define loader_available {false}
+!define add_to_invoice {false}
+!define indent_type {2}
+!define destination_location_id {$destination_location_id}
+!define sold_to_id {$destination_gate_location_id}
+!define unloader_available {false}
+!define expected_delivery_at {$expected_date}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+|$data= |getTrim;|{"data":{"order_type":${order_type},"transporter_id":"${transporter_id}","vehicle_type_id":"${vehicle_type_id}","sources":[{"type":1,"location_id":"${location_id}","gate_id":"${gate_id}","vehicle_requirement_date":"${vehicle_requirement_date}","loader_available":${loader_available},"add_to_invoice":${add_to_invoice}}],"destinations":[{"type":1,"location_id":"${destination_location_id}","source_location_id":"${location_id}","source_gate_id":"${gate_id}","sold_to_id":"${sold_to_id}","unloader_available":${unloader_available},"add_to_invoice":${add_to_invoice},"gate_id":"${sold_to_id}"}],"no_of_vehicles": 1}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.IndentCreationDynamicAPI
+
+!| Script    |Common            |
+|$order_id_2=|getTrim;|$order_id|
+*!
+
+!***> Adding Truck details
+!define vechicle_number {${truck_no}}
+!define driver_name {d$unique}
+!define phone_number {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckAssignAPI
+*!
+
+!*** Truck In
+!| Script       |Common               |
+|$truck_in_date=|getTrim;|$truckindate|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.TruckInAPI
+*!
+
+!**> Update LR for Consignee
+!define consignee_id {$destination_location_id}
+!define lr_number {l1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.Indent.LRUpdateAPI
+**!
+
+!**> Material upload for all consingee
+!define mrp_price {100}
+!define quantity1 {1000} 
+!define quantity_unit {cases}
+!define weight {600}
+!define weight_unit {KG}
+!define volume {300}
+!define volume_unit {CFT}
+!define type {SECONDARY}
+!define invoice_amount {1000}
+!define invoice_date {$indate}
+!define category {}
+!define truck_out {$truckoutdate}
+
+!|script|common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|$data= |getTrim;|{"data":[{"indent_no":"$order_id","delivery_number":"D1$unique","mrp_price":"${mrp_price}","material_code":"${material_code_2}","depot_ref_id":"R$unique","gate_ref_id":"${gate_ref_id}","division":"BK","quantity":"${quantity1}","quantity_unit":"${quantity_unit}","weight":"${weight}","weight_unit":"${weight_unit}","volume":"${volume}","volume_unit":"${volume_unit}","ship_to":"${destination_depot_gateid}","sold_to":"${destination_depot_gateid}","type":"${type}","invoice_number":"INV-$unique","invoice_amount":"${invoice_amount}","invoice_date":"$indate","category":"${category}","truck_out":"$truckoutdate","cgst_rate":"0","cgst_amount":"0","sgst_rate":"0","sgst_amount":"0","igst_rate":"0","igst_amount":"0","hsn_code":"1806","material_taxable_amount":"0","ext_ref_id":""}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.MaterialInvoiceDynamicERPAPI
+**!
+
+!** ERP Upload
+!|script|common                                                                                                                                                                                                                                                                                                                                                            |
+|$data= |getTrim;|{"data":[{"indent_number":"$order_id","ship_to":"${destination_depot_gateid}","sold_to":"${destination_depot_gateid}","material_invoice_number":"INV-$unique","material_code":"SAFFOLAOATS","no_of_shortage":"90","no_of_leakage":"0","mrp":"100","no_of_excess":"0","no_of_damage":"450","no_of_carton_damage":"60","release_date":"$released_date_2"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.ERPIntegration.EpodDynamicERPAPI
+**!
+**!
+
+!**> Transporter login
+!define transporter_email {${manager_email}}
+!define transporter_password {$password}
+!include -c .FrontPage.Pando.Common.TransporterLogin
+**!
+
+!** Ready for billing
+!define depot_name {d$unique}
+
+!|Script   |Common                                           |
+|$pdfpath1=|getPath;|testAttachment/pdf1_$unique.pdf|fullpath|
+
+!|Script               |FileUtil            |
+|createFileFromContent;|$pdfpath1|test|UTF-8|
+
+!|Script       |Ui                                     |
+|navigateToUrl;|${turl}/v2/payments?depot=${depot_name}|
+
+!define search_text {$order_id_1}
+!include .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletIndentSearch
+
+!|Script  |Ui                                                                                        |
+|click;   |//*[normalize-space(text())='Update']                                     |xpath          |
+|sendKeys;|(//input[@class='el-upload__input'])[1]                                   |xpath|$pdfpath1|
+|click;   |//div[@class='formfooter']//button//span[normalize-space(text())='Update']|xpath          |
+|wait;    |5                                                                                         |
+|click;   |//div[@class='close-sidebar']                                             |xpath          |
+|click;   |//div[@class='app-search-label']                                          |xpath          |
+|click;   |//button[text()='Clear']                                                  |xpath          |
+|wait;    |3                                                                                         |
+|click;   |//button[text()='Search']                                                 |xpath          |
+
+!define search_text {$order_id_2}
+!include .FrontPage.Pando.PandoSuites.WalletV2.ListingAndFilter.CommonWalletIndentSearch
+
+!|Script  |Ui                                                                                        |
+|click;   |//*[normalize-space(text())='Update']                                     |xpath          |
+|sendKeys;|(//input[@class='el-upload__input'])[1]                                   |xpath|$pdfpath1|
+|click;   |//div[@class='formfooter']//button//span[normalize-space(text())='Update']|xpath          |
+|wait;    |5                                                                                         |
+|click;   |//div[@class='close-sidebar']                                             |xpath          |
+ 
+!|Script|Ui                                    |
+|click; |//div[@class='app-search-label']|xpath|
+|click; |//button[text()='Clear']        |xpath|
+|wait;  |3                                     |
+|click; |//button[text()='Search']       |xpath|
+*!
+
+!** Combine two primary indents into single invoice
+!|script|ui                                            |
+|click; |(//span[@class='el-checkbox__inner'])[1]|xpath|
+|wait;  |2                                             |
+|click; |(//span[@class='el-checkbox__inner'])[3]|xpath|
+|wait;  |2                                             |
+|click; |//button[text()='Create Invoice']       |xpath|
+**!
+
+!**> Checking the charges in transporter invoice for indent 1
+!define header_name1 {Freight}
+!define header_name2 {Transit Delay - 5 Days}
+!define header_name3 {Loading}
+!define header_name4 {Loading Detention - 3 Days}
+!define header_name5 {UnLoading Detention - 0 Days}
+!define header_name6 {ODA}
+!define header_name7 {Fixed Charge}
+!define header_name8 {Shortage}
+!define header_name9 {Damage}
+!define header_name10 {Carton Damage}
+!define header_name11 {Unloading}
+
+!|script                         |ui                                                                                                                                                                                                                                                                   |
+|click;                          |//div[@class='el-table__fixed']//*[normalize-space(text())='$order_id_1']               |xpath                                                                                                                                                                       |
+|waitForElementToBeDisplayed;    |//div[@id='pane-Details']//div[starts-with(normalize-space(@class),'tab-content')]      |xpath                                                                                                                                                |15                    |
+|click;                          |//div[@id='tab-Charges']                                                                |xpath                                                                                                                                                                       |
+|waitForElementToBeDisplayed;    |//div[@id='pane-Charges']//div[starts-with(normalize-space(@class),'tab-content')]      |xpath                                                                                                                                                |15                    |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name1} |
+|$freight_shipper=               |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$freight_transporter=           |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name2} |
+|$transitdelay_shipper=          |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$transitdelay_transporter=      |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name3} |
+|$loading_shipper=               |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$loading_transporter=           |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name4} |
+|$loadingdetention_shipper=      |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$loadingdetention_transporter=  |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name5} |
+|$unloadingdetention_shipper=    |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$unloadingdetention_transporter=|getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name6} |
+|$oda_shipper=                   |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$oda_transporter=               |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name7} |
+|$fixedrate_shipper=             |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$fixedrate_transporter=         |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name8} |
+|$shortage_shipper=              |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$shortage_transporter=          |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name9} |
+|$damage_shipper=                |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$damage_transporter=            |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name10}|
+|$cartondamage_shipper=          |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$cartondamage_transporter=      |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name11}|
+|$unloading_shipper=             |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$unloading_transporter=         |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$total_shipper=                 |getText;                                                                                |(//*[text()='TOTAL']/..//following-sibling::div)[1]                                                                                                  |xpath                 |
+|$total_transporter=             |getText;                                                                                |(//*[text()='TOTAL']/..//following-sibling::div)[2]                                                                                                  |xpath                 |
+|click;                          |//div[contains(text(),'$order_id_1')]/..//button//i[contains(@class,'el-dialog__close')]|xpath                                                                                                                                                                       |
+|wait;                           |2                                                                                                                                                                                                                                                                    |
+
+!|Script|common                                                           |
+|check  |checkIfStringAreEqual;|$freight_shipper               |12000|true|
+|check  |checkIfStringAreEqual;|$freight_transporter           |12000|true|
+|check  |checkIfStringAreEqual;|$transitdelay_shipper          |1600 |true|
+|check  |checkIfStringAreEqual;|$transitdelay_transporter      |1600 |true|
+|check  |checkIfStringAreEqual;|$loading_transporter           |400  |true|
+|check  |checkIfStringAreEqual;|$loading_shipper               |400  |true|
+|check  |checkIfStringAreEqual;|$loadingdetention_shipper      |600  |true|
+|check  |checkIfStringAreEqual;|$loadingdetention_transporter  |600  |true|
+|check  |checkIfStringAreEqual;|$unloadingdetention_shipper    |0    |true|
+|check  |checkIfStringAreEqual;|$unloadingdetention_transporter|0    |true|
+|check  |checkIfStringAreEqual;|$oda_shipper                   |770  |true|
+|check  |checkIfStringAreEqual;|$oda_transporter               |770  |true|
+|check  |checkIfStringAreEqual;|$fixedrate_shipper             |550  |true|
+|check  |checkIfStringAreEqual;|$fixedrate_transporter         |550  |true|
+|check  |checkIfStringAreEqual;|$shortage_shipper              |85   |true|
+|check  |checkIfStringAreEqual;|$shortage_transporter          |85   |true|
+|check  |checkIfStringAreEqual;|$damage_shipper                |400  |true|
+|check  |checkIfStringAreEqual;|$damage_transporter            |400  |true|
+|check  |checkIfStringAreEqual;|$cartondamage_shipper          |300  |true|
+|check  |checkIfStringAreEqual;|$cartondamage_transporter      |300  |true|
+|check  |checkIfStringAreEqual;|$unloading_shipper             |740  |true|
+|check  |checkIfStringAreEqual;|$unloading_transporter         |740  |true|
+|check  |checkIfStringAreEqual;|$total_shipper                 |12675|true|
+|check  |checkIfStringAreEqual;|$total_transporter             |12675|true|
+*!
+
+!**> Checking the charges in transporter invoice for indent 2
+!define header_name1 {Freight}
+!define header_name2 {Transit Delay - 2 Days}
+!define header_name3 {Loading}
+!define header_name4 {Loading Detention - 3 Days}
+!define header_name5 {UnLoading Detention - 0 Days}
+!define header_name6 {ODA}
+!define header_name7 {Fixed Charge}
+!define header_name8 {Shortage}
+!define header_name9 {Damage}
+!define header_name10 {Carton Damage}
+!define header_name11 {Unloading}
+
+!|script                         |ui                                                                                                                                                                                                                                                                   |
+|click;                          |//div[@class='el-table__fixed']//*[normalize-space(text())='$order_id_2']               |xpath                                                                                                                                                                       |
+|waitForElementToBeDisplayed;    |//div[@id='pane-Details']//div[starts-with(normalize-space(@class),'tab-content')]      |xpath                                                                                                                                                |15                    |
+|click;                          |//div[@id='tab-Charges']                                                                |xpath                                                                                                                                                                       |
+|waitForElementToBeDisplayed;    |//div[@id='pane-Charges']//div[starts-with(normalize-space(@class),'tab-content')]      |xpath                                                                                                                                                |15                    |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name1} |
+|$freight_shipper=               |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$freight_transporter=           |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name2} |
+|$transitdelay_shipper=          |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$transitdelay_transporter=      |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name3} |
+|$loading_shipper=               |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$loading_transporter=           |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name4} |
+|$loadingdetention_shipper=      |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$loadingdetention_transporter=  |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name5} |
+|$unloadingdetention_shipper=    |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$unloadingdetention_transporter=|getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name6} |
+|$oda_shipper=                   |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$oda_transporter=               |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name7} |
+|$fixedrate_shipper=             |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$fixedrate_transporter=         |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name8} |
+|$shortage_shipper=              |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$shortage_transporter=          |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name9} |
+|$damage_shipper=                |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$damage_transporter=            |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name10}|
+|$cartondamage_shipper=          |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$cartondamage_transporter=      |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$charges_header_column_number=  |getHeaderColumnNumber;                                                                  |//div[@role='tablist' and contains(@class,'table')]/child::div//div[@class='cell']//span[not(contains(@class,'icon') or contains(@class,'position'))]|xpath|${header_name11}|
+|$unloading_shipper=             |getText;                                                                                |((//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//div[starts-with(@class,'cell text-right')])[1]     |xpath                 |
+|$unloading_transporter=         |getValue;                                                                               |(//div[@role='tablist' and contains(@class,'table')]/child::div)[$charges_header_column_number]//input[@type='number']                               |xpath                 |
+|$total_shipper=                 |getText;                                                                                |(//*[text()='TOTAL']/..//following-sibling::div)[1]                                                                                                  |xpath                 |
+|$total_transporter=             |getText;                                                                                |(//*[text()='TOTAL']/..//following-sibling::div)[2]                                                                                                  |xpath                 |
+|click;                          |//div[contains(text(),'$order_id_2')]/..//button//i[contains(@class,'el-dialog__close')]|xpath                                                                                                                                                                       |
+
+!|Script|common                                                             |
+|check  |checkIfStringAreEqual;|$freight_shipper               |12000  |true|
+|check  |checkIfStringAreEqual;|$freight_transporter           |12000  |true|
+|check  |checkIfStringAreEqual;|$transitdelay_shipper          |340    |true|
+|check  |checkIfStringAreEqual;|$transitdelay_transporter      |340    |true|
+|check  |checkIfStringAreEqual;|$loading_transporter           |400    |true|
+|check  |checkIfStringAreEqual;|$loading_shipper               |400    |true|
+|check  |checkIfStringAreEqual;|$loadingdetention_shipper      |600    |true|
+|check  |checkIfStringAreEqual;|$loadingdetention_transporter  |600    |true|
+|check  |checkIfStringAreEqual;|$unloadingdetention_shipper    |0      |true|
+|check  |checkIfStringAreEqual;|$unloadingdetention_transporter|0      |true|
+|check  |checkIfStringAreEqual;|$oda_shipper                   |770    |true|
+|check  |checkIfStringAreEqual;|$oda_transporter               |770    |true|
+|check  |checkIfStringAreEqual;|$fixedrate_shipper             |550    |true|
+|check  |checkIfStringAreEqual;|$fixedrate_transporter         |550    |true|
+|check  |checkIfStringAreEqual;|$shortage_shipper              |76.5   |true|
+|check  |checkIfStringAreEqual;|$shortage_transporter          |76.5   |true|
+|check  |checkIfStringAreEqual;|$damage_shipper                |450    |true|
+|check  |checkIfStringAreEqual;|$damage_transporter            |450    |true|
+|check  |checkIfStringAreEqual;|$cartondamage_shipper          |1800   |true|
+|check  |checkIfStringAreEqual;|$cartondamage_transporter      |1800   |true|
+|check  |checkIfStringAreEqual;|$unloading_shipper             |740    |true|
+|check  |checkIfStringAreEqual;|$unloading_transporter         |740    |true|
+|check  |checkIfStringAreEqual;|$total_shipper                 |12393.5|true|
+|check  |checkIfStringAreEqual;|$total_transporter             |12393.5|true|
+*!
+
+!** Verify Summary
+!|Script                     |Ui                                                                                                                                    |
+|waitForElementToBeDisplayed;|//div[contains(@class,'table__body')]|xpath                                                                                |20        |
+|click;                      |//button[contains(text(),'Summary')] |xpath                                                                                           |
+|check                       |isElementPresent;                    |//div[contains(text(),'discount (10%)')]                                             |xpath|true|
+|$totalinvoicevalue=         |getText;                             |//div[@class='bgfooter']/div/div[@class='col-6 floatright']                          |xpath     |
+|$totaltaxablevalue=         |getText;                             |//span[contains(text(),'Total Taxable Value')]/../parent::div//following-sibling::div|xpath     |
+|$discountvalue=             |getText;                             |//div[contains(text(),'discount (10%)')]/../following-sibling::div                   |xpath     |
+|$igstvalue=                 |getText;                             |//div[contains(text(),'IGST (5%)')]/../following-sibling::div                        |xpath     |
+
+!|Script|common                                                  |
+|check  |checkIfStringAreEqual;|$totalinvoicevalue|23,689.73|true|
+|check  |checkIfStringAreEqual;|$totaltaxablevalue|25,068.5 |true|
+|check  |checkIfStringAreEqual;|$discountvalue    |2506.86  |true|
+|check  |checkIfStringAreEqual;|$igstvalue        |1,128.09 |true|
+**!
+
+!**> Generating Invoice in transporter
+!define invoice_number {i$unique}
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceGeneration
+
+!|Script|Ui|
+|wait;  |90|
+*!
+
+!** Approve invoice in Shipper 
+!include -c .FrontPage.Pando.Common.ShipperInvoiceFilter
+
+!include -c .FrontPage.Pando.Common.CommonInvoiceApprove
+
+!|Script|Ui|
+|wait;  |90|
+**!
+
+!** Validating freight invoice posting
+!|Script              |MongoDBQuery                                                                                                 |
+|getMongoConnection;  |${connection}                               |db_pando_testing                                                |
+|$total_invoice_sent1=|getTotalNoOfStrategy1InvoicePostingSent;    |${invoice_number}                                               |
+|$erp_invoice_details=|getStrategy1InvoicePostingPayload;          |${invoice_number}                                               |
+|check                |getValuesFromInvoicePayload;                |transporter_code|TRANSMARICOD                                   |
+|check                |getValuesFromInvoicePayload;                |invoice_number  |${invoice_number}                              |
+|check                |getValuesFromInvoicePayload;                |invoice_total   |22561.64                                       |
+|check                |getValuesFromInvoicePayload;                |invoice_date    |$invoicedate                                   |
+|check                |getValuesFromInvoicePayload;                |tax_code        |1                                              |
+|check                |getValuesFromInvoicePayload;                |tax_type        |1                                              |
+|check                |getValuesFromInvoicePayload;                |tax_percentage  |5                                              |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|indent_id              |$order_id_1|
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|order_reference        |$order_id_1|
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|movement               |2          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|material_invoice_number|INV-$unique|
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|sku                    |PARACHUTE  |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|source                 |Chennai    |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|source_ref_id          |R$unique   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|gate_ref_id            |RQ$unique  |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|destination            |Mumbai     |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|destination_gate_ref_id|MUMGATE    |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|destination_ref_id     |MUMDEPOT   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|quantity               |1000       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|weight                 |480        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|volume                 |450        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|invoice_value_freight  |10807.5    |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|invoice_value_detention|600        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|invoice_value_defect   |785        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|consignee_category     |           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|line_item_number       |NA         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|oda_freight_charge     |770        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|fixed_charge           |550        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|additional_point_charge|0          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|miscellaneous_charge   |0          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|loading_charge         |400        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|unloading_charge       |740        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|lr_charge              |0          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|sla_delay              |0          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|transit_delay          |1600       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|penalty                |0          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|shortage               |85         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|damage                 |400        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|carton_damage          |300        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|debit_adjustment       |0          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|extra_km_charge        |0          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|base_freight_charge    |12000      |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|weight_unit            |kg         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|quantity_unit          |cases      |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_1|volume_unit            |cft        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|indent_id              |$order_id_2|
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|order_reference        |$order_id_2|
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|movement               |2          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|material_invoice_number|INV-$unique|
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|sku                    |SAFFOLAOATS|
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|source                 |Chennai    |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|source_ref_id          |R$unique   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|gate_ref_id            |RQ$unique  |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|destination            |Mumbai     |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|destination_gate_ref_id|MUMGATE    |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|destination_ref_id     |MUMDEPOT   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|quantity               |1000       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|weight                 |600        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|volume                 |300        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|invoice_value_freight  |10554.14   |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|invoice_value_detention|600        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|invoice_value_defect   |2326.5     |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|consignee_category     |           |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|line_item_number       |NA         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|oda_freight_charge     |770        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|fixed_charge           |550        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|additional_point_charge|0          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|miscellaneous_charge   |0          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|loading_charge         |400        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|unloading_charge       |740        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|lr_charge              |0          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|sla_delay              |0          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|transit_delay          |340        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|penalty                |0          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|shortage               |76.5       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|damage                 |450        |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|carton_damage          |1800       |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|debit_adjustment       |0          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|extra_km_charge        |0          |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|base_freight_charge    |12000      |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|weight_unit            |kg         |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|quantity_unit          |cases      |
+|check                |getIndentsValuesFromStrategy1InvoicePayload;|indent_id       |$order_id_2|volume_unit            |cft        |
+
+!|Script         |Common                                                                  |
+|$schemaFilePath=|getPath;|data/schemafiles/strategy1_invoice_posting_schema.json|fullpath|
+
+!|script   |common                                             |
+|check     |comparisonResult;|$total_invoice_sent1|equal|1|true|
+|$tresult1=|comparisonResult;|$total_invoice_sent1|equal|1     |
+*!
+
+!**> Validating the print preview
+!|Script             |Common                                   |
+|$order_id_preview_1=|stringConcatenation;|MR-R$unique-M-|!-1-!|
+|$order_id_preview_2=|stringConcatenation;|MR-R$unique-M-|!-2-!|
+
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+
+!|Script                     |ui                                                   |
+|click;                      |//span[contains(text(),'${invoice_number}')]|xpath   |
+|waitForElementToBeDisplayed;|//div[contains(@class,'table__body')]       |xpath|20|
+|clickJS;                    |//a[text()='Preview']                       |xpath   |
+|wait;                       |10                                                   |
+
+!|script           |common                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+|$expected_content=|getTrim;|REMARKS remarks $unique Powered by pando This is an electronic invoice issued in accordance with the provisions of the InformationTechnology Act, 2000 (21 of 2000). Hence, does not require any signature or digital signature PLACE OF SUPPLY: TAMIL NADU 25068.5 2506.86 1128.09 23689.73 TOTAL TAXABLE VALUE: DISCOUNT (10%) TAX IGST 5% TOTAL INVOICE VALUE BILL TO PARTY MARICO-AUTO NO 15,GST STREET, CHENNAI - 123456, GSTIN : 123 SERVICE PROVIDER STATE: BIHAR GST: GST$unique TAX PAYABLE ON REVERSE CHARGE: NO SERVICE DESCRIPTION: MOVEMENT OF GOODS BY ROAD HSN/SAC: - PO NUMBER: - T TRANSPORTER MARICO D CHENNAI - 600001 TAMIL NADU i$unique $todayDate$ordinalDateSuffix $monthAndYear ORIGINAL FOR RECIPIENT TAX INVOICE Indent ID Delivery Mode Vehicle Type Taxable Value $order_id_preview_2 PTL VEHICLE 900 CFT PTL 12393.5 $order_id_preview_1 PTL VEHICLE 900 CFT PTL 12675 REMARKS remarks $unique Powered by pando This is an electronic invoice issued in accordance with the provisions of the InformationTechnology Act, 2000 (21 of 2000). Hence, does not require any signature or digital signature PLACE OF SUPPLY: TAMIL NADU 25068.5 2506.86 1128.09 23689.73 TOTAL TAXABLE VALUE: DISCOUNT (10%) TAX IGST 5% TOTAL INVOICE VALUE BILL TO PARTY MARICO-AUTO NO 15,GST STREET, CHENNAI - 123456, GSTIN : 123 SERVICE PROVIDER STATE: BIHAR GST: GST$unique TAX PAYABLE ON REVERSE CHARGE: NO SERVICE DESCRIPTION: MOVEMENT OF GOODS BY ROAD HSN/SAC: - PO NUMBER: - T TRANSPORTER MARICO D CHENNAI - 600001 TAMIL NADU i$unique $todayDate$ordinalDateSuffix $monthAndYear DUPLICATE FOR SUPPLIER TAX INVOICE Indent ID Delivery Mode Vehicle Type Taxable Value $order_id_preview_2 PTL VEHICLE 900 CFT PTL 12393.5 $order_id_preview_1 PTL VEHICLE 900 CFT PTL 12675|
+
+!|script       |common                    |
+|$downloadPath=|getPath;|download|fullpath|
+
+!|script         |FileUtil                          |
+|$filename=      |getLastModifiedFile;|$downloadPath|
+|$actual_content=|readPdfFile;        |$filename    |
+
+!|Script            |Common                                                          |
+|$difference_in_pdf=|stringCompareForDifference;|$actual_content   |$expected_content|
+|check              |checkIfStringAreEqual;     |$difference_in_pdf|[]     |true     |
+|$tresult2=         |checkIfStringAreEqual;     |$difference_in_pdf|[]               |
+
+!|script               |common                    |
+|$downloadPath=        |getPath;|download|fullpath|
+|cleanFilesInDirectory;|$downloadPath             |
+*!
+
+!**> Reverting client config to allow 1 indents for primary
+!|script                   |MongoDB                                                         |
+|initialize;               |${connection}|${database}                                       |
+|updateClientConfiguration;|${surl}      |payment_settings.max_indents_for_invoice.primary|1|
+**!
+
+!**> Validating test result
+!|script  |common                                                     |
+|check    |checkIfStringAreEqualInArray;|$tresult1,$tresult2,true|true|
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,true     |
+*!

@@ -1,0 +1,296 @@
+---
+Help: Ensure that the rejected deliveries are available in Rejection in Ui
+Suites: optscn7
+Test
+---
+!5 Ensure that the rejected deliveries are available in Rejection in Ui
+
+!5 Send the deliveries via Delivery_Picklist
+!5 All the rejected deliveries should be displayed in Rejections
+!5 User should be able to see the rejections with reason in Rejections page
+
+1. Valid | 600023 -> 636401 | CMAIL GATE1  ->  CUST MAIL |
+2. Contract NA | 600023 -> 607303 | CMAIL GATE1  ->  CA2 |
+3. Single Quantity Larger than vehicle | 600023 -> 636401 | CMAIL GATE1  ->  CUST MAIL |
+4. Consignee veh exclude | 600023 -> 600117 | CMAIL GATE1  ->  CA1 |
+5. RM Vehicle exclude | 600023 -> 600020 | CMAIL GATE1  ->  COn11 |
+6. vehicle exclude sku category | 600023 -> 632006 | CMAIL GATE1  ->  new_con |
+7. Material cannot be split (delivery do not split) | 600023 -> 636401 | CMAIL GATE1  ->  CUST MAIL |
+
+!***> Unique values assignment
+!|Script          |Common                                       |
+|$unique=         |getCurrentDateTimeStamp;|yMMddHHmmss         |
+|$currDate=       |getCurrentDateTimeStamp |iso                 |
+|$year=           |getSubString;           |$unique  |0   |4    |
+|$detention_group=|getRandomString;        |4        |ALPHAUPPER|
+|$num=            |getRandomNumber;        |100000   |999999    |
+|$today=          |getSubString;           |$currDate|0   |10   |
+|$pincode1=       |getRandomNumber;        |111001   |999999    |
+|$pincode2=       |getRandomNumber;        |111001   |999999    |
+
+!|Script  |DateUtil                      |
+|$today=  |dateCalculation;|yyyy-MM-dd |0|
+|$rdate=  |dateCalculation;|yyyy/MM/dd |0|
+|$thisday=|dateCalculation;|dd MMM yyyy|0|
+
+!| Script     |Common                                      |
+|$rdate=      |stringConcatenation;   |$rdate|!- 10:00:00-!|
+|$loadingDate=|getCurrentDateTimeStamp|iso                 |
+*!
+
+!***> Depot for Shipper
+!define depot_name {d$unique}
+!define depot_state {Madhya Pradesh}
+!define depot_city {B$unique}
+!define depot_region {North}
+!define depot_short_code {D$num}
+!define depot_reference_id {r$unique}
+!define depot_address {No 15,GST Street}
+!define depot_pincode {600023}
+!define depot_gstn_no {123}
+!define depot_delivery_type {1}
+!define depot_phone {123}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.DepotCreationAPI
+
+!*** Gate Creation for shipper depot
+!*** User Role ID Retrival
+!define key {name}
+!define role_type {gate_manager}
+!define retrieve_key {id}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GetUserRoleAPI
+*!
+
+!*** Gate Manager Creation
+!define role_id {$retrieve_key_value}
+!define user_number {12891}
+!define user_name {u1$unique}
+!define user_email {pandoindent+1+$unique@gmail.com}
+!define status {1}
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.UserCreationAPI
+*!
+
+!** Gate Creation one
+!define depot_id {$depot}
+!define gate_name {Gate 1}
+!define gate_ref_id {rq1$unique}
+!define gate_city {${depot_city}}
+!define gate_state {${depot_state}}
+!define gate_region {North}
+!define gate_pincode {600023}
+!define gate_short_code {G1$num}
+!define gate_user_id {$user_id}
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.DataManager.GateCreationAPI
+
+!| Script   |json                                |
+|$gate_id_1=|getValueFromJSON;|$depotResp|data.id|
+*!
+*!
+*!
+
+!***> Depot Optima Setting
+!define depo {d$unique}
+!define max_split {2}
+!define split_factor {5}
+!define ftl_certify {false}
+!define algorithm {1}
+!define distance_deviation {500}
+!define degree_of_deviation {30}
+!define optima_type {1}
+!define weight {1}
+!define volume {1}
+!define mode {0}
+!define max_pickup {2}
+!define fitment {1}
+!define max_dropoff {2}
+!define optima_for_ptl {false}
+!define ptl_club_gates {false}
+!define limited_truck_count {false}
+!define hybrid_split {false}
+!define depot_id {$depot}
+!define movement {1}
+!define movement_type {Secondary}
+!define material_category {"GT","MT"}
+
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+|$data= |getJsonTrim;|{"optima_configuration":{"max_split": ${max_split},"split_factor": ${split_factor},"ftl_certify": ${ftl_certify},"algorithm": ${algorithm},"distance_deviation":"${distance_deviation}","degree_of_deviation":${degree_of_deviation},"optima_type":${optima_type},"vehicle_exclusion":[],"vehicle_constraining_factor":[],"default_constraining_factor":{"weight":${weight},"volume":${volume}},"material_categories":[${material_category}],"mode":${mode},"max_pickup_points":${max_pickup},"fitment":${fitment},"max_drop_points":${max_dropoff},"drop_off_rule":[],"optima_for_ptl":${optima_for_ptl},"ptl_club_gates":${ptl_club_gates},"limited_truck_count":${limited_truck_count},"hybrid_split": ${hybrid_split}},"depot_ids":["${depot_id}"],"movement":${movement}}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.OptimaSettingsAPI
+*!
+
+!***> Uploading Rate Matrix
+!define erp_gate_id_api_1 {rq1$unique}
+!define transit_days {1}
+!define ratec {1000}
+!define rtrip {per_trip}
+!define mrate {10000}
+!define mfactor {1}
+
+!define row {Type*,Source*,Destination*,Vehicle Type*,Distance,Transporter Reference ID*,Transporter Name,Transit Days*,Freight Rate*,Freight Unit*,Valid From*,Valid To*,Minimum Rate,Multiplying Factor,Detention Group,Product Category,Fixed Rate,ODA Rate,Oda Unit,Minimum ODA,Point Charges,Is Dedicated,Truck Count,Slab Kms,Min Kms,Additional Charge Percentage,Hilly Region Addition Percentage,Is Round Trip Eligible,Return Freight Rate,Exclude,Trip Count}
+!define column {Pincode,600023,636401,965 CFT,${transit_days},TA1,TRANSAUTO,${transit_days},55,per_case,01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|
+Pincode,600023,600117,965 CFT,${transit_days},TA1,TRANSAUTO,${transit_days},55,per_case,01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|
+Pincode,600023,600020,965 CFT,${transit_days},TA1,TRANSAUTO,${transit_days},55,per_case,01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0|
+Pincode,600023,632006,965 CFT,${transit_days},TA1,TRANSAUTO,${transit_days},55,per_case,01-Jan-$year,31-Dec-2030,275,${mfactor},$detention_group,,50,0,Per KG,0,0}
+
+!include -c .FrontPage.Pando.Common.RateMatrix
+**!
+
+!***> Uploading the Rate Matrix vehicle exclude
+!define row {Source,Destination,Vehicle Type,Exclude,trip count}
+!define column {600023,600020,965 CFT,yes,1}
+
+!include -c .FrontPage.Pando.PandoSuites.DataManager.RateMatrixVehicleExclude
+*!
+
+!***> Delivery Picklist API 
+!|Script|Http                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+|$data= |getJsonTrim;|{"data":[{"delivery_number":"D1$num","material_code":"mat001","pickup_reference_number":"rq1$unique","division":"","quantity":10,"quantity_unit":"case","weight":900,"weight_unit":"KG","volume":"200","volume_unit":"CFT","lr_number":"","ship_to":"CUST MAIL","sold_to":"CUST MAIL","line_item":"122120","type":"Secondary","category":"","stn":"","date":"$today"},{"delivery_number":"D2$num","material_code":"mat002","pickup_reference_number":"rq1$unique","division":"","quantity":10,"quantity_unit":"case","weight":900,"weight_unit":"KG","volume":"200","volume_unit":"CFT","lr_number":"","ship_to":"CA2","sold_to":"CA2","line_item":"122120","type":"Secondary","category":"","stn":"","date":"$today"},{"delivery_number":"D3$num","material_code":"mat003","pickup_reference_number":"rq1$unique","division":"","quantity":1,"quantity_unit":"case","weight":1800,"weight_unit":"KG","volume":"400","volume_unit":"CFT","lr_number":"","ship_to":"CUST MAIL","sold_to":"CUST MAIL","line_item":"122120","type":"Secondary","category":"","stn":"","date":"$today"},{"delivery_number":"D4$num","material_code":"mat004","pickup_reference_number":"rq1$unique","division":"","quantity":10,"quantity_unit":"case","weight":900,"weight_unit":"KG","volume":"400","volume_unit":"CFT","lr_number":"","ship_to":"CA1","sold_to":"CA1","line_item":"122120","type":"Secondary","category":"","stn":"","date":"$today"},{"delivery_number":"D5$num","material_code":"mat005","pickup_reference_number":"rq1$unique","division":"","quantity":10,"quantity_unit":"case","weight":900,"weight_unit":"KG","volume":"400","volume_unit":"CFT","lr_number":"","ship_to":"COn11","sold_to":"COn11","line_item":"122120","type":"Secondary","category":"","stn":"","date":"$today"},{"delivery_number":"D6$num","material_code":"mat006","pickup_reference_number":"rq1$unique","division":"","quantity":10,"quantity_unit":"case","weight":900,"weight_unit":"KG","volume":"400","volume_unit":"CFT","lr_number":"","ship_to":"new_con","sold_to":"new_con","line_item":"122120","type":"Secondary","category":"oil","stn":"","date":"$today"},{"delivery_number":"D7$num","material_code":"mat007","pickup_reference_number":"rq1$unique","division":"","quantity":10,"quantity_unit":"case","weight":1500,"weight_unit":"KG","volume":"400","volume_unit":"CFT","lr_number":"","ship_to":"CUST MAIL","sold_to":"CUST MAIL","line_item":"122120","type":"Secondary","category":"","stn":"","date":"$today"},{"delivery_number":"D7$num","material_code":"mat008","pickup_reference_number":"rq1$unique","division":"","quantity":10,"quantity_unit":"case","weight":500,"weight_unit":"KG","volume":"100","volume_unit":"CFT","lr_number":"","ship_to":"CUST MAIL","sold_to":"CUST MAIL","line_item":"122120","type":"Secondary","category":"","stn":"","date":"$today"}]}|
+
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.DeliveryPicklistAPI
+**!
+
+!*** Validating Line Item in UI
+!define depot {d$unique}
+
+!include -c .FrontPage.Pando.PandoSuites.Optima.Common.OptimisingDeliveryPicklist
+
+!|Script   |Ui                                                                                                                                          |
+|check     |getCountOfElements;                           |//div[@class='card-row card-row-show']                                            |xpath|1   |
+|click;    |(//div[@class='card-row card-row-show'])[1]//a|xpath                                                                                        |
+|check     |isElementPresent;                             |(//div[contains(@class,'table-rowbg')])[1]//span[normalize-space(text())='D1$num']|xpath|true|
+|$tresult1=|isElementPresent;                             |(//div[contains(@class,'table-rowbg')])[1]//span[normalize-space(text())='D1$num']|xpath     |
+|click;    |//div[@class='back-option']//a                |xpath                                                                                        |
+|wait;     |3                                                                                                                                           |
+**!
+
+!*** Checking if validation rejection deliveries are available in delivery_picklist page (pending state)
+!|Script       |Ui                                                                                                                                               |
+|navigateToUrl;|${surl}/optima/settings                                                                                                                          |
+|click;        |//a[contains(.,'Delivery picklist')]               |xpath                                                                                        |
+|click;        |//input[@placeholder='Select Depot']               |xpath                                                                                        |
+|sendKeys;     |//div[normalize-space(text())='Depot']/..//input   |xpath                                                                       |${depo}         |
+|click;        |//span[contains(text(),'${depo}')]                 |xpath                                                                                        |
+|click;        |//div[normalize-space(text())='Movement']/..//input|xpath                                                                                        |
+|sendKeys;     |//div[normalize-space(text())='Movement']/..//input|xpath                                                                       |${movement_type}|
+|click;        |//span[contains(text(),'${movement_type}')]        |xpath                                                                                        |
+|check         |isElementPresent;                                  |//div[contains(@class,'table-rowbg')]//div[normalize-space(text())='D2$num']|xpath   |true   |
+|$tresult2=    |isElementPresent;                                  |//div[contains(@class,'table-rowbg')]//div[normalize-space(text())='D2$num']|xpath           |
+|check         |isElementPresent;                                  |//div[contains(@class,'table-rowbg')]//div[normalize-space(text())='D5$num']|xpath   |true   |
+|check         |isElementNotPresent;                               |//div[contains(@class,'table-rowbg')]//div[normalize-space(text())='D1$num']|xpath   |true   |
+|check         |isElementNotPresent;                               |//div[contains(@class,'table-rowbg')]//div[normalize-space(text())='D3$num']|xpath   |true   |
+*!
+
+!** Validating Rejection's reason
+!|Script       |Ui                                                                                                                                                                                                         |
+|wait;         |5                                                                                                                                                                                                          |
+|navigateToUrl;|${surl}/optima                                                                                                                                                                                             |
+|click;        |(//div[@class='cardfilter-grid']//input)[1]/../self::div                              |xpath                                                                                                               |
+|sendKeys;     |(//div[@class='cardfilter-grid']//input)[1]                                           |xpath                                                                                                    |${depo}   |
+|click;        |//span[contains(text(),'${depo}')]                                                    |xpath                                                                                                               |
+|wait          |2                                                                                                                                                                                                          |
+|click;        |(//div[@class='cardfilter-grid']//input)[2]                                           |xpath                                                                                                               |
+|click;        |//span[contains(text(),'${movement_type}')]                                           |xpath                                                                                                               |
+|click;        |//div[normalize-space(text())='Rejection']/..//span[contains(@class,'cfamount_error')]|xpath                                                                                                               |
+|wait;         |3                                                                                                                                                                                                          |
+|click;        |//div[text()='D2$num']/ancestor::tr//div[contains(@class,'expand-icon')]              |xpath                                                                                                               |
+|check         |isElementPresent;                                                                     |//div[text()='D2$num']/../preceding-sibling::td//input[@disabled='disabled']                             |xpath|true|
+|check         |isElementPresent;                                                                     |(//div[text()='D2$num']/ancestor::tr/following-sibling::tr)[1]//span[contains(text(),'Contract not')]    |xpath|true|
+|$tresult3=    |isElementPresent;                                                                     |(//div[text()='D2$num']/ancestor::tr/following-sibling::tr)[1]//span[contains(text(),'Contract not')]    |xpath     |
+|click;        |//div[text()='D2$num']/ancestor::tr//div[contains(@class,'expand-icon')]              |xpath                                                                                                               |
+|click;        |//div[text()='D3$num']/ancestor::tr//div[contains(@class,'expand-icon')]              |xpath                                                                                                               |
+|check         |isElementNotPresent;                                                                  |//div[text()='D3$num']/../preceding-sibling::td//input[@disabled='disabled']                             |xpath|true|
+|check         |isElementPresent;                                                                     |(//div[text()='D3$num']/ancestor::tr/following-sibling::tr)[1]//span[contains(text(),'Fitment')]         |xpath|true|
+|click;        |//div[text()='D3$num']/ancestor::tr//div[contains(@class,'expand-icon')]              |xpath                                                                                                               |
+|click;        |//div[text()='D4$num']/ancestor::tr//div[contains(@class,'expand-icon')]              |xpath                                                                                                               |
+|check         |isElementNotPresent;                                                                  |//div[text()='D4$num']/../preceding-sibling::td//input[@disabled='disabled']                             |xpath|true|
+|check         |isElementPresent;                                                                     |(//div[text()='D4$num']/ancestor::tr/following-sibling::tr)[1]//span[contains(text(),'Fitment')]         |xpath|true|
+|click;        |//div[text()='D4$num']/ancestor::tr//div[contains(@class,'expand-icon')]              |xpath                                                                                                               |
+|click;        |//div[text()='D5$num']/ancestor::tr//div[contains(@class,'expand-icon')]              |xpath                                                                                                               |
+|check         |isElementPresent;                                                                     |//div[text()='D5$num']/../preceding-sibling::td//input[@disabled='disabled']                             |xpath|true|
+|check         |isElementPresent;                                                                     |(//div[text()='D5$num']/ancestor::tr/following-sibling::tr)[1]//span[contains(text(),'Contract not')]    |xpath|true|
+|click;        |//div[text()='D5$num']/ancestor::tr//div[contains(@class,'expand-icon')]              |xpath                                                                                                               |
+|click;        |//div[text()='D6$num']/ancestor::tr//div[contains(@class,'expand-icon')]              |xpath                                                                                                               |
+|check         |isElementNotPresent;                                                                  |//div[text()='D6$num']/../preceding-sibling::td//input[@disabled='disabled']                             |xpath|true|
+|check         |isElementPresent;                                                                     |(//div[text()='D6$num']/ancestor::tr/following-sibling::tr)[1]//span[contains(text(),'Fitment')]         |xpath|true|
+|click;        |//div[text()='D6$num']/ancestor::tr//div[contains(@class,'expand-icon')]              |xpath                                                                                                               |
+|click;        |//div[text()='D7$num']/ancestor::tr//div[contains(@class,'expand-icon')]              |xpath                                                                                                               |
+|check         |isElementNotPresent;                                                                  |//div[text()='D7$num']/../preceding-sibling::td//input[@disabled='disabled']                             |xpath|true|
+|check         |isElementPresent;                                                                     |((//div[text()='D7$num']/ancestor::tr/following-sibling::tr)[1]//tr)[2]//span[contains(text(),'Fitment')]|xpath|true|
+|check         |isElementPresent;                                                                     |((//div[text()='D7$num']/ancestor::tr/following-sibling::tr)[1]//tr)[3]//span[contains(text(),'Fitment')]|xpath|true|
+|$tresult4=    |isElementPresent;                                                                     |((//div[text()='D7$num']/ancestor::tr/following-sibling::tr)[1]//tr)[3]//span[contains(text(),'Fitment')]|xpath     |
+|click;        |//div[text()='D7$num']/ancestor::tr//div[contains(@class,'expand-icon')]              |xpath                                                                                                               |
+*!
+
+!** Exporting the Rejected Deliveries
+!|script|ui                                       |
+|click; |//button[contains(text(),'EXPORT')]|xpath|
+|wait;  |3                                        |
+
+!** Verifying the File download
+!|script       |common                                                     |
+|$downloadPath=|getPath;              |download         |fullpath          |
+|check         |checkIfFileDownloaded;|optima-rejections|$downloadPath|true|
+|$tresult5=    |checkIfFileDownloaded;|optima-rejections|$downloadPath     |
+*!
+
+!|script   |file util                        |
+|$filename=|getLastModifiedFile|$downloadPath|
+
+!|script                  |ExcelQuery                                                                                  |
+|$total_rejected_count=   |getCountQuery;|$filename|select * from "Optima Rejections"                                  |
+|$preoptima_reject_count= |getCountQuery;|$filename|select * from "Optima Rejections" where Stage = 'PRE_OPTIMA_STAGE' |
+|$postoptima_reject_count=|getCountQuery;|$filename|select * from "Optima Rejections" where Stage = 'POST_OPTIMA_STAGE'|
+
+!|Script|common                                                |
+|check  |checkIfStringAreEqual;|$total_rejected_count   |7|true|
+|check  |checkIfStringAreEqual;|$preoptima_reject_count |2|true|
+|check  |checkIfStringAreEqual;|$postoptima_reject_count|5|true|
+*!
+
+!** Checking if the fitment rejected deliveries can be moved back to Pending state
+!|script                     |ui                                                                                         |
+|click;                      |//div[text()='D3$num']/../preceding-sibling::td//span[contains(@class,'checkbox')]|xpath   |
+|click;                      |//button[contains(text(),'Move')]                                                 |xpath   |
+|waitForElementToBeDisplayed;|//h3/following-sibling::span[text()='Moved to Pending Deliveries']                |xpath|30|
+
+!|Script       |Ui                                                                                                                                               |
+|navigateToUrl;|${surl}/optima/settings                                                                                                                          |
+|click;        |//a[contains(.,'Delivery picklist')]               |xpath                                                                                        |
+|click;        |//input[@placeholder='Select Depot']               |xpath                                                                                        |
+|sendKeys;     |//div[normalize-space(text())='Depot']/..//input   |xpath                                                                       |${depo}         |
+|click;        |//span[contains(text(),'${depo}')]                 |xpath                                                                                        |
+|click;        |//div[normalize-space(text())='Movement']/..//input|xpath                                                                                        |
+|sendKeys;     |//div[normalize-space(text())='Movement']/..//input|xpath                                                                       |${movement_type}|
+|click;        |//span[contains(text(),'${movement_type}')]        |xpath                                                                                        |
+|check         |isElementPresent;                                  |//div[contains(@class,'table-rowbg')]//div[normalize-space(text())='D3$num']|xpath   |true   |
+|$tresult6=    |isElementPresent;                                  |//div[contains(@class,'table-rowbg')]//div[normalize-space(text())='D3$num']|xpath           |
+*!
+
+!** Checking if user can Discard All the rejections
+!|Script       |Ui                                                                                                                        |
+|wait;         |5                                                                                                                         |
+|navigateToUrl;|${surl}/optima                                                                                                            |
+|click;        |(//div[@class='cardfilter-grid']//input)[1]/../self::div                              |xpath                              |
+|sendKeys;     |(//div[@class='cardfilter-grid']//input)[1]                                           |xpath                   |${depo}   |
+|click;        |//span[contains(text(),'${depo}')]                                                    |xpath                              |
+|wait          |2                                                                                                                         |
+|click;        |(//div[@class='cardfilter-grid']//input)[2]                                           |xpath                              |
+|click;        |//span[contains(text(),'${movement_type}')]                                           |xpath                              |
+|click;        |//div[normalize-space(text())='Rejection']/..//span[contains(@class,'cfamount_error')]|xpath                              |
+|wait;         |3                                                                                                                         |
+|click;        |//button[contains(text(),'Discard All')]                                              |xpath                              |
+|click;        |//button/span[normalize-space(text())='Yes']                                          |xpath                              |
+|check         |isElementPresent;                                                                     |//span[text()='No Data']|xpath|true|
+|$tresult7=    |isElementPresent;                                                                     |//span[text()='No Data']|xpath     |
+*!
+
+!***> Validating the test results
+!|Script  |Common                                                                                             |
+|$tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7|
+|check    |checkIfStringAreEqual;       |$tresult                 |true                 |true                 |
+*!
+
+!***> Retrieving the Job ID using API
+!include -c .FrontPage.Pando.PandoSuites.PandoAPI.OptimaAPI.RetrieveOptimaJobIDAPI
+*!

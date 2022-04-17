@@ -1,0 +1,109 @@
+!** Common Account setting
+!include -c .GlobalSettings.Accounts.cfeatures
+**!
+
+!** Transporter Email Setting
+!define turl {https://transporter-auto.pandostaging.in}
+!define tMailUserName {pandotransporter@outlook.com}
+!define tMailUserPassword {Pando@123}
+*!
+
+!** Shipper Side Default Settings
+!define role_type {gate_manager}
+!define special_tax_rebate {false}
+!define expected_status_code {200}
+*!
+
+!** Consingee API Default Status
+!define curl {https://consignee-auto.pandostaging.in}
+!define default_combine {true}
+!define consignee_status {1}
+!define group {}
+**!
+
+!** Transporter API Default Status
+!define transporter_status {1}
+!define depot_name {Chennai Depot}
+!define service_provider_state {Bihar}
+*!
+
+!** Depo Default API
+!define plant_type {1}
+*!
+
+!** Detention defaults
+!define detention_row {1}
+!define detention_column {6}
+!define cGroup {AU}
+*!
+
+!** Indent API Default Status
+!define depo_id_api {5c74edf0c8d634115eaf23bd}
+!define delivery_type_api {FTL}
+!define gate_id_api {5c74edf083f399115e3eaa55}
+!define vehicle_type_id_api {5c750bce6e2ae92e2d5bc5f8} 
+!define freight_open_schmea {}
+**!
+
+!** Material ERP API Default Status
+!define erp_depo_id_api {CHN1}
+!define erp_gate_id_api {CHN01}
+!define sold_to {cr$unique}
+!define ship_to {cr$unique}
+!define delivery_number {D$unique}
+!define invoice_number {INV-$unique}
+*!
+
+!** Pando Material API
+!define material_code {m1}
+!define business_unit {10}
+!define piece_per_box {10}
+!define box_width {10}
+!define box_length {10}
+!define box_height {10}
+!define box_weight {10}
+!define box_volume {10}
+**!
+
+!** Transporter invoice Approval Status API
+!define contract_charge {1000}
+!define special_tax_rebate {false}
+
+**!
+
+!** Jenkins Variable
+!define build_no {build_no_x}
+!define build_job {build_job_x}
+!define view_name {view_name_x}
+!define folder_name {folder_name_x}
+**!
+
+!** Test case screenshoot
+!define test_screenshot {https://b4a112d42948772cf082d.s3.ap-south-1.amazonaws.com/${build_no}/${RUNNING_PAGE_NAME}_${build_no}.png}
+*!
+
+!** Slack Notification
+!define notify {notxxx}
+**!
+
+!** Super Admin
+!define superaAdminUrl {https://superadmin.pandostaging.in}
+!define superAdminToken {eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoic3VwZXJhZG1pbiIsImZlYXR1cmUiOiJmcmVpZ2h0QmlsbFBvc3RpbmcifQ.C1BoXLIQnolb-xDdi45jd05yrZYb99izhkr85fkXvHU}
+*!
+
+!** Mail Server
+!define mail_url {http://35.154.192.224:5080}
+*!
+
+!** Arena Url
+!define arena_url {https://admin:arena-admin@arena-auto.pandostaging.in/admin}
+**!
+
+!** Generate Consolidated Report
+!define testCycle {reportTestCyclexxx}
+!define clientFilter {reportClientFilterxxx}
+*!
+
+!** Logging to ELK
+!define log_to_elk {yes}
+*!

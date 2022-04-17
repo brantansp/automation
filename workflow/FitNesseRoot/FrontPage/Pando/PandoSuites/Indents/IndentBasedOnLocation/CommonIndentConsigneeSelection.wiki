@@ -1,0 +1,13 @@
+!|Script                     |Ui                                                                                                                                                                     |
+|click;                      |//div[@class='el-select select-default']                                                                                                 |xpath                        |
+|click;                      |//span[contains(text(),'${gate_id}')]                                                                                                    |xpath                        |
+|click;                      |//div[@class='add-block']                                                                                                                |xpath                        |
+|waitForElementToBeDisplayed;|!-(//section//div[contains(@class,'table-striped')])[1]|(//section//div[contains(@class,'table-striped')])[2]-!                          |xpath|30                     |
+|click;                      |//div[text()='${switch_depo}']                                                                                                           |xpath                        |
+|waitForElementToBeDisplayed;|(//section//div[contains(@class,'table-striped')])[2]                                                                                    |xpath|30                     |
+|sendKeys;                   |(//section[@class='el-drawer__body']//input[@type='text'])[${switch_type}]                                                               |xpath|${destination_location}|
+|waitForElementToDisappear;  |//div[@class='status-msg']//img                                                                                                          |xpath|20                     |
+|waitForElementToBeDisplayed;|(//section//div[contains(@class,'table-striped')])[2]                                                                                    |xpath|20                     |
+|click;                      |(//tr[contains(@class,'row')])[last()]//span[normalize-space(text())='${destination_location}']/ancestor::td/preceding-sibling::td//label|xpath                        |
+|wait;                       |2                                                                                                                                                                      |
+|click;                      |//span[text()='Add']                                                                                                                     |xpath                        |

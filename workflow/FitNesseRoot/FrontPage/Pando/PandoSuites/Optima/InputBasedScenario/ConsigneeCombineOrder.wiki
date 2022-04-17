@@ -1,0 +1,7 @@
+---
+Help: Contain test cases for Consignee with Combine flag enabled or disabled
+Suite
+Suites: optscn1
+---
+!1 Test suite Consignee combine orders
+!contents -R2 -g -p -f -h

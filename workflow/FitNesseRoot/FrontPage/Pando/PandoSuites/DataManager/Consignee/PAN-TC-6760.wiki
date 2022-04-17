@@ -1,0 +1,228 @@
+---
+Help: Add and update consignee- Ensure if city,state and region is auto populated by entering pincode
+Suites: siemens
+Test
+---
+!** Configuration in mongoDB
+"autopopulate_pincode_ratecard" : true
+
+Note: 
+Script should be run for rate card with pincodes.
+Due to large data, added only 3 pincodes in pincode_ratecard collection in mongoDB
+**!
+
+!**> Unique values assignment
+!|Script |Common                              |
+|$unique=|getCurrentDateTimeStamp;|yMMddHHmmss|
+**!
+
+!**> Add consignee and Verify auto population of data
+!** Consignee Creation
+!define consignee_name {c$unique}
+!define consignee_ref_id {cr$unique}
+!define address {Kovur}
+!define pincode {209745}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+$unique@gmail.com}
+!define region {South}
+!define site {Customer Site}
+!define loading_starttime {00:30}
+!define loading_endtime {12:00}
+!define unloading_starttime {12:00}
+!define unloading_endtime {23:30}
+
+!|Script                     |Ui                                                                                                                    |
+|navigateToUrl;              |${surl}/mdm/consignees                                                                                                |
+|click;                      |//button[text()='Add']                             |xpath                                                             |
+|sendKeys;                   |//input[@placeholder='Enter Consignee Name']       |xpath                                         |${consignee_name}  |
+|sendKeys;                   |//input[@placeholder='Enter Reference Id']         |xpath                                         |${consignee_ref_id}|
+|sendKeys;                   |//input[@placeholder='Enter Address']              |xpath                                         |${address}         |
+|sendKeys;                   |//input[@placeholder='Enter Postal code']          |xpath                                         |${pincode}         |
+|sendControlKey;             |//input[@placeholder='Enter Postal code']          |xpath                                         |ENTER              |
+|wait;                       |2                                                                                                                     |
+|$cityname=                  |getValue;                                          |//input[@placeholder='Enter City']            |xpath              |
+|$statename=                 |getValue;                                          |//input[@placeholder='Enter State']           |xpath              |
+|$regionname=                |getValue;                                          |//input[@placeholder='Enter Region']          |xpath              |
+|sendKeys;                   |//input[@placeholder='Enter Representative Name']  |xpath                                         |${manager_name}    |
+|sendKeys;                   |//input[@placeholder='Enter Representative Mobile']|xpath                                         |${manager_mobile}  |
+|sendKeys;                   |//input[@placeholder='Enter Representative Email'] |xpath                                         |${manager_email}   |
+|click;                      |//span[contains(text(),'Save')]                    |xpath                                                             |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span     |xpath                                         |30                 |
+|$successMessage=            |getElementAttribute;                               |//h3[text()='Success']/following-sibling::span|xpath  |innerText  |
+
+!|Script   |common                                                                    |
+|check     |checkIfStringAreEqual;|$successMessage|Consignee Created Successfully|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage|Consignee Created Successfully     |
+|$tresult2=|checkIfStringAreEqual;|$cityname      |Farrukhabad                        |
+|$tresult3=|checkIfStringAreEqual;|$statename     |UTTAR PRADESH                      |
+|$tresult4=|checkIfStringAreEqual;|$regionname    |West UP                            |
+
+!|script                     |Ui                                                                                |
+|waitForElementToBeDisplayed;|//span[contains(text(),'c$unique')]|xpath                              |20        |
+|check                       |isElementPresent;                  |//span[contains(text(),'c$unique')]|xpath|true|
+|$tresult5=                  |isElementPresent;                  |//span[contains(text(),'c$unique')]|xpath     |
+
+!**> Validating test results
+!|Script     |Common                                                                              |
+|$add_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,true|
+**!
+**!
+
+!** Verify added consignee values
+!|Script                  |Ui                                                                                           |
+|navigateToUrl;           |${surl}/mdm/consignees                                                                       |
+|click;                   |//span[contains(text(),'c$unique')]|xpath                                                    |
+|wait;                    |2                                                                                            |
+|$actual_consignee_ref_id=|getValue;                          |//input[@placeholder='Enter Reference Id']         |xpath|
+|$actual_address=         |getValue;                          |//input[@placeholder='Enter Address']              |xpath|
+|$actual_city=            |getValue;                          |//input[@placeholder='Enter City']                 |xpath|
+|$actual_state=           |getValue;                          |//input[@placeholder='Enter State']                |xpath|
+|$actual_pincode=         |getValue;                          |//input[@placeholder='Enter Postal code']          |xpath|
+|$actual_name=            |getValue;                          |//input[@placeholder='Enter Representative Name']  |xpath|
+|$actual_mobile=          |getValue;                          |//input[@placeholder='Enter Representative Mobile']|xpath|
+|$actual_email=           |getValue;                          |//input[@placeholder='Enter Representative Email'] |xpath|
+|$actual_region=          |getValue;                          |//input[@placeholder='Enter Region']               |xpath|
+
+!|Script   |Common                                                             |
+|$tresult1=|checkIfStringAreEqual;|$actual_consignee_ref_id|${consignee_ref_id}|
+|$tresult2=|checkIfStringAreEqual;|$actual_address         |${address}         |
+|$tresult3=|checkIfStringAreEqual;|$actual_city            |Farrukhabad        |
+|$tresult4=|checkIfStringAreEqual;|$actual_state           |UTTAR PRADESH      |
+|$tresult5=|checkIfStringAreEqual;|$actual_pincode         |${pincode}         |
+|$tresult6=|checkIfStringAreEqual;|$actual_name            |${manager_name}    |
+|$tresult7=|checkIfStringAreEqual;|$actual_mobile          |${manager_mobile}  |
+|$tresult8=|checkIfStringAreEqual;|$actual_email           |${manager_email}   |
+|$tresult9=|checkIfStringAreEqual;|$actual_region          |West UP            |
+**!
+
+!**> Validating test results
+!|Script               |Common                                                                                                                      |
+|$verifyrecord_tresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,$tresult7,$tresult8,$tresult9,true|
+**!
+**!
+
+!**> Edit consignee and verify auto population of Data
+!define newpincode {273013}
+
+!|Script                     |Ui                                                                                                           |
+|navigateToUrl;              |${surl}/mdm/consignees                                                                                       |
+|click;                      |//span[contains(text(),'c$unique')]           |xpath                                                         |
+|wait;                       |2                                                                                                            |
+|click;                      |//input[@placeholder='Enter Postal code']     |xpath                                                         |
+|clearValueJS;               |//input[@placeholder='Enter Postal code']     |xpath                                                         |
+|sendKeys;                   |//input[@placeholder='Enter Postal code']     |xpath                                         |${newpincode}  |
+|sendControlKey;             |//input[@placeholder='Enter Postal code']     |xpath                                         |ENTER          |
+|wait;                       |2                                                                                                            |
+|$actual_city=               |getValue;                                     |//input[@placeholder='Enter City']            |xpath          |
+|$actual_state=              |getValue;                                     |//input[@placeholder='Enter State']           |xpath          |
+|$actual_pincode=            |getValue;                                     |//input[@placeholder='Enter Postal code']     |xpath          |
+|$actual_region=             |getValue;                                     |//input[@placeholder='Enter Region']          |xpath          |
+|click;                      |//span[contains(text(),'Save')]               |xpath                                                         |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span|xpath                                         |30             |
+|$successMessage=            |getElementAttribute;                          |//h3[text()='Success']/following-sibling::span|xpath|innerText|
+
+!|Script   |common                                                                    |
+|check     |checkIfStringAreEqual;|$successMessage|Consignee Updated Successfully|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage|Consignee Updated Successfully     |
+
+!|Script        |Common                                                                    |
+|$tresult1=     |checkIfStringAreEqual;       |$actual_pincode        |${newpincode}       |
+|$tresult2=     |checkIfStringAreEqual;       |$actual_city           |Gorakhpur           |
+|$tresult3=     |checkIfStringAreEqual;       |$actual_state          |UTTAR PRADESH       |
+|$tresult4=     |checkIfStringAreEqual;       |$actual_region         |East UP             |
+|$update_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,true|
+**!
+
+!**> Add consignee without region and Verify auto population of data
+!** Consignee Creation
+!define consignee_name {c1$unique}
+!define consignee_ref_id {cr1$unique}
+!define address {Kovur}
+!define pincode {603103}
+!define region {South}
+!define manager_name {Manager Automation}
+!define manager_mobile {123}
+!define manager_email {pandoconsignee+2$unique@gmail.com}
+!define site {Customer Site}
+
+!|Script                     |Ui                                                                                                                    |
+|navigateToUrl;              |${surl}/mdm/consignees                                                                                                |
+|click;                      |//button[text()='Add']                             |xpath                                                             |
+|sendKeys;                   |//input[@placeholder='Enter Consignee Name']       |xpath                                         |${consignee_name}  |
+|sendKeys;                   |//input[@placeholder='Enter Reference Id']         |xpath                                         |${consignee_ref_id}|
+|sendKeys;                   |//input[@placeholder='Enter Address']              |xpath                                         |${address}         |
+|sendKeys;                   |//input[@placeholder='Enter Postal code']          |xpath                                         |${pincode}         |
+|sendControlKey;             |//input[@placeholder='Enter Postal code']          |xpath                                         |ENTER              |
+|wait;                       |2                                                                                                                     |
+|$cityname=                  |getValue;                                          |//input[@placeholder='Enter City']            |xpath              |
+|$statename=                 |getValue;                                          |//input[@placeholder='Enter State']           |xpath              |
+|$regionname=                |getValue;                                          |//input[@placeholder='Enter Region']          |xpath              |
+|sendKeys;                   |//input[@placeholder='Enter Region']               |xpath                                         |${region}          |
+|sendKeys;                   |//input[@placeholder='Enter Representative Name']  |xpath                                         |${manager_name}    |
+|sendKeys;                   |//input[@placeholder='Enter Representative Mobile']|xpath                                         |${manager_mobile}  |
+|sendKeys;                   |//input[@placeholder='Enter Representative Email'] |xpath                                         |${manager_email}   |
+|$enteredregionname=         |getValue;                                          |//input[@placeholder='Enter Region']          |xpath              |
+|click;                      |//span[contains(text(),'Save')]                    |xpath                                                             |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span     |xpath                                         |30                 |
+|$successMessage=            |getElementAttribute;                               |//h3[text()='Success']/following-sibling::span|xpath  |innerText  |
+
+!|Script   |common                                                                       |
+|check     |checkIfStringAreEqual;|$successMessage   |Consignee Created Successfully|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage   |Consignee Created Successfully     |
+|$tresult2=|checkIfStringAreEqual;|$cityname         |Kanchipuram                        |
+|$tresult3=|checkIfStringAreEqual;|$statename        |Tamil Nadu                         |
+|$tresult4=|checkIfStringAreEqual;|$regionname       |                                   |
+|$tresult5=|checkIfStringAreEqual;|$enteredregionname|South                              |
+
+!|script                     |Ui                                                                                |
+|waitForElementToBeDisplayed;|//span[contains(text(),'c$unique')]|xpath                              |20        |
+|check                       |isElementPresent;                  |//span[contains(text(),'c$unique')]|xpath|true|
+|$tresult6=                  |isElementPresent;                  |//span[contains(text(),'c$unique')]|xpath     |
+
+!**> Validating test results
+!|Script                   |Common                                                                                        |
+|$add_withoutregion_result=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,true|
+**!
+**!
+**!
+
+!**> Edit consignee without region and verify auto population of Data
+!define newpincode {600024}
+
+!|Script                     |Ui                                                                                                           |
+|navigateToUrl;              |${surl}/mdm/consignees                                                                                       |
+|click;                      |//span[contains(text(),'c1$unique')]          |xpath                                                         |
+|wait;                       |2                                                                                                            |
+|click;                      |//input[@placeholder='Enter Postal code']     |xpath                                                         |
+|clearValueJS;               |//input[@placeholder='Enter Postal code']     |xpath                                                         |
+|sendKeys;                   |//input[@placeholder='Enter Postal code']     |xpath                                         |${newpincode}  |
+|sendControlKey;             |//input[@placeholder='Enter Postal code']     |xpath                                         |ENTER          |
+|wait;                       |2                                                                                                            |
+|$actual_city=               |getValue;                                     |//input[@placeholder='Enter City']            |xpath          |
+|$actual_state=              |getValue;                                     |//input[@placeholder='Enter State']           |xpath          |
+|$actual_pincode=            |getValue;                                     |//input[@placeholder='Enter Postal code']     |xpath          |
+|$actual_region=             |getValue;                                     |//input[@placeholder='Enter Region']          |xpath          |
+|sendKeys;                   |//input[@placeholder='Enter Region']          |xpath                                         |North          |
+|$enteredregionname=         |getValue;                                     |//input[@placeholder='Enter Region']          |xpath          |
+|click;                      |//span[contains(text(),'Save')]               |xpath                                                         |
+|waitForElementToBeDisplayed;|//h3[text()='Success']/following-sibling::span|xpath                                         |30             |
+|$successMessage=            |getElementAttribute;                          |//h3[text()='Success']/following-sibling::span|xpath|innerText|
+
+!|Script   |common                                                                    |
+|check     |checkIfStringAreEqual;|$successMessage|Consignee Updated Successfully|true|
+|$tresult1=|checkIfStringAreEqual;|$successMessage|Consignee Updated Successfully     |
+
+!|Script                     |Common                                                                                        |
+|$tresult2=                  |checkIfStringAreEqual;       |$actual_pincode                   |${newpincode}                |
+|$tresult3=                  |checkIfStringAreEqual;       |$actual_city                      |Chennai                      |
+|$tresult4=                  |checkIfStringAreEqual;       |$actual_state                     |Tamil Nadu                   |
+|$tresult5=                  |checkIfStringAreEqual;       |$regionname                       |                             |
+|$tresult6=                  |checkIfStringAreEqual;       |$enteredregionname                |North                        |
+|$update_withoutregionresult=|checkIfStringAreEqualInArray;|$tresult1,$tresult2,$tresult3,$tresult4,$tresult5,$tresult6,true|
+**!
+
+!**> Validating final test results
+!|Script  |Common                                                                                                                                   |
+|$tresult=|checkIfStringAreEqualInArray;|$add_result,$verifyrecord_tresult,$update_result,$add_withoutregion_result,$update_withoutregionresult,true|
+**!

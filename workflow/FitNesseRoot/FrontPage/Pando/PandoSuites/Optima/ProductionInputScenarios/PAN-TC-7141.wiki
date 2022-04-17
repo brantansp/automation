@@ -1,0 +1,19 @@
+---
+Help: SCN27_Ensure optima clubbing is correct with Courier algorithm and hybridsplit false
+Test
+---
+!|script       |common                    |
+|$fileLocation=|getPath;|download|fullpath|
+
+!|script       |CsvQuery                                                                                                                                                                        |
+|getConnection;|$fileLocation|,                                                                                                                                                                 |
+|$tresult1=    |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE "Truck Type" LIKE '96.0 CFT - 400.0%' AND File LIKE 'scn27_%' AND Consignee LIKE '%8101563%'|noOfOccurrences|
+|$tresult2=    |executeQuery;|SELECT count(*) as noOfOccurrences FROM summary WHERE "Truck Type" NOT LIKE '99999%' AND File LIKE 'scn27_%' AND Consignee LIKE '%8101563%'       |noOfOccurrences|
+|$tresult3=    |executeQuery;|SELECT Rate FROM summary WHERE File LIKE 'scn27_%' AND Consignee LIKE '%8101563%'                                                                 |Rate           |
+|closeConnection;                                                                                                                                                                               |
+
+!|script  |common                                      |
+|check    |checkIfStringAreEqual;|$tresult1|1     |true|
+|check    |checkIfStringAreEqual;|$tresult2|1     |true|
+|check    |checkIfStringAreEqual;|$tresult3|1500.0|true|
+|$tresult=|checkIfStringAreEqual;|$tresult1|$tresult2  |

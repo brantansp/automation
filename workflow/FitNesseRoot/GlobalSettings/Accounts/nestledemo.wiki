@@ -1,0 +1,7 @@
+---
+Test
+---
+!define surl {https://nestle.gopando.in}
+!define username {gramcha+100@pando.in}
+!define password {password@123}
+!define shipper_client_id {}

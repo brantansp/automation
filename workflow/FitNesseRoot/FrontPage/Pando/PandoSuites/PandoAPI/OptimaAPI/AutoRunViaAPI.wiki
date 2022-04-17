@@ -1,0 +1,13 @@
+---
+Help: Contains script to run the Optimize via Auto Run API Script
+Test
+---
+!| Script   |Http                                      |
+|addHeader; |Authorization |bearer $stoken             |
+|setBaseUrl;|${surl}/api/tasks/optima?                 |
+|$response= |getResponse;  |Application/Json|post|$data|
+|check      |getStatusCode;|202                        |
+|wait;      |8                                         |
+
+!|script|common                                        |
+|check  |checkIfStringAreEqual;|$response|Accepted|true|

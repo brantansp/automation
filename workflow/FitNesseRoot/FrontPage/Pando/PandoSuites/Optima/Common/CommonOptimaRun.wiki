@@ -1,0 +1,24 @@
+!define depot {${depo}}
+!define movement {${movement_type}}
+
+!include .FrontPage.Pando.PandoSuites.Optima.Common.FilterForDepotAndMovement
+
+!|Script                   |Ui                                                                       |
+|wait;                     |2                                                                        |
+|sendKeys;                 |file                         |id                              |$excelpath|
+|waitForElementToDisappear;|//i[@class='el-icon-loading']|xpath                           |300       |
+|$data=                    |getText;                     |//div[@class='empty-stage-text']|xpath     |
+#|click;|(//div[@class='cardfilter-grid']//i[@class='el-select__caret el-input__icon el-icon-arrow-up'])[2]|xpath|
+#|click;|//span[text()='${movement_type}']                                                                 |xpath|
+
+#!|lick;|//div[@class='dropdown-section multipletag bordertransparent']/div[@class='el-select']|xpath|
+#|click;|//span[contains(text(),'${movement_type}')]                                           |xpath|
+!|Script                     |Ui                                                                                                                        |
+|wait;                       |2                                                                                                                         |
+|click;                      |//button[contains(text(),'OPTIMIZE') or contains(text(),'Optimize')]|xpath                                                |
+|waitForElementToBeDisplayed;|//div[@class='el-loading-spinner']                                  |xpath                                 |5             |
+|waitForElementToDisappear;  |//div[@class='el-loading-spinner']                                  |xpath                                 |30            |
+|check                       |isElementPresent;                                                   |//div[@class='card-row card-row-show']|xpath|true    |
+|check                       |getCountOfElements;                                                 |//div[@class='card-row card-row-show']|xpath|${items}|
+#|click;|(//div[@class='cardfilter-grid']//div[contains(@class,'dropdown-section')])[2]|xpath|
+#|click;|//span[@class='dropdownlisttag-text' and text()='${movement_type}']           |xpath|

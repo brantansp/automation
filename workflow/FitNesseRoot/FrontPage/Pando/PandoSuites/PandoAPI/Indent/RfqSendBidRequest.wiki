@@ -1,0 +1,9 @@
+---
+Test
+---
+!|Script    |Http                                     |
+|wait;      |2                                        |
+|addHeader; |Authorization |bearer $stoken            |
+|setBaseUrl;|${surl}/api/order/$order_id/rfq          |
+|$response= |getResponse;  |Application/Json|put|$data|
+|check      |getStatusCode;|200                       |
